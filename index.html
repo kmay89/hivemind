@@ -1,0 +1,2016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d0905">
+<title>HIVEMIND — keep a honeybee colony alive, year after year</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --comb:#0d0905;
+    --panel:rgba(27,19,9,0.74);
+    --panel2:rgba(255,214,130,0.05);
+    --border:rgba(255,196,110,0.16);
+    --text:#f7eed9; --dim:#c2a97e;
+    --honey:#ffb42b; --gold:#ffd97a; --amber2:#e08f1f;
+    --brood:#8fc4ff; --good:#a7e07c; --bad:#ff7052; --frost:#cfe2f5; --cyan:#7fe3d6;
+    --shadow:0 2px 6px rgba(0,0,0,.35), 0 18px 54px rgba(0,0,0,.5);
+    --radius:16px;
+    --hex: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html,body{ height:100%; width:100%; overflow:hidden; background:var(--comb); overscroll-behavior:none; touch-action:none;
+    font-family:'Bricolage Grotesque',sans-serif; color:var(--text); -webkit-font-smoothing:antialiased; }
+  #c{ position:fixed; inset:0; width:100%; height:100%; display:block; touch-action:none; }
+  .panel{ background:linear-gradient(180deg,var(--panel2),rgba(255,255,255,0)) , var(--panel); border:1px solid var(--border); border-radius:var(--radius);
+    box-shadow:var(--shadow); backdrop-filter:blur(14px) saturate(1.25); -webkit-backdrop-filter:blur(14px) saturate(1.25); }
+  .hide{ display:none !important; }
+
+  /* ---------- buttons ---------- */
+  .btn{ font-family:'Bricolage Grotesque'; font-weight:700; letter-spacing:.04em; color:#241503;
+    background:linear-gradient(180deg,var(--gold),var(--honey) 60%,var(--amber2)); border:none; border-radius:13px; cursor:pointer;
+    box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 8px 22px rgba(255,160,40,.28); transition:transform .09s, box-shadow .2s, filter .2s; }
+  .btn:hover{ filter:brightness(1.06); }
+  .btn:active{ transform:scale(.96); }
+  .btn.ghost{ background:rgba(255,255,255,0.06); color:var(--text); box-shadow:none; border:1px solid var(--border); font-weight:500; }
+  .tab,.tb,.btn,.cbtn,.gift{ -webkit-tap-highlight-color:transparent; }
+  .tab:focus-visible,.tb:focus-visible,.btn:focus-visible,.cbtn:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+
+  /* ---------- HUD frame ---------- */
+  /* the stage: play field + controls share one centred column; wider screens become ambient surround */
+  #hud-top{ position:fixed; top:0; left:50%; right:auto; bottom:auto; transform:translateX(-50%); width:min(100%, var(--stage));
+    padding:13px; display:flex; align-items:flex-start; justify-content:space-between; gap:10px; z-index:3; pointer-events:none; }
+  #hud-bottom{ position:fixed; bottom:0; left:50%; right:auto; top:auto; transform:translateX(-50%); width:min(100%, var(--stage));
+    padding:12px; display:flex; align-items:flex-end; justify-content:space-between; gap:10px; z-index:3; pointer-events:none; }
+  #hud-top>*, #hud-bottom>*{ pointer-events:auto; }
+
+  /* view tabs */
+  #tabs{ padding:6px; display:flex; gap:5px; }
+  .tab{ font-weight:600; font-size:12.5px; letter-spacing:.03em; padding:8px 12px; border-radius:11px; cursor:pointer; min-height:36px;
+    display:flex; align-items:center; color:var(--dim); border:1px solid transparent; background:rgba(255,255,255,0.02); transition:all .15s; white-space:nowrap; user-select:none; }
+  .tab:hover{ color:var(--text); }
+  .tab.on{ color:#241503; background:linear-gradient(180deg,var(--gold),var(--honey)); box-shadow:0 1px 0 rgba(255,255,255,.4) inset, 0 3px 14px rgba(255,170,40,.35); }
+  .tab.on.meadow{ background:linear-gradient(180deg,#cfe6ff,#79b1e6); color:#0a1a2c; }
+
+  /* ---------- vitals ---------- */
+  #res{ padding:7px; display:flex; gap:6px; }
+  .stat{ min-width:58px; padding:5px 9px; border-radius:11px; background:rgba(255,255,255,0.03); text-align:center; transition:background .3s; }
+  .stat .lab{ font-size:8px; letter-spacing:.18em; text-transform:uppercase; color:var(--dim); font-weight:600; }
+  .stat .val{ font-family:'JetBrains Mono',monospace; font-size:15px; font-weight:700; margin-top:1px; display:flex; align-items:center; justify-content:center; gap:3px; font-variant-numeric:tabular-nums; }
+  .stat.honey .val .n{ color:var(--honey); } .stat.pollen .val .n{ color:#f3953c; }
+  .stat.pop .val .n{ color:var(--gold); } .stat.brood .val .n{ color:#e9dcc4; }
+  .stat.keeper .val .n{ color:var(--gold); text-shadow:0 0 10px rgba(255,217,122,.45); }
+  .arr{ font-size:9px; line-height:1; transition:color .3s; }
+  .arr.up{ color:var(--good); } .arr.down{ color:var(--bad); } .arr.flat{ color:rgba(194,169,126,0.4); }
+  .stat .sub{ font-size:8px; color:var(--dim); font-family:'JetBrains Mono',monospace; }
+  .stat.honey.warn{ animation:pulseW 1s infinite; } .stat.honey.warn .val .n{ color:var(--bad); }
+  .stat.pop.warn2{ animation:pulseS 1.1s infinite; } .stat.pop.warn2 .sub{ color:var(--bad); }
+  @keyframes pulseW{ 0%,100%{background:rgba(255,255,255,0.03);} 50%{background:rgba(255,90,60,0.16);} }
+  @keyframes pulseS{ 0%,100%{background:rgba(255,255,255,0.03);} 50%{background:rgba(255,180,60,0.14);} }
+  .val .n{ display:inline-block; }
+  .val .n.popN{ animation:nPop .35s cubic-bezier(.2,1.6,.5,1); }
+  @keyframes nPop{ 0%{ transform:scale(1.45); } 100%{ transform:scale(1); } }
+
+  /* ---------- almanac (year · season · goal · readiness) ---------- */
+  #clockWrap{ padding:9px 12px 10px; min-width:210px; }
+  #yearLine{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+  #yearLab{ font-weight:700; font-size:14px; letter-spacing:.03em; }
+  #seasonLab{ font-size:11px; color:var(--dim); font-family:'JetBrains Mono',monospace; }
+  #tl{ margin-top:6px; height:9px; border-radius:5px; position:relative;
+    background:linear-gradient(90deg,#5b9e54 0%,#7cbe57 22%,#e7c14a 44%,#dd8b3a 60%,#c06a3a 70%,#8fa8c2 80%,#7d93b0 92%,#5b9e54 100%); }
+  #tlHarv{ position:absolute; top:-2px; height:13px; background:rgba(255,217,122,0.22); border:1px solid rgba(255,217,122,0.35); border-radius:3px; }
+  :root{ --stage:1180px; --pollen:#ef8c2c; }
+  /* every choice carries its own numbers, the way a strategy game shows tile yields */
+  .tb.y{ flex-direction:column; align-items:flex-start; gap:1px; padding-top:5px; padding-bottom:5px; }
+  .tb .yld{ font-family:'JetBrains Mono',monospace; font-size:8.5px; font-style:normal; letter-spacing:0; line-height:1.2; opacity:.95; white-space:nowrap; }
+  .tb .yld b{ color:var(--honey); font-weight:700; } .tb .yld em{ color:var(--pollen); font-style:normal; font-weight:700; }
+  .tb .yld i{ color:var(--dim); font-style:normal; font-weight:400; }
+  .gl u{ text-decoration:none; font-family:'JetBrains Mono',monospace; font-size:8px; opacity:.75; letter-spacing:0; }
+  .tb .yld s{ color:var(--good); text-decoration:none; font-weight:700; }
+  .tb:not(.on) .yld{ opacity:.62; }
+  /* full-screen lessons: show the thing, then say when to pick it and why */
+  .gcard{ max-width:440px; }
+  #guideRow{ display:flex; flex-direction:column; gap:7px; margin:18px 0; }
+  .gtopic{ display:flex; align-items:center; gap:11px; padding:11px 13px; border-radius:12px; cursor:pointer; text-align:left;
+    background:rgba(255,255,255,0.035); border:1px solid var(--border); transition:all .15s; -webkit-tap-highlight-color:transparent; }
+  .gtopic:hover{ border-color:rgba(255,217,122,0.45); background:rgba(255,217,122,0.07); transform:translateX(2px); }
+  .gtopic b{ font:700 12px 'Bricolage Grotesque',sans-serif; color:var(--gold); }
+  .gtopic span{ font:500 10.5px 'JetBrains Mono',monospace; color:var(--dim); }
+  .gtopic .gi2{ font-size:17px; flex:none; width:22px; text-align:center; }
+  .lcard{ max-width:520px; text-align:left; }
+  #lessonArt{ width:100%; max-width:340px; height:auto; display:block; margin:0 auto 16px; }
+  .lcard h1{ text-align:center; font-size:24px; }
+  .lcard .sub{ text-align:center; }
+  .lcard p{ font-size:12.5px; line-height:1.65; color:var(--text); margin:14px 0 0; }
+  .strat{ margin:14px 0 18px; padding:12px 14px; border-radius:12px; background:rgba(255,217,122,0.07);
+    border:1px solid rgba(255,217,122,0.2); font-size:12px; line-height:1.7; color:var(--dim); }
+  .strat b{ color:var(--gold); font-weight:700; } .strat .k{ display:block; margin-top:5px; }
+  .strat .k:first-child{ margin-top:0; }
+  #lesBtn{ display:block; width:100%; padding:13px; font-size:13px; }
+  @media(max-width:620px){ .lcard p{ font-size:12px; } .strat{ font-size:11.5px; } }
+  #inspect{ position:fixed; z-index:5; pointer-events:none; padding:8px 10px; max-width:216px; opacity:0; transition:opacity .12s; }
+  #inspect.show{ opacity:1; }
+  #inspect .it{ font:700 11px 'Bricolage Grotesque',sans-serif; color:var(--text); letter-spacing:.01em; }
+  #inspect .is{ font:500 9.5px 'JetBrains Mono',monospace; color:var(--dim); margin-top:2px; }
+  #inspect .ia{ margin-top:6px; padding-top:6px; border-top:1px solid var(--border); font:600 10px 'Bricolage Grotesque',sans-serif; color:var(--gold); }
+  #inspect .ia.no{ color:var(--dim); } #inspect .ia.bad{ color:var(--bad); }
+  #inspect .id2{ font:500 9.5px 'JetBrains Mono',monospace; color:var(--dim); margin-top:2px; }
+  .hexrow{ display:flex; align-items:baseline; gap:6px; font-size:11px; color:var(--dim); padding:2px 0; }
+  .hexrow span{ flex:1; } .hexrow b{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text); font-weight:700; }
+  .hexrow b.good{ color:var(--good); } .hexrow i{ font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--gold); font-style:normal; opacity:.85; }
+  @media (pointer:coarse){ #inspect{ display:none; } }
+  @media (min-width:1500px){ :root{ --stage:1280px; } }
+  #tlBloom{ position:absolute; top:-2px; height:13px; background:rgba(140,200,110,0.13); border-radius:3px; }
+  #tlFrost{ position:absolute; top:-3px; width:2px; height:15px; background:var(--frost); box-shadow:0 0 5px var(--frost); border-radius:1px; }
+  #tlNow{ position:absolute; top:-2px; width:3px; height:13px; background:#fff; border-radius:2px; box-shadow:0 0 6px #fff; }
+  #wx{ display:flex; justify-content:space-between; margin-top:6px; font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--dim); }
+  #wx b{ color:var(--text); font-weight:500; }
+  /* season goal — the quest line */
+  #goal{ margin-top:8px; display:flex; gap:8px; align-items:center; padding:6px 8px; border-radius:10px; background:rgba(255,255,255,0.035); transition:background .4s; }
+  #goal.flash{ animation:goalFlash .9s ease; }
+  @keyframes goalFlash{ 0%{ background:rgba(255,217,122,0.45); } 100%{ background:rgba(255,255,255,0.035); } }
+  #goal.done{ background:rgba(167,224,124,0.10); }
+  #goalIc{ font-size:14px; line-height:1; }
+  #goalBody{ flex:1; min-width:0; }
+  #goalTx{ font-size:10px; line-height:1.35; color:var(--text); }
+  #goal.done #goalTx{ color:var(--good); }
+  #goalBar{ margin-top:4px; height:5px; border-radius:3px; background:rgba(255,255,255,0.08); overflow:hidden; }
+  #goalFill{ display:block; height:100%; width:0%; border-radius:3px; background:linear-gradient(90deg,var(--honey),var(--gold)); transition:width .5s; }
+  #goal.done #goalFill{ background:var(--good); }
+  #goalN{ font-family:'JetBrains Mono',monospace; font-size:9.5px; color:var(--dim); }
+  /* winter readiness */
+  #wr{ margin-top:8px; }
+  #wrTop{ display:flex; justify-content:space-between; font-size:8px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); margin-bottom:3px; font-weight:600; }
+  #wrBar{ height:7px; border-radius:4px; background:rgba(255,255,255,0.08); overflow:hidden; }
+  #wrFill{ height:100%; width:0%; border-radius:4px; background:var(--good); transition:width .45s, background .45s; }
+  #wrLab{ font-size:9px; margin-top:3px; font-family:'JetBrains Mono',monospace; color:var(--text); }
+  #wrLab.good{ color:var(--good); } #wrLab.warn{ color:var(--gold); } #wrLab.bad{ color:var(--bad); }
+
+  /* ---------- advisor ---------- */
+  #advisor{ padding:10px 13px; max-width:302px; display:flex; gap:9px; align-items:flex-start; }
+  #advisor .ic{ width:46px; height:46px; flex:none; margin-top:-2px; }
+  #advisor .tx{ font-size:11.5px; line-height:1.5; color:var(--text); }
+  #advisor .tx b{ color:var(--gold); font-weight:600; }
+  #advisor .tx em{ color:var(--cyan); font-style:normal; }
+  #advisor.warn{ border-color:rgba(255,112,82,0.5); } #advisor.warn .ic{ filter:drop-shadow(0 0 6px rgba(255,112,82,.6)); }
+  #advisor.raid{ border-color:rgba(255,112,82,0.85); animation:raidPulse .8s infinite; }
+  @keyframes raidPulse{ 0%,100%{ box-shadow:var(--shadow); } 50%{ box-shadow:0 0 22px rgba(255,90,60,0.55); } }
+  #feedBtn{ margin-top:8px; font-family:'Bricolage Grotesque'; font-weight:700; font-size:11.5px; padding:7px 12px; border-radius:9px; border:none; cursor:pointer;
+    color:#241503; background:linear-gradient(180deg,var(--gold),var(--amber2)); animation:btnPulse 1.6s infinite; }
+
+  /* ---------- controls ---------- */
+  #ctl{ padding:7px; display:flex; gap:7px; align-items:center; flex-wrap:wrap; justify-content:center; }
+  .grp{ display:flex; gap:4px; align-items:center; padding:4px; border-radius:12px; background:rgba(255,255,255,0.035); }
+  .grp .gl{ font-size:7.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); padding:0 3px 0 5px; align-self:center; font-weight:600; }
+  .grp.dim{ opacity:.4; pointer-events:none; }
+  .tb{ font-family:'Bricolage Grotesque'; font-weight:600; font-size:11.5px; padding:7px 10px; border-radius:9px; cursor:pointer; color:var(--dim); min-height:36px;
+    display:flex; align-items:center; gap:4px; border:1px solid transparent; background:rgba(255,255,255,0.03); transition:transform .09s, background .14s, color .14s; white-space:nowrap; user-select:none; }
+  .tb:hover{ color:var(--text); }
+  .tb:active{ transform:scale(.94); }
+  .tb.on{ color:#241503; background:linear-gradient(180deg,var(--gold),var(--honey)); box-shadow:0 1px 0 rgba(255,255,255,.4) inset; }
+  .tb.on.brood{ background:linear-gradient(180deg,#b9dcff,#6aa2e2); color:#0a1a2c; }
+  .tb.on.honeyb{ background:linear-gradient(180deg,var(--honey),#cf8a2e); color:#241503; }
+  .tb.on.expand{ background:linear-gradient(180deg,#c4f2ad,#77b25c); color:#12240a; }
+  .tb.on.cyan{ background:linear-gradient(180deg,var(--cyan),#2bb9ad); color:#06120f; }
+  .tb.gold{ color:var(--gold); background:rgba(255,217,122,0.08); border-color:rgba(255,217,122,0.25); }
+  .tb.gold:hover{ background:rgba(255,217,122,0.16); color:var(--gold); }
+  .tb.gold.off{ opacity:.42; }
+  #fastW{ font-size:10px; color:var(--frost); padding:0 6px; letter-spacing:.05em; font-family:'JetBrains Mono',monospace; align-self:center; }
+
+  /* ---------- toast ---------- */
+  #toast{ position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:8; padding:9px 17px; border-radius:12px;
+    font-size:12.5px; opacity:0; transition:opacity .35s; pointer-events:none; text-align:center; max-width:84vw; line-height:1.45; }
+  #toast.show{ opacity:1; }
+
+  /* ---------- season interstitial ---------- */
+  #sb{ position:fixed; inset:0; z-index:6; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; opacity:0; }
+  #sb.show{ animation:sbIn 2.3s cubic-bezier(.3,.6,.3,1) both; }
+  @keyframes sbIn{ 0%{ opacity:0; transform:scale(1.03); } 14%{ opacity:1; transform:scale(1); } 78%{ opacity:1; } 100%{ opacity:0; } }
+  #sbT{ font-weight:800; font-size:clamp(40px,9vw,86px); letter-spacing:.1em; line-height:1;
+    background:linear-gradient(95deg,var(--gold),#fff 55%,var(--honey)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 4px 22px rgba(0,0,0,.55)); }
+  #sb.s3 #sbT{ background:linear-gradient(95deg,var(--frost),#fff 55%,#9fb8d8); -webkit-background-clip:text; background-clip:text; }
+  #sb.s0 #sbT{ background:linear-gradient(95deg,#b6f0a0,#fff 55%,var(--gold)); -webkit-background-clip:text; background-clip:text; }
+  #sbS{ margin-top:8px; font-size:12px; letter-spacing:.34em; text-transform:uppercase; color:var(--text); opacity:.85;
+    text-shadow:0 2px 12px rgba(0,0,0,.6); font-weight:500; }
+
+  /* ---------- view wipe ---------- */
+  #wipe{ position:fixed; inset:0; z-index:4; pointer-events:none; opacity:0; transition:opacity .15s;
+    background:radial-gradient(circle at 50% 55%, rgba(255,190,80,0.5), rgba(13,9,5,0.92) 72%); }
+
+  /* ---------- report ---------- */
+  #report{ position:fixed; top:78px; right:max(13px, calc((100% - var(--stage))/2 + 13px)); width:254px; max-height:calc(100vh - 176px); overflow:auto; padding:12px 14px; z-index:6; }
+  #reportX{ cursor:pointer; color:var(--dim); font-size:15px; padding:0 4px; } #reportX:hover{ color:var(--text); }
+  .rHead{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .rHead span:first-child{ font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--gold); font-weight:700; }
+  #report h3{ font-size:9px; letter-spacing:.18em; text-transform:uppercase; color:var(--dim); margin:0 0 7px; font-weight:600; }
+  #report .sec{ margin-bottom:15px; } #report .sec:last-child{ margin-bottom:2px; }
+  .ledger{ font-family:'JetBrains Mono',monospace; font-size:11px; }
+  .ledger .row{ display:flex; justify-content:space-between; padding:2px 0; color:var(--dim); }
+  .ledger .row b{ font-weight:500; color:var(--text); }
+  .ledger .row.pos b{ color:var(--good); } .ledger .row.neg b{ color:var(--bad); }
+  .ledger .row.net{ border-top:1px solid var(--border); margin-top:4px; padding-top:5px; }
+  .ledger .row.net span{ color:var(--text); } .ledger .row.net b{ font-size:13px; }
+  .comp{ height:13px; border-radius:5px; overflow:hidden; display:flex; margin-bottom:6px; background:rgba(255,255,255,0.05); }
+  .comp i{ display:block; height:100%; transition:width .4s; }
+  .compLeg{ font-size:9px; color:var(--dim); display:flex; flex-wrap:wrap; gap:3px 9px; }
+  .compLeg span{ display:inline-flex; align-items:center; gap:4px; } .compLeg b{ color:var(--text); }
+  .dot{ width:8px; height:8px; border-radius:2px; display:inline-block; }
+  #sparkHoney{ width:100%; height:62px; display:block; border-radius:6px; background:rgba(255,255,255,0.03); }
+  #report .cap{ font-size:9px; color:var(--dim); line-height:1.5; margin-top:6px; }
+  #reportBtn.on{ color:#0a1a2c; background:linear-gradient(180deg,#cfe6ff,#79b1e6); }
+
+  /* ---------- coach ---------- */
+  #coach{ position:fixed; left:50%; bottom:96px; transform:translateX(-50%); z-index:7; max-width:334px; width:calc(100% - 32px);
+    padding:13px 16px; display:flex; gap:11px; align-items:flex-start; opacity:0; transition:opacity .4s, transform .4s; pointer-events:none; }
+  #coach.show{ opacity:1; pointer-events:auto; }
+  #coach .ci{ font-size:21px; line-height:1.1; }
+  #coach .cb{ flex:1; }
+  #coach .ct{ font-size:13px; line-height:1.55; color:var(--text); }
+  #coach .ct b{ color:var(--gold); font-weight:600; } #coach .ct em{ color:var(--cyan); font-style:normal; }
+  #coach .cgo{ margin-top:9px; display:flex; gap:8px; align-items:center; }
+  #coach .cbtn{ font-family:'Bricolage Grotesque'; font-weight:700; font-size:12px; padding:7px 14px; border-radius:9px; cursor:pointer; border:none;
+    color:#241503; background:linear-gradient(180deg,var(--gold),var(--honey)); transition:transform .09s; }
+  #coach .cbtn:active{ transform:scale(.95); }
+  #coach .cskip{ font-size:10px; color:var(--dim); cursor:pointer; text-decoration:underline; }
+  #coach .cprog{ font-size:9px; letter-spacing:.18em; color:var(--dim); margin-bottom:5px; text-transform:uppercase; font-weight:600; }
+
+  .preveal{ transition:opacity .5s, transform .5s; }
+  .preveal.hidden{ opacity:0; transform:translateY(-6px); pointer-events:none; }
+  .spotlight{ animation:spot 1.3s ease-in-out infinite; position:relative; z-index:5; }
+  @keyframes spot{ 0%,100%{ box-shadow:0 0 0 0 rgba(255,217,122,0); } 50%{ box-shadow:0 0 0 4px rgba(255,217,122,0.55); } }
+  .tapHere{ animation:spot 1.3s ease-in-out infinite, btnPulse 1.3s ease-in-out infinite; }
+  @keyframes btnPulse{ 0%,100%{ filter:brightness(1); } 50%{ filter:brightness(1.25); } }
+
+  /* ---------- overlays ---------- */
+  .ov{ position:fixed; inset:0; z-index:9; display:flex; align-items:center; justify-content:center;
+    background:rgba(9,6,3,0.74); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); padding:16px; }
+  .ov.hide{ display:none; }
+  /* cinematic intro */
+  #story{ background:transparent; backdrop-filter:none; -webkit-backdrop-filter:none; align-items:stretch; justify-content:stretch; padding:0; flex-direction:column; cursor:pointer; }
+  #storyTop{ display:flex; justify-content:flex-end; padding:16px 18px; }
+  #storySkip{ background:rgba(0,0,0,0.35); color:rgba(255,255,255,0.72); border:1px solid rgba(255,255,255,0.16); border-radius:20px;
+    font:600 11px 'Bricolage Grotesque',sans-serif; letter-spacing:.04em; padding:7px 14px; cursor:pointer; transition:all .2s; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); }
+  #storySkip:hover{ background:rgba(0,0,0,0.55); color:#fff; }
+  #storyNarr{ margin-top:auto; padding:64px 26px 40px; background:linear-gradient(0deg, rgba(6,5,10,0.92) 0%, rgba(6,5,10,0.72) 45%, rgba(6,5,10,0) 100%); }
+  #storyInner{ max-width:640px; margin:0 auto; }
+  #storyWho{ font:700 10px 'JetBrains Mono',monospace; letter-spacing:.24em; text-transform:uppercase; color:var(--gold); margin-bottom:12px; opacity:0; transform:translateY(6px); transition:opacity .5s, transform .5s; }
+  #storyLine{ font:500 22px/1.5 'Bricolage Grotesque',sans-serif; color:#fdf6ea; letter-spacing:.005em; min-height:3.2em; text-shadow:0 2px 20px rgba(0,0,0,0.6); opacity:0; transform:translateY(10px); transition:opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1); }
+  #storyLine b{ color:var(--gold); font-weight:600; } #storyLine em{ color:var(--cyan); font-style:normal; }
+  #story.show #storyWho, #story.show #storyLine{ opacity:1; transform:none; }
+  #storyFoot{ display:flex; align-items:center; justify-content:space-between; margin-top:22px; }
+  #storyDots{ display:flex; gap:6px; }
+  #storyDots i{ width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,0.22); transition:background .3s, width .3s; }
+  #storyDots i.on{ background:var(--gold); width:16px; border-radius:3px; }
+  #storyNext{ font-size:13px; padding:12px 22px; min-height:46px; border-radius:999px; flex:none; }
+  /* ---- responsive: phone · tablet · desktop ---- */
+  #storyLine{ font-size:clamp(16px, 1.15vw + 13px, 24px); }
+  #storyInner{ max-width:min(640px, 92vw); }
+  @supports(padding:max(0px)){
+    #hud-top{ padding-top:max(13px, env(safe-area-inset-top)); padding-left:max(13px, env(safe-area-inset-left)); padding-right:max(13px, env(safe-area-inset-right)); }
+    #hud-bottom{ padding-bottom:max(12px, env(safe-area-inset-bottom)); padding-left:max(12px, env(safe-area-inset-left)); padding-right:max(12px, env(safe-area-inset-right)); }
+    #storyTop{ padding-top:max(16px, calc(env(safe-area-inset-top) + 6px)); padding-right:max(18px, env(safe-area-inset-right)); }
+    #storyNarr{ padding-bottom:max(40px, calc(env(safe-area-inset-bottom) + 26px)); }
+    #coach{ bottom:max(96px, calc(env(safe-area-inset-bottom) + 92px)); }
+  }
+  /* phones */
+  @media (max-width:620px){
+    #storyNarr{ padding:44px 18px 30px; }
+    #storyLine{ min-height:4.2em; line-height:1.45; }
+    #storyWho{ margin-bottom:8px; font-size:9px; }
+    #storyFoot{ margin-top:16px; }
+    .card{ padding:22px 18px; border-radius:18px; }
+    .card h1{ font-size:23px; }
+    .card p{ font-size:12px; }
+    #sndInvite{ font-size:11.5px; padding:9px 13px; }
+    #giftRow{ flex-direction:column; gap:6px; }
+    .gift{ display:flex; align-items:center; gap:10px; text-align:left; padding:10px 12px; }
+    .gift .gi{ font-size:20px; } .gift .gn{ margin:0; } .gift .gc{ margin:0 0 0 auto; }
+  }
+  /* short/landscape phones: let the picture breathe */
+  @media (max-height:520px){
+    #storyNarr{ padding:26px 18px 16px; background:linear-gradient(0deg, rgba(6,5,10,0.94) 0%, rgba(6,5,10,0.6) 60%, rgba(6,5,10,0) 100%); }
+    #storyLine{ min-height:0; font-size:15px; } #storyFoot{ margin-top:10px; }
+    #storyNext{ min-height:40px; padding:9px 18px; }
+  }
+  /* tablets: roomier reading */
+  @media (min-width:760px) and (max-width:1180px){
+    #storyLine{ font-size:22px; } #storyNarr{ padding:70px 34px 46px; }
+  }
+  /* touch devices: every control clears the 44px tap target */
+  @media (pointer:coarse){
+    .tab, .tb{ min-height:44px; padding-top:10px; padding-bottom:10px; }
+    .cbtn, .btn{ min-height:44px; }
+    #sndInvite{ min-height:44px; }
+    #storySkip{ min-height:40px; padding:9px 16px; }
+  }
+  #sndInvite{ display:inline-flex; align-items:center; gap:9px; margin:2px auto 16px; padding:10px 15px; border-radius:999px; cursor:pointer;
+    background:rgba(255,217,122,0.08); border:1px solid rgba(255,217,122,0.28); transition:background .2s, border-color .2s;
+    font:600 12px 'Bricolage Grotesque',sans-serif; color:var(--text); user-select:none; -webkit-tap-highlight-color:transparent; }
+  #sndInvite:hover{ background:rgba(255,217,122,0.14); border-color:rgba(255,217,122,0.5); }
+  #sndInvite .box{ width:19px; height:19px; border-radius:6px; border:1.5px solid rgba(255,217,122,0.55); display:grid; place-items:center;
+    font-size:12px; color:#241503; background:transparent; transition:background .18s; flex:none; }
+  #sndInvite.on .box{ background:var(--gold); border-color:var(--gold); }
+  #sndInvite .box i{ opacity:0; font-style:normal; transition:opacity .18s; } #sndInvite.on .box i{ opacity:1; }
+  #sndInvite .sub2{ color:var(--dim); font-weight:500; }
+  .beenote{ margin-top:14px; padding:11px 13px; border-radius:12px; background:rgba(255,217,122,0.07); border:1px solid rgba(255,217,122,0.16);
+    font-size:11.5px; line-height:1.55; color:var(--dim); text-align:left; }
+  .beenote b{ color:var(--gold); font-weight:600; } .beenote .lbl{ display:block; font:700 8.5px 'JetBrains Mono',monospace; letter-spacing:.2em; text-transform:uppercase; color:var(--gold); margin-bottom:4px; opacity:.8; }
+  .card{ text-align:center; padding:26px 30px; max-width:470px; max-height:92vh; overflow:auto; }
+  .card h1{ font-weight:800; font-size:27px; letter-spacing:.08em; margin-bottom:3px;
+    background:linear-gradient(95deg,var(--gold),#fff 55%,var(--honey)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  .card h1.bad{ background:linear-gradient(95deg,#ff9a7a,#ffd0c4); -webkit-background-clip:text; background-clip:text; }
+  .card h1.good{ background:linear-gradient(95deg,#b6f0a0,#eaffe0 55%,#7fe3d6); -webkit-background-clip:text; background-clip:text; }
+  .card .sub{ font-size:10px; letter-spacing:.28em; text-transform:uppercase; color:var(--dim); margin-bottom:14px; font-weight:600; }
+  .card p{ font-size:12.5px; color:var(--text); line-height:1.65; margin-bottom:11px; text-align:left; }
+  .card p b{ color:var(--gold); font-weight:600; } .card p em{ color:var(--cyan); font-style:normal; }
+  .legend{ display:flex; flex-wrap:wrap; gap:5px 13px; justify-content:center; font-size:10.5px; color:var(--dim); margin-bottom:15px; }
+  .legend span{ display:inline-flex; align-items:center; gap:5px; }
+  .sw{ width:11px; height:12px; clip-path:var(--hex); display:inline-block; }
+  .card .btn{ font-size:15px; padding:12px 26px; }
+  .card .btn.pulse{ animation:glowPulse 2.2s infinite; }
+  @keyframes glowPulse{ 0%,100%{ box-shadow:0 8px 22px rgba(255,160,40,.28);} 50%{ box-shadow:0 8px 34px rgba(255,200,90,.6);} }
+  .card .btn.ghost{ margin-left:8px; font-size:13px; padding:11px 18px; }
+  .grade{ font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--dim); line-height:1.9; margin-bottom:12px; }
+  .grade b{ color:var(--text); } .grade .G{ font-size:52px; font-weight:700; display:block; margin:4px 0; animation:pop .6s cubic-bezier(.2,1.4,.5,1); font-family:'Bricolage Grotesque'; }
+  @keyframes pop{ from{ transform:scale(.3); opacity:0; } to{ transform:scale(1); opacity:1; } }
+  .G.S{ color:#ffd76b; text-shadow:0 0 22px rgba(255,215,107,.65);} .G.A{ color:#a7e07c; } .G.B{ color:#7fe3d6; } .G.C{ color:#cdb88f; } .G.D{ color:#ff9a7a; }
+  .trophies{ display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-bottom:14px; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--dim); }
+  .trophies span{ padding:2px 7px; border-radius:7px; background:rgba(255,255,255,0.05); }
+
+  /* queen's gifts draft */
+  #giftHead{ display:flex; justify-content:space-between; align-items:baseline; margin:4px 0 8px; }
+  #giftHead span:first-child{ font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--gold); font-weight:700; }
+  #rjBal{ font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--gold); }
+  #giftRow{ display:flex; gap:8px; margin-bottom:16px; }
+  .gift{ flex:1; padding:11px 9px 10px; border-radius:13px; border:1px solid var(--border); background:rgba(255,255,255,0.035);
+    cursor:pointer; text-align:center; transition:transform .12s, border-color .2s, background .2s; user-select:none; }
+  .gift:hover{ border-color:rgba(255,217,122,0.5); background:rgba(255,217,122,0.07); transform:translateY(-2px); }
+  .gift:active{ transform:scale(.96); }
+  .gift .gi{ font-size:21px; }
+  .gift .gn{ font-size:11px; font-weight:700; margin:5px 0 3px; color:var(--gold); letter-spacing:.02em; }
+  .gift .gt{ font-size:9.5px; line-height:1.45; color:var(--dim); }
+  .gift .gc{ margin-top:7px; font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--text); }
+  .gift.poor{ opacity:.45; cursor:default; } .gift.poor:hover{ transform:none; border-color:var(--border); background:rgba(255,255,255,0.035); }
+  .gift.owned{ border-color:rgba(167,224,124,0.6); background:rgba(167,224,124,0.08); cursor:default; }
+  .gift.owned:hover{ transform:none; }
+  .gift.owned .gc{ color:var(--good); }
+
+  @media (max-width:760px){
+    #hud-top{ flex-direction:column; align-items:stretch; gap:7px; padding:8px; }
+    #hud-bottom{ flex-direction:column; align-items:stretch; gap:7px; padding:8px; }
+    #tabs{ align-self:flex-start; }
+    #res{ width:100%; } #res .stat{ flex:1; min-width:0; padding:5px 4px; } .stat .sub{ display:none; }
+    #clockWrap{ width:100%; min-width:0; } #wx{ display:none; }
+    .gl{ display:none; }
+    #advisor{ max-width:none; }
+    #ctl{ width:100%; }
+    #report{ top:auto; left:6vw; right:6vw; bottom:50%; transform:translateY(50%); width:auto; max-height:78vh; }
+    #giftRow{ flex-direction:column; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{ animation-duration:.001s !important; transition-duration:.05s !important; }
+  }
+</style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+
+  <div id="hud-top">
+    <div id="tabs" class="panel">
+      <div class="tab on" id="tabHive" tabindex="0">⬡ Hive</div>
+      <div class="tab meadow" id="tabMeadow" tabindex="0">☀ Meadow</div>
+      <div class="tab preveal" id="reportBtn" tabindex="0" title="Hive report — trends, honey ledger & winter forecast">📊</div>
+      <div class="tab" id="helpBtn" tabindex="0" title="What does what — read any lesson again">?</div>
+      <div class="tab" id="sndBtn" tabindex="0" title="Hive sound on/off">🔇</div>
+    </div>
+
+    <div id="res" class="panel preveal">
+      <div class="stat honey" id="stHoney"><div class="lab">Honey</div><div class="val"><span class="n" id="vHoney">0</span><span class="arr flat" id="aHoney">▬</span></div><div class="sub" id="sHoney">need —</div></div>
+      <div class="stat pollen"><div class="lab">Pollen</div><div class="val"><span class="n" id="vPollen">0</span><span class="arr flat" id="aPollen">▬</span></div><div class="sub">protein</div></div>
+      <div class="stat pop" id="stPop"><div class="lab">Bees</div><div class="val"><span class="n" id="vPop">0</span><span class="arr flat" id="aPop">▬</span></div><div class="sub" id="sPop">0 out</div></div>
+      <div class="stat brood"><div class="lab">Brood</div><div class="val"><span class="n" id="vBrood">0</span><span class="arr flat" id="aBrood">▬</span></div><div class="sub" id="sBrood">e·l·p</div></div>
+      <div class="stat keeper"><div class="lab">Keeper</div><div class="val"><span class="n" id="vRJ">✧0</span></div><div class="sub" id="sJars">0 jars</div></div>
+    </div>
+
+    <div id="clockWrap" class="panel preveal">
+      <div id="yearLine"><span id="yearLab">Year 1</span><span id="seasonLab">Spring · day 1</span></div>
+      <div id="tl"><div id="tlBloom"></div><div id="tlHarv"></div><div id="tlFrost"></div><div id="tlNow" style="left:0%"></div></div>
+      <div id="wx"><span>flow <b id="wxFlow">—</b></span><span><b id="wxTemp">—</b></span></div>
+      <div id="goal"><span id="goalIc">🧭</span><div id="goalBody"><div id="goalTx">Found the colony</div><div id="goalBar"><i id="goalFill"></i></div></div><span id="goalN"></span></div>
+      <div id="wr"><div id="wrTop"><span>Winter pantry</span><span id="wrPct"></span></div><div id="wrBar"><div id="wrFill"></div></div><div id="wrLab">—</div></div>
+    </div>
+  </div>
+
+  <div id="hud-bottom">
+    <div id="advisor" class="panel preveal"><canvas class="ic" id="hazelC" width="46" height="46" aria-label="Hazel"></canvas><div class="tx"><span id="advTx">Welcome to your colony.</span><button id="feedBtn" class="hide">Feed syrup — once</button></div></div>
+    <div id="ctl" class="panel">
+      <div class="grp preveal" id="forageGrp">
+        <span class="gl">Forage <u>🍯·🌼 wk</u></span>
+        <div class="tb cyan y" data-f="nectar" tabindex="0" title="All effort to nectar → honey, the winter fuel. Numbers are cells of honey · pollen per week."><span>Nectar</span><i class="yld" id="yNec">—</i></div>
+        <div class="tb cyan y on" data-f="balanced" tabindex="0" title="Split the foragers between nectar and pollen. Numbers are cells of honey · pollen per week."><span>Balanced</span><i class="yld" id="yBal">—</i></div>
+        <div class="tb cyan y" data-f="pollen" tabindex="0" title="All effort to pollen → the protein nurses feed the young. Numbers are cells of honey · pollen per week."><span>Pollen</span><i class="yld" id="yPol">—</i></div>
+      </div>
+      <div class="grp" id="brushGrp">
+        <span class="gl">Comb</span>
+        <div class="tb brood y on" data-brush="brood" tabindex="0" title="Paint where the queen lays"><span>Brood</span><i class="yld" id="yBrood">—</i></div>
+        <div class="tb honeyb y" data-brush="honey" tabindex="0" title="Paint storage cells"><span>Honey</span><i class="yld" id="yHon">—</i></div>
+        <div class="tb expand y" data-brush="expand" tabindex="0" title="Flag fresh wax to build"><span>Expand</span><i class="yld" id="yExp">—</i></div>
+      </div>
+      <div class="grp preveal hidden" id="apiaryGrp">
+        <span class="gl">Apiary</span>
+        <div class="tb gold" id="harvestBtn" tabindex="0" title="Seal a jar from surplus honey — autumn only">🫙 Harvest</div>
+      </div>
+      <div class="grp" id="timeGrp">
+        <span class="gl">Time</span>
+        <div class="tb" data-sp="0" tabindex="0" title="Pause &amp; plan (space)">❚❚</div>
+        <div class="tb on" data-sp="1" tabindex="0">▶</div>
+        <div class="tb" data-sp="3" tabindex="0" title="Fast">▶▶</div>
+        <span id="fastW" class="hide">❄ fast</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ov hide" id="guide">
+    <div class="card gcard">
+      <h1>THE KEEPER'S NOTES</h1><div class="sub">nothing here is a secret — read any of it, any time</div>
+      <div id="guideRow"></div>
+      <button class="btn ghost" id="guideClose">Back to the hive</button>
+    </div>
+  </div>
+  <div class="ov hide" id="lesson">
+    <div class="card lcard">
+      <canvas id="lessonArt" width="680" height="264"></canvas>
+      <h1 id="lesT">—</h1><div class="sub" id="lesS">—</div>
+      <p id="lesL"></p><div class="strat" id="lesW"></div>
+      <button class="btn pulse" id="lesBtn">Got it</button>
+    </div>
+  </div>
+  <div id="inspect" class="panel"></div>
+  <div id="toast" class="panel"></div>
+  <div id="sb"><div id="sbT"></div><div id="sbS"></div></div>
+  <div id="wipe"></div>
+
+  <div id="coach" class="panel">
+    <div class="ci" id="coachIc">🐝</div>
+    <div class="cb">
+      <div class="cprog" id="coachProg"></div>
+      <div class="ct" id="coachTx"></div>
+      <div class="cgo"><button class="cbtn" id="coachBtn">Got it</button><span class="cskip" id="coachSkip">skip intro</span></div>
+    </div>
+  </div>
+
+  <div id="report" class="panel hide">
+    <div class="rHead"><span>Hive report</span><span id="reportX">✕</span></div>
+    <div class="sec">
+      <h3>Honey ledger · per day</h3>
+      <div class="ledger">
+        <div class="row pos" id="rIncome"><span>nectar → honey</span><b>+0 /day</b></div>
+        <div class="row neg" id="rEaten"><span>bees eating</span><b>−0 /day</b></div>
+        <div class="row neg" id="rBrood"><span>feeding brood</span><b>−0 /day</b></div>
+        <div class="row neg" id="rWax"><span>building comb</span><b>−0 /day</b></div>
+        <div class="row net pos" id="rNet"><span>net change</span><b>+0 /day</b></div>
+      </div>
+    </div>
+    <div class="sec">
+      <h3>Honey through the year</h3>
+      <canvas id="sparkHoney"></canvas>
+      <div class="cap" id="fcCap">—</div>
+    </div>
+    <div class="sec">
+      <h3>Colony at work</h3>
+      <div class="comp"><i id="cFor" style="background:#f5a623"></i><i id="cNur" style="background:#5a93d8"></i><i id="cBui" style="background:#6fae54"></i><i id="cHou" style="background:#8a7a5a"></i></div>
+      <div class="compLeg">
+        <span><i class="dot" style="background:#f5a623"></i>Foragers <b id="cForN">0</b></span>
+        <span><i class="dot" style="background:#5a93d8"></i>Nurses <b id="cNurN">0</b></span>
+        <span><i class="dot" style="background:#6fae54"></i>Builders <b id="cBuiN">0</b></span>
+        <span><i class="dot" style="background:#8a7a5a"></i>House <b id="cHouN">0</b></span>
+      </div>
+      <div class="cap">Bees change jobs as they age — house bees & nurses inside, the eldest forage.</div>
+      <div class="cap" id="qCap" style="color:var(--gold)">—</div>
+    </div>
+    <div class="sec">
+      <h3>Geometry of the comb</h3>
+      <div id="hexFacts">
+        <div class="hexrow"><span>cells built</span><b id="hxCells">0</b></div>
+        <div class="hexrow"><span>complete rings</span><b id="hxRings">0</b><i id="hxSeq"></i></div>
+        <div class="hexrow"><span>wax saved vs. square cells</span><b id="hxSave" class="good">—</b></div>
+        <div class="hexrow"><span>wax saved vs. triangles</span><b id="hxSaveSq">—</b></div>
+      </div>
+      <div class="cap" id="hexNote">A hexagon holds a given area with the shortest wall of any tile — the least wax. Bees have built this since long before it was a theorem.</div>
+    </div>
+  </div>
+
+  <!-- intro -->
+  <div class="ov" id="intro">
+    <div class="card panel">
+      <h1>HIVEMIND</h1>
+      <div class="sub">a beekeeping story</div>
+      <p>An old beekeeper is hanging up her veil, and her hillside of hives needs a new pair of hands. Yours.</p>
+      <div id="sndInvite" class="on" tabindex="0" role="checkbox" aria-checked="true">
+        <span class="box"><i>✓</i></span><span>🎧 Play with sound<span class="sub2"> — music &amp; the hive</span></span>
+      </div>
+      <div>
+        <button class="btn pulse" id="startNew">Found a new colony</button>
+        <button class="btn ghost hide" id="startCont">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- cinematic intro -->
+  <div class="ov hide" id="story">
+    <div id="storyTop"><button id="storySkip">Skip intro ›</button></div>
+    <div id="storyNarr"><div id="storyInner">
+      <div id="storyWho">Hazel · beekeeper</div>
+      <div id="storyLine"></div>
+      <div id="storyFoot"><div id="storyDots"></div><button id="storyNext" class="btn">Continue ›</button></div>
+    </div></div>
+  </div>
+
+  <!-- year summary + gift draft -->
+  <div class="ov hide" id="yearEnd">
+    <div class="card panel">
+      <h1 class="good" id="yeTitle">YEAR 1 SURVIVED</h1>
+      <div class="sub" id="yeSub">winter is past · spring returns</div>
+      <div class="grade" id="yeGrade"></div>
+      <div class="trophies" id="yeTrophies"></div>
+      <div id="giftHead"><span>Queen's Gifts</span><span id="rjBal">✧0</span></div>
+      <div id="giftRow"></div>
+      <button class="btn pulse" id="yeNext">Into Year 2</button>
+    </div>
+  </div>
+
+  <!-- game over -->
+  <div class="ov hide" id="over">
+    <div class="card panel">
+      <h1 id="ovTitle" class="bad">THE COLONY FAILS</h1>
+      <div class="sub" id="ovSub"></div>
+      <div class="grade" id="ovStats"></div>
+      <div class="trophies" id="ovTrophies"></div>
+      <button class="btn pulse" id="ovRestart">A new swarm arrives in spring ▶</button>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
+    const $=(id)=>document.getElementById(id);
+    const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // ===================== CONFIG (economy validated headless — do not retune casually) =====================
+    const COLS=24, ROWS=20, HC=100;
+    const EGG_D=3, LAR_D=5, PUP_D=12;
+    const LIFE_S=35, LIFE_W=135;
+    const CAP=200, RENDER_BEES=120;
+    const C_BEE=0.45, COLD_K=1.25, RIPE=0.55;
+    const NEC_PF=4.0, POL_PF=2.2;
+    const BROOD_H=0.28, BROOD_P=0.20, WAX_H=3.5, LAYMAX=6.0;
+    const FOR_FRAC=0.45, NURSE_FRAC=0.30, BUILD_FRAC=0.17;
+    const DAY_LEN=1.0, YEAR=360, WIN_TEMP=6;
+    const FN={nectar:0.85, balanced:0.6, pollen:0.25};
+    const SAVE_KEY='hivemind.save.v3';
+    const OFFLINE_SEC_PER_DAY=900, OFFLINE_CAP=3, OFFLINE_FLOOR=8*HC;
+    const HARV0=172, HARV1=262, GIFT_COST=3;
+
+    const nectarM=[0.25,0.55,0.85,1.0,0.9,0.7,0.45,0.2,0.05,0,0,0];
+    const pollenM=[0.5,0.8,0.9,0.8,0.6,0.45,0.3,0.12,0.03,0,0,0];
+    const tempM  =[10,15,20,24,26,24,18,12,6,1,-2,2];
+    const layM   =[0.4,0.8,1.0,1.0,0.85,0.6,0.35,0.12,0.0,0,0,0.1];
+    const SEASONS=[[0,'Spring'],[90,'Summer'],[180,'Autumn'],[270,'Winter']];
+    const lerpM=(a,d)=>{const x=d/30,i=Math.floor(x)%12,f=x-Math.floor(x);return a[i]*(1-f)+a[(i+1)%12]*f;};
+    const coldMult=T=>1+Math.max(0,(12-T))/12*COLD_K;
+    const seasonName=d=>{let n='Spring';for(const[s,nm]of SEASONS)if(d>=s)n=nm;return n;};
+    const seasonIdx=d=>Math.max(0,Math.min(3,Math.floor(d/90)));
+
+    // year names — the difficulty ramp, made legible
+    const YEARNAMES=[null,
+      ['The Founding','a gentle first year'],
+      ['The Long Frost','spring comes late and cold'],
+      ['Lean Blooms','the meadow gives less'],
+      ['Hornet Summer','raids come early and often'],
+      ['The Dry Wind','the flow fades fast'],
+    ];
+    function yearName(y){ return y<YEARNAMES.length?YEARNAMES[y]:['Endurance '+(y-5),'the seasons only sharpen']; }
+
+    // meadow flower patches (waggle-dance targets) — bloom at different times of year
+    const PATCHES=[ {fx:0.13,base:0.95,phase:0.2}, {fx:0.31,base:0.85,phase:1.9}, {fx:0.50,base:1.0,phase:3.3}, {fx:0.67,base:0.82,phase:4.9} ];
+    function patchQuality(i,d){ const p=PATCHES[i]; const bloom=0.5+0.5*Math.sin(2*Math.PI*d/360 + p.phase);
+      return Math.max(0, Math.min(1, p.base*bloom*Math.max(0,lerpM(nectarM,d)) )); }
+    function bestPatch(d){ let b=0,bq=-1; for(let i=0;i<PATCHES.length;i++){const q=patchQuality(i,d); if(q>bq){bq=q;b=i;}} return {i:b,q:bq}; }
+    function forageMult(){ if(activePatch==null) return 1.0; return Math.max(0.9, Math.min(1.3, 0.9+0.45*patchQuality(activePatch,day))); }
+
+    // ===================== queen's gifts (roguelite meta between years) =====================
+    const GIFTS=[
+      {id:'hardy',    ic:'🧬', name:'Hardy Stock',    tx:'Winter bees burn 12% less honey.'},
+      {id:'wax',      ic:'🕯️', name:'Wax Masters',    tx:'New comb costs 35% less honey to build.'},
+      {id:'forager',  ic:'🧭', name:'Forager Lines',  tx:'All foraging brings home 12% more.'},
+      {id:'prolific', ic:'👑', name:'Prolific Queen', tx:'The queen lays 15% faster.'},
+      {id:'guard',    ic:'🛡️', name:'Guard Wall',     tx:'Hornets fall faster and steal half as many bees.'},
+      {id:'insulated',ic:'🧣', name:'Insulated Hive', tx:'Cold bites less — milder winters and cold snaps.'},
+    ];
+    let owned={};
+    const M={
+      eat:   ()=>owned.hardy?0.88:1,
+      wax:   ()=>owned.wax?0.65:1,
+      forage:()=>owned.forager?1.12:1,
+      lay:   ()=>owned.prolific?1.15:1,
+      hHP:   ()=>owned.guard?3:5,
+      steal: ()=>owned.guard?0.5:1,
+      temp:  ()=>owned.insulated?1.5:0,
+      snap:  ()=>owned.insulated?-3:-5,
+    };
+
+    // ===================== hex grid =====================
+    const SQ3=Math.sqrt(3);
+    let size=16, ox=0, oy=0;        // size: comb scale (adapts to how much comb exists)
+    let mSize=16;                   // mSize: stable viewport scale — meadow art & the story never rescale
+    let tSize=0, tOx=0, tOy=0, fitT=0;
+    const STAGE_W=1180;
+    const N_EVEN=[[1,0],[0,-1],[-1,-1],[-1,0],[-1,1],[0,1]];
+    const N_ODD =[[1,0],[1,-1],[0,-1],[-1,0],[0,1],[1,1]];
+    const idx=(c,r)=>r*COLS+c;
+    const inGrid=(c,r)=>c>=0&&c<COLS&&r>=0&&r<ROWS;
+    function neighbors(c,r){const t=(r&1)?N_ODD:N_EVEN,o=[];for(const[dc,dr]of t){const nc=c+dc,nr=r+dr;if(inGrid(nc,nr))o.push([nc,nr]);}return o;}
+    function cellCenter(c,r){return {x:ox+size*SQ3*(c+0.5*(r&1)), y:oy+size*1.5*r};}
+    const ccx=(COLS-1)/2, ccy=(ROWS-1)/2;
+    // Offset rows -> cube coords, where hex distance is exact. The comb grows in rings:
+    // ring r holds 6r cells, and a full hexagon of radius r holds 3r(r+1)+1 — the centered
+    // hexagonal numbers 1, 7, 19, 37, 61. That shape is no accident: of every way to fence off
+    // a given area, the hexagon uses the least wall (Hales, 1999). Least wall is also least
+    // edge to lose heat through — so the cheapest nest to build is the warmest one to keep.
+    function cube(c,r){ const x=c-((r-(r&1))/2), z=r; return {x,y:-x-z,z}; }
+    function hexDist(c1,r1,c2,r2){ const a=cube(c1,r1), b=cube(c2,r2);
+      return (Math.abs(a.x-b.x)+Math.abs(a.y-b.y)+Math.abs(a.z-b.z))/2; }
+    const Hnum=(r)=>3*r*(r+1)+1;                       // cells in a full hexagon of radius r
+    const CCC=Math.round((COLS-1)/2), CCR=Math.round((ROWS-1)/2);
+    function nestRing(){ let m=0; for(const c of cells) if(c.built&&c.zone==='brood'){
+      const d=hexDist(c.c,c.r,CCC,CCR); if(d>m)m=d; } return m; }
+    function cellDist(c,r){const a=cellCenter(c,r),b=cellCenter(ccx,ccy);return Math.hypot(a.x-b.x,a.y-b.y)/(size*SQ3);}
+
+    // ===================== cells =====================
+    const cells=[];
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++) cells.push({c,r,built:false,zone:'none',flagExpand:false,brood:null,heat:0});
+    // tiny founding colony: a small knot of empty wax + a little capped brood so the first workers emerge within seconds
+    function tinyComb(){
+      for(const cell of cells){ cell.built=false; cell.zone='none'; cell.flagExpand=false; cell.brood=null;
+        const d=cellDist(cell.c,cell.r); if(d<2.1){ cell.built=true; cell.zone='none'; } }
+      const core=cells.filter(c=>c.built && cellDist(c.c,c.r)<1.2).sort((a,b)=>cellDist(a.c,a.r)-cellDist(b.c,b.r));
+      const seed=[['pupa',PUP_D-1.2],['pupa',PUP_D-2.4],['pupa',PUP_D-3.6],['larva',LAR_D*0.5],['larva',LAR_D*0.3]];
+      for(let i=0;i<seed.length && i<core.length;i++){ core[i].brood={stage:seed[i][0], t:seed[i][1]}; }
+    }
+    const broodCells=()=>cells.reduce((n,c)=>n+(c.built&&c.zone==='brood'?1:0),0);
+    const honeyCells=()=>cells.reduce((n,c)=>n+(c.built&&c.zone==='honey'?1:0),0);
+    function caps(){ const cap=honeyCells()*HC; const pol=Math.min(cap*0.6, Math.max(6*HC, cap*0.42)); return {total:cap, pollen:pol}; }
+
+    // ===================== state =====================
+    let honeyU=0, pollenU=0, nectarU=0, P=0;
+    let day=0, year=1, started=false, over=false, paused=false, speed=1, forage='balanced';
+    let peakPop=0, bornTotal=0, swarmP=0, coldSnap=0, grades=[];
+    let view='hive', activePatch=null;
+    let reportOpen=false, hoveredCell=null, waxAccum=0, waxRateEMA=0;
+    let rate={h:0,p:0,b:0,br:0}, prevv={h:0,p:0,b:0,br:0}, forecastCache=null, fcTimer=0, sparkCtx=null;
+    let onboard=false, coachStep=0, brushedBrood=0, flaggedExpand=0, paintedHoney=0, forageTouched=false;
+    let queenAge=1, hornet=null, hornetCD=18+Math.random()*22, shake=0, gt=0, hitstop=0;
+    let rj=0, jars=0, jarsThisYear=0, fedWinter=false, goals=null, lastSI=0, scoutShown=false, raidLoss=0, starveT=0, bankAtFrost=0, seenTips={};
+    const queenVigour=()=>Math.max(0.7, 1-(queenAge-1)*0.12);
+
+    // ===================== season goals (the reward cadence inside each year) =====================
+    function makeGoals(){
+      const y=year;
+      const g0=30+9*Math.min(3,y-1), g1=24+8*Math.min(4,y-1), g2=1+Math.min(2,y-1);
+      return [
+        {s:0, ic:'🐝', label:'Grow the colony to '+g0+' bees',   tgt:g0, cur:()=>Math.round(P), done:false},
+        {s:1, ic:'🍯', label:'Bank '+g1+' cells of honey',        tgt:g1, cur:()=>Math.round(honeyU/HC), done:false},
+        {s:2, ic:'🫙', label:'Seal '+g2+(g2>1?' jars':' jar')+' at harvest', tgt:g2, cur:()=>jarsThisYear, done:false},
+        {s:3, ic:'❄️', label:'Midwinter check · hold honey to day 316', tgt:0, armed:false, special:'midwinter', cur:()=>Math.round(honeyU/HC), done:false},
+      ];
+    }
+    function armMidwinter(silent){ if(!goals) return; const g=goals[3]; if(g.armed) return;
+      g.armed=true; g.tgt=Math.max(6, Math.round(winterNeed()*0.42));
+      g.label='Midwinter check · '+g.tgt+' cells on day 316';
+      if(!silent) toast('Winter goal set: reach day 316 with '+g.tgt+' cells still capped.'); }
+    function completeGoal(g){ if(g.done) return; g.done=true; rj++;
+      fanfare(); burst(W/2,topH+40,26); toast('Season goal complete — +1 ✧ royal jelly');
+      const el=$('goal'); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+      saveGame(); }
+    function checkGoals(){ if(onboard||!goals||over) return;
+      for(const g of goals){ if(g.done) continue;
+        if(g.special==='midwinter'){ if(g.armed && day>=316 && g.cur()>=g.tgt) completeGoal(g); }
+        else if(g.cur()>=g.tgt) completeGoal(g); } }
+
+    // ===================== particles (pure cosmetics) =====================
+    const parts=[];
+    function puff(x,y,col,n,sp){ if(RM) return; for(let i=0;i<n;i++){ if(parts.length>260)parts.shift();
+      const a=Math.random()*6.28, v=(0.3+Math.random())*sp;
+      parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-sp*0.35,life:0.5+Math.random()*0.6,t:0,col,s:size*(0.08+Math.random()*0.13)}); } }
+    const FESTIVE=['#ffd97a','#ffb42b','#ff9dc4','#a7e07c','#cfe2f5'];
+    function burst(x,y,n){ if(RM) return; for(let i=0;i<n;i++){ if(parts.length>260)parts.shift();
+      const a=Math.random()*6.28, v=(0.6+Math.random()*1.2)*1.8;
+      parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-1.2,life:0.7+Math.random()*0.7,t:0,col:FESTIVE[(Math.random()*FESTIVE.length)|0],s:size*(0.1+Math.random()*0.14)}); } }
+    function drawParts(dt){ for(let i=parts.length-1;i>=0;i--){ const p=parts[i]; p.t+=dt;
+      if(p.t>=p.life){ parts.splice(i,1); continue; }
+      p.x+=p.vx*size*dt*3.2; p.y+=p.vy*size*dt*3.2; p.vy+=dt*1.4;
+      const a=1-p.t/p.life; ctx.globalAlpha=a*0.9; ctx.fillStyle=p.col;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.s*(0.5+a*0.6),0,6.28); ctx.fill(); }
+      ctx.globalAlpha=1; }
+
+    // ===================== sound (WebAudio, all synthesized, opt-in) =====================
+    const AU={ctx:null,on:false,master:null,humG:null,musicG:null,musDry:null,musWet:null};
+    function sndInit(){ if(AU.ctx) return; try{
+      const c=new (window.AudioContext||window.webkitAudioContext)(); AU.ctx=c;
+      AU.master=c.createGain(); AU.master.gain.value=0; AU.master.connect(c.destination);
+      AU.humG=c.createGain(); AU.humG.gain.value=0;
+      const lp=c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=420; lp.Q.value=0.8;
+      AU.humG.connect(lp); lp.connect(AU.master);
+      [[112,'sawtooth',0.4],[115,'sawtooth',0.4],[224,'triangle',0.22],[57,'sine',0.5]].forEach(([f,ty,g0])=>{
+        const o=c.createOscillator(); o.type=ty; o.frequency.value=f;
+        const g=c.createGain(); g.gain.value=g0; o.connect(g); g.connect(AU.humG); o.start(); });
+      const lfo=c.createOscillator(); lfo.frequency.value=0.14; const lg=c.createGain(); lg.gain.value=70;
+      lfo.connect(lg); lg.connect(lp.frequency); lfo.start();
+      // music bus: dry + convolution reverb for long, floating tails
+      AU.musicG=c.createGain(); AU.musicG.gain.value=1; AU.musicG.connect(AU.master);
+      AU.musDry=c.createGain(); AU.musDry.gain.value=0.5; AU.musDry.connect(AU.musicG);
+      const cv=c.createConvolver(); cv.buffer=makeIR(c,4.2,2.4);
+      AU.musWet=c.createGain(); AU.musWet.gain.value=0.5; AU.musWet.connect(cv); cv.connect(AU.musicG);
+      musNext=0;
+    }catch(e){ AU.ctx=null; } }
+    function makeIR(c,sec,decay){ const rate=c.sampleRate, len=Math.max(1,(rate*sec)|0), b=c.createBuffer(2,len,rate);
+      for(let ch=0;ch<2;ch++){ const d=b.getChannelData(ch);
+        for(let i=0;i<len;i++){ const x=i/len; d[i]=(Math.random()*2-1)*Math.pow(1-x,decay)*(1-x*0.15); } }
+      return b; }
+    function setSound(on){ sndInit(); if(!AU.ctx) return; AU.on=on;
+      if(AU.ctx.state==='suspended'){ try{ AU.ctx.resume(); }catch(e){} }
+      try{ AU.master.gain.setTargetAtTime(on?0.5:0, AU.ctx.currentTime, 0.09); }catch(e){ AU.master.gain.value=on?0.5:0; }
+      const b=$('sndBtn'); if(b){ b.textContent=on?'🔊':'🔇'; b.classList.toggle('on',on); } }
+    function sndToggle(){ sndInit(); if(!AU.ctx) return; setSound(!AU.on); }
+
+    // ===================== music (generative ambient — sparse, floating, unhurried) =====================
+    const MOODS={
+      story:  {prog:[[45,52,57,60,64,71],[41,48,53,57,60,64],[48,55,60,64,67,71],[43,50,55,59,62,66]], bar:[5.0,6.4], dens:0.8, vel:0.30},
+      spring: {prog:[[48,55,60,64,67,71],[43,50,55,59,62,67],[45,52,57,60,64,69],[41,48,53,57,60,65]], bar:[5.0,6.6], dens:0.75, vel:0.26},
+      summer: {prog:[[41,48,53,57,60,64],[48,55,60,64,67,71],[43,50,55,59,62,66],[45,52,57,60,64,69]], bar:[4.6,6.0], dens:0.9, vel:0.27},
+      autumn: {prog:[[45,52,57,60,64,69],[41,48,53,57,60,64],[48,55,60,64,67,70],[43,50,55,58,62,67]], bar:[5.6,7.2], dens:0.6, vel:0.24},
+      winter: {prog:[[45,52,57,60,64],[40,47,52,55,59],[41,48,53,56,60],[45,52,57,59,64]], bar:[7.2,9.6], dens:0.38, vel:0.21},
+    };
+    let musNext=0, musBar=0, musMood='story';
+    const mhz=(m)=>440*Math.pow(2,(m-69)/12);
+    function mNote(m,t,dur,vel,pan){ const c=AU.ctx; if(!c||!AU.musDry) return; const f=mhz(m);
+      const o=c.createOscillator(); o.type='triangle'; o.frequency.value=f;
+      const o2=c.createOscillator(); o2.type='sine'; o2.frequency.value=f*2.001;
+      const g=c.createGain(), g2=c.createGain();
+      const lp=c.createBiquadFilter(); lp.type='lowpass';
+      lp.frequency.setValueAtTime(2400,t); lp.frequency.exponentialRampToValueAtTime(520,t+dur*0.8);
+      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(Math.max(0.0002,vel),t+0.04); g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+      g2.gain.setValueAtTime(0.0001,t); g2.gain.exponentialRampToValueAtTime(Math.max(0.0002,vel*0.22),t+0.02); g2.gain.exponentialRampToValueAtTime(0.0001,t+dur*0.4);
+      o.connect(g); o2.connect(g2); g.connect(lp); g2.connect(lp);
+      let out=lp;
+      if(c.createStereoPanner){ const pn=c.createStereoPanner(); pn.pan.value=pan||0; lp.connect(pn); out=pn; }
+      out.connect(AU.musDry); out.connect(AU.musWet);
+      o.start(t); o.stop(t+dur+0.12); o2.start(t); o2.stop(t+dur+0.12); }
+    function musicTick(){ if(!AU.ctx||!AU.on||!AU.musDry) return; const c=AU.ctx, t=c.currentTime;
+      if(t<musNext) return;
+      const M=MOODS[musMood]||MOODS.spring, ch=M.prog[musBar%M.prog.length];
+      const barLen=M.bar[0]+Math.random()*(M.bar[1]-M.bar[0]);
+      const t0=Math.max(t, musNext)+0.03;
+      mNote(ch[0]-12, t0, barLen*1.5, M.vel*0.5, 0);                       // root, low and long
+      mNote(ch[1], t0+0.07, barLen*1.15, M.vel*0.38, -0.18);               // fifth beneath
+      const n=1+Math.round(Math.random()*2.4*M.dens);                      // sprinkled upper voices
+      for(let i=0;i<n;i++){ const m=ch[2+((Math.random()*(ch.length-2))|0)]+(Math.random()<0.2?12:0);
+        mNote(m, t0+0.15+Math.random()*barLen*0.7, 2.4+Math.random()*2.8, M.vel*(0.5+Math.random()*0.55), (Math.random()-0.5)*0.7); }
+      musNext=t0+barLen; musBar++; }
+    function chime(f1,f2){ if(!AU.on||!AU.ctx)return; const c=AU.ctx,t=c.currentTime;
+      const o=c.createOscillator(),g=c.createGain(); o.type='sine'; o.frequency.setValueAtTime(f1,t);
+      if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+0.18);
+      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.2,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+0.45);
+      o.connect(g); g.connect(AU.master); o.start(t); o.stop(t+0.5); }
+    function fanfare(){ if(!AU.on||!AU.ctx)return; [[523,659],[659,784],[784,1175]].forEach((p,i)=>setTimeout(()=>chime(p[0],p[1]), i*110)); }
+    function clink(){ chime(1240,880); }
+    function buzzAlert(){ if(!AU.on||!AU.ctx)return; const c=AU.ctx,t=c.currentTime;
+      const o=c.createOscillator(),g=c.createGain(); o.type='sawtooth'; o.frequency.setValueAtTime(74,t); o.frequency.linearRampToValueAtTime(52,t+0.7);
+      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.28,t+0.05); g.gain.exponentialRampToValueAtTime(0.0001,t+0.85);
+      o.connect(g); g.connect(AU.master); o.start(t); o.stop(t+0.9); }
+    function windGust(){ if(!AU.on||!AU.ctx)return; const c=AU.ctx,t=c.currentTime, n=c.sampleRate*1.4;
+      const buf=c.createBuffer(1,n,c.sampleRate), d=buf.getChannelData(0);
+      for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);
+      const src=c.createBufferSource(); src.buffer=buf;
+      const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=340; bp.Q.value=0.7;
+      const g=c.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.22,t+0.25); g.gain.exponentialRampToValueAtTime(0.0001,t+1.35);
+      src.connect(bp); bp.connect(g); g.connect(AU.master); src.start(t); }
+    $('sndBtn').addEventListener('click',sndToggle);
+
+    // ===================== hornet raids — telegraphed, juicy, defensible =====================
+    function hornetWindow(){ const early=year>=4; return {a:early?120:140, b:early?268:258}; }
+    function scoutActive(){ const w=hornetWindow(); const T=lerpM(tempM,day)+difficulty().temp+M.temp();
+      return !hornet && !over && started && !onboard && T>=WIN_TEMP && day>w.a && day<w.b && P>40 && hornetCD<6; }
+    function spawnHornet(){ const side=Math.random()<0.5?-1:1;
+      hornet={x:hiveCx+side*W*0.55, y:topH+size*2, vx:0, vy:0, hp:M.hHP(), maxhp:M.hHP(), t:0, atk:1.2, state:'in', wob:Math.random()*6.28};
+      raidLoss=0; scoutShown=false;
+      toast('⚔ A hornet is raiding the hive! Tap it to drive it off!'); buzzAlert(); shake=0.45; }
+    function stepHornet(dt){ const h=hornet; if(!h) return; h.wob+=dt*26;
+      const mv=(tx,ty,sp)=>{ const dx=tx-h.x,dy=ty-h.y,L=Math.hypot(dx,dy)||1,st=Math.min(L,sp*size*dt);
+        h.x+=dx/L*st; h.y+=dy/L*st; h.vx=dx/L; h.vy=dy/L; return L<size*0.8; };
+      if(h.state==='in'){ if(mv(hiveCx,hiveCy-size*2.5,4.5)) h.state='raid'; }
+      else if(h.state==='raid'){ h.t+=dt; h.atk-=dt;
+        h.x+=Math.sin(h.wob*0.4)*size*dt*1.6; h.y+=Math.cos(h.wob*0.31)*size*dt*1.2;
+        if(h.atk<=0){ h.atk=3.2; if(P>6){ const take=Math.max(1,Math.round(1*M.steal())); P-=take; raidLoss+=take;
+          const vb=bees.length?bees[(Math.random()*bees.length)|0]:null;
+          puff(vb?vb.x:h.x, vb?vb.y:h.y,'#ff7052',7,1.2); shake=Math.max(shake,0.12); } }
+        if(h.t>12){ h.state='flee'; puff(h.x,h.y,'#ffd76b',12,1.4);
+          toast(raidLoss?('Your guards drove the hornet off — '+raidLoss+' bees were lost.'):'Your guards drove the hornet off.'); } }
+      else { h.x+=h.vx*size*dt; mv(h.x>hiveCx?W+size*6:-size*6, -size*6, 6);
+        if(h.y<-size*4||h.x<-size*5||h.x>W+size*5){ hornet=null; hornetCD=(year>=4?14+Math.random()*20:24+Math.random()*36); } } }
+    function hitHornet(p){ const h=hornet; if(!h||h.state==='flee') return false;
+      if(Math.hypot(p.x-h.x,p.y-h.y)>size*2.4) return false;
+      h.hp--; h.x+=(Math.random()-0.5)*size*1.5; h.y-=size*0.4; shake=Math.max(shake,0.22); hitstop=0.055;
+      puff(h.x,h.y,'#ff9a7a',6,1.4); chime(220+(h.maxhp-h.hp)*130, 160);
+      if(h.hp<=0){ h.state='flee'; puff(h.x,h.y,'#ffd76b',18,1.8); chime(520,880);
+        if(raidLoss===0){ rj++; burst(h.x,h.y,22); toast('Perfect defense — not one bee lost! +1 ✧ royal jelly 🛡'); fanfare(); }
+        else toast('Hornet driven off! The guard bees prevail. 🛡'); saveGame(); }
+      return true; }
+    function drawHornet(){ const h=hornet; if(!h) return; const s=size*0.5;
+      if(h.state==='raid'){ const pr=size*2.4*(1+0.08*Math.sin(gt*6));
+        ctx.strokeStyle='rgba(255,90,60,'+(0.45+0.25*Math.sin(gt*6)).toFixed(2)+')'; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.arc(h.x,h.y,pr,0,6.28); ctx.stroke(); }
+      ctx.save(); ctx.translate(h.x,h.y); ctx.rotate(Math.atan2(h.vy||0,h.vx||1)+Math.sin(h.wob)*0.1);
+      ctx.fillStyle='#5a3a14'; ctx.beginPath(); ctx.ellipse(0,0,s*2.1,s*0.95,0,0,6.28); ctx.fill();
+      ctx.fillStyle='#e08a20'; for(let i=-1;i<=1;i++){ ctx.beginPath(); ctx.ellipse(i*s*0.7,0,s*0.24,s*0.85,0,0,6.28); ctx.fill(); }
+      ctx.fillStyle='#2a1606'; ctx.beginPath(); ctx.arc(s*1.9,0,s*0.6,0,6.28); ctx.fill();
+      ctx.fillStyle='#ff5a3a'; ctx.beginPath(); ctx.arc(s*2.1,-s*0.2,s*0.16,0,6.28); ctx.fill();
+      ctx.fillStyle='rgba(190,210,255,0.4)'; const wf=0.5+0.5*Math.sin(h.wob*2);
+      ctx.beginPath(); ctx.ellipse(-s*0.2,-s*0.9*wf,s*1.1,s*0.36,-0.4,0,6.28); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(-s*0.2,s*0.9*wf,s*1.1,s*0.36,0.4,0,6.28); ctx.fill();
+      ctx.restore();
+      // hp pips
+      if(h.state!=='flee'){ const pw=size*0.55, x0=h.x-(h.maxhp*pw)/2+pw/2, y0=h.y-size*2.2;
+        for(let i=0;i<h.maxhp;i++){ hexPath(x0+i*pw,y0,pw*0.34);
+          ctx.fillStyle=i<h.hp?'#ff7052':'rgba(255,255,255,0.14)'; ctx.fill(); } } }
+    function drawScout(){ if(!scoutActive()) return; const a=gt*1.35;
+      const sx=hiveCx+Math.cos(a)*size*9.5, sy=topH+size*3.2+Math.sin(a*1.7)*size*1.6, s=size*0.3;
+      ctx.save(); ctx.translate(sx,sy); ctx.rotate(a+Math.PI/2); ctx.globalAlpha=0.8;
+      ctx.fillStyle='#3f2a10'; ctx.beginPath(); ctx.ellipse(0,0,s*1.9,s*0.8,0,0,6.28); ctx.fill();
+      ctx.fillStyle='#c07a1c'; ctx.beginPath(); ctx.ellipse(-s*0.3,0,s*0.22,s*0.7,0,0,6.28); ctx.fill();
+      ctx.globalAlpha=1; ctx.restore(); }
+
+    function difficulty(){ return {flow:Math.max(0.62,1-(year-1)*0.055), temp:Math.max(-4.8,-(year-1)*1.2)+(year===1?0.8:0)}; }
+    function honeyCellsStored(){ return honeyU/HC; }
+
+    // ===================== cosmetic bees =====================
+    const bees=[]; let hiveCx=0, hiveCy=0;
+    function makeBee(x,y){ return {x,y,vx:0,vy:0,role:'nurse',state:'idle',tx:x,ty:y,timer:0,carry:null,fieldp:null,tcell:null,lc:null,danceT:0,wob:Math.random()*6.28}; }
+    function syncBeePool(){
+      const want=Math.min(RENDER_BEES, Math.round(P));
+      while(bees.length<want){ const a=Math.random()*6.28, rr=size*(1+Math.random()*4); bees.push(makeBee(hiveCx+Math.cos(a)*rr, hiveCy+Math.sin(a)*rr)); }
+      while(bees.length>want) bees.pop();
+      for(let i=0;i<bees.length;i++){ const f=i/Math.max(1,bees.length); bees[i].role=f<0.12?'clean':f<0.42?'nurse':f<0.59?'build':'forage'; }
+    }
+    const queen={x:0,y:0,tx:0,ty:0,wob:0};
+    const flyers=[];
+
+    // ===================== layout =====================
+    let DPR=1,W=0,Hh=0,topH=120,botH=120;
+    function layout(){
+      DPR=Math.min(devicePixelRatio||1,2); W=innerWidth; Hh=innerHeight;
+      canvas.width=W*DPR; canvas.height=Hh*DPR; canvas.style.width=W+'px'; canvas.style.height=Hh+'px';
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+      const t=$('hud-top'), b=$('hud-bottom');
+      topH=(t?t.offsetHeight:110)+8; botH=(b?b.offsetHeight:110)+8;
+      const availW=W*0.94, availH=Math.max(120,Hh-topH-botH);
+      const needW=(COLS+0.5)*SQ3, needH=(ROWS-1)*1.5+2;
+      mSize=Math.max(6, Math.min(availW/needW, availH/needH));
+      seedMeadow(); syncAlmanacTicks(); fitComb(true);
+    }
+    // the camera frames the comb you actually have, not the grid you might one day fill
+    function combBounds(){ let c0=1e9,c1=-1e9,r0=1e9,r1=-1e9,any=false;
+      for(const cell of cells){ if(cell.built||cell.flagExpand){ any=true;
+        if(cell.c<c0)c0=cell.c; if(cell.c>c1)c1=cell.c; if(cell.r<r0)r0=cell.r; if(cell.r>r1)r1=cell.r; } }
+      if(!any) return {c0:ccx-2.5,c1:ccx+2.5,r0:ccy-2.5,r1:ccy+2.5};
+      return {c0,c1,r0,r1}; }
+    function fitComb(hard){
+      const b=combBounds(), pad=2.6;
+      const needW=((b.c1-b.c0)+1.5+pad*2)*SQ3, needH=(b.r1-b.r0)*1.5+2+pad*2;
+      const availW=Math.min(W, STAGE_W)*0.96, availH=Math.max(120, Hh-topH-botH);
+      const s=Math.max(7, Math.min(50, Math.min(availW/needW, availH/needH)));
+      const midC=(b.c0+b.c1)/2, midR=(b.r0+b.r1)/2;
+      tSize=s; tOx=W/2 - s*SQ3*(midC+0.25); tOy=topH+availH/2 - s*1.5*midR;
+      if(hard){ size=tSize; ox=tOx; oy=tOy; syncHiveCentre(); } }
+    // anchor the hive on a real cell, so ring 0 is a cell and not the seam between two
+    function syncHiveCentre(){ hiveCx=ox+size*SQ3*(CCC+0.5*(CCR&1)); hiveCy=oy+size*1.5*CCR; }
+    // frost tick + harvest band on the timeline — anticipation made visible
+    function syncAlmanacTicks(){
+      let fd=270; const dt=difficulty().temp+M.temp();
+      for(let d=180;d<=360;d++){ if(lerpM(tempM,d)+dt<WIN_TEMP){ fd=d; break; } }
+      $('tlFrost').style.left=(fd/YEAR*100)+'%'; $('tlFrost').title='first frost ≈ day '+fd;
+      $('tlHarv').style.left=(HARV0/YEAR*100)+'%'; $('tlHarv').style.width=((HARV1-HARV0)/YEAR*100)+'%';
+      $('tlBloom').style.left=(85/YEAR*100)+'%'; $('tlBloom').style.width=(90/YEAR*100)+'%'; $('tlBloom').title='main nectar flow';
+    }
+
+    // ===================== meadow seeding =====================
+    let blades=[], flowers=[], clouds=[], flits=[];
+    function seedMeadow(){
+      const groundY=Hh*0.72;
+      blades=[]; const nb=Math.floor(W/4);
+      for(let i=0;i<nb;i++){ blades.push({x:Math.random()*W, y:groundY+Math.random()*(Hh-groundY)*0.9, len:mSize*(0.7+Math.random()*1.4), ph:Math.random()*6.28, bend:(Math.random()-0.5)*0.5}); }
+      flowers=[]; const nf=Math.floor(W/40);
+      const types=[['#ffd24a','#e8902b'],['#ff7aa8','#d65b86'],['#b58cff','#8a5fd0'],['#ffffff','#e2dcc8']];
+      for(let i=0;i<nf;i++){ const t=types[(Math.random()*types.length)|0]; flowers.push({x:Math.random()*W, y:groundY+(Hh-groundY)*(0.12+Math.random()*0.7), petal:t[0], core:t[1], s:mSize*(0.4+Math.random()*0.4), ph:Math.random()*6.28, sway:Math.random()*6.28}); }
+      clouds=[]; for(let i=0;i<5;i++) clouds.push({x:Math.random()*W, y:Hh*(0.08+Math.random()*0.26), s:mSize*(3+Math.random()*4), v:6+Math.random()*10});
+      flits=[]; for(let i=0;i<6;i++) flits.push({x:Math.random()*W, y:groundY-mSize*(1+Math.random()*4), ph:Math.random()*6.28, vx:(Math.random()-0.5)*20});
+    }
+    function patchPos(i){ return {x:PATCHES[i].fx*W, y:Hh*0.72-mSize*0.4}; }
+
+    // ===================== input =====================
+    function cellAtPx(px,py){ let best=null,bd=(size*1.05)**2; const rr=Math.round((py-oy)/(size*1.5));
+      for(let r=Math.max(0,rr-1);r<=Math.min(ROWS-1,rr+1);r++)for(let c=0;c<COLS;c++){ const ce=cellCenter(c,r);
+        const d=(ce.x-px)*(ce.x-px)+(ce.y-py)*(ce.y-py); if(d<bd){bd=d;best={c,r};} }
+      return best?cells[idx(best.c,best.r)]:null; }
+    function applyBrush(cell){ if(!cell)return;
+      if(brush==='expand'){ if(cell.built)return; if(neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built)){ if(!cell.flagExpand&&!paintErase)flaggedExpand++; cell.flagExpand=!paintErase; checkCoachProgress(); watchHands(); } return; }
+      if(!cell.built)return;
+      if(paintErase){ if(cell.zone==='brood'&&cell.brood)return; cell.zone='none'; }
+      else { if(brush==='brood'){ if(cell.zone!=='brood')brushedBrood++; cell.zone='brood'; } else if(brush==='honey'){ if(cell.zone!=='honey')paintedHoney++; cell.zone='honey'; } checkCoachProgress(); watchHands(); }
+    }
+    // She'd rather catch it while your hand is still on it than tell you afterwards. One remark
+    // per idea, never twice, and never a scolding — she has done this for forty years.
+    let nudgeCool=0, nudged={};
+    function nudge(key,msg,mood){ if(onboard||over||!started||nudgeCool>0||nudged[key]) return;
+      nudged[key]=1; nudgeCool=13; if(mood){ hzMood=mood; hzHold=4.5; } toast(msg); }
+    let hzHold=0;
+    function coachCheck(){
+      if(onboard||!started||over) return;
+      const nb=broodCells(), st=honeyCells(), pop=Math.round(P), stored=honeyCellsStored();
+      const fl=cells.reduce((a,c)=>a+((!c.built&&c.flagExpand)?1:0),0);
+      // too much
+      if(pop>=5 && nb>pop*1.35)
+        nudge('bigNest','Hazel: That\u2019s a wide nursery for '+pop+' bees — they can only keep so much of it warm at once. Shall we let them catch up before we widen it further?','think');
+      else if(fl>16 && stored<12)
+        nudge('bigBuild','Hazel: That\u2019s a great deal of wax to ask for at once, and wax is bought with honey. They\u2019ll draw it as the pantry allows — no harm done, just slower than you\u2019d expect.','think');
+      else if(day<150 && st>Math.max(16,winterNeed()*2.4) && nb<pop*0.5)
+        nudge('bigStore','Hazel: You\u2019ve shelves enough for now. Empty comb earns nothing — the queen would put that space to better use.','think');
+      // too little
+      else if(day>26 && day<300 && nb<4)
+        nudge('noNest','Hazel: The queen has almost nowhere to lay. A few cells painted <b>Brood</b> and she\u2019ll begin within the day — that\u2019s the whole engine of the place.','worry');
+      else if(day>45 && st<6)
+        nudge('noStore','Hazel: There are hardly any <b>Honey</b> cells. Nectar coming in with nowhere to go simply goes to waste.','think');
+      else if(day>60 && pop>=14 && fl===0 && stored>16 && nb<pop*0.8)
+        nudge('noGrow','Hazel: They\u2019ve honey in hand and no room to grow into. Try <b>Expand</b> just outside the wax — the builders will do the rest.','think');
+      // and when it's right, say so
+      else if(nb>=7 && pop>=10 && nestRing()<=2 && nestWarmth()>0.8)
+        nudge('goodNest','Hazel: That\u2019s exactly the shape — one round patch, held snug. The warmth keeps itself. Well done.','happy');
+    }
+    function watchHands(){ coachCheck(); }
+    function watchIdle(){ coachCheck(); }
+    function rel(e){ const r=canvas.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; }
+    function selectPatch(p){ let best=null,bd=(W*0.14)**2;
+      for(let i=0;i<PATCHES.length;i++){ const q=patchQuality(i,day); if(q<=0.02)continue; const pp=patchPos(i); const d=(pp.x-p.x)**2+(pp.y-p.y)**2; if(d<bd){bd=d;best=i;} }
+      if(best!=null){ activePatch=best; forecastCache=forecastToSpring();
+        toast('Foragers recruited to a '+(patchQuality(best,day)>0.6?'rich':'modest')+' patch — watch the waggle dance in the hive.'); } }
+    let brush='brood', painting=false, paintErase=false;
+    canvas.addEventListener('pointerdown',e=>{ if(!started||over)return; const p=rel(e);
+      if(view==='hive' && hitHornet(p)) return;
+      if(view==='meadow'){ selectPatch(p); return; }
+      painting=true; paintErase=(e.button===2)||e.shiftKey; applyBrush(cellAtPx(p.x,p.y)); });
+    canvas.addEventListener('pointermove',e=>{ const p=rel(e);
+      if(view==='hive'){ hoveredCell=cellAtPx(p.x,p.y); if(painting)applyBrush(hoveredCell); showInspect(e.clientX,e.clientY); }
+      else { hoveredCell=null; hideInspect(); } });
+    function hideInspect(){ $('inspect').classList.remove('show'); }
+    const STAGE_NAME={egg:'Egg',larva:'Larva',pupa:'Capped brood'};
+    function inspectHTML(cell){
+      const degC=Math.round(cell.heat*33+2);
+      let t,s,a='',cls='',d='';
+      if(!cell.built){
+        const adj=neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built);
+        if(cell.flagExpand){ t='Marked for wax'; s='builders will draw it when honey allows'; }
+        else if(adj){ t='Empty space'; s='your comb reaches here'; }
+        else { t='Out of reach'; s='wax can only grow from wax'; }
+        if(brush==='expand'){ if(cell.flagExpand){ a='Click to unmark'; cls='no'; }
+          else if(adj){ a='→ Draw wax here'; d='builders spend honey to build it'; }
+          else { a='Too far from the comb'; cls='bad'; } }
+        else { a='Switch to Expand to build here'; cls='no'; }
+        return '<div class="it">'+t+'</div><div class="is">'+s+'</div><div class="ia '+cls+'">'+a+'</div>'+(d?'<div class="id2">'+d+'</div>':'');
+      }
+      if(cell.brood){ const st=cell.brood.stage, dur=st==='egg'?EGG_D:st==='larva'?LAR_D:PUP_D;
+        t=STAGE_NAME[st]; s='day '+(Math.floor(cell.brood.t)+1)+' of '+dur+' · '+degC+'\u00b0C'; }
+      else { t=cell.zone==='honey'?'Storage cell':cell.zone==='brood'?'Empty nursery cell':'Bare wax';
+        s=(cell.zone==='brood'?'waiting for the queen':cell.zone==='honey'?'holds 1 cell of stores':'no job yet')+' · '+degC+'\u00b0C'; }
+      if(brush==='brood'){ const rg=hexDist(cell.c,cell.r,CCC,CCR);
+        if(cell.zone==='brood'){ a='Already nursery'; cls='no'; d='ring '+rg+' · full hexagon out to here = '+Hnum(rg)+' cells'; }
+        else { a='→ Nursery'; d='ring '+rg+' · full hexagon out to here = '+Hnum(rg)+' cells (nest '+broodCells()+')'; } }
+      else if(brush==='honey'){ if(cell.zone==='honey'){ a='Already storage'; cls='no'; }
+        else if(cell.brood){ a='Brood is growing here'; cls='bad'; d='it would be lost'; }
+        else { a='→ Storage'; d='store '+honeyCells()+' \u2192 '+(honeyCells()+1)+' cells'; } }
+      else { a='Already built'; cls='no'; }
+      if(cell.brood && degC<28 && brush==='brood') d='cold for brood \u2014 a tighter nest holds heat';
+      return '<div class="it">'+t+'</div><div class="is">'+s+'</div><div class="ia '+cls+'">'+a+'</div>'+(d?'<div class="id2">'+d+'</div>':'');
+    }
+    function showInspect(cx,cy){ const el=$('inspect');
+      if(!hoveredCell||!started||over||storyMode){ hideInspect(); return; }
+      el.innerHTML=inspectHTML(hoveredCell); el.classList.add('show');
+      const w=el.offsetWidth||200, h=el.offsetHeight||70;
+      el.style.left=Math.max(8, Math.min(W-w-8, cx+18))+'px';
+      el.style.top=Math.max(8, Math.min(Hh-h-8, cy+16))+'px'; }
+    addEventListener('pointerup',()=>{painting=false;});
+    canvas.addEventListener('pointerleave',()=>{hoveredCell=null; hideInspect();});
+    canvas.addEventListener('contextmenu',e=>e.preventDefault());
+
+    document.querySelectorAll('[data-f]').forEach(b=>b.addEventListener('click',()=>{forage=b.dataset.f;forageTouched=true;document.querySelectorAll('[data-f]').forEach(x=>x.classList.toggle('on',x===b)); forecastCache=forecastToSpring(); checkCoachProgress();}));
+    document.querySelectorAll('[data-brush]').forEach(b=>b.addEventListener('click',()=>{brush=b.dataset.brush;document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x===b));}));
+    document.querySelectorAll('[data-sp]').forEach(b=>b.addEventListener('click',()=>setSpeed(+b.dataset.sp)));
+    function setSpeed(s){ speed=s; document.querySelectorAll('[data-sp]').forEach(x=>x.classList.toggle('on',+x.dataset.sp===s)); }
+    $('tabHive').addEventListener('click',()=>setView('hive'));
+    $('tabMeadow').addEventListener('click',()=>setView('meadow'));
+    $('reportBtn').addEventListener('click',()=>toggleReport());
+    $('reportX').addEventListener('click',()=>toggleReport(false));
+    function toggleReport(v){ reportOpen=(v===undefined)?!reportOpen:v; $('reportBtn').classList.toggle('on',reportOpen); $('report').classList.toggle('hide',!reportOpen); }
+    function applyViewCls(){ $('tabHive').classList.toggle('on',view==='hive'); $('tabMeadow').classList.toggle('on',view==='meadow'); $('brushGrp').classList.toggle('dim',view!=='hive'); hoveredCell=null; }
+    function setView(v){ if(v==='meadow') tip('meadow','Hazel: When a forager finds good flowers, she comes home and <em>dances</em> \u2014 the waggle dance \u2014 to send the others there. Tapping a patch is you pointing the way.');
+      if(v===view){ applyViewCls(); return; }
+      if(RM){ view=v; applyViewCls(); return; }
+      const w=$('wipe'); w.style.opacity=1; setTimeout(()=>{ view=v; applyViewCls(); w.style.opacity=0; },150); }
+    addEventListener('keydown',e=>{ if(e.key===' '){e.preventDefault(); setSpeed(speed===0?1:0);} if(e.key==='1')pickBrush('brood'); if(e.key==='2')pickBrush('honey'); if(e.key==='3')pickBrush('expand'); if(e.key==='h'||e.key==='H')harvestSurplus(); if(e.key==='Tab'){e.preventDefault(); setView(view==='hive'?'meadow':'hive');} });
+    function pickBrush(b){ brush=b; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x.dataset.brush===b)); }
+
+    // ===================== harvest (push-your-luck legacy score) =====================
+    function harvestState(){ const T=lerpM(tempM,day)+difficulty().temp+M.temp();
+      const inWin=day>=HARV0 && day<=HARV1 && T>=WIN_TEMP && !onboard && started && !over;
+      const need=winterNeed(); const sur=honeyCellsStored()-need*1.1;
+      return {inWin, ok:inWin&&sur>=8, sur, need}; }
+    function harvestSurplus(){ const hs=harvestState();
+      if(!hs.inWin){ if(started&&!over&&!onboard) toast('Harvest is an autumn job — the window is marked on the timeline.'); return; }
+      if(!hs.ok){ toast('No safe surplus yet. Bank '+Math.ceil(hs.need*1.25+8)+' cells before you take a jar.'); return; }
+      honeyU-=8*HC; jars++; jarsThisYear++; clink(); burst(hiveCx,hiveCy,16);
+      forecastCache=forecastToSpring(); setN('vRJ','✧'+rj); $('sJars').textContent=jars+(jars===1?' jar':' jars');
+      toast('🫙 Jar sealed — '+jars+' on the shelf. The bees keep the rest.'); checkGoals(); syncHUD(); saveGame(); }
+    $('harvestBtn').addEventListener('click',harvestSurplus);
+
+    // ===================== emergency feed (one comeback per winter) =====================
+    function feedSyrup(){ if(fedWinter||over) return; fedWinter=true; honeyU+=10*HC; starveT=0;
+      chime(320,540); puff(hiveCx,hiveCy,'#ffd97a',18,1.2);
+      toast('You slide a syrup feeder into the hive — the cluster stirs. +10 cells. (This year grades no higher than B.)');
+      $('feedBtn').classList.add('hide'); forecastCache=forecastToSpring(); saveGame(); }
+    $('feedBtn').addEventListener('click',feedSyrup);
+
+    // ===================== Hazel =====================
+    // She sits with you the whole time. Her face carries the mood of the advice so a glance is
+    // enough — you shouldn't have to read a paragraph to know whether things are alright.
+    let hzCtx=null, hzBlink=2.2, hzMood='calm', hzShown='calm', hzT=0;
+    (function(){ const cv=$('hazelC'); if(!cv||!cv.getContext) return;
+      const d=Math.min(devicePixelRatio||1,2); cv.width=46*d; cv.height=46*d;
+      hzCtx=cv.getContext('2d'); hzCtx.setTransform(d,0,0,d,0,0); })();
+    const MOODOF={'⚔️':'alarm','🍽':'worry','👁':'alert','🌡':'think','👑':'think','🍯':'think','📦':'think',
+      '📉':'worry','🍂':'think','❄️':'worry','🫙':'happy','💃':'happy','🌱':'calm','🌻':'happy','🐝':'calm','🚨':'alarm'};
+    function drawHazel(dt){ const g=hzCtx; if(!g) return; hzT+=dt;
+      hzBlink-=dt; const blink=hzBlink<0.11; if(hzBlink<0) hzBlink=2.4+Math.random()*3.4;
+      const m=hzMood, S=46, cx=S/2, bob=Math.sin(hzT*1.25)*0.7, cy=S*0.56+bob;
+      const lean=(m==='alert'||m==='alarm')?-1.2:0;
+      g.clearRect(0,0,S,S);
+      g.save(); g.translate(0,lean);
+      g.fillStyle='#4b3b60'; g.beginPath(); g.ellipse(cx,S+7,15.5,10,0,0,6.28); g.fill();   // shoulders
+      g.fillStyle='#cfc6c0';                                                                 // grey hair
+      g.beginPath(); g.ellipse(cx-8.6,cy+1.6,3.2,5.4,0.22,0,6.28); g.fill();
+      g.beginPath(); g.ellipse(cx+8.6,cy+1.6,3.2,5.4,-0.22,0,6.28); g.fill();
+      g.fillStyle='#e9bb8e'; g.beginPath(); g.ellipse(cx,cy,9.4,10.4,0,0,6.28); g.fill();    // face
+      const ey=cy-1.2, ex=3.7;
+      if(blink||m==='happy'){ g.strokeStyle='#3a2a1a'; g.lineWidth=1.5; g.lineCap='round';
+        for(const s of [-1,1]){ g.beginPath(); g.arc(cx+s*ex,ey+1.2,2.3,Math.PI*1.12,Math.PI*1.88); g.stroke(); } }
+      else { const w=(m==='alert'||m==='alarm')?2.5:1.95; g.fillStyle='#3a2a1a';
+        for(const s of [-1,1]){ g.beginPath(); g.ellipse(cx+s*ex,ey,1.5,w,0,0,6.28); g.fill(); } }
+      g.strokeStyle='#b3a69e'; g.lineWidth=1.35; g.lineCap='round';                          // brows carry the mood
+      let bl=0,br=0;
+      if(m==='worry'||m==='alarm'){ bl=-0.4; br=0.4; } else if(m==='think'){ bl=-0.34; br=0.02; }
+      else if(m==='alert'){ bl=0.14; br=-0.14; } else if(m==='happy'){ bl=0.1; br=-0.1; }
+      for(const [s,tl] of [[-1,bl],[1,br]]){ g.save(); g.translate(cx+s*ex,ey-4.4+(m==='alert'?-0.7:0)); g.rotate(s*tl);
+        g.beginPath(); g.moveTo(-2.5,0); g.lineTo(2.5,0); g.stroke(); g.restore(); }
+      const my=cy+5.4; g.strokeStyle='#9a5242'; g.lineWidth=1.5;                             // mouth
+      if(m==='happy'){ g.beginPath(); g.arc(cx,my-1.8,3.3,0.24,Math.PI-0.24); g.stroke(); }
+      else if(m==='calm'){ g.beginPath(); g.arc(cx,my-1.2,2.7,0.34,Math.PI-0.34); g.stroke(); }
+      else if(m==='worry'){ g.beginPath(); g.arc(cx,my+2.8,2.5,Math.PI+0.42,-0.42); g.stroke(); }
+      else if(m==='alarm'){ g.fillStyle='#7d3a2c'; g.beginPath(); g.ellipse(cx,my,2.1,2.7,0,0,6.28); g.fill(); }
+      else { g.beginPath(); g.moveTo(cx-2.3,my); g.lineTo(cx+2.3,my); g.stroke(); }
+      g.fillStyle='#8a6a3a'; g.beginPath(); g.ellipse(cx,cy-8.6,7.6,5.6,0,Math.PI,0); g.fill();   // hat
+      g.fillStyle='#a8874c'; g.beginPath(); g.ellipse(cx,cy-7.6,15.2,3.5,0,0,6.28); g.fill();
+      g.fillStyle='rgba(0,0,0,0.16)'; g.beginPath(); g.ellipse(cx,cy-6.2,14,1.9,0,0,6.28); g.fill();
+      g.restore();
+      if(m==='alarm'||m==='alert'){ const a=0.5+0.5*Math.sin(hzT*7);                          // a bee frets round her hat
+        const bx=cx+Math.cos(hzT*3.2)*13, by=cy-11+Math.sin(hzT*4.1)*3;
+        g.fillStyle='rgba(255,196,80,'+(0.55+0.45*a).toFixed(2)+')'; g.beginPath(); g.arc(bx,by,1.7,0,6.28); g.fill(); }
+    }
+
+    // ===================== toast / advisor =====================
+    let toastT=null, said={};
+    function tip(key,msg){ if(seenTips[key]||onboard||!started) return; seenTips[key]=1; toast(msg); }
+    function toast(s,once){ if(once){if(said[once])return; said[once]=1;} const el=$('toast'); el.textContent=s; el.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),2700); }
+    function advise(){
+      const T=lerpM(tempM,day)+difficulty().temp+M.temp(), Na=lerpM(nectarM,day), winter=T<WIN_TEMP;
+      const hc=honeyCellsStored(), need=winterNeed(), br=countBrood(), fc=forecastCache;
+      const bp=bestPatch(day); const hs=harvestState();
+      let ic='🐝', tx='The colony hums along.', warn=false;
+      const raiding=!!hornet && hornet.state!=='flee';
+      $('advisor').classList.toggle('raid', raiding);
+      const feedable=(winter || day<75 || day>235) && hc<5 && !fedWinter && started && !over && !onboard;
+      $('feedBtn').classList.toggle('hide', !feedable);
+      if(raiding){ ic='⚔️'; warn=true; tx='A <b>hornet</b> is raiding — <em>tap it</em> to help the guards, or let them handle it.'; }
+      else if(starveT>0){ ic='🍽'; warn=true; tx=feedable?'The pantry is empty and the cluster is hungry — a <b>syrup feeder</b> would see them through.':'The pantry is empty — every drop of <b>Nectar</b> counts now.'; }
+      else if(feedable){ ic='🍽'; tx='The pantry is nearly bare. You may slide in a <b>syrup feeder</b>, once a year.'; }
+      else if(scoutActive()){ ic='👁'; tx='A <b>hornet scout</b> circles the apiary — a raid will come within days.'; }
+      else if(honeyCells()<6){ ic='🍯'; tx='The comb has almost no <b>Honey</b> cells yet — the pantry needs shelves.'; }
+      else if(swarmP>0.6 && !winter){ ic='👑'; warn=true; tx='Swarm pressure is <b>high</b> — bees may leave. <b>Expand</b> the brood comb to give the queen room.'; }
+      else if(!winter && countBrood().total>5 && nestWarmth()<0.72){ ic='🌡'; tx='The brood is <b>chilled at the edges</b> — a nursery in one tight patch holds its own heat. Scattered comb bleeds it away.'; }
+      else if(!winter && day<210 && broodCells()<Math.max(6,P*0.45)){ ic='👑'; tx='The <b>nursery is small</b> for this colony — paint more comb as <b>Brood</b> so the queen can lay.'; }
+      else if(caps().total>0 && (honeyU+pollenU+nectarU)>=caps().total-2){ ic='📦'; tx='Storage is <b>full</b> — flow is wasted. <b>Expand</b> comb to hold more.'; }
+      else if(!winter && fc && fc.starve!==null && day>135 && day<252){ ic='📉'; warn=true; tx='At this pace the pantry won\u2019t last the winter — favour <b>Nectar</b> for a while.'; }
+      else if(!winter && fc && fc.minW<8 && day>150 && day<252){ ic='🍂'; tx='The pantry looks a little light for winter — lean <b>Nectar</b> when you can.'; }
+      else if(hs.ok){ ic='🫙'; tx='Surplus honey is banked — you can <b>Harvest</b> a jar for your shelf. The window closes at first frost.'; }
+      else if(!winter && bp.q>0.5 && (activePatch==null || patchQuality(activePatch,day)<bp.q-0.18)){ ic='💃'; tx='A <b>rich patch</b> is blooming. Open the <b>☀ Meadow</b> and tap it to send your foragers there.'; }
+      else if(winter && hc<need*0.5){ ic='❄️'; tx='Deep winter and the shelves are thin — but spring is coming.'; }
+      else if(day<55){ ic='🌱'; tx='Early spring. Favour <b>Pollen</b> or Balanced so the queen has protein to grow the colony.'; }
+      else if(day>=85&&day<175){ ic='🌻'; tx='Peak <b>nectar flow</b>. Lean <b>Nectar</b>, <b>Expand</b> storage, and chase the best <b>patch</b>.'; }
+      else if(day>=175&&day<250){ ic='🍂'; tx='Autumn — flow is fading. Top off honey with <b>Nectar</b> and stop expanding.'; }
+      else if(day>=250&&!winter){ ic='🍂'; tx='Brood eats your honey. Shrink the <b>brood zone</b> so fewer mouths face winter.'; }
+      else if(winter){ ic='❄️'; tx='Winter. No forage now — the cluster lives on stored honey. Hold on for spring.'; }
+      else if(br.total<6 && Na>0.2){ ic='👑'; tx='Brood is sparse. Ensure there\u2019s <b>pollen</b> and empty <b>brood</b> cells for the queen.'; }
+      if(hzHold<=0) hzMood=MOODOF[ic]||'calm'; $('advTx').innerHTML=tx; $('advisor').classList.toggle('warn',warn);
+    }
+
+    // ===================== sim core =====================
+    // ===================== thermal field =====================
+    // A colony holds its brood nest near 35 C by clustering and shivering. No bee knows the
+    // temperature of the nest — each only warms its own patch, and the warmth spreads through
+    // the wax. Compact comb holds heat; scattered comb bleeds it to the edges. The nest shape
+    // that emerges is not designed by anyone. That is the whole idea behind the word hivemind.
+    // centred hexagonal numbers 3r(r+1)+1 — how many cells a nest of r complete rings holds
+    const CHEX=new Set(), CHEXRING={}; for(let r=1;r<=8;r++){ const n=3*r*(r+1)+1; CHEX.add(n); CHEXRING[n]=r; }
+    const AMB=(T)=>Math.max(0,Math.min(1,(T-2)/33));      // outside air, normalised (1 ~ 35 C)
+    function stepThermal(dd,T,winter){
+      const amb=AMB(T), k=Math.min(0.6,dd*3.2);
+      const br=countBrood().total, nurses=P*NURSE_FRAC;
+      const supply=Math.max(0,Math.min(1.1,nurses/Math.max(1,br*0.30)));   // a cluster warms far more than it covers
+      const clusterR=1.1+P/30;
+      for(const c of cells){
+        if(!c.built){ c.heat=amb; continue; }
+        let sum=0,n=0;
+        for(const [nc,nr] of neighbors(c.c,c.r)){ const nb=cells[idx(nc,nr)]; sum+=nb.built?nb.heat:amb; n++; }
+        const avg=n?sum/n:amb;
+        let target=amb*0.25+avg*0.75;                       // wax conducts; the rim leaks
+        if(c.brood) target+=0.62*supply*(1-target);         // nurses shiver over the young
+        if(winter){ const cl=Math.max(0,1-cellDist(c.c,c.r)/clusterR);
+          if(cl>0) target+=cl*0.85*(1-target); }            // the winter cluster is its own furnace
+        c.heat+=(target-c.heat)*k;
+      }
+    }
+    const thermF=(h)=>Math.max(0.78,Math.min(1,0.78+(h-0.55)*0.62));  // warmth nudges brood along; it never strands it
+    function nestWarmth(){ let s=0,n=0; for(const c of cells) if(c.brood){ s+=c.heat; n++; } return n?s/n:0; }
+    function countBrood(){ let e=0,l=0,p=0; for(const c of cells)if(c.brood){ if(c.brood.stage==='egg')e++; else if(c.brood.stage==='larva')l++; else p++; } return {e,l,p,total:e+l+p}; }
+    function winterNeed(){ return Math.round(Math.max(24, peakPop*0.62)); }
+    function clampStores(dd){ const cp=caps(); let tot=cp.total, pol=cp.pollen; const k=Math.max(0,1-(dd===undefined?1:dd)*0.05);
+      if(onboard){ tot=Math.max(tot,14*HC); pol=Math.max(pol,8*HC); }
+      const soft=(cur,cap)=>cur<=cap?Math.max(0,cur):cap+(cur-cap)*k; // displaced stores drain, not vanish
+      pollenU=soft(pollenU,pol); const hr=Math.max(0,tot-pollenU); honeyU=soft(honeyU,hr); const nr=Math.max(0,tot-pollenU-honeyU); nectarU=soft(nectarU,nr); }
+    function buildFromFlags(dd){
+      let budget=Math.floor(P*BUILD_FRAC*dd*1.4 + Math.random()); if(budget<=0)return;
+      const cost=WAX_H*M.wax();
+      const builtN=cells.reduce((a,c)=>a+(c.built?1:0),0);
+      if(builtN >= P*2.4+14){ toast('The colony is too small to tend more comb — grow the brood nest first.','buildscale'); return; }
+      tip('wax','Hazel: Wax is dear. The old rule is eight ounces of honey burned for every ounce of wax drawn \u2014 that\u2019s why the builders hang back when the pantry runs thin.');
+      const cpB=caps(); const reserve = cost + Math.min(cpB.total*0.3, rate.h < -0.05 ? 500 : 200); // scale the buffer to what the comb can even hold
+      for(const s of cells){ if(budget<=0)break; if(!s.built&&s.flagExpand){ if(honeyU<reserve){ toast('Builders wait — stores are too lean to draw wax.','buildwait'); break; }
+        honeyU-=cost; waxAccum+=cost; s.built=true; s.flagExpand=false;
+        let b=0,h=0; for(const[c,r]of neighbors(s.c,s.r)){const nb=cells[idx(c,r)]; if(nb.zone==='brood')b++; else if(nb.zone==='honey')h++;}
+        s.zone=(b>h && cellDist(s.c,s.r)<2.2)?'brood':'honey'; budget--;
+        const bn=cells.reduce((a,cc)=>a+(cc.built?1:0),0);
+        if(CHEX.has(bn)){ const rr=CHEXRING[bn]; toast('Ring '+rr+' complete \u2014 '+bn+' cells. The comb grows in the centred hexagonal numbers: 1, 7, 19, 37\u2026','ring'+bn); burst(hiveCx,hiveCy,10); }
+        else toast('Fresh comb drawn.','built1'); } }
+    }
+    function stepDay(dd, offline){
+      const dif=difficulty(); const T=lerpM(tempM,day)+dif.temp+M.temp()+(coldSnap>0?M.snap():0);
+      const Na=lerpM(nectarM,day)*dif.flow, Pa=lerpM(pollenM,day)*dif.flow, lv=lerpM(layM,day);
+      const winter=T<WIN_TEMP; const fN=FN[forage]; const mult=forageMult()*M.forage();
+      const foragers=P*FOR_FRAC, nurses=P*NURSE_FRAC;
+      nectarU += foragers*NEC_PF*Na*fN*mult*dd; pollenU += foragers*POL_PF*Pa*(1-fN)*mult*dd;
+      clampStores(dd); const rip=Math.min(nectarU,nectarU*RIPE*dd); nectarU-=rip; honeyU+=rip; clampStores(dd);
+      if(!offline) buildFromFlags(dd);
+      const br=countBrood();
+      const needH=br.l*BROOD_H*dd, needP=br.l*BROOD_P*dd; const foodOK=(honeyU>=needH)&&(pollenU>=needP);
+      honeyU=Math.max(0,honeyU-Math.min(honeyU,needH)); pollenU=Math.max(0,pollenU-Math.min(pollenU,needP));
+      const nurseCap=nurses/Math.max(1,br.l*0.9); const growF=Math.max(0.15,Math.min(1,nurseCap))*(foodOK?1:0.3);
+      stepThermal(dd,T,winter);
+      for(const c of cells){ if(!c.brood)continue; c.brood.t+=dd*growF*thermF(c.heat);
+        const dur=c.brood.stage==='egg'?EGG_D:c.brood.stage==='larva'?LAR_D:PUP_D;
+        if(c.brood.stage==='larva'&&!foodOK&&Math.random()<dd*0.16){ c.brood=null; continue; }
+        if(c.brood.t>=dur){ c.brood.t=0;
+          if(c.brood.stage==='egg')c.brood.stage='larva';
+          else if(c.brood.stage==='larva')c.brood.stage='pupa';
+          else { c.brood=null; if(P<CAP){ P+=1; bornTotal++; if(!offline&&bees.length<RENDER_BEES){ const pp=cellCenter(c.c,c.r); bees.push(makeBee(pp.x,pp.y)); puff(pp.x,pp.y,'#ffe9b0',5,0.9); } if(!offline&&!said['firstborn']) chime(660,980); toast('A new worker emerges.','firstborn'); } } } }
+      const space=cells.filter(c=>c.built&&c.zone==='brood'&&!c.brood).length;
+      const pollenF=Math.max(0,Math.min(1,pollenU/400));
+      const layRate=Math.min(LAYMAX*lv*M.lay(),nurses*0.8,space)*pollenF*(P<CAP?1:0.15)*queenVigour();
+      if(layRate>0&&space>0){ let n=Math.floor(layRate*dd)+(Math.random()<((layRate*dd)%1)?1:0); n=Math.min(n,space,5);
+        const empties=cells.filter(c=>c.built&&c.zone==='brood'&&!c.brood);
+        for(let i=0;i<n&&empties.length;i++){ const k=(Math.random()*empties.length)|0; empties[k].brood={stage:'egg',t:0}; empties.splice(k,1); } }
+      honeyU -= P*C_BEE*coldMult(T)*M.eat()*dd;
+      if(offline||onboard){ if(honeyU<2*HC)honeyU=2*HC; starveT=0; }
+      else if(honeyU<=0){ honeyU=0; starveT+=dd; if(starveT>2.5) return gameOver('starve'); }
+      else { starveT=0; if(honeyU<0)honeyU=0; }
+      const drate=winter?1/LIFE_W:1/LIFE_S; P-=P*drate*dd*1.2;
+      if(!offline && !onboard && P<1) return gameOver('dwindle'); if(P<1)P=1;
+      if(!onboard && !winter && day<215){ const crowd=(P/CAP)*(1-Math.min(1,space/14)); swarmP=Math.max(0,Math.min(1.2, swarmP+(crowd-0.18)*dd*0.5));
+        if(swarmP>0.85 && Math.random()<dd*0.22){ const lost=Math.round(P*0.42); P-=lost; swarmP=0.1; puff(hiveCx,hiveCy,'#ffd76b',40,2); shake=Math.max(shake,0.6); buzzAlert(); toast('A swarm has left to found a new colony! '+lost+' bees gone — give them space next time.'); } }
+      else swarmP=Math.max(0,swarmP-dd*0.4);
+      if(day>=262 && bankAtFrost===0) bankAtFrost=honeyCellsStored();
+      if(!offline && cells.some(c=>c.built&&c.flagExpand)) tip('hex','Hazel: Why six sides? It\u2019s the cheapest wall there is \u2014 a hexagon fences off its space with less wax than any other tile. People suspected that for two thousand years; a mathematician named Hales only proved it in 1999. And the bees didn\u2019t work it out \u2014 they build round cells, and the warm wax settles into hexagons by itself.');
+      if(!offline && broodCells()>=7) tip('rings','Hazel: Watch how a nest grows \u2014 a ring at a time. One cell, then six around it, then twelve, then eighteen: 1, 7, 19, 37. Round is the shape with the least edge for the space inside, so it\u2019s both the cheapest to build and the warmest to hold. The cold always bites at the corners.');
+      if(!offline && day>10 && day<80) tip('forage','Hazel: Pollen is protein \u2014 it\u2019s what nurse bees eat to make food for the young. Nectar is sugar, for honey. The dials just tell your foragers which to favour.');
+      if(coldSnap>0) coldSnap-=dd; else if(year>1 && !winter && day>150 && Math.random()<dd*0.006){ coldSnap=3; toast('A cold snap — the bees burn extra honey to stay warm.'); }
+      if(!offline && !onboard && !over){
+        const w=hornetWindow();
+        if(!hornet){ hornetCD-=dd;
+          if(scoutActive() && !scoutShown){ scoutShown=true; buzzAlert();
+            toast('👁 A hornet scout has found the hive — expect a raid within days.'); }
+          if(hornetCD<=0 && !winter && day>w.a && day<w.b && P>40 && Math.random()<dd*0.5) spawnHornet(); }
+        if(queenAge>=3 && day>30 && day<60 && Math.random()<dd*0.1){
+          queenAge=1; toast('Supersedure — the workers have raised a new queen. Her laying is vigorous again. 👑');
+          chime(520,780); puff(queen.x||hiveCx,queen.y||hiveCy,'#ffd76b',24,1.6); }
+      }
+      peakPop=Math.max(peakPop,Math.round(P));
+    }
+
+    // ===================== cosmetic bee animation (inside) =====================
+    function stepInside(dt,dd){
+      const T=lerpM(tempM,day)+difficulty().temp+M.temp(), Na=lerpM(nectarM,day), winter=T<WIN_TEMP, dancing=forageMult()>1.05;
+      const move=(b,tx,ty,sp)=>{const dx=tx-b.x,dy=ty-b.y,L=Math.hypot(dx,dy)||1,st=Math.min(L,sp*size*dt); b.x+=dx/L*st;b.y+=dy/L*st; if(st>0.05){b.vx=dx/L;b.vy=dy/L;} return L<size*0.5;};
+      for(const b of bees){ b.wob+=dt*8;
+        if(winter){ const a=b.wob*0.25+(b.x+b.y), rr=size*(1.4+1.3*Math.sin(b.x+b.y)); move(b,hiveCx+Math.cos(a)*rr,hiveCy+Math.sin(a)*rr*0.8,0.5); continue; }
+        if(b.state==='waggle'){ b.danceT+=dt*5; const s=size*2.2; b.x=hiveCx+Math.sin(b.danceT)*s; b.y=hiveCy-size*4+Math.sin(b.danceT*2)*s*0.5; b.vx=Math.cos(b.danceT); b.vy=Math.sin(b.danceT*2); if(b.danceT>10){b.state='idle';} continue; }
+        if(b.role==='forage'){
+          if(b.state==='idle'){ if(Na>0.05){ b.state='out'; const px=activePatch!=null?activePatch:bestPatch(day).i; const a=(px/PATCHES.length)*1.6-0.8; b.fieldp={x:hiveCx+Math.cos(a-1.2)*size*16, y:hiveCy-size*10+Math.sin(a)*size*4}; b.carry=null; } else move(b,hiveCx+(Math.random()-0.5)*size*8,hiveCy+(Math.random()-0.5)*size*6,0.4); }
+          else if(b.state==='out'){ if(move(b,b.fieldp.x,b.fieldp.y,2.4)){ b.carry=Math.random()<FN[forage]?'nectar':'pollen'; b.state='return'; } }
+          else { if(move(b,hiveCx+(Math.random()-0.5)*size*5,hiveCy+(Math.random()-0.5)*size*4,2.4)){ if(dancing&&Math.random()<0.18){ b.state='waggle'; b.danceT=0; } else b.state='idle'; b.carry=null; } } }
+        else if(b.role==='build'){ const site=b.tcell;
+          if(site&&!site.built&&site.flagExpand){ const p=cellCenter(site.c,site.r); move(b,p.x,p.y,1.4); } else { b.tcell=randomFlagged(); if(!b.tcell) move(b,hiveCx+(Math.random()-0.5)*size*8,hiveCy+(Math.random()-0.5)*size*6,0.7); } }
+        else if(b.role==='nurse'){ if(!b.lc||!b.lc.brood) b.lc=randomLarva();
+          if(b.lc){ const p=cellCenter(b.lc.c,b.lc.r); if(move(b,p.x,p.y,1.4)){ b.timer+=dd; if(b.timer>0.4){b.timer=0;b.lc=null;} } } else move(b,hiveCx+(Math.random()-0.5)*size*5,hiveCy+(Math.random()-0.5)*size*4,0.6); }
+        else { if(hornet&&hornet.state==='raid'){ move(b,hornet.x+(Math.random()-0.5)*size*2.4,hornet.y+(Math.random()-0.5)*size*2.4,1.8); } else move(b,hiveCx+(Math.random()-0.5)*size*6,hiveCy+(Math.random()-0.5)*size*5,0.6); }
+      }
+      queen.wob+=dt;
+      if(Math.random()<dt*1.2){ const bc=randomWhere(c=>c.built&&c.zone==='brood'); if(bc){const p=cellCenter(bc.c,bc.r);queen.tx=p.x;queen.ty=p.y;} }
+      const dx=queen.tx-queen.x,dy=queen.ty-queen.y,L=Math.hypot(dx,dy)||1; queen.x+=dx/L*Math.min(L,0.6*size*dt); queen.y+=dy/L*Math.min(L,0.6*size*dt);
+    }
+    function randomWhere(pred){ const pool=cells.filter(pred); return pool.length?pool[(Math.random()*pool.length)|0]:null; }
+    function randomLarva(){ return randomWhere(c=>c.brood&&c.brood.stage==='larva'); }
+    function randomFlagged(){ return randomWhere(c=>!c.built&&c.flagExpand); }
+
+    // ===================== rendering: INSIDE =====================
+    const COL={ wallEmpty:'#3a2c16', wallRim:'#5a4624', egg:'#f3ead6', larva:'#f0dcae', pupa:'#caa86a', nectar:'#e9c64f', honey:'#f7b733', pollen:'#ef8c2c',
+      broodZone:'rgba(120,170,235,0.16)', honeyZone:'rgba(247,183,51,0.10)', unbuilt:'rgba(150,120,70,0.16)', frontier:'rgba(150,200,120,0.28)' };
+    function hexPath(x,y,s){ ctx.beginPath(); for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-30), px=x+s*Math.cos(a), py=y+s*Math.sin(a); i?ctx.lineTo(px,py):ctx.moveTo(px,py);} ctx.closePath(); }
+    function drawInside(){
+      const T=lerpM(tempM,day)+difficulty().temp+M.temp(), winter=T<WIN_TEMP;
+      let g=ctx.createLinearGradient(0,0,0,Hh); g.addColorStop(0,winter?'#10131c':'#1a1305'); g.addColorStop(1,winter?'#0b0d14':'#0f0b05'); ctx.fillStyle=g; ctx.fillRect(0,0,W,Hh);
+      // on a large display the surround falls away, so the comb reads as the subject
+      if(W>1100||Hh>860){ const vr=Math.max(W,Hh)*0.8;
+        let vg=ctx.createRadialGradient(hiveCx,hiveCy,Math.min(W,Hh)*0.2,hiveCx,hiveCy,vr);
+        vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.5)');
+        ctx.fillStyle=vg; ctx.fillRect(0,0,W,Hh); }
+      if(!winter){ // a shaft of light from the hive entrance, with drifting dust motes
+        const lx=Math.min(W-size*1.5, hiveCx+size*9); let lg=ctx.createRadialGradient(lx,0,0,lx,0,Hh*0.95);
+        lg.addColorStop(0,'rgba(255,214,130,0.10)'); lg.addColorStop(0.5,'rgba(255,200,110,0.035)'); lg.addColorStop(1,'rgba(255,200,110,0)');
+        ctx.fillStyle=lg; ctx.beginPath(); ctx.moveTo(lx-W*0.10,0); ctx.lineTo(lx+W*0.16,0); ctx.lineTo(lx+W*0.34,Hh); ctx.lineTo(lx-W*0.30,Hh); ctx.closePath(); ctx.fill();
+        ctx.fillStyle='rgba(255,225,160,0.20)';
+        for(let i=0;i<14;i++){ const t=(gt*0.05+i*0.617)%1, mx=lx-W*0.10+((i*73)%97)/97*W*0.34+Math.sin(gt*0.7+i)*8, my=t*Hh;
+          ctx.beginPath(); ctx.arc(mx,my,1.1+((i*37)%3)*0.5,0,6.28); ctx.fill(); } }
+      const s2=size*0.93;
+      for(const cell of cells){ const {x,y}=cellCenter(cell.c,cell.r);
+        if(!cell.built){ if(cell.flagExpand){ hexPath(x,y,s2); ctx.fillStyle=COL.frontier; ctx.fill(); ctx.strokeStyle='rgba(180,230,150,0.5)'; ctx.lineWidth=1; ctx.stroke(); }
+          else if(neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built)){ hexPath(x,y,s2*0.96); ctx.strokeStyle=COL.unbuilt; ctx.lineWidth=1; ctx.stroke(); } continue; }
+        hexPath(x,y,s2); ctx.fillStyle=COL.wallEmpty; ctx.fill();
+        if(cell.zone==='brood'){ ctx.fillStyle=COL.broodZone; ctx.fill(); } else if(cell.zone==='honey'){ ctx.fillStyle=COL.honeyZone; ctx.fill(); }
+        const hw=cell.heat-AMB(T);
+        if(hw>0.06){ ctx.fillStyle='rgba(255,146,54,'+Math.min(0.34,hw*0.42).toFixed(3)+')'; ctx.fill(); }
+        ctx.strokeStyle=COL.wallRim; ctx.lineWidth=1; ctx.stroke();
+        if(cell.brood){ const st=cell.brood.stage;
+          if(st==='egg'){ ctx.fillStyle=COL.egg; ctx.beginPath(); ctx.ellipse(x,y,s2*0.10,s2*0.22,0.5,0,6.28); ctx.fill(); }
+          else if(st==='larva'){ const gr=0.2+0.7*(cell.brood.t/LAR_D); ctx.fillStyle=COL.larva; ctx.beginPath(); ctx.arc(x,y,s2*0.34*gr+s2*0.12,0,6.28); ctx.fill(); ctx.strokeStyle='rgba(180,140,80,0.5)'; ctx.lineWidth=1; ctx.stroke(); }
+          else { hexPath(x,y,s2*0.86); ctx.fillStyle=COL.pupa; ctx.fill(); ctx.fillStyle='rgba(120,90,50,0.35)'; ctx.beginPath(); ctx.arc(x,y,s2*0.4,0,6.28); ctx.fill(); } } }
+      const sorted=cells.filter(c=>c.built&&c.zone==='honey').sort((a,b)=>cellDist(a.c,a.r)-cellDist(b.c,b.r));
+      let pol=pollenU,nec=nectarU,hon=honeyU;
+      for(const cell of sorted){ let kind=null,frac=0;
+        if(pol>0){kind='pollen';frac=Math.min(1,pol/HC);pol-=HC;} else if(nec>0){kind='nectar';frac=Math.min(1,nec/HC);nec-=HC;} else if(hon>0){kind='honey';frac=Math.min(1,hon/HC);hon-=HC;} else break;
+        const {x,y}=cellCenter(cell.c,cell.r), col=kind==='pollen'?COL.pollen:kind==='nectar'?COL.nectar:COL.honey;
+        ctx.save(); hexPath(x,y,s2*0.92); ctx.clip(); ctx.fillStyle=col; const fh=s2*1.7*frac; ctx.fillRect(x-s2,y+s2*0.85-fh,s2*2,fh+0.5);
+        if(kind==='honey'){ ctx.fillStyle='rgba(255,255,255,'+(0.14+0.08*Math.sin(gt*1.6+x*0.05+y*0.07)).toFixed(3)+')'; ctx.fillRect(x-s2,y+s2*0.85-fh,s2*2,Math.min(fh,s2*0.3)); } ctx.restore();
+        hexPath(x,y,s2); ctx.strokeStyle=COL.wallRim; ctx.lineWidth=1; ctx.stroke(); }
+      for(const b of bees){ if(b.state==='waggle'){ ctx.strokeStyle='rgba(255,210,120,0.35)'; ctx.lineWidth=1.5; ctx.beginPath(); let first=true; for(let t=0;t<6.3;t+=0.3){ const xx=hiveCx+Math.sin(t)*size*2.2, yy=hiveCy-size*4+Math.sin(t*2)*size*1.1; if(first){ctx.moveTo(xx,yy);first=false;} else ctx.lineTo(xx,yy);} ctx.stroke(); } drawBee(b.x,b.y,Math.atan2(b.vy||0,b.vx||0),b.carry,false,b.wob); }
+      drawBee(queen.x,queen.y,0,null,true,queen.wob);
+      drawScout(); drawHornet(); drawParts(lastDt);
+      if(view==='hive'&&started&&!over&&hoveredCell){ const {x,y}=cellCenter(hoveredCell.c,hoveredCell.r); let okc;
+        if(brush==='expand'){ const adj=neighbors(hoveredCell.c,hoveredCell.r).some(([c,r])=>cells[idx(c,r)].built); okc=(!hoveredCell.built&&adj)?'rgba(180,240,150,0.95)':'rgba(255,120,90,0.5)'; }
+        else okc=hoveredCell.built?(brush==='brood'?'rgba(150,200,255,0.95)':'rgba(247,200,90,0.95)'):'rgba(255,120,90,0.5)';
+        hexPath(x,y,s2*1.02); ctx.strokeStyle=okc; ctx.lineWidth=2; ctx.stroke(); }
+      if(winter && honeyCellsStored()<28){ const a=(28-honeyCellsStored())/28; let v=ctx.createRadialGradient(W/2,Hh/2,Math.min(W,Hh)*0.2,W/2,Hh/2,Math.max(W,Hh)*0.6); v.addColorStop(0,'rgba(255,60,40,0)'); v.addColorStop(1,'rgba(255,50,35,'+(0.4*a).toFixed(3)+')'); ctx.fillStyle=v; ctx.fillRect(0,0,W,Hh); }
+    }
+    function drawBee(x,y,ang,carry,isQueen,wob){ const s=size*(isQueen?0.5:0.32);
+      ctx.save(); ctx.translate(x,y); ctx.rotate(ang+Math.sin(wob||0)*0.12);
+      ctx.fillStyle=isQueen?'#d99a2e':'#e2a52e'; ctx.beginPath(); ctx.ellipse(0,0,s*(isQueen?1.7:1.3),s*0.8,0,0,6.28); ctx.fill();
+      ctx.fillStyle='rgba(30,20,8,0.85)'; for(let i=-1;i<=1;i++){ ctx.beginPath(); ctx.ellipse(i*s*0.5,0,s*0.16,s*0.7,0,0,6.28); ctx.fill(); }
+      ctx.fillStyle='#23180a'; ctx.beginPath(); ctx.arc(s*(isQueen?1.5:1.15),0,s*0.42,0,6.28); ctx.fill();
+      ctx.fillStyle='rgba(220,235,255,0.35)'; const wf=0.6+0.4*Math.sin((wob||0)*3);
+      ctx.beginPath(); ctx.ellipse(-s*0.1,-s*0.6*wf,s*0.7,s*0.32,-0.5,0,6.28); ctx.fill(); ctx.beginPath(); ctx.ellipse(-s*0.1,s*0.6*wf,s*0.7,s*0.32,0.5,0,6.28); ctx.fill();
+      if(carry){ ctx.fillStyle=carry==='nectar'?COL.nectar:COL.pollen; ctx.beginPath(); ctx.arc(-s*0.9,0,s*0.4,0,6.28); ctx.fill(); }
+      if(isQueen){ ctx.strokeStyle='rgba(255,210,120,0.5)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(0,0,s*2,0,6.28); ctx.stroke(); }
+      ctx.restore();
+    }
+
+    // ===================== rendering: MEADOW =====================
+    const SKY=[['#8fb8e8','#dcefff'],['#5aa6e8','#cfeaff'],['#9fa8c0','#f1e3c9'],['#aebccd','#e9eff7'],['#8fb8e8','#dcefff']];
+    const HILL=[['#5b9e54','#7cbe57'],['#4f9a48','#6bb050'],['#b59a4a','#caa85e'],['#cfd6df','#e6edf4'],['#5b9e54','#7cbe57']];
+    const GRASS=['#5fae54','#62b452','#b59a45','#dfe7ee','#5fae54'];
+    function lc(a,b,t){ const A=parseInt(a.slice(1),16),B=parseInt(b.slice(1),16); const ar=A>>16,ag=(A>>8)&255,ab=A&255,br=B>>16,bg=(B>>8)&255,bb=B&255;
+      return 'rgb('+Math.round(ar+(br-ar)*t)+','+Math.round(ag+(bg-ag)*t)+','+Math.round(ab+(bb-ab)*t)+')'; }
+    function sblend(arr){ const x=day/90, i=Math.min(arr.length-2,Math.floor(x)), f=x-Math.floor(x); return [i,f]; }
+    let mt=0;
+    function drawMeadow(dt){ const _s=size; size=mSize; try{ drawMeadowBody(dt); } finally { size=_s; } }
+    function drawMeadowBody(dt){
+      mt+=dt; const dif=difficulty(); const T=lerpM(tempM,day)+dif.temp+M.temp(), Na=lerpM(nectarM,day)*dif.flow, Pa=lerpM(pollenM,day)*dif.flow;
+      const winter=T<WIN_TEMP, bloom=Math.max(Na,Pa), groundY=Hh*0.72;
+      const [si,sf]=sblend(SKY); let g=ctx.createLinearGradient(0,0,0,Hh);
+      g.addColorStop(0,lc(SKY[si][0],SKY[si+1][0],sf)); g.addColorStop(0.7,lc(SKY[si][1],SKY[si+1][1],sf)); g.addColorStop(1,lc(SKY[si][1],SKY[si+1][1],sf)); ctx.fillStyle=g; ctx.fillRect(0,0,W,Hh);
+      const sunF=(lerpM(tempM,day)+2)/28, sx=W*(0.18+0.64*((Math.sin(mt*0.05+1)+1)/2)), sy=Hh*(0.42-0.26*Math.max(0,Math.min(1,sunF))), sr=size*2.6, sunC=winter?'255,238,200':'255,236,170';
+      let sg=ctx.createRadialGradient(sx,sy,0,sx,sy,sr*3); sg.addColorStop(0,'rgba('+sunC+',0.95)'); sg.addColorStop(0.3,'rgba('+sunC+',0.5)'); sg.addColorStop(1,'rgba('+sunC+',0)'); ctx.fillStyle=sg; ctx.beginPath(); ctx.arc(sx,sy,sr*3,0,6.28); ctx.fill();
+      ctx.fillStyle='rgba('+sunC+',1)'; ctx.beginPath(); ctx.arc(sx,sy,sr,0,6.28); ctx.fill();
+      for(const cl of clouds){ cl.x+=cl.v*dt; if(cl.x-cl.s*2>W)cl.x=-cl.s*2; ctx.fillStyle='rgba(255,255,255,'+(winter?0.5:0.7)+')'; for(let i=-1;i<=1;i++){ ctx.beginPath(); ctx.ellipse(cl.x+i*cl.s*0.8,cl.y,cl.s*0.9,cl.s*0.5,0,0,6.28); ctx.fill(); } }
+      const [hi,hf]=sblend(HILL);
+      ctx.fillStyle=lc(HILL[hi][0],HILL[hi+1][0],hf); ctx.beginPath(); ctx.moveTo(0,groundY); for(let x=0;x<=W;x+=20) ctx.lineTo(x,groundY-size*4-Math.sin(x*0.004+2)*size*2.2); ctx.lineTo(W,Hh); ctx.lineTo(0,Hh); ctx.fill();
+      ctx.fillStyle=lc(HILL[hi][1],HILL[hi+1][1],hf); ctx.beginPath(); ctx.moveTo(0,groundY); for(let x=0;x<=W;x+=20) ctx.lineTo(x,groundY-Math.sin(x*0.006)*size*1.4); ctx.lineTo(W,Hh); ctx.lineTo(0,Hh); ctx.fill();
+      const gi=Math.min(3,Math.floor(day/90)), gf=(day/90)%1;
+      ctx.fillStyle=lc(GRASS[gi],GRASS[Math.min(4,gi+1)],gf); ctx.fillRect(0,groundY,W,Hh-groundY);
+      if(winter){ ctx.fillStyle='rgba(238,244,252,0.92)'; ctx.fillRect(0,groundY-size*0.4,W,Hh-groundY); }
+      const gcol=winter?'rgba(200,210,220,0.7)':lc(GRASS[gi],GRASS[Math.min(4,gi+1)],gf); ctx.strokeStyle=gcol; ctx.lineWidth=Math.max(1,size*0.08); const wind=Math.sin(mt*1.3)*0.25;
+      for(const bl of blades){ const sway=Math.sin(mt*1.6+bl.ph)*0.12+wind+bl.bend, ln=bl.len*(winter?0.4:1); ctx.beginPath(); ctx.moveTo(bl.x,bl.y); ctx.quadraticCurveTo(bl.x+sway*ln*0.5,bl.y-ln*0.6,bl.x+sway*ln,bl.y-ln); ctx.stroke(); }
+      for(const fl of flowers){ const open=winter?0:Math.min(1,bloom*1.2)*(0.4+0.6*((Math.sin(fl.ph*3+(day/30))+1)/2)); const sway=Math.sin(mt*1.4+fl.sway)*size*0.18;
+        ctx.strokeStyle=winter?'rgba(150,150,150,0.4)':'rgba(80,140,70,0.8)'; ctx.lineWidth=Math.max(1,size*0.06); ctx.beginPath(); ctx.moveTo(fl.x,fl.y); ctx.quadraticCurveTo(fl.x+sway*0.5,fl.y-fl.s*1.4,fl.x+sway,fl.y-fl.s*2.4); ctx.stroke();
+        const hx=fl.x+sway, hy=fl.y-fl.s*2.4; if(open>0.05){ ctx.fillStyle=fl.petal; for(let i=0;i<6;i++){ const a=i/6*6.28+fl.ph; ctx.beginPath(); ctx.ellipse(hx+Math.cos(a)*fl.s*0.45*open,hy+Math.sin(a)*fl.s*0.45*open,fl.s*0.36*open,fl.s*0.2*open,a,0,6.28); ctx.fill(); } ctx.fillStyle=fl.core; ctx.beginPath(); ctx.arc(hx,hy,fl.s*0.3*open,0,6.28); ctx.fill(); } }
+      // gameplay PATCHES — tappable; richness pips + glow; arrow marks the best
+      const best=bestPatch(day).i;
+      for(let i=0;i<PATCHES.length;i++){ const q=patchQuality(i,day); const pp=patchPos(i); if(q<=0.02 && activePatch!==i) continue;
+        const n=2+Math.round(q*7), spread=size*3.2;
+        if(q>0.04){ let gg=ctx.createRadialGradient(pp.x,pp.y-size,0,pp.x,pp.y-size,spread*1.6); gg.addColorStop(0,'rgba(255,220,120,'+(0.06+0.18*q)+')'); gg.addColorStop(1,'rgba(255,220,120,0)'); ctx.fillStyle=gg; ctx.beginPath(); ctx.arc(pp.x,pp.y-size,spread*1.6,0,6.28); ctx.fill(); }
+        for(let k=0;k<n;k++){ const a=k*2.39+i, rx=pp.x+Math.cos(a)*spread*(0.3+(k%3)*0.3), ry=pp.y-size*0.5+Math.sin(a)*spread*0.4*(0.4+(k%2)*0.3)+Math.sin(mt*1.5+k)*size*0.1;
+          const ps=size*(0.5+0.4*q); ctx.strokeStyle='rgba(80,140,70,0.8)'; ctx.lineWidth=Math.max(1,size*0.07); ctx.beginPath(); ctx.moveTo(rx,ry+ps*1.6); ctx.lineTo(rx,ry); ctx.stroke();
+          const col=['#ffd24a','#ff7aa8','#b58cff','#ff9d5a'][i%4]; ctx.fillStyle=col; for(let j=0;j<5;j++){ const aa=j/5*6.28; ctx.beginPath(); ctx.ellipse(rx+Math.cos(aa)*ps*0.4,ry+Math.sin(aa)*ps*0.4,ps*0.3,ps*0.16,aa,0,6.28); ctx.fill(); } ctx.fillStyle='#e8902b'; ctx.beginPath(); ctx.arc(rx,ry,ps*0.22,0,6.28); ctx.fill(); }
+        for(let p2=0;p2<5;p2++){ ctx.fillStyle = p2 < Math.round(q*5) ? '#ffd76b' : 'rgba(255,255,255,0.18)'; ctx.fillRect(pp.x-12+p2*5, pp.y-spread*1.7, 3, 6); }
+        if(activePatch===i){ ctx.strokeStyle='rgba(255,210,120,0.95)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(pp.x,pp.y-size,spread*1.5,0,6.28); ctx.stroke();
+          ctx.fillStyle='rgba(255,210,120,0.95)'; ctx.font='600 '+Math.round(size*0.9)+'px Bricolage Grotesque'; ctx.textAlign='center'; ctx.fillText('foraging here', pp.x, pp.y-spread*1.95); ctx.textAlign='left'; }
+        else if(i===best && q>0.5 && !winter){ const bob=Math.sin(mt*3)*size*0.3; ctx.fillStyle='rgba(255,235,150,0.9)'; ctx.beginPath(); ctx.moveTo(pp.x,pp.y-spread*2.1+bob); ctx.lineTo(pp.x-size*0.5,pp.y-spread*2.1-size*0.7+bob); ctx.lineTo(pp.x+size*0.5,pp.y-spread*2.1-size*0.7+bob); ctx.closePath(); ctx.fill(); }
+      }
+      if(day>=170&&day<250){ ctx.fillStyle='rgba(210,130,50,0.8)'; for(let i=0;i<22;i++){ const t=(mt*30+i*60)%Hh, x=(i*W/22+Math.sin(t*0.05+i)*40)%W; ctx.beginPath(); ctx.ellipse(x,t%Hh,size*0.18,size*0.1,t*0.1,0,6.28); ctx.fill(); } }
+      if(winter){ ctx.fillStyle='rgba(255,255,255,0.85)'; for(let i=0;i<60;i++){ const t=mt*40+i*40, y=t%Hh, x=(i*W/60+Math.sin(t*0.04+i)*30)%W; ctx.beginPath(); ctx.arc(x,y,size*0.08,0,6.28); ctx.fill(); } }
+      if(!winter && bloom>0.4){ for(const f of flits){ f.x+=f.vx*dt+Math.sin(mt*2+f.ph)*0.4; f.y+=Math.sin(mt*3+f.ph)*0.6; if(f.x>W)f.x=0; if(f.x<0)f.x=W; const wf=Math.sin(mt*16+f.ph); ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.beginPath(); ctx.ellipse(f.x-size*0.2,f.y,size*0.22,size*0.12*Math.abs(wf)+1,0.6,0,6.28); ctx.fill(); ctx.beginPath(); ctx.ellipse(f.x+size*0.2,f.y,size*0.22,size*0.12*Math.abs(wf)+1,-0.6,0,6.28); ctx.fill(); } }
+      const bx=W*0.85, by=groundY, bw=size*4.4, boxes=3;
+      for(let i=0;i<boxes;i++){ const yy=by-(i+1)*size*1.8; ctx.fillStyle=i?'#caa066':'#b98a48'; rr2(bx-bw/2,yy,bw,size*1.8,3); ctx.fill(); ctx.strokeStyle='rgba(80,55,20,0.6)'; ctx.lineWidth=1.5; ctx.stroke(); ctx.fillStyle='rgba(0,0,0,0.10)'; ctx.fillRect(bx-bw/2,yy+size*1.6,bw,size*0.2); }
+      ctx.fillStyle='#8a6a36'; rr2(bx-bw/2-2,by-boxes*size*1.8-size*0.5,bw+4,size*0.6,3); ctx.fill();
+      ctx.fillStyle='#9a7438'; ctx.fillRect(bx-bw/2,by-size*0.2,bw,size*0.5); ctx.fillStyle='#1c1206'; ctx.fillRect(bx-bw*0.3,by-size*0.2,bw*0.6,size*0.18);
+      if(winter){ ctx.fillStyle='rgba(255,255,255,0.92)'; rr2(bx-bw/2-3,by-boxes*size*1.8-size*0.9,bw+6,size*0.5,3); ctx.fill(); }
+      const tgt=activePatch!=null?activePatch:best; const tp=patchPos(tgt);
+      const want=winter?0:Math.min(34,Math.round(P*FOR_FRAC*0.18*(0.4+Na)*(patchQuality(tgt,day)>0.05?1:0.3)));
+      while(flyers.length<want) flyers.push({x:bx,y:by-size,st:'out',ph:Math.random()*6.28});
+      while(flyers.length>want) flyers.pop();
+      for(const fb of flyers){ fb.ph+=dt*12; let tx,ty; if(fb.st==='out'){ tx=tp.x+(Math.random()-0.5)*size*4; ty=tp.y-size*2; } else { tx=bx; ty=by-size*0.1; }
+        const dx=tx-fb.x,dy=ty-fb.y,L=Math.hypot(dx,dy)||1,sp=size*4.5*dt; fb.x+=dx/L*Math.min(L,sp); fb.y+=dy/L*Math.min(L,sp)+Math.sin(fb.ph)*0.4;
+        if(L<size*0.8){ fb.st=fb.st==='out'?'back':'out'; } drawBee(fb.x,fb.y,Math.atan2(dy,dx),fb.st==='back'?'nectar':null,false,fb.ph); }
+      ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.font='800 '+Math.round(size*3.2)+'px Bricolage Grotesque'; ctx.textAlign='center'; ctx.fillText(seasonName(day).toUpperCase(),W/2,Hh*0.5); ctx.textAlign='left';
+      if(activePatch==null && !winter){ ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.font='500 '+Math.round(size*1.1)+'px Bricolage Grotesque'; ctx.textAlign='center'; ctx.fillText('tap a flower patch to send your foragers', W/2, groundY+(Hh-groundY)*0.5); ctx.textAlign='left'; }
+    }
+    function rr2(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+
+    // ===================== HUD =====================
+    function setN(id,v){ const el=$(id); const s=String(v); if(el.textContent!==s){ el.textContent=s; el.classList.remove('popN'); void el.offsetWidth; el.classList.add('popN'); } }
+    function arrowOf(r,eps){ if(r>eps)return['▲','up']; if(r<-eps)return['▼','down']; return['▬','flat']; }
+    function goalHUD(){
+      if(onboard||!goals){ $('goalIc').textContent='🧭'; $('goalTx').textContent='First: found the colony'; $('goalFill').style.width='0%'; $('goalN').textContent=''; $('goal').classList.remove('done'); return; }
+      tip('goals','Season goals wait for you \u2014 no timers, no rush. Each one you finish earns \u2727 royal jelly to spend on your queen\u2019s line.');
+      if(honeyCells()+broodCells()>=7) tip('hexmath','Hazel: Notice the cells are six-sided \u2014 never five, never round. A hexagon walls off its honey with the least wax of any shape that leaves no gaps. Folk guessed it two thousand years ago; a mathematician only proved it in 1999. The bees never needed the proof.');
+      if(countBrood().total>4) tip('warmth','Hazel: See the glow? That\u2019s the nest holding itself at blood heat \u2014 about 35\u00b0C. No bee knows that number. Each just warms her own patch, and the wax carries it. Keep the nursery in one tight round patch and it holds; spread it thin and the edges go cold.');
+      if(countBrood().total>6) tip('ages','Hazel: A worker\u2019s job follows her age \u2014 she starts as a nurse, becomes a builder, and only late in life flies out to forage. Your colony sorts its own labour.');
+      let g=goals[seasonIdx(day)];
+      if(g.done){ const nx=goals.find(x=>!x.done && !(x.special==='midwinter'&&!x.armed)); if(nx) g=nx; }
+      $('goalIc').textContent=g.done?'✓':g.ic; $('goalTx').textContent=g.label;
+      if(g.special==='midwinter'&&!g.armed){ $('goalN').textContent='—'; $('goalFill').style.width='0%'; }
+      else{ const c=Math.min(g.cur(),g.tgt); $('goalN').textContent=(g.done?g.tgt:c)+'/'+g.tgt;
+        $('goalFill').style.width=(g.done?100:Math.min(100,c/g.tgt*100))+'%'; }
+      $('goal').classList.toggle('done',!!g.done);
+    }
+    function syncHUD(){
+      const hc=Math.round(honeyCellsStored()); setN('vHoney',hc); const need=winterNeed(); $('sHoney').textContent='need '+need;
+      $('stHoney').classList.toggle('warn', seasonName(day)==='Winter' && hc<need*0.5);
+      setN('vPollen',Math.round(pollenU/HC)); setN('vPop',Math.round(P));
+      const swarming=swarmP>0.28 && seasonName(day)!=='Winter';
+      $('stPop').classList.toggle('warn2',swarming);
+      $('sPop').textContent=swarming?('swarm '+Math.round(Math.min(1,swarmP)*100)+'%'):(Math.round(P*FOR_FRAC)+' out');
+      const br=countBrood(); setN('vBrood',br.total); $('sBrood').textContent=br.e+'·'+br.l+'·'+br.p;
+      setN('vRJ','✧'+rj); $('sJars').textContent=jars+(jars===1?' jar':' jars');
+      const a1=arrowOf(rate.h,0.15); $('aHoney').textContent=a1[0]; $('aHoney').className='arr '+a1[1];
+      const a2=arrowOf(rate.p,0.15); $('aPollen').textContent=a2[0]; $('aPollen').className='arr '+a2[1];
+      const a3=arrowOf(rate.b,0.12); $('aPop').textContent=a3[0]; $('aPop').className='arr '+a3[1];
+      const a4=arrowOf(rate.br,0.25); $('aBrood').textContent=a4[0]; $('aBrood').className='arr '+a4[1];
+      const T=lerpM(tempM,day)+difficulty().temp+M.temp(), Na=lerpM(nectarM,day)*difficulty().flow;
+      $('yearLab').textContent='Year '+year; $('seasonLab').textContent=seasonName(day)+' · day '+(Math.floor(day)+1); $('tlNow').style.left=(day/YEAR*100)+'%';
+      $('wxFlow').textContent=Math.round(Na*100)+'%'; $('wxTemp').textContent=Math.round(T)+'°';
+      goalHUD(); checkGoals(); syncYields();
+      const hs=harvestState(); $('apiaryGrp').classList.toggle('hidden', !hs.inWin || onboard);
+      $('harvestBtn').classList.toggle('off',!hs.ok);
+      $('harvestBtn').title=hs.ok?('Seal a jar (8 cells of surplus) — '+Math.floor(hs.sur)+' spare'):'No safe surplus yet — the bees\u2019 winter share comes first';
+      const fc=forecastCache, pantry=Math.min(1,hc/Math.max(1,need));
+      const fill=$('wrFill'); fill.style.width=(pantry*100)+'%';
+      fill.style.background=pantry>=1?'var(--good)':pantry>=0.5?'var(--gold)':'var(--honey)';
+      $('wrPct').textContent=hc+' / '+need;
+      let lab='', cls='';
+      if(day<100) lab='The year is young — build and grow.';
+      else if(fc && fc.starve!==null && day>=150){ lab='At this pace it runs dry ~day '+fc.starve+'.'; cls='bad'; }
+      else if(pantry>=1){ lab='Full for the winter ahead.'; cls='good'; }
+      else if(day>=HARV0) lab='Fill it before the frost.';
+      else lab='The summer flow will fill it.';
+      $('wrLab').textContent=lab; $('wrLab').className=cls;
+    }
+
+    // ===================== season interstitials =====================
+    const SUBS=['the queen wakes','the flow rises','harvest & trim','the long cold'];
+    function seasonBanner(si){ if(RM||onboard) return; const sb=$('sb');
+      $('sbT').textContent=['SPRING','SUMMER','AUTUMN','WINTER'][si];
+      let sub=SUBS[si]; if(si===0){ const yn=yearName(year); sub='year '+year+' · '+yn[0]; }
+      $('sbS').textContent=sub;
+      sb.className=''; sb.id='sb'; void sb.offsetWidth; sb.classList.add('show','s'+si);
+      if(si===3) windGust(); else chime(392,523);
+      setTimeout(()=>sb.classList.remove('show'),2400); }
+
+    // ===================== grading / year transition =====================
+    function gradeYear(){ const need=winterNeed(); const bank=bankAtFrost||honeyCellsStored();
+      const gdone=goals?goals.filter(g=>g.done).length:0;
+      const jarTgt=Math.max(1,1+Math.min(2,year-1));
+      const sc=Math.min(1,bank/Math.max(1,need))*0.35+Math.min(1,peakPop/CAP)*0.2+(gdone/4)*0.3+Math.min(1,jarsThisYear/jarTgt)*0.15;
+      let g=sc>0.92?'S':sc>0.75?'A':sc>0.55?'B':sc>0.35?'C':'D';
+      if(fedWinter&&(g==='S'||g==='A'))g='B';
+      return {g,sc,gdone}; }
+    function trophyRow(el){ el.innerHTML=grades.map(x=>'<span>Y'+x.year+' '+x.g+'</span>').join('')||'<span>—</span>'; }
+    function renderGifts(){
+      const row=$('giftRow'); $('rjBal').textContent='✧'+rj;
+      const pool=GIFTS.filter(g=>!owned[g.id]).slice(0,3);
+      if(!pool.length){ row.innerHTML='<div class="cap" style="color:var(--dim);font-size:11px">Your line is perfected — every gift is carried in the blood.</div>'; return; }
+      row.innerHTML='';
+      pool.forEach(g=>{ const d=document.createElement('div'); d.className='gift'+(rj<GIFT_COST?' poor':''); d.tabIndex=0;
+        d.innerHTML='<div class="gi">'+g.ic+'</div><div class="gn">'+g.name+'</div><div class="gt">'+g.tx+'</div><div class="gc">✧'+GIFT_COST+'</div>';
+        d.addEventListener('click',()=>{ if(owned[g.id]||rj<GIFT_COST) return;
+          rj-=GIFT_COST; owned[g.id]=true; d.classList.add('owned'); d.querySelector('.gc').textContent='carried ✓';
+          chime(520,780); $('rjBal').textContent='✧'+rj;
+          document.querySelectorAll('.gift').forEach(x=>{ if(!x.classList.contains('owned')) x.classList.toggle('poor',rj<GIFT_COST); });
+          saveGame(); });
+        row.appendChild(d); });
+    }
+    function endOfYear(){
+      const {g,gdone}=gradeYear(); grades.push({year,g,honey:Math.round(honeyCellsStored()),peak:peakPop}); const est=(year===3);
+      $('yeTitle').textContent=est?'APIARY ESTABLISHED':('YEAR '+year+' SURVIVED'); $('yeTitle').className='good';
+      $('yeSub').textContent=est?'three winters weathered — the colony endures':'winter is past';
+      $('yeGrade').innerHTML='this year\u2019s grade<span class="G '+g+'">'+g+'</span>goals <b>'+gdone+'/4</b> · jars <b>'+jarsThisYear+'</b> · peak <b>'+peakPop+'</b> bees';
+      trophyRow($('yeTrophies')); renderGifts();
+      { const host=$('yeTrophies'); const old=host.parentNode.querySelector('.beenote'); if(old) old.remove(); host.insertAdjacentHTML('afterend', beeNote()); }
+      const yn=yearName(year+1); $('yeNext').textContent='Into Year '+(year+1)+' — '+yn[0]+' ▶';
+      fanfare(); saveGame(); $('yearEnd').classList.remove('hide'); paused=true; setSpeed(0);
+    }
+    $('yeNext').addEventListener('click',()=>{ $('yearEnd').classList.add('hide'); year++; day=0; peakPop=Math.round(P); coldSnap=0; swarmP=0; activePatch=null;
+      queenAge++; hornet=null; hornetCD=(year>=4?14+Math.random()*20:18+Math.random()*22); scoutShown=false;
+      jarsThisYear=0; fedWinter=false; starveT=0; bankAtFrost=0; goals=makeGoals(); lastSI=0; syncAlmanacTicks();
+      delete nudged.bigNest; delete nudged.bigStore; delete nudged.bigBuild; delete nudged.noGrow;
+      const yn=yearName(year); toast('Year '+year+' — '+yn[0]+': '+yn[1]+'.'+(queenAge>=3?' Your queen is aging.':''));
+      forecastCache=forecastToSpring(); saveGame(); setSpeed(1); paused=false; said={}; });
+    function gameOver(kind){ if(over)return; over=true; setSpeed(0); chime(330,165); hornet=null;
+      $('ovTitle').textContent=kind==='starve'?'THE COLONY FAILS':'THE COLONY DWINDLES'; $('ovSub').textContent=(kind==='starve'?'the pantry ran dry in '+seasonName(day).toLowerCase():'too few bees remained')+' — but the comb, the shelf, and the queen\u2019s line are yours to keep';
+      const {g}=gradeYear(); grades.push({year,g,honey:Math.round(honeyCellsStored()),peak:peakPop});
+      $('ovStats').innerHTML='Year '+year+' ends early<span class="G '+g+'">'+g+'</span><b>'+jars+'</b> jars on the shelf · <b>'+bornTotal+'</b> bees raised in all';
+      trophyRow($('ovTrophies'));
+      { const host=$('ovTrophies'); const old=host.parentNode.querySelector('.beenote'); if(old) old.remove(); host.insertAdjacentHTML('afterend', beeNote()); }
+      saveGame(); $('over').classList.remove('hide'); }
+    $('ovRestart').addEventListener('click',()=>{ // renewal: the apiary persists; a wild swarm takes the comb
+      year++; day=0; P=12; honeyU=6*HC; pollenU=3*HC; nectarU=0; peakPop=12; swarmP=0; coldSnap=0; activePatch=null;
+      queenAge=1; hornet=null; hornetCD=18+Math.random()*22; scoutShown=false; raidLoss=0; starveT=0;
+      jarsThisYear=0; fedWinter=false; bankAtFrost=0; goals=makeGoals(); lastSI=0; said={};
+      for(const c of cells){ c.brood=null; c.flagExpand=false; }
+      over=false; $('over').classList.add('hide'); syncAlmanacTicks(); forecastCache=forecastToSpring();
+      const yn=yearName(year); toast('A wild swarm settles into your comb — the line continues. Year '+year+': '+yn[0]+'.');
+      setSpeed(1); paused=false; saveGame(); });
+
+    // ===================== persistence =====================
+    function serialize(){ const Z={none:0,brood:1,honey:2}, ST={egg:0,larva:1,pupa:2};
+      const cb=cells.map(c=>(c.built?1:0)|(Z[c.zone]<<1)|((c.flagExpand?1:0)<<3)|((c.brood?1:0)<<4)|(c.brood?ST[c.brood.stage]<<5:0));
+      const bt=cells.map(c=>c.brood?Math.round(c.brood.t*10):0);
+      return {v:4,t:Date.now(),day,year,P,honeyU,pollenU,nectarU,peakPop,bornTotal,swarmP,forage,activePatch,grades,queenAge,cb,bt,
+        rj,jars,jy:jarsThisYear,ow:Object.keys(owned),fw:fedWinter?1:0,bf:Math.round(bankAtFrost),tp:Object.keys(seenTips),ls:Object.keys(lessonSeen),gd:goals?goals.map(g=>g.done?1:0):[0,0,0,0]}; }
+    function saveGame(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify(serialize())); }catch(e){} }
+    function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+    function loadSave(){ try{ const s=localStorage.getItem(SAVE_KEY); return s?JSON.parse(s):null; }catch(e){ return null; } }
+    function deserialize(s){ const ZN=['none','brood','honey'], STN=['egg','larva','pupa'];
+      day=s.day; year=s.year; P=s.P; honeyU=s.honeyU; pollenU=s.pollenU; nectarU=s.nectarU; peakPop=s.peakPop||Math.round(P); bornTotal=s.bornTotal||0; swarmP=s.swarmP||0; forage=s.forage||'balanced'; activePatch=(s.activePatch===undefined?null:s.activePatch); grades=s.grades||[]; queenAge=s.queenAge||1;
+      rj=s.rj||0; jars=s.jars||0; jarsThisYear=s.jy||0; owned={}; (s.ow||[]).forEach(k=>owned[k]=true); fedWinter=!!s.fw; bankAtFrost=s.bf||0; seenTips={}; (s.tp||[]).forEach(k=>seenTips[k]=1); lessonSeen={}; (s.ls||[]).forEach(k=>lessonSeen[k]=1);
+      goals=makeGoals(); (s.gd||[]).forEach((d,i)=>{ if(goals[i]) goals[i].done=!!d; });
+      if(day>=270) armMidwinter(true);
+      lastSI=seasonIdx(day);
+      for(let i=0;i<cells.length;i++){ const v=s.cb[i],c=cells[i]; c.built=!!(v&1); c.zone=ZN[(v>>1)&3]; c.flagExpand=!!(v>>3&1); c.brood=(v>>4&1)?{stage:STN[(v>>5)&3],t:(s.bt[i]||0)/10}:null; }
+      document.querySelectorAll('[data-f]').forEach(x=>x.classList.toggle('on',x.dataset.f===forage)); }
+    function offlineCatchup(s){ const away=(Date.now()-s.t)/1000; if(away<60)return null; let d=Math.min(OFFLINE_CAP,away/OFFLINE_SEC_PER_DAY); if(d<0.1)return null;
+      const bp=Math.round(P), bh=Math.round(honeyCellsStored()); let rem=d; while(rem>0&&!over&&day<YEAR){ const dd=Math.min(0.25,rem); stepDay(dd,true); day+=dd; rem-=dd; }
+      const hrs=Math.floor(away/3600), mins=Math.floor((away%3600)/60); return {time:(hrs?hrs+'h ':'')+mins+'m', days:d.toFixed(1), dP:Math.round(P)-bp, dH:Math.round(honeyCellsStored())-bh}; }
+    let saveTimer=0;
+    document.addEventListener('visibilitychange',()=>{ if(document.hidden&&started&&!over)saveGame(); });
+    addEventListener('pagehide',()=>{ if(started&&!over)saveGame(); });
+
+    // ===================== trends, ledger & forecast =====================
+    function ledger(){ const dif=difficulty(); const T=lerpM(tempM,day)+dif.temp+M.temp()+(coldSnap>0?M.snap():0); const Na=lerpM(nectarM,day)*dif.flow; const fN=FN[forage]; const foragers=P*FOR_FRAC; const br=countBrood(); const cp=caps(); const full=(honeyU+pollenU+nectarU)>=cp.total-2; const m=forageMult()*M.forage();
+      const income=(full?0:foragers*NEC_PF*Na*fN*m)/HC, eaten=P*C_BEE*coldMult(T)*M.eat()/HC, brood=br.l*BROOD_H/HC, wax=waxRateEMA/HC;
+      return {income,eaten,brood,wax,mult:m,full,net:income-eaten-brood-wax}; }
+    // the same maths the sim runs, asked hypothetically: "what would this dial pay today?"
+    function forageYield(f){ const dif=difficulty();
+      const Na=lerpM(nectarM,day)*dif.flow, Pa=lerpM(pollenM,day)*dif.flow, fN=FN[f];
+      const foragers=P*FOR_FRAC, m=forageMult()*M.forage(), cp=caps();
+      const full=(honeyU+pollenU+nectarU)>=cp.total-2;
+      return { h:(full?0:foragers*NEC_PF*Na*fN*m)/HC, p:(full?0:foragers*POL_PF*Pa*(1-fN)*m)/HC }; }
+    function syncYields(){
+      const cpY=caps(), fullY=(honeyU+pollenU+nectarU)>=cpY.total-2;
+      const one=(id,f)=>{ const y=forageYield(f);
+        $(id).innerHTML = fullY ? '<i>comb full</i>' : ('<b>'+(y.h*7).toFixed(1)+'</b><i>·</i><em>'+(y.p*7).toFixed(1)+'</em>'); };
+      one('yNec','nectar'); one('yBal','balanced'); one('yPol','pollen');
+      $('yBrood').innerHTML='<i>nest </i><b>'+broodCells()+'</b><i> r</i><b>'+nestRing()+'</b>';
+      $('yHon').innerHTML='<i>store </i><b>'+honeyCells()+'</b>';
+      const L=ledger();
+      $('yExp').innerHTML= L.wax>0.02 ? ('<i>wax </i><b>-'+(L.wax*7).toFixed(1)+'</b>') : '<i>+room</i>';
+    }
+    function forecastToSpring(){ const dif=difficulty(), fN=FN[forage], cp=caps(), m=forageMult()*M.forage();
+      let p=P,Hn=honeyU,Po=pollenU,Ne=nectarU; const br=countBrood();
+      let eggs=Array(EGG_D).fill(br.e/EGG_D), larv=Array(LAR_D).fill(br.l/LAR_D), pup=Array(PUP_D).fill(br.p/PUP_D);
+      const broodSpace=broodCells(); let used=cells.filter(c=>c.built&&c.zone==='brood'&&c.brood).length; const series=[]; let minW=Infinity,starve=null,d0=Math.floor(day);
+      for(let d=d0;d<=YEAR;d++){ const T=lerpM(tempM,d)+dif.temp+M.temp(),Na=lerpM(nectarM,d)*dif.flow,Pa=lerpM(pollenM,d)*dif.flow,lv=lerpM(layM,d); const winter=T<WIN_TEMP,foragers=p*FOR_FRAC,nurses=p*NURSE_FRAC;
+        Ne+=foragers*NEC_PF*Na*fN*m; Po+=foragers*POL_PF*Pa*(1-fN)*m;
+        Po=Math.min(Po,cp.pollen); let hr=Math.max(0,cp.total-Po); if(Hn>hr)Hn=hr; let nr=Math.max(0,cp.total-Po-Hn); if(Ne>nr)Ne=nr;
+        const rip=Ne*RIPE; Ne-=rip; Hn+=rip; hr=Math.max(0,cp.total-Po); if(Hn>hr)Hn=hr;
+        const nL=larv.reduce((a,b)=>a+b,0); const needH=nL*BROOD_H,needP=nL*BROOD_P; Hn=Math.max(0,Hn-Math.min(Hn,needH)); Po=Math.max(0,Po-Math.min(Po,needP));
+        const space=Math.max(0,broodSpace-used), pollenF=Math.max(0,Math.min(1,Po/400)); const lay=Math.min(LAYMAX*lv*M.lay(),nurses*0.8,space)*pollenF*(p<CAP?1:0.15)*queenVigour();
+        const em=pup[PUP_D-1]; for(let i=PUP_D-1;i>0;i--)pup[i]=pup[i-1]; pup[0]=larv[LAR_D-1]; for(let i=LAR_D-1;i>0;i--)larv[i]=larv[i-1]; larv[0]=eggs[EGG_D-1]; for(let i=EGG_D-1;i>0;i--)eggs[i]=eggs[i-1]; eggs[0]=lay;
+        used+=lay-em; if(used<0)used=0; if(used>broodSpace)used=broodSpace; p+=em-p*(winter?1/LIFE_W:1/LIFE_S); if(p<1)p=1; Hn-=p*C_BEE*coldMult(T)*M.eat(); if(Hn<0){Hn=0; if(starve===null)starve=d;}
+        if(d%6===0||d===YEAR) series.push({d,h:Hn/HC}); if(d>=250)minW=Math.min(minW,Hn); }
+      if(minW===Infinity)minW=Hn; return {minW:minW/HC,endH:Hn/HC,starve,series}; }
+    function setRow(id,txt){ const el=$(id); el.querySelector('b').textContent=txt+' /day'; }
+    function drawReport(){ const L=ledger();
+      $('rIncome').querySelector('b').textContent=L.full?'storage full':('+'+L.income.toFixed(1)+(L.mult!==1?(' ×'+L.mult.toFixed(2)):'')+' /day');
+      setRow('rEaten','−'+L.eaten.toFixed(1)); setRow('rBrood','−'+L.brood.toFixed(1)); setRow('rWax','−'+L.wax.toFixed(1));
+      const net=$('rNet'); net.className='row net '+(L.net>=0?'pos':'neg'); net.querySelector('b').textContent=(L.net>=0?'+':'−')+Math.abs(L.net).toFixed(1)+' /day';
+      const fr=Math.round(P*FOR_FRAC),nu=Math.round(P*NURSE_FRAC),bu=Math.round(P*BUILD_FRAC),ho=Math.max(0,Math.round(P)-fr-nu-bu),tot=Math.max(1,fr+nu+bu+ho);
+      $('cFor').style.width=(fr/tot*100)+'%'; $('cNur').style.width=(nu/tot*100)+'%'; $('cBui').style.width=(bu/tot*100)+'%'; $('cHou').style.width=(ho/tot*100)+'%';
+      $('cForN').textContent=fr; $('cNurN').textContent=nu; $('cBuiN').textContent=bu; $('cHouN').textContent=ho;
+      // the comb's own geometry, measured live against the honeycomb theorem
+      const nb=cells.reduce((a,c)=>a+(c.built?1:0),0);
+      $('hxCells').textContent=nb;
+      // centred hexagonal numbers: 1,7,19,37,61,91… = 3r(r+1)+1 — the rings of a growing nest
+      let ring=0; while(3*(ring+1)*(ring+2)+1<=nb) ring++;
+      $('hxRings').textContent=ring;
+      const seq=[1,7,19,37,61,91,127].filter(n=>n<=Math.max(7,nb)+30).slice(0,6);
+      $('hxSeq').textContent='('+seq.join(' · ')+'…)';
+      // wall length to enclose one unit of area, per tiling shape (the isoperimetric constant √⁴12 for the hexagon):
+      //   hexagon √⁴12 ≈ 1.861   square 2.000   equilateral triangle √⁴48 ≈ 2.632
+      // circles pack tightest but can't tile — they leave ~9.3% of the plane as gaps, so they're not an option for comb.
+      const HEX=1.861, SQUARE=2.000, TRI=2.632;
+      $('hxSave').textContent='−'+Math.round((SQUARE-HEX)/SQUARE*100)+'% wax';
+      $('hxSave').className='good';
+      $('hxSaveSq').innerHTML='<span style="color:var(--dim)">−'+Math.round((TRI-HEX)/TRI*100)+'% vs. triangular cells</span>';
+      if(ring>=1){ const nextN=3*(ring+1)*(ring+2)+1;
+        $('hexNote').innerHTML='Your nest is '+ring+' full ring'+(ring>1?'s':'')+' of comb — the centred hexagonal numbers. The next complete ring lands at <b style="color:var(--gold)">'+nextN+'</b> cells. Varro guessed hexagons were best in 36 BC; it wasn\u2019t proven until 1999.'; }
+      else { $('hexNote').innerHTML='A hexagon walls off its area with the shortest perimeter of any tile that leaves no gaps. The saving looks small per cell, but wax is dear \u2014 bees eat roughly 8 spoons of honey to make one of wax \u2014 so across a whole comb it is enormous. And it is not merely good: it is <b>provably the best possible</b>, which no one showed until 1999.'; }
+      $('qCap').innerHTML='Queen: year '+queenAge+' · vigour '+Math.round(queenVigour()*100)+'%'+(queenAge>=3?' — aging; expect supersedure in spring':'');
+      const cv=$('sparkHoney');
+      if(!sparkCtx){ const r=cv.getBoundingClientRect(); if(r.width<10) return; cv.width=Math.max(120,r.width)*DPR; cv.height=62*DPR; sparkCtx=cv.getContext('2d'); sparkCtx.setTransform(DPR,0,0,DPR,0,0); }
+      const sc=sparkCtx, w=cv.width/DPR, h=cv.height/DPR; sc.clearRect(0,0,w,h);
+      const fc=forecastCache||forecastToSpring(); const ser=fc.series;
+      if(ser && ser.length>1){ const maxH=Math.max(10,...ser.map(s=>s.h));
+        const X=d=>((d-ser[0].d)/Math.max(1,(ser[ser.length-1].d-ser[0].d)))*(w-8)+4, Y=v=>h-6-(Math.max(0,v)/maxH)*(h-14);
+        const wx0=Math.max(4,X(270)); sc.fillStyle='rgba(140,170,210,0.10)'; sc.fillRect(wx0,0,w-wx0,h);
+        sc.strokeStyle='rgba(255,90,60,0.5)'; sc.lineWidth=1; sc.beginPath(); sc.moveTo(4,Y(0)); sc.lineTo(w-4,Y(0)); sc.stroke();
+        sc.beginPath(); ser.forEach((s,i)=>{ const x=X(s.d),y=Y(s.h); i?sc.lineTo(x,y):sc.moveTo(x,y); });
+        sc.lineTo(X(ser[ser.length-1].d),Y(0)); sc.lineTo(X(ser[0].d),Y(0)); sc.closePath();
+        sc.fillStyle=fc.starve!==null?'rgba(255,122,90,0.12)':'rgba(247,183,51,0.13)'; sc.fill();
+        sc.strokeStyle=fc.starve!==null?'#ff7a5a':'#f7b733'; sc.lineWidth=2; sc.beginPath(); ser.forEach((s,i)=>{ const x=X(s.d),y=Y(s.h); i?sc.lineTo(x,y):sc.moveTo(x,y); }); sc.stroke();
+        sc.strokeStyle='rgba(255,255,255,0.7)'; sc.lineWidth=1; sc.beginPath(); sc.moveTo(X(Math.floor(day)),2); sc.lineTo(X(Math.floor(day)),h-2); sc.stroke();
+      }
+      $('fcCap').innerHTML = fc.starve!==null ? ('Honey runs out around <b style="color:var(--bad)">day '+fc.starve+'</b> if nothing changes.')
+        : ('Projected winter low: <b style="color:var(--good)">'+Math.round(fc.minW)+'</b> cells. White line = today; blue band = winter.');
+    }
+
+    // ===================== founding coach (progressive onboarding) =====================
+    const PREVEAL=['res','clockWrap','reportBtn','advisor','forageGrp'];
+    function setReveal(on){ PREVEAL.forEach(id=>{ const el=$(id); if(el) el.classList.toggle('hidden', on); }); }
+    function spot(id,on){ const el=$(id); if(el) el.classList.toggle('spotlight',on); }
+    function clearSpots(){ ['forageGrp','brushGrp','timeGrp','tabMeadow','reportBtn'].forEach(id=>spot(id,false)); document.querySelectorAll('[data-brush],[data-sp],[data-f]').forEach(e=>e.classList.remove('tapHere')); }
+    const COACH=[
+      { ic:'👑', spot:'brushGrp', brushHint:'brood', pause:true, prog:'1 · nursery', lesson:'brood',
+        tx:'Your queen needs a nursery — <em>tap a few wax cells</em> to mark them <b>Brood</b>.',
+        until:()=>brushedBrood>=3, done:'She begins to lay. New bees in about 20 days.' },
+      { ic:'🍯', spot:'brushGrp', brushHint:'honey', prog:'2 · pantry', lesson:'honey',
+        tx:'Mark a couple of outer cells as <b>Honey</b> — the winter pantry.',
+        until:()=>paintedHoney>=2, done:'They\u2019ll fill as the nectar ripens.' },
+      { ic:'🔨', spot:'brushGrp', brushHint:'expand', prog:'3 · grow', lesson:'expand',
+        tx:'<b>Expand</b>: tap just outside the comb and the builders will draw new wax. That\u2019s the craft — the seasons teach the rest.',
+        until:()=>flaggedExpand>=2, done:'The builders get to work.' },
+    ];
+    function showCoach(){ const s=COACH[coachStep]; if(!s){ endCoach(); return; }
+      if(s.lesson && !lessonSeen[s.lesson]){ showLesson(s.lesson, showCoach); return; }
+      clearSpots();
+      if(s.show) s.show.forEach(id=>{ const el=$(id); if(el) el.classList.remove('hidden'); });
+      $('coachIc').textContent=s.ic; $('coachTx').innerHTML=s.tx; $('coachProg').textContent=s.prog||'';
+      const btn=$('coachBtn');
+      if(s.until){ if(s.until()){ btn.style.display=''; btn.textContent='Next'; } else btn.style.display='none'; } else { btn.style.display=''; btn.textContent=s.btn||'Next'; }
+      $('coach').classList.add('show');
+      if(s.spot) spot(s.spot,true);
+      if(s.brushHint){ const el=document.querySelector('[data-brush="'+s.brushHint+'"]'); if(el) el.classList.add('tapHere'); }
+      if(s.pause){ setSpeed(0); } else if(speed===0 && coachStep>0){ setSpeed(1); }
+    }
+    function advanceCoach(){ const s=COACH[coachStep]; if(s&&s.done) toast(s.done); coachStep++;
+      if(coachStep>=COACH.length){ endCoach(); } else showCoach(); }
+    function endCoach(){ onboard=false; clearSpots(); $('coach').classList.remove('show'); setReveal(false); forecastCache=forecastToSpring();
+      goals=makeGoals(); lastSI=seasonIdx(day); setSpeed(1); saveGame();
+      showLesson('forage', ()=>{ tip('notes','Hazel: Nothing here is a secret — the <b>?</b> up top keeps all of it. Read any of it again whenever you like, and take your time. The bees aren\u2019t going anywhere.'); }); }
+    $('coachBtn').addEventListener('click',()=>{ const s=COACH[coachStep]; if(s&&!s.until) advanceCoach(); });
+    $('coachSkip').addEventListener('click',()=>{ seedStarterZones(); endCoach(); });
+    function checkCoachProgress(){ if(!onboard) return; const s=COACH[coachStep]; if(s&&s.until&&s.until()){ advanceCoach(); } }
+    function seedStarterZones(){ for(const cell of cells){ if(cell.built&&cell.zone==='none'){ cell.zone = cellDist(cell.c,cell.r)<1.2?'brood':'honey'; } }
+      let n=0; for(const cell of cells){ if(cell.zone==='brood'&&!cell.brood&&n<4){ cell.brood={stage:'larva',t:Math.random()*LAR_D}; n++; } } }
+
+    // ===================== grounded beekeeping facts (rotated on summaries) =====================
+    const FACTS=[
+      'A single worker makes only about a <b>twelfth of a teaspoon</b> of honey in her whole life. A jar is thousands of lifetimes.',
+      'It takes visits to roughly <b>two million flowers</b> to make one pound of honey — and a strong hive can gather a hundred pounds in a summer.',
+      'Kept honeybees aren’t endangered — they’re <b>livestock</b>, and there are more hives now than 60 years ago. It’s the wild bees — bumblebees, mason bees — that most need our help.',
+      'The best thing a beekeeper does for the world isn’t the honey — it’s the <b>flowers they plant</b>, which feed every wild pollinator too.',
+      'The real threat to a hive isn’t hornets. It’s a pinhead-sized mite called <b>varroa</b>, and the viruses it carries.',
+      'A forager’s <b>waggle dance</b> names both the direction and the distance to the flowers — a map, danced in the dark.',
+      'Bees and flowering plants have grown up together for over <b>a hundred million years</b>. Neither would be the same without the other.',
+      'A colony holds its centre at <b>blood heat</b> all winter by shivering as one — no fire, just forty thousand bodies keeping the queen warm.',
+    ];
+    let factIx=Math.floor(Math.random()*FACTS.length);
+    function beeNote(){ factIx=(factIx+1)%FACTS.length; return '<div class="beenote"><span class="lbl">Did you know</span>'+FACTS[factIx]+'</div>'; }
+
+    // ===================== cinematic intro (Hazel's story) =====================
+    let storyMode=false, storyIx=0, storyT=0, storySun=0, storyBees=[], camX=0.5, camS=0.9;
+    // where the camera rests per beat — the hive never leaves the frame
+    const SCN={ dawn:{hx:0.5,hs:0.8,far:true}, hive:{hx:0.5,hs:1.0}, swarm:{hx:0.5,hs:1.0}, queen:{hx:0.84,hs:0.6},
+                comb:{hx:0.85,hs:0.54}, year:{hx:0.86,hs:0.5}, flowers:{hx:0.85,hs:0.56}, ready:{hx:0.5,hs:1.12} };
+    const STORY=[
+      { sc:'dawn',    line:'Forty years I\u2019ve kept bees on this hill. My hands are done now \u2014 but the meadow\u2019s still humming, and I\u2019ve been waiting to hand it on.' },
+      { sc:'hive',    line:'This nest is empty this morning. Give it an hour. Listen\u2026' },
+      { sc:'swarm',   line:'There. A <b>swarm</b> \u2014 ten thousand bees around one young queen, hunting for a home. Every colony starts this way: the old hive grew crowded, and half of them left to begin again.' },
+      { sc:'queen',   line:'That\u2019s her. The whole colony is her children \u2014 <b>one mother</b>, tens of thousands of daughters. In a good week she lays fifteen hundred eggs a day.' },
+      { sc:'comb',    line:'Here\u2019s what the bees taught me: a hive isn\u2019t a heap of insects. It\u2019s <b>one creature</b>. It thinks together, warms itself, remembers. Keepers call it a superorganism.' },
+      { sc:'comb',    line:'You won\u2019t command them \u2014 nobody commands bees. You only choose <em>where they build</em> and <em>where they forage</em>. They\u2019ve managed the rest for a hundred million years.' },
+      { sc:'year',    line:'It comes down to one race with the calendar: raise enough bees, and store enough <b>honey</b>, to last the winter. Honey isn\u2019t treasure to them \u2014 it\u2019s fuel. In the cold they huddle and shiver to stay warm, and shivering burns honey.' },
+      { sc:'flowers', line:'And every flower they visit, they leave a little <b>pollen</b> behind. Near a third of the food on your plate grows because bees did that. Keep them well, plant them flowers \u2014 you\u2019re tending far more than honey.' },
+      { sc:'ready',   line:'That\u2019s plenty from an old woman. The queen\u2019s waiting on you. Let\u2019s give her a nursery.' },
+    ];
+    function seedStoryBees(){ storyBees=[]; for(let i=0;i<44;i++) storyBees.push({x:Math.random()*W,y:Math.random()*Hh,ph:Math.random()*6.28,sp:0.4+Math.random()*0.9,r:size*(0.09+Math.random()*0.12),dx:(Math.random()-0.5),dy:(Math.random()-0.5)}); }
+    function ramp(keys,t){ const n=keys.length-1, x=Math.max(0,Math.min(1,t))*n, i=Math.min(n-1,Math.floor(x)); return lc(keys[i],keys[i+1],x-i); }
+    function storyDots(){ let h=''; for(let i=0;i<STORY.length;i++) h+='<i class="'+(i===storyIx?'on':'')+'"></i>'; $('storyDots').innerHTML=h; }
+    function showStoryBeat(){ const b=STORY[storyIx]; if(!b){ endStory(); return; }
+      const el=$('story'); el.classList.remove('show'); void $('storyLine').offsetWidth;
+      $('storyLine').innerHTML=b.line; storyDots(); storyT=0;
+      $('storyNext').textContent = storyIx>=STORY.length-1 ? 'Begin ›' : 'Continue ›';
+      requestAnimationFrame(()=>el.classList.add('show'));
+    }
+    function advanceStory(){ if(!storyMode) return; storyIx++; if(storyIx>=STORY.length){ endStory(); } else showStoryBeat(); }
+    function startStory(){ $('intro').classList.add('hide'); storyMode=true; storyIx=0; storySun=0; camX=0.5; camS=0.8;
+      if(wantSound){ setSound(true); } seedStoryBees(); layout(); $('story').classList.remove('hide'); showStoryBeat(); }
+    function endStory(){ storyMode=false; $('story').classList.add('hide'); seedAndPlay(); }
+    $('storySkip').addEventListener('click',(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); endStory(); });
+    $('storyNext').addEventListener('click',(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); advanceStory(); });
+    $('story').addEventListener('click',()=>advanceStory());
+    addEventListener('keydown',e=>{ if(!storyMode) return;
+      if(e.key===' '||e.key==='Enter'||e.key==='ArrowRight'){ e.preventDefault(); advanceStory(); }
+      else if(e.key==='Escape'){ e.preventDefault(); endStory(); } });
+
+    // ---- cinematic backdrop, painted on the live canvas ----
+    function storyHorizon(){ return Hh*(W<620?0.44:0.55); }
+    function meadowBase(s){
+      const horizon=storyHorizon();
+      // A long dawn, graded through the colours the sky actually passes: deep night, indigo,
+      // the rose that arrives before the sun does, amber, then the plain blue of a working morning.
+      const zen=ramp(['#04050e','#0a0d26','#211b42','#4a3e71','#7ba5da','#8fb8e8'],s);
+      const mid=ramp(['#080a16','#151434','#4a2a55','#a45c75','#e5a077','#c7dff9'],s);
+      const low=ramp(['#0e0d1a','#251e3f','#78375a','#f4805a','#ffcd93','#e8f2ff'],s);
+      let g=ctx.createLinearGradient(0,0,0,horizon+size*3);
+      g.addColorStop(0,zen); g.addColorStop(0.44,mid); g.addColorStop(0.84,low); g.addColorStop(1,low);
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,Hh);
+      if(s<0.52){ const a=1-s/0.52;                                    // stars, thinning as the sky lifts
+        for(let i=0;i<74;i++){ const x=(i*137.5)%W, y=((i*89.3)%(horizon*0.88));
+          const tw=0.5+0.5*Math.sin(gt*1.3+i*1.7);
+          ctx.fillStyle='rgba(255,248,232,'+(a*(0.2+0.55*tw)*(((i%5)/5)*0.6+0.4)).toFixed(3)+')';
+          ctx.beginPath(); ctx.arc(x,y,(i%9===0)?1.5:0.85,0,6.28); ctx.fill(); } }
+      const sx=W*(0.27+0.11*s), sy=horizon+size*2.4-s*(horizon+size*2.4-Hh*0.15), sr=size*2.1;
+      const glow=Math.max(0,1-Math.abs(sy-horizon)/(size*10));         // the horizon burns before the sun clears it
+      if(glow>0.01){ let bg=ctx.createLinearGradient(0,horizon-size*8,0,horizon+size*1.5);
+        bg.addColorStop(0,'rgba(255,140,80,0)');
+        bg.addColorStop(1,'rgba(255,164,92,'+(0.36*glow*Math.min(1,s*2.6)).toFixed(3)+')');
+        ctx.fillStyle=bg; ctx.fillRect(0,horizon-size*8,W,size*9.5); }
+      const warm=s<0.5?'255,146,92':'255,231,178';
+      let sg=ctx.createRadialGradient(sx,sy,0,sx,sy,sr*6);
+      sg.addColorStop(0,'rgba('+warm+',0.92)'); sg.addColorStop(0.16,'rgba('+warm+',0.4)');
+      sg.addColorStop(0.46,'rgba('+warm+',0.12)'); sg.addColorStop(1,'rgba('+warm+',0)');
+      ctx.fillStyle=sg; ctx.beginPath(); ctx.arc(sx,sy,sr*6,0,6.28); ctx.fill();
+      ctx.fillStyle=ramp(['#ff7d52','#ff8f5c','#ffbe78','#ffe0aa','#fff5db','#fffdf5'],s);
+      ctx.beginPath(); ctx.arc(sx,sy,sr,0,6.28); ctx.fill();
+      for(const cl of clouds){                                          // cloud bellies catch it first
+        const cdx=((cl.x+gt*cl.v*0.3)%(W+cl.s*5))-cl.s*2.5;             // a slow drift, barely there
+        const lit=Math.max(0,1-Math.abs(cl.y-sy)/(Hh*0.5));
+        const base=ramp(['#0b0c1a','#171634','#4a2b4e','#9c5f6e','#e2b79b','#ffffff'],s);
+        ctx.fillStyle=base; ctx.globalAlpha=0.5+0.35*s;
+        for(let i=-1;i<=1;i++){ ctx.beginPath(); ctx.ellipse(cdx+i*cl.s*0.8,cl.y,cl.s*0.95,cl.s*0.5,0,0,6.28); ctx.fill(); }
+        if(lit>0.05&&s>0.2){ ctx.fillStyle=ramp(['#3a2030','#6b3448','#c96a5e','#ffb076','#ffe6bd','#ffffff'],s);
+          ctx.globalAlpha=(0.16+0.4*lit)*Math.min(1,s*1.8);
+          for(let i=-1;i<=1;i++){ ctx.beginPath(); ctx.ellipse(cdx+i*cl.s*0.8,cl.y+cl.s*0.16,cl.s*0.8,cl.s*0.3,0,0,6.28); ctx.fill(); } }
+        ctx.globalAlpha=1; }
+      const hA=ramp(['#06070f','#0c0e22','#201a36','#3e3950','#5d8a5a','#5b9e54'],s);
+      const hB=ramp(['#030409','#080a16','#151125','#2b2839','#497848','#4f9a48'],s);
+      const rim=ramp(['#1a1420','#3a2440','#8a4258','#ff9a6a','#ffd9a4','#dff0ff'],s);
+      ctx.fillStyle=hA; ctx.beginPath(); ctx.moveTo(0,horizon);
+      for(let x=0;x<=W;x+=14) ctx.lineTo(x,horizon-size*3.4-Math.sin(x*0.004+2)*size*2);
+      ctx.lineTo(W,Hh); ctx.lineTo(0,Hh); ctx.fill();
+      ctx.strokeStyle=rim; ctx.lineWidth=1.6; ctx.globalAlpha=0.5+0.45*s; ctx.beginPath();   // light along the crest
+      for(let x=0;x<=W;x+=14){ const y=horizon-size*3.4-Math.sin(x*0.004+2)*size*2; x?ctx.lineTo(x,y):ctx.moveTo(x,y); }
+      ctx.stroke(); ctx.globalAlpha=1;
+      ctx.fillStyle=hB; ctx.beginPath(); ctx.moveTo(0,horizon+size*0.5);
+      for(let x=0;x<=W;x+=14) ctx.lineTo(x,horizon+size*0.5-Math.sin(x*0.006)*size*1.3);
+      ctx.lineTo(W,Hh); ctx.lineTo(0,Hh); ctx.fill();
+      let hz=ctx.createLinearGradient(0,horizon-size*2,0,Hh);          // ground haze, warm at dawn
+      hz.addColorStop(0,'rgba(255,190,130,'+(0.14*Math.min(1,s*2)).toFixed(3)+')'); hz.addColorStop(1,'rgba(255,190,130,0)');
+      ctx.fillStyle=hz; ctx.fillRect(0,horizon-size*2,W,Hh-horizon+size*2);
+      return horizon; }
+    function hiveBox(cx,by,scale){ const bw=size*4.6*scale, boxes=3;
+      for(let i=0;i<boxes;i++){ const yy=by-(i+1)*size*1.9*scale; ctx.fillStyle=i?'#caa066':'#b98a48'; rr2(cx-bw/2,yy,bw,size*1.9*scale,3); ctx.fill(); ctx.strokeStyle='rgba(70,48,18,0.6)'; ctx.lineWidth=1.5; ctx.stroke(); ctx.fillStyle='rgba(0,0,0,0.10)'; ctx.fillRect(cx-bw/2,yy+size*1.7*scale,bw,size*0.2*scale); }
+      ctx.fillStyle='#8a6a36'; rr2(cx-bw/2-2,by-boxes*size*1.9*scale-size*0.5*scale,bw+4,size*0.6*scale,3); ctx.fill();
+      ctx.fillStyle='#9a7438'; ctx.fillRect(cx-bw/2,by-size*0.2*scale,bw,size*0.5*scale); ctx.fillStyle='#1c1206'; ctx.fillRect(cx-bw*0.3,by-size*0.2*scale,bw*0.6,size*0.18*scale); }
+    function crown(cx,cy,r){ ctx.fillStyle='rgba(255,214,120,0.95)'; ctx.beginPath(); ctx.moveTo(cx-r,cy+r*0.5); ctx.lineTo(cx-r,cy-r*0.3); ctx.lineTo(cx-r*0.5,cy+r*0.05); ctx.lineTo(cx,cy-r*0.5); ctx.lineTo(cx+r*0.5,cy+r*0.05); ctx.lineTo(cx+r,cy-r*0.3); ctx.lineTo(cx+r,cy+r*0.5); ctx.closePath(); ctx.fill(); }
+    function drawStory(dt){ const _s=size; size=mSize; try{ drawStoryBody(dt); } finally { size=_s; } }
+    function drawStoryBody(dt){ storyT+=dt;
+      const beat=STORY[storyIx]||STORY[0];
+      const prog = STORY.length>1 ? storyIx/(STORY.length-1) : 1;
+      storySun += (prog-storySun)*Math.min(1,dt*0.42);   // she takes her time
+      const s=storySun, horizon=meadowBase(s), sc=beat.sc;
+      // camera drifts between beats; the apiary is always somewhere in frame
+      const cam=SCN[sc]||SCN.hive;
+      camX += (cam.hx-camX)*Math.min(1,dt*2.0); camS += (cam.hs-camS)*Math.min(1,dt*2.0);
+      const by=horizon+size*0.5;
+      // her hillside: distant hives behind, hers in front
+      if(cam.far||sc==='dawn'){ ctx.globalAlpha=0.5; hiveBox(W*0.18, horizon-size*1.6, 0.5); hiveBox(W*0.78, horizon-size*1.2, 0.42); ctx.globalAlpha=1; }
+      hiveBox(W*camX, by, camS);
+      // drifting bees; they gather into a swarm on the swarm beat
+      const swarmPull = sc==='swarm'?1:0;
+      const scx=W*camX, scy=by-size*4;
+      for(const b of storyBees){ b.ph+=dt*10;
+        if(swarmPull){ const dx=scx-b.x, dy=scy-b.y, L=Math.hypot(dx,dy)||1;
+          b.x+=dx/L*size*2.2*dt + Math.cos(b.ph)*size*0.5; b.y+=dy/L*size*2.2*dt + Math.sin(b.ph)*size*0.5; }
+        else { b.x+=b.dx*b.sp*size*dt*1.2 + Math.sin(b.ph)*0.3; b.y+=b.dy*b.sp*size*dt*0.8; }
+        if(b.x<-size*2)b.x=W+size*2; if(b.x>W+size*2)b.x=-size*2; if(b.y<-size*2)b.y=Hh+size*2; if(b.y>Hh+size*2)b.y=-size*2;
+        drawBee(b.x,b.y,Math.atan2(b.dy,b.dx),null,false,b.ph); }
+      const stageX=W*0.40, stageY=Hh*0.30;   // motifs play out to the left of the hive
+      if(sc==='queen'){ const qx=stageX, qy=stageY;
+        for(let i=0;i<9;i++){ const a=gt*0.6+i/9*6.28, rr=size*3.6+Math.sin(gt+i)*size*0.5;
+          drawBee(qx+Math.cos(a)*rr, qy+Math.sin(a)*rr*0.7, a+1.6, null, false, gt*3+i); }
+        crown(qx, qy-size*3.4, size*1.5); drawBee(qx,qy,0,null,true,gt*2); }
+      if(sc==='comb'){ const cols=6, rows=3, s2=size*1.2, ox0=stageX-(cols-1)*s2*0.87, oy0=stageY-s2*1.5;
+        for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){ const x=ox0+c*s2*1.74+(r%2)*s2*0.87, y=oy0+r*s2*1.5;
+          hexPath(x,y,s2); const fill=(c+r)%3;
+          ctx.fillStyle=fill===0?'rgba(247,183,51,0.85)':fill===1?'rgba(143,196,255,0.4)':'rgba(58,44,22,0.9)'; ctx.fill();
+          ctx.strokeStyle='rgba(90,70,36,0.9)'; ctx.lineWidth=1.5; ctx.stroke(); }
+        for(let i=0;i<4;i++) drawBee(ox0+((i*97)%(cols*s2*1.74)), oy0+((i*53)%(rows*s2*1.5)), gt+i, null, false, gt*2+i); }
+      if(sc==='year'){ const ax=stageX, ay=stageY+Hh*0.14, rx=Math.min(W*0.28,size*11), ry=Math.min(Hh*0.2,size*7);
+        ctx.strokeStyle='rgba(255,255,255,0.25)'; ctx.lineWidth=2; ctx.beginPath();
+        for(let a=Math.PI;a<=2*Math.PI;a+=0.05){ const x=ax+Math.cos(a)*rx, y=ay+Math.sin(a)*ry; a===Math.PI?ctx.moveTo(x,y):ctx.lineTo(x,y); } ctx.stroke();
+        const cols=['#a7e07c','#ffd24a','#ff9d5a','#cfe2f5'];
+        for(let i=0;i<4;i++){ const a=Math.PI+(i+0.5)/4*Math.PI, x=ax+Math.cos(a)*rx, y=ay+Math.sin(a)*ry;
+          ctx.fillStyle=cols[i]; ctx.beginPath(); ctx.arc(x,y,size*0.65,0,6.28); ctx.fill(); }
+        const ta=Math.PI+((gt*0.15)%1)*Math.PI, tx=ax+Math.cos(ta)*rx, ty=ay+Math.sin(ta)*ry;
+        ctx.fillStyle='rgba(255,240,200,0.95)'; ctx.beginPath(); ctx.arc(tx,ty,size*0.85,0,6.28); ctx.fill(); }
+      if(sc==='flowers'){ const gy=by;
+        for(let i=0;i<7;i++){ const fx=W*(0.07+0.62*(i/6)) + Math.sin(gt*0.6+i)*size*0.3, fs=size*(0.8+((i*7)%3)*0.3);
+          ctx.strokeStyle='rgba(60,120,50,0.85)'; ctx.lineWidth=Math.max(1,size*0.08);
+          ctx.beginPath(); ctx.moveTo(fx,gy); ctx.quadraticCurveTo(fx+size*0.2,gy-fs*1.8,fx,gy-fs*3); ctx.stroke();
+          const hx=fx, hy=gy-fs*3, col=['#ffd24a','#ff7aa8','#b58cff','#ff9d5a'][i%4]; ctx.fillStyle=col;
+          for(let j=0;j<6;j++){ const a=j/6*6.28; ctx.beginPath(); ctx.ellipse(hx+Math.cos(a)*fs*0.5,hy+Math.sin(a)*fs*0.5,fs*0.34,fs*0.2,a,0,6.28); ctx.fill(); }
+          ctx.fillStyle='#e8902b'; ctx.beginPath(); ctx.arc(hx,hy,fs*0.28,0,6.28); ctx.fill();
+          if(i%2===0){ const bx=hx+Math.sin(gt*1.5+i)*size*1.6, byy=hy-size*1.2+Math.cos(gt*1.5+i)*size*0.8;
+            drawBee(bx,byy,gt+i,'nectar',false,gt*3+i); } } }
+    }
+
+    let wantSound=true;
+    (function(){ const el=$('sndInvite'); if(!el) return;
+      const set=()=>{ el.classList.toggle('on',wantSound); el.setAttribute('aria-checked',wantSound?'true':'false'); };
+      const flip=(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); wantSound=!wantSound; set(); if(AU.ctx) setSound(wantSound); };
+      el.addEventListener('click',flip);
+      el.addEventListener('keydown',e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); flip(e); } });
+      set(); })();
+
+    // ===================== lessons =====================
+    // One idea at a time, full screen, with the thing itself drawn large — and always the part
+    // that actually matters: when would you pick this, and why.
+    const LESSONS={
+      brood:{ t:'BROOD', s:'the nursery', art:'brood',
+        l:'The queen lays her eggs in these cells. Egg, then a curled white larva the nurses feed, then a capped pupa — about twenty days from laying to a bee that can fly.',
+        w:'<span class="k"><b>Pick Brood when you want more bees.</b></span><span class="k">Bees are the engine of the whole place: more bees, more foragers, more honey. Spring is the moment — a bee raised in April works the entire summer.</span><span class="k">Keep it as <b>one tight round patch</b>. A nest holds its own warmth; a scattered one bleeds it at the edges.</span>' },
+      honey:{ t:'HONEY', s:'the winter pantry', art:'honey',
+        l:'Foragers bring nectar home wet — about four-fifths water. House bees fan it until it thickens, then seal it under a wax cap. That is honey.',
+        w:'<span class="k"><b>Pick Honey to give the harvest somewhere to go.</b></span><span class="k">Honey isn\u2019t treasure to them — it\u2019s fuel. All winter the cluster shivers to stay warm, and shivering burns honey.</span><span class="k">Watch the <b>Winter pantry</b> gauge: it fills toward what they will actually need. With no storage cells, nectar coming in is simply wasted.</span>' },
+      expand:{ t:'EXPAND', s:'fresh wax', art:'expand',
+        l:'Builder bees draw new comb wherever you mark it — but only touching wax that already exists, and only when there is honey to spare.',
+        w:'<span class="k"><b>Pick Expand when the comb is full, or the queen is crowded.</b></span><span class="k">Wax is dear: roughly eight spoons of honey burned for every one of wax. Build a little ahead of need — not far ahead of it.</span><span class="k">A crowded queen is how colonies decide to <b>swarm</b> and leave you half a hive.</span>' },
+      forage:{ t:'THE DIALS', s:'where the foragers go', art:'forage',
+        l:'You can\u2019t command bees. You can only say which of the two harvests to favour. <b>Pollen</b> is protein — nurses eat it and make food for the young. <b>Nectar</b> is sugar, and it ripens into honey.',
+        w:'<span class="k"><b>Early spring \u2192 Pollen or Balanced.</b> No protein, no brood; no brood, no colony.</span><span class="k"><b>High summer \u2192 Nectar.</b> The flow is at its peak and the pantry has to be filled.</span><span class="k"><b>Autumn \u2192 Nectar.</b> Top it off and stop growing.</span><span class="k">The numbers on each dial show what it pays right now — honey and pollen, cells per week.</span>' },
+      year:{ t:'THE YEAR', s:'one race with the calendar', art:'year',
+        l:'It comes down to a single question, asked once a year: did you raise enough bees, and bank enough honey, to reach spring?',
+        w:'<span class="k"><b>Spring</b> — grow the colony.</span><span class="k"><b>Summer</b> — bank the honey while the flow lasts.</span><span class="k"><b>Autumn</b> — harvest what is truly spare, and stop expanding.</span><span class="k"><b>Winter</b> — sit tight and let them eat what you saved.</span><span class="k">The almanac up top shows the bloom, the frost, and this season\u2019s goal.</span>' },
+    };
+    let lesArt='brood', lesCtx=null, lesT2=0, lesAfter=null, lessonSeen={};
+    (function(){ const cv=$('lessonArt'); if(cv&&cv.getContext){ const d=Math.min(devicePixelRatio||1,2);
+      cv.width=340*d; cv.height=132*d; lesCtx=cv.getContext('2d'); lesCtx.setTransform(d,0,0,d,0,0); } })();
+    function showLesson(key, after, again){ const L=LESSONS[key]; if(!L||(lessonSeen[key]&&!again)){ if(after)after(); return; }
+      lessonSeen[key]=1; lesArt=L.art; lesAfter=after||null; lesT2=0;
+      $('lesT').textContent=L.t; $('lesS').textContent=L.s; $('lesL').innerHTML=L.l; $('lesW').innerHTML=L.w;
+      $('lesson').classList.remove('hide'); paused=true; }
+    $('lesBtn').addEventListener('click',()=>{ $('lesson').classList.add('hide'); paused=false;
+      const a=lesAfter; lesAfter=null; if(a) a(); });
+    function lhex(g,x,y,s){ g.beginPath(); for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-30);
+      const px=x+s*Math.cos(a), py=y+s*Math.sin(a); i?g.lineTo(px,py):g.moveTo(px,py); } g.closePath(); }
+    function drawLessonArt(dt){ const g=lesCtx; if(!g||$('lesson').classList.contains('hide')) return;
+      lesT2+=dt; const t=lesT2, W2=340, H2=132; g.clearRect(0,0,W2,H2);
+      const cy=H2*0.5, s=26;
+      const label=(x,y,tx)=>{ g.fillStyle='rgba(255,255,255,0.42)'; g.font='600 8.5px "JetBrains Mono", monospace';
+        g.textAlign='center'; g.fillText(tx,x,y); g.textAlign='left'; };
+      const arrow=(x,y)=>{ g.strokeStyle='rgba(255,217,122,0.4)'; g.lineWidth=1.4; g.beginPath();
+        g.moveTo(x-6,y); g.lineTo(x+6,y); g.moveTo(x+2,y-4); g.lineTo(x+6,y); g.lineTo(x+2,y+4); g.stroke(); };
+      const cellAt=(x,fill,rim)=>{ lhex(g,x,cy,s); g.fillStyle=fill; g.fill(); g.strokeStyle=rim||'#5a4624'; g.lineWidth=1.6; g.stroke(); };
+      if(lesArt==='brood'){ const xs=[62,170,278];
+        cellAt(xs[0],'#3a2c16'); g.fillStyle='#f3ead6'; g.beginPath(); g.ellipse(xs[0],cy,2.6,6,0.5,0,6.28); g.fill(); label(xs[0],cy+s+13,'EGG · 3d');
+        arrow((xs[0]+xs[1])/2,cy);
+        cellAt(xs[1],'#3a2c16'); const gr=0.55+0.25*Math.sin(t*1.6); g.fillStyle='#f0dcae';
+        g.beginPath(); g.arc(xs[1],cy,s*0.42*gr+3,0,6.28); g.fill(); g.strokeStyle='rgba(180,140,80,0.5)'; g.lineWidth=1; g.stroke(); label(xs[1],cy+s+13,'LARVA · 5d');
+        arrow((xs[1]+xs[2])/2,cy);
+        cellAt(xs[2],'#caa86a'); g.fillStyle='rgba(120,90,50,0.35)'; g.beginPath(); g.arc(xs[2],cy,s*0.42,0,6.28); g.fill(); label(xs[2],cy+s+13,'PUPA · 12d');
+        g.fillStyle='rgba(255,217,122,0.75)'; g.font='600 9px "Bricolage Grotesque", sans-serif'; g.textAlign='center';
+        g.fillText('\u2192 a new worker, about 20 days',170,20); g.textAlign='left'; }
+      else if(lesArt==='honey'){ const xs=[62,170,278];
+        cellAt(xs[0],'#3a2c16'); g.save(); lhex(g,xs[0],cy,s*0.94); g.clip(); g.fillStyle='#e9c64f';
+        const fh=s*1.1*(0.45+0.12*Math.sin(t*1.4)); g.fillRect(xs[0]-s,cy+s*0.85-fh,s*2,fh+1); g.restore(); label(xs[0],cy+s+13,'NECTAR · wet');
+        arrow((xs[0]+xs[1])/2,cy);
+        cellAt(xs[1],'#3a2c16'); g.save(); lhex(g,xs[1],cy,s*0.94); g.clip(); g.fillStyle='#f0b93f';
+        g.fillRect(xs[1]-s,cy-s*0.5,s*2,s*1.4); g.restore(); label(xs[1],cy+s+13,'FANNED DRY');
+        arrow((xs[1]+xs[2])/2,cy);
+        cellAt(xs[2],'#f7b733'); g.fillStyle='rgba(255,255,255,'+(0.14+0.09*Math.sin(t*1.8)).toFixed(2)+')';
+        g.fillRect(xs[2]-s*0.8,cy-s*0.7,s*1.6,s*0.4); label(xs[2],cy+s+13,'CAPPED · honey');
+        g.fillStyle='rgba(255,217,122,0.75)'; g.font='600 9px "Bricolage Grotesque", sans-serif'; g.textAlign='center';
+        g.fillText('winter fuel \u2014 they eat it to stay warm',170,20); g.textAlign='left'; }
+      else if(lesArt==='expand'){ cellAt(96,'#3a2c16'); cellAt(140,'#3a2c16');
+        lhex(g,192,cy,s); g.fillStyle='rgba(150,200,120,0.2)'; g.fill();
+        g.strokeStyle='rgba(180,230,150,'+(0.5+0.4*Math.sin(t*2.4)).toFixed(2)+')'; g.lineWidth=2; g.setLineDash([4,3]); g.stroke(); g.setLineDash([]);
+        const bx=192+Math.cos(t*2)*16, by=cy+Math.sin(t*3)*7;
+        g.fillStyle='#e2a52e'; g.beginPath(); g.ellipse(bx,by,5,3.2,Math.sin(t*3)*0.3,0,6.28); g.fill();
+        g.fillStyle='rgba(30,20,8,0.85)'; g.beginPath(); g.ellipse(bx,by,1.1,3,0,0,6.28); g.fill();
+        label(140,cy+s+13,'YOUR COMB'); label(192,cy+s+13,'NEW WAX');
+        g.fillStyle='rgba(255,217,122,0.75)'; g.font='600 9px "Bricolage Grotesque", sans-serif'; g.textAlign='center';
+        g.fillText('\u2248 8 spoons of honey buys 1 of wax',170,20); g.textAlign='left'; }
+      else if(lesArt==='forage'){ const fx=95, px=245;
+        g.strokeStyle='rgba(80,140,70,0.8)'; g.lineWidth=2; g.beginPath(); g.moveTo(fx,cy+34); g.lineTo(fx,cy-2); g.stroke();
+        g.fillStyle='#ffd24a'; for(let i=0;i<6;i++){ const a=i/6*6.28+t*0.3; g.beginPath(); g.ellipse(fx+Math.cos(a)*11,cy-2+Math.sin(a)*11,7,4,a,0,6.28); g.fill(); }
+        g.fillStyle='#e8902b'; g.beginPath(); g.arc(fx,cy-2,6,0,6.28); g.fill();
+        label(fx,cy+48,'ONE FLOWER');
+        const y1=cy-16, y2=cy+16;
+        g.fillStyle='#e9c64f'; g.beginPath(); g.arc(px-52,y1,7,0,6.28); g.fill();
+        g.fillStyle='rgba(233,198,79,0.9)'; g.font='700 9px "Bricolage Grotesque", sans-serif'; g.fillText('NECTAR \u2192 honey \u2192 winter fuel',px-38,y1+3);
+        g.fillStyle='#ef8c2c'; g.beginPath(); g.arc(px-52,y2,7,0,6.28); g.fill();
+        g.fillStyle='rgba(239,140,44,0.9)'; g.fillText('POLLEN \u2192 protein \u2192 more bees',px-38,y2+3);
+        const bx=fx+Math.cos(t*1.4)*26, by=cy-2+Math.sin(t*2.2)*10;
+        g.fillStyle='#e2a52e'; g.beginPath(); g.ellipse(bx,by,5,3.2,0,0,6.28); g.fill(); }
+      else { const ax=170, ay=cy+34, rx=126, ry=52;
+        g.strokeStyle='rgba(255,255,255,0.2)'; g.lineWidth=2; g.beginPath();
+        for(let a=Math.PI;a<=2*Math.PI;a+=0.05){ const x=ax+Math.cos(a)*rx, y=ay+Math.sin(a)*ry; a===Math.PI?g.moveTo(x,y):g.lineTo(x,y); } g.stroke();
+        const cols=['#a7e07c','#ffd24a','#ff9d5a','#cfe2f5'], nm=['GROW','BANK','HARVEST','SURVIVE'];
+        for(let i=0;i<4;i++){ const a=Math.PI+(i+0.5)/4*Math.PI, x=ax+Math.cos(a)*rx, y=ay+Math.sin(a)*ry;
+          g.fillStyle=cols[i]; g.beginPath(); g.arc(x,y,7,0,6.28); g.fill();
+          g.fillStyle='rgba(255,255,255,0.5)'; g.font='700 7.5px "JetBrains Mono", monospace'; g.textAlign='center';
+          g.fillText(nm[i],x,y-13); g.textAlign='left'; }
+        const ta=Math.PI+((t*0.12)%1)*Math.PI, tx=ax+Math.cos(ta)*rx, ty=ay+Math.sin(ta)*ry;
+        g.fillStyle='rgba(255,240,200,0.95)'; g.beginPath(); g.arc(tx,ty,4,0,6.28); g.fill(); }
+    }
+
+    const GICON={brood:'👑',honey:'🍯',expand:'🔨',forage:'🌼',year:'☀'};
+    (function(){ const row=$('guideRow'); if(!row) return;
+      Object.keys(LESSONS).forEach(k=>{ const L=LESSONS[k]; const d=document.createElement('div');
+        d.className='gtopic'; d.tabIndex=0;
+        d.innerHTML='<span class="gi2">'+GICON[k]+'</span><div><b>'+L.t+'</b><br><span>'+L.s+'</span></div>';
+        d.addEventListener('click',()=>{ $('guide').classList.add('hide'); showLesson(k,()=>{ $('guide').classList.remove('hide'); }, true); });
+        row.appendChild(d); }); })();
+    $('helpBtn').addEventListener('click',()=>{ $('guide').classList.remove('hide'); paused=true; });
+    $('guideClose').addEventListener('click',()=>{ $('guide').classList.add('hide'); paused=false; });
+
+    // ===================== boot =====================
+    layout(); addEventListener('resize',()=>{ layout(); sparkCtx=null; });
+
+    const existing=loadSave();
+    if(existing && existing.cb){ $('startCont').classList.remove('hide');
+      $('startCont').textContent='Continue — Year '+existing.year+', '+seasonName(existing.day)+' day '+(Math.floor(existing.day)+1); }
+
+    function beginCommon(){ $('intro').classList.add('hide'); started=true; queen.x=hiveCx; queen.y=hiveCy; queen.tx=hiveCx; queen.ty=hiveCy; syncBeePool();
+      prevv={h:honeyU,p:pollenU,b:P,br:countBrood().total}; rate={h:0,p:0,b:0,br:0}; waxRateEMA=0; forecastCache=forecastToSpring(); layout(); setSpeed(1); }
+    function seedAndPlay(){ clearSave(); tinyComb(); honeyU=8*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; grades=[]; forage='balanced'; activePatch=null;
+      queenAge=1; hornet=null; hornetCD=18+Math.random()*22; parts.length=0; shake=0;
+      rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=null; lastSI=0; scoutShown=false; seenTips={}; lessonSeen={}; nudged={}; starveT=0; bankAtFrost=0; raidLoss=0;
+      brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=true; setReveal(true);
+      document.querySelectorAll('[data-f]').forEach(x=>x.classList.toggle('on',x.dataset.f==='balanced')); beginCommon(); showCoach(); saveGame(); }
+    $('startNew').addEventListener('click',()=>{ startStory(); });
+    $('startCont').addEventListener('click',()=>{ const s=loadSave(); if(!s){ $('startNew').click(); return; } onboard=false; setReveal(false); deserialize(s); beginCommon();
+      if(broodCells()===0) seedStarterZones();
+      const rep=offlineCatchup(s); if(rep){ const sign=v=>(v>=0?'+':'')+v; toast('While you were away ('+rep.time+'): ~'+rep.days+' days passed. Bees '+sign(rep.dP)+', honey '+sign(rep.dH)+' cells.'); } saveGame(); });
+    syncHUD();
+
+    // debug/testing handle
+    window.__hm=()=>({day,year,P,honeyU,pollenU,nectarU,honeyCells:honeyCells(),broodCells:broodCells(),
+      story:{on:storyMode, ix:storyIx, sc:(STORY[storyIx]||{}).sc, camX, camS, hiveX:W*camX, W, horizon:storyHorizon(), Hh},
+      view:{W,Hh,size,mSize,tSize,ox,oy,hiveCx,hiveCy,topH,botH,stage:Math.min(W,STAGE_W),bounds:combBounds()},
+      therm:{warmth:nestWarmth(), amb:AMB(lerpM(tempM,day)+difficulty().temp+M.temp()),
+        broodHeats:cells.filter(c=>c.brood).map(c=>+c.heat.toFixed(3)),
+        growAvg:(()=>{const b=cells.filter(c=>c.brood); return b.length? b.reduce((a,c)=>a+thermF(c.heat),0)/b.length : 0;})()},
+      built:cells.filter(c=>c.built).length, flagged:cells.filter(c=>!c.built&&c.flagExpand).length,
+      zones:{brood:cells.filter(c=>c.built&&c.zone==='brood').length,honey:cells.filter(c=>c.built&&c.zone==='honey').length,none:cells.filter(c=>c.built&&c.zone==='none').length},
+      rateH:rate.h, rj, jars, goals:goals?goals.map(g=>({l:g.label,d:g.done})):null});
+
+    // ===================== main loop =====================
+    let last=performance.now(), relayoutT=0, lastDt=1/60, idleT=0;
+    function frame(now){
+      requestAnimationFrame(frame);
+      let dt=(now-last)/1000; last=now; if(dt>0.05)dt=0.05; if(dt<0)dt=0;
+      gt+=dt; lastDt=dt; shake=Math.max(0,shake-dt*1.2);
+      const frozen=hitstop>0; if(frozen) hitstop-=dt;
+      relayoutT+=dt; if(relayoutT>1){ relayoutT=0; const t=$('hud-top'),b=$('hud-bottom');
+        if(Math.abs((t.offsetHeight+8)-topH)>6 || Math.abs((b.offsetHeight+8)-botH)>6) layout(); }
+      // the view eases out as the comb grows — intimate when small, whole-hive when large
+      fitT+=dt; if(fitT>0.3){ fitT=0; fitComb(false); }
+      if(tSize>0){ const k=Math.min(1,dt*1.5);
+        size+=(tSize-size)*k; ox+=(tOx-ox)*k; oy+=(tOy-oy)*k; syncHiveCentre(); }
+      // winter passes quickly — when there is nothing to decide and the forecast is safe
+      let eff=speed;
+      const Tn=lerpM(tempM,day)+difficulty().temp+M.temp(), winterNow=Tn<WIN_TEMP;
+      const autoFast=started&&!over&&!onboard&&winterNow&&!hornet&&speed>0&&forecastCache&&forecastCache.starve===null&&forecastCache.minW>10;
+      if(autoFast) eff=Math.max(speed,3);
+      $('fastW').classList.toggle('hide',!autoFast);
+      if(started && !over && speed>0 && !paused && !frozen){
+        const dd=(dt/DAY_LEN)*eff; day+=dd;
+        if(day>=YEAR){ day=YEAR; stepDay(0.0001,false); if(!over){ syncHUD(); endOfYear(); } }
+        else stepDay(dd,false);
+        if(!over){
+          stepHornet(dt);
+          const si=seasonIdx(day);
+          if(si!==lastSI && !onboard){ lastSI=si; showLesson('year'); if(si===3){ armMidwinter(false); tip('winter','Hazel: They don\u2019t sleep through winter. They cluster tight and shiver to keep the queen at blood heat \u2014 about 35\u00b0C \u2014 burning the honey you stored to do it.'); } if(si===1) tip('summer','Hazel: Fresh nectar is mostly water. House bees fan it dry with their wings until it\u2019s thick enough to keep, then cap it with wax. That\u2019s ripe honey.'); seasonBanner(si); }
+          const brc=countBrood().total;
+          rate.h+=(((honeyU-prevv.h)/HC/dd)-rate.h)*0.06; rate.p+=(((pollenU-prevv.p)/HC/dd)-rate.p)*0.06;
+          rate.b+=(((P-prevv.b)/dd)-rate.b)*0.06; rate.br+=(((brc-prevv.br)/dd)-rate.br)*0.06;
+          prevv.h=honeyU; prevv.p=pollenU; prevv.b=P; prevv.br=brc;
+          waxRateEMA+=((waxAccum/dd)-waxRateEMA)*0.12; waxAccum=0;
+          fcTimer+=dt; if(fcTimer>0.6){ fcTimer=0; forecastCache=forecastToSpring(); }
+          syncBeePool();
+          saveTimer+=dt; if(saveTimer>5){ saveTimer=0; saveGame(); }
+        }
+      }
+      // music: mood follows the story, then the seasons; gameplay sits a touch below the narration
+      if(AU.ctx&&AU.on){
+        musMood = storyMode ? 'story' : ['spring','summer','autumn','winter'][seasonIdx(day)];
+        musicTick();
+        if(AU.musicG){ const mt2=storyMode?1:(over?0.5:0.62);
+          try{ AU.musicG.gain.setTargetAtTime(mt2, AU.ctx.currentTime, 0.5); }catch(e){} } }
+      if(AU.ctx&&AU.on&&AU.humG){ const T=lerpM(tempM,day)+difficulty().temp+M.temp(), winter=T<WIN_TEMP;
+        const tgt=(started&&!over)?(0.08+0.5*Math.min(1,P/CAP))*(winter?0.45:1)*(speed===0?0.3:1)*(hornet&&hornet.state==='raid'?1.4:1):0;
+        AU.humG.gain.value+= (tgt-AU.humG.gain.value)*Math.min(1,dt*2.5); }
+      const shx=shake>0.005?(Math.random()-0.5)*shake*size*0.8:0, shy=shake>0.005?(Math.random()-0.5)*shake*size*0.8:0;
+      ctx.setTransform(DPR,0,0,DPR,shx*DPR,shy*DPR);
+      drawLessonArt(dt);
+      if(nudgeCool>0) nudgeCool-=dt;
+      if(hzHold>0) hzHold-=dt;
+      idleT+=dt; if(idleT>4){ idleT=0; watchIdle(); }
+      drawHazel(dt);
+      if(started){
+        if(view==='hive'){ if(!paused&&!over&&!frozen) stepInside(dt*Math.min(eff,1.6),(dt/DAY_LEN)*Math.min(eff,3)); drawInside(); }
+        else drawMeadow(dt);
+        syncHUD(); advise(); if(reportOpen) drawReport();
+      } else if(storyMode){ drawStory(dt);
+      } else drawInside();
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+    }
+    requestAnimationFrame(frame);
+  })();
+  </script>
+</body>
+</html>
