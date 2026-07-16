@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://hive-mind-game.com/sitemap.xml

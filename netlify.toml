@@ -1,0 +1,26 @@
+# Netlify configuration for HIVEMIND — a static, single-file game.
+# No build step: the repo root is published as-is.
+
+[build]
+  publish = "."
+
+# Redirect www to the apex domain (Cloudflare DNS points both at Netlify).
+[[redirects]]
+  from = "https://www.hive-mind-game.com/*"
+  to = "https://hive-mind-game.com/:splat"
+  status = 301
+  force = true
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # The game is one inline <script>/<style> file; fonts come from Google Fonts.
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'; upgrade-insecure-requests"
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    Cross-Origin-Opener-Policy = "same-origin"
+
+# HTML caching is left to Netlify's default (public, max-age=0, must-revalidate),
+# which already guarantees players get the newest version right after a deploy.

@@ -7,6 +7,13 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0d0905">
+<meta name="description" content="HIVEMIND — a beekeeping survival sim in your browser. Paint the comb, steer the foragers, fight off hornets, and stock enough honey to survive the winter. Free & open source.">
+<link rel="canonical" href="https://hive-mind-game.com/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://hive-mind-game.com/">
+<meta property="og:title" content="HIVEMIND — keep a honeybee colony alive, year after year">
+<meta property="og:description" content="A beekeeping survival sim in your browser. Paint the comb, steer the foragers, and stock enough honey to survive the winter. Free & open source.">
+<meta name="twitter:card" content="summary">
 <title>HIVEMIND — keep a honeybee colony alive, year after year</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -337,6 +344,9 @@
   .card .btn.pulse{ animation:glowPulse 2.2s infinite; }
   @keyframes glowPulse{ 0%,100%{ box-shadow:0 8px 22px rgba(255,160,40,.28);} 50%{ box-shadow:0 8px 34px rgba(255,200,90,.6);} }
   .card .btn.ghost{ margin-left:8px; font-size:13px; padding:11px 18px; }
+  .cardLinks{ margin-top:22px; display:flex; gap:18px; justify-content:center; font-size:10.5px; }
+  .cardLinks a{ color:var(--dim); text-decoration:none; border-bottom:1px solid rgba(194,169,126,0.35); padding-bottom:1px; }
+  .cardLinks a:hover{ color:var(--gold); border-color:var(--gold); }
   .grade{ font-family:'JetBrains Mono',monospace; font-size:12.5px; color:var(--dim); line-height:1.9; margin-bottom:12px; }
   .grade b{ color:var(--text); } .grade .G{ font-size:52px; font-weight:700; display:block; margin:4px 0; animation:pop .6s cubic-bezier(.2,1.4,.5,1); font-family:'Bricolage Grotesque'; }
   @keyframes pop{ from{ transform:scale(.3); opacity:0; } to{ transform:scale(1); opacity:1; } }
@@ -519,6 +529,9 @@
       <div>
         <button class="btn pulse" id="startNew">Found a new colony</button>
         <button class="btn ghost hide" id="startCont">Continue</button>
+      </div>
+      <div class="cardLinks">
+        <a href="about.html" target="_blank" rel="noopener">About</a><a href="privacy.html" target="_blank" rel="noopener">Privacy</a><a href="terms.html" target="_blank" rel="noopener">Terms</a>
       </div>
     </div>
   </div>
