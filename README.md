@@ -6,7 +6,7 @@ HIVEMIND is a cozy-but-punishing beekeeping survival sim that runs entirely in y
 
 ## Play
 
-Open `index.html` in any modern browser. That's it.
+**▶ Play it now at [hive-mind-game.com](https://hive-mind-game.com)** (also at [hive-mind-game.netlify.app](https://hive-mind-game.netlify.app)) — or open `index.html` in any modern browser.
 
 Works on desktop and mobile (touch-friendly, installable as a fullscreen web app).
 
@@ -26,7 +26,21 @@ You guide a colony through a 360-day year across four seasons — Spring, Summer
 - Single-file HTML5 canvas game (`index.html`) — HTML, CSS, and vanilla JavaScript, zero dependencies.
 - Simulation-driven: population dynamics, forage yields, comb economy, and weather all tick per in-game day.
 - Fonts loaded from Google Fonts (Bricolage Grotesque + JetBrains Mono); everything else is self-contained.
+- No accounts, no analytics, no server — saves live in your browser's localStorage. See the [privacy policy](https://hive-mind-game.com/privacy.html).
+
+## Hosting
+
+The site is hosted on Netlify with DNS on Cloudflare. Setup, DNS records, and
+security headers are documented in [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md);
+Netlify configuration (headers, redirects) lives in [`netlify.toml`](netlify.toml).
+
+## Site pages
+
+[About](https://hive-mind-game.com/about.html) ·
+[Privacy](https://hive-mind-game.com/privacy.html) ·
+[Terms](https://hive-mind-game.com/terms.html) ·
+[Security policy](SECURITY.md)
 
 ## License
 
-[MIT](LICENSE) © ERRERLabs
+[MIT](LICENSE) © 2026 ErrerLabs (Karl Meves)

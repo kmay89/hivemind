@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="About HIVEMIND — a browser beekeeping survival sim by ErrerLabs.">
+<link rel="canonical" href="https://hive-mind-game.com/about.html">
+<meta name="theme-color" content="#0d0905">
+<title>About — HIVEMIND</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --comb:#0d0905; --panel:rgba(27,19,9,0.74); --border:rgba(255,196,110,0.16);
+    --text:#f7eed9; --dim:#c2a97e; --gold:#ffd97a; --honey:#ffb42b; --cyan:#7fe3d6; }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{ min-height:100vh; background:var(--comb); color:var(--text);
+    font-family:'Bricolage Grotesque',sans-serif; -webkit-font-smoothing:antialiased;
+    display:flex; flex-direction:column; align-items:center; padding:40px 20px 60px; line-height:1.7; }
+  main{ max-width:640px; width:100%; }
+  .crumb{ font:700 10px 'JetBrains Mono',monospace; letter-spacing:.24em; text-transform:uppercase; }
+  .crumb a{ color:var(--gold); text-decoration:none; }
+  .crumb a:hover{ text-decoration:underline; }
+  h1{ font-weight:800; font-size:34px; letter-spacing:.06em; margin:14px 0 4px;
+    background:linear-gradient(95deg,var(--gold),#fff 55%,var(--honey)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  .sub{ font-size:10px; letter-spacing:.28em; text-transform:uppercase; color:var(--dim); margin-bottom:30px; font-weight:600; }
+  h2{ font-size:16px; font-weight:700; color:var(--gold); margin:30px 0 8px; }
+  p{ font-size:14px; margin-bottom:14px; color:var(--text); }
+  p b{ color:var(--gold); font-weight:600; } em{ color:var(--cyan); font-style:normal; }
+  a{ color:var(--cyan); }
+  ul{ margin:0 0 14px 20px; font-size:14px; }
+  li{ margin-bottom:6px; }
+  .play{ display:inline-block; margin:10px 0 4px; padding:13px 28px; border-radius:999px; text-decoration:none;
+    font-weight:700; font-size:15px; color:#241503; background:linear-gradient(180deg,var(--gold),var(--honey));
+    box-shadow:0 8px 22px rgba(255,160,40,.28); }
+  footer{ max-width:640px; width:100%; margin-top:50px; padding-top:18px; border-top:1px solid var(--border);
+    font-size:11.5px; color:var(--dim); display:flex; flex-wrap:wrap; gap:6px 18px; }
+  footer a{ color:var(--dim); }
+</style>
+</head>
+<body>
+<main>
+  <div class="crumb"><a href="/">← hive-mind-game.com</a></div>
+  <h1>ABOUT</h1>
+  <div class="sub">the game &amp; the people behind it</div>
+
+  <p><b>HIVEMIND</b> is a beekeeping survival sim that runs entirely in your browser. You take over an old beekeeper's hillside of hives and guide a honeybee colony through the year — paint the comb, steer the foragers, fend off hornets, and bank enough honey to survive the winter. Make it to spring and the next year gets harder.</p>
+  <a class="play" href="/">Play HIVEMIND ▶</a>
+
+  <h2>Grounded in real beekeeping</h2>
+  <p>The colony is simulated, not scripted: brood develops from egg to larva to capped pupa, bees change jobs as they age, nectar ripens into honey, and the winter cluster burns its stores to stay warm. The game takes liberties where fun demands it, but the bones are honest — and the in-game keeper's notes are full of real bee facts.</p>
+
+  <h2>Technology</h2>
+  <ul>
+    <li>A single HTML file — vanilla JavaScript and an HTML5 canvas, no frameworks, no build step.</li>
+    <li>No accounts and no server: your save lives in your own browser.</li>
+    <li>Works on desktop and mobile, mouse or touch.</li>
+  </ul>
+
+  <h2>Who makes this</h2>
+  <p>HIVEMIND is made by <b>ErrerLabs</b> (Karl Meves). The game is open source under the <a href="https://github.com/kmay89/hivemind/blob/main/LICENSE">MIT License</a> — the code lives at <a href="https://github.com/kmay89/hivemind">github.com/kmay89/hivemind</a>. Bug reports and ideas are welcome on the <a href="https://github.com/kmay89/hivemind/issues">issue tracker</a>.</p>
+</main>
+<footer>
+  <span>© 2026 ErrerLabs · Karl Meves</span>
+  <a href="/about.html">About</a>
+  <a href="/privacy.html">Privacy</a>
+  <a href="/terms.html">Terms</a>
+  <a href="https://github.com/kmay89/hivemind/blob/main/LICENSE">MIT License</a>
+  <a href="https://github.com/kmay89/hivemind">Source</a>
+</footer>
+</body>
+</html>
