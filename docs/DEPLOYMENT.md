@@ -60,8 +60,9 @@ All responses get security headers from `netlify.toml`:
 - `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`,
   `Referrer-Policy: strict-origin-when-cross-origin`, and a locked-down
   `Permissions-Policy` (no camera, mic, geolocation, payment, or USB).
-- HTML is served with `max-age=0, must-revalidate` so players always get the
-  latest version immediately after a deploy.
+- HTML caching is Netlify's default (`public, max-age=0, must-revalidate`),
+  so players always get the latest version immediately after a deploy —
+  no extra configuration needed.
 
 If you add an external script/analytics/API someday, extend the CSP in
 `netlify.toml` or the browser will block it.
