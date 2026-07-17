@@ -123,13 +123,34 @@
   .lcard{ max-width:520px; text-align:left; }
   #lessonArt{ width:100%; max-width:340px; height:auto; display:block; margin:0 auto 20px; }
   .lcard h1{ text-align:center; font-size:24px; }
+  .lcard h1.cBrood{ background:linear-gradient(95deg,#8fc4ff,#fff 55%,#6aa2e2); -webkit-background-clip:text; background-clip:text; }
+  .lcard h1.cExpand{ background:linear-gradient(95deg,#a7e07c,#fff 55%,#77b25c); -webkit-background-clip:text; background-clip:text; }
+  .lcard h1.cCyan{ background:linear-gradient(95deg,var(--cyan),#fff 55%,#2bb9ad); -webkit-background-clip:text; background-clip:text; }
   .lcard .sub{ text-align:center; }
   .lcard p{ font-size:12.5px; line-height:1.7; color:var(--text); margin:18px 0 0; }
+  /* semantic ink: every key term wears its in-game colour, everywhere it appears */
+  .kb{ color:#8fc4ff; font-weight:700; } .kh{ color:var(--gold); font-weight:700; } .kg{ color:#a7e07c; font-weight:700; }
+  .kc{ color:var(--cyan); font-weight:700; } .kp{ color:#ef8c2c; font-weight:700; } .kw{ color:var(--frost); font-weight:700; }
+  .typing::after{ content:'\258d'; margin-left:1px; color:var(--gold); animation:caretBlink .7s steps(1) infinite; }
+  @keyframes caretBlink{ 50%{ opacity:0; } }
+  /* the three beats: sign → meaning → wisdom, revealed one tap at a time */
+  #lesSteps{ margin-top:16px; }
+  .lstep{ display:none; margin-bottom:13px; }
+  .lstep.in{ display:block; animation:stepIn .55s cubic-bezier(.2,.9,.3,1) both; }
+  .lstep.past{ opacity:.6; animation:none; }
+  @keyframes stepIn{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:none; } }
+  .stepLab{ display:block; font:700 8.5px 'JetBrains Mono',monospace; letter-spacing:.22em; text-transform:uppercase; color:var(--gold); opacity:.7; margin-bottom:5px; }
+  .lstep p{ margin:0; }
+  .lstep .strat{ margin:0; }
+  #lesFoot{ display:flex; align-items:center; justify-content:space-between; margin-top:8px; }
+  #lesDots{ display:flex; gap:6px; }
+  #lesDots i{ width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,0.2); transition:all .3s; }
+  #lesDots i.on{ background:var(--gold); width:15px; border-radius:3px; }
   .strat{ margin:18px 0 22px; padding:14px 16px; border-radius:12px; background:rgba(255,217,122,0.07);
     border:1px solid rgba(255,217,122,0.2); font-size:12px; line-height:1.7; color:var(--dim); }
   .strat b{ color:var(--gold); font-weight:700; } .strat .k{ display:block; margin-top:9px; }
   .strat .k:first-child{ margin-top:0; }
-  #lesBtn{ display:block; width:100%; padding:13px; font-size:13px; }
+  #lesBtn{ padding:12px 26px; font-size:13px; }
   @media(max-width:620px){ .lcard p{ font-size:12px; } .strat{ font-size:11.5px; } }
   #inspect{ position:fixed; z-index:5; pointer-events:none; padding:8px 10px; max-width:216px; opacity:0; transition:opacity .12s; }
   #inspect.show{ opacity:1; }
@@ -576,8 +597,12 @@
     <div class="card lcard">
       <canvas id="lessonArt" width="680" height="264"></canvas>
       <h1 id="lesT">—</h1><div class="sub" id="lesS">—</div>
-      <p id="lesL"></p><div class="strat" id="lesW"></div>
-      <button class="btn pulse" id="lesBtn">Got it</button>
+      <div id="lesSteps">
+        <div class="lstep" id="lesStep1"><span class="stepLab">1 · The sign</span><p id="lesI"></p></div>
+        <div class="lstep" id="lesStep2"><span class="stepLab">2 · What it is</span><p id="lesL"></p></div>
+        <div class="lstep" id="lesStep3"><span class="stepLab">3 · Why it matters</span><div class="strat" id="lesW"></div></div>
+      </div>
+      <div id="lesFoot"><div id="lesDots"><i></i><i></i><i></i></div><button class="btn pulse" id="lesBtn">Next ›</button></div>
     </div>
   </div>
   <div id="inspect" class="panel"></div>
@@ -725,6 +750,22 @@
       el.addEventListener('click',e=>{ if(viaPointer) return; fn(e); });
       el.addEventListener('pointercancel',()=>{ viaPointer=false; });
       addEventListener('pointerup',()=>{ setTimeout(()=>{ viaPointer=false; },500); }); }
+
+    // ---- typewriter: text arrives at reading pace, Zelda-style; markup tags
+    // are swallowed whole so colours appear with their words. One channel —
+    // lessons and coach speech never type at the same time. ----
+    let twActive=null;
+    function finishType(){ if(!twActive) return; clearInterval(twActive.t);
+      twActive.el.innerHTML=twActive.html; twActive.el.classList.remove('typing'); twActive=null; }
+    function typeInto(el, html, done){ finishType(); if(!el) return;
+      el.classList.add('typing'); el.innerHTML=''; let i=0;
+      const t=setInterval(()=>{
+        do{ if(html[i]==='<'){ const j=html.indexOf('>',i); i=(j<0?html.length:j+1); }
+            else if(html[i]==='&'){ const j=html.indexOf(';',i); i=(j>0&&j-i<9)?j+1:i+1; }
+            else i++; } while(i<html.length && html[i]==='<');
+        el.innerHTML=html.slice(0,i);
+        if(i>=html.length){ finishType(); if(done)done(); } },13);
+      twActive={el,html,t}; }
 
     // ---- ErrerLabs studio splash: play once on load, tap or key to skip ----
     (function(){ const sp=$('splash'); if(!sp) return; let gone=false;
@@ -1787,20 +1828,20 @@
     function clearSpots(){ ['forageGrp','brushGrp','timeGrp','tabMeadow','reportBtn'].forEach(id=>spot(id,false)); document.querySelectorAll('[data-brush],[data-sp],[data-f]').forEach(e=>e.classList.remove('tapHere')); }
     const COACH=[
       { ic:'👑', spot:'brushGrp', brushHint:'brood', pause:true, prog:'1 · nursery', lesson:'brood',
-        tx:'Your queen needs a nursery — <em>tap a few wax cells</em> to mark them <b>Brood</b>.',
+        tx:'Your queen needs a nursery — <em>tap a few wax cells</em> to mark them <span class="kb">Brood</span>.',
         until:()=>brushedBrood>=3, done:'She begins to lay. New bees in about 20 days.' },
       { ic:'🍯', spot:'brushGrp', brushHint:'honey', prog:'2 · pantry', lesson:'honey',
-        tx:'Mark a couple of outer cells as <b>Honey</b> — the winter pantry.',
+        tx:'Mark a couple of outer cells as <span class="kh">Honey</span> — the winter pantry.',
         until:()=>paintedHoney>=2, done:'They\u2019ll fill as the nectar ripens.' },
       { ic:'🔨', spot:'brushGrp', brushHint:'expand', prog:'3 · grow', lesson:'expand',
-        tx:'<b>Expand</b>: tap just outside the comb and the builders will draw new wax. That\u2019s the craft — the seasons teach the rest.',
+        tx:'<span class="kg">Expand</span>: tap just outside the comb and the builders will draw new wax. That\u2019s the craft — the seasons teach the rest.',
         until:()=>flaggedExpand>=2, done:'The builders get to work.' },
     ];
     function showCoach(){ const s=COACH[coachStep]; if(!s){ endCoach(); return; }
       if(s.lesson && !lessonSeen[s.lesson]){ showLesson(s.lesson, showCoach); return; }
       clearSpots();
       if(s.show) s.show.forEach(id=>{ const el=$(id); if(el) el.classList.remove('hidden'); });
-      $('coachIc').textContent=s.ic; $('coachTx').innerHTML=s.tx; $('coachProg').textContent=s.prog||'';
+      $('coachIc').textContent=s.ic; typeInto($('coachTx'), s.tx); $('coachProg').textContent=s.prog||''; $('coachSkip').style.display='';
       const btn=$('coachBtn');
       if(s.until){ if(s.until()){ btn.style.display=''; btn.textContent='Next'; } else btn.style.display='none'; } else { btn.style.display=''; btn.textContent=s.btn||'Next'; }
       $('coach').classList.add('show');
@@ -1808,15 +1849,23 @@
       if(s.brushHint){ const el=document.querySelector('[data-brush="'+s.brushHint+'"]'); if(el) el.classList.add('tapHere'); }
       if(s.pause){ setSpeed(0); } else if(speed===0 && coachStep>0){ setSpeed(1); }
     }
-    // a completed step earns a quiet beat: the result toast plays, the bees do
-    // their thing, and only then does the next lesson arrive
+    // a completed step earns a spoken interlude: Hazel reacts to what you just
+    // did while the bees respond, and only then does the next lesson arrive
+    const BRIDGE=[
+      'There she goes \u2014 the <span class="kb">queen</span> is already circling her new nursery. New bees in about twenty days. Next: where the <span class="kh">honey</span> lives.',
+      'Good. Those cells will fill as the <span class="kc">nectar</span> ripens. One last craft \u2014 giving them <span class="kg">room to grow</span>.',
+      'The builders are on it. That\u2019s everything I can teach standing still \u2014 <em>the seasons do the rest</em>.',
+    ];
     let coachWait=false;
-    function advanceCoach(){ if(coachWait) return; const s=COACH[coachStep]; if(s&&s.done) toast(s.done);
-      coachWait=true; $('coach').classList.remove('show'); clearSpots(); coachStep++;
+    function advanceCoach(){ if(coachWait) return; coachWait=true; clearSpots();
+      const bridge=BRIDGE[coachStep]||''; coachStep++;
       if(speed===0) setSpeed(1);
-      setTimeout(()=>{ coachWait=false; if(!onboard) return;
-        if(coachStep>=COACH.length){ endCoach(); } else showCoach(); }, 3200); }
-    function endCoach(){ onboard=false; clearSpots(); $('coach').classList.remove('show'); setReveal(false); forecastCache=forecastToSpring();
+      $('coachIc').textContent='\ud83d\udc75'; $('coachProg').textContent='hazel';
+      $('coachBtn').style.display='none'; $('coachSkip').style.display='none';
+      $('coach').classList.add('show'); typeInto($('coachTx'), bridge);
+      setTimeout(()=>{ coachWait=false; $('coach').classList.remove('show'); if(!onboard) return;
+        if(coachStep>=COACH.length){ endCoach(); } else showCoach(); }, 4600); }
+    function endCoach(){ onboard=false; finishType(); clearSpots(); $('coach').classList.remove('show'); setReveal(false); forecastCache=forecastToSpring();
       goals=makeGoals(); lastSI=seasonIdx(day); setSpeed(1); saveGame();
       setTimeout(()=>showLesson('forage', ()=>{ tip('notes','Hazel: Nothing here is a secret — the <b>?</b> up top keeps all of it. Read any of it again whenever you like, and take your time. The bees aren\u2019t going anywhere.'); }), 1500); }
     press($('coachBtn'),()=>{ const s=COACH[coachStep]; if(s&&!s.until) advanceCoach(); });
@@ -2000,31 +2049,51 @@
     // One idea at a time, full screen, with the thing itself drawn large — and always the part
     // that actually matters: when would you pick this, and why.
     const LESSONS={
-      brood:{ t:'BROOD', s:'the nursery', art:'brood',
-        l:'The queen lays her eggs in these cells. Egg, then a curled white larva the nurses feed, then a capped pupa — about twenty days from laying to a bee that can fly.',
-        w:'<span class="k"><b>Pick Brood when you want more bees.</b></span><span class="k">Bees are the engine of the whole place: more bees, more foragers, more honey. Spring is the moment — a bee raised in April works the entire summer.</span><span class="k">Keep it as <b>one tight round patch</b>. A nest holds its own warmth; a scattered one bleeds it at the edges.</span>' },
+      brood:{ t:'BROOD', s:'the nursery', art:'brood', tc:'cBrood',
+        i:'The <span class="kb">blue brush</span>. Comb painted with it becomes the <span class="kb">nursery</span> \u2014 the warm heart of the nest, where new bees are made.',
+        l:'The queen lays her eggs in these cells. <span class="kb">Egg</span>, then a curled white <span class="kb">larva</span> the nurses feed, then a capped <span class="kb">pupa</span> \u2014 about twenty days from laying to a bee that can fly.',
+        w:'<span class="k"><b>Pick <span class="kb">Brood</span> when you want more bees.</b></span><span class="k">Bees are the engine of the whole place: more bees, more foragers, more <span class="kh">honey</span>. <span class="kg">Spring</span> is the moment \u2014 a bee raised in April works the entire summer.</span><span class="k">Keep it as <b>one tight round patch</b>. A nest holds its own warmth; a scattered one bleeds it at the edges.</span>' },
       honey:{ t:'HONEY', s:'the winter pantry', art:'honey',
-        l:'Foragers bring nectar home wet — about four-fifths water. House bees fan it until it thickens, then seal it under a wax cap. That is honey.',
-        w:'<span class="k"><b>Pick Honey to give the harvest somewhere to go.</b></span><span class="k">Honey isn\u2019t treasure to them — it\u2019s fuel. All winter the cluster shivers to stay warm, and shivering burns honey.</span><span class="k">Watch the <b>Winter pantry</b> gauge: it fills toward what they will actually need. With no storage cells, nectar coming in is simply wasted.</span>' },
-      expand:{ t:'EXPAND', s:'fresh wax', art:'expand',
-        l:'Builder bees draw new comb wherever you mark it — but only touching wax that already exists, and only when there is honey to spare.',
-        w:'<span class="k"><b>Pick Expand when the comb is full, or the queen is crowded.</b></span><span class="k">Wax is dear: roughly eight spoons of honey burned for every one of wax. Build a little ahead of need — not far ahead of it.</span><span class="k">A crowded queen is how colonies decide to <b>swarm</b> and leave you half a hive.</span>' },
-      forage:{ t:'THE DIALS', s:'where the foragers go', art:'forage',
-        l:'You can\u2019t command bees. You can only say which of the two harvests to favour. <b>Pollen</b> is protein — nurses eat it and make food for the young. <b>Nectar</b> is sugar, and it ripens into honey.',
-        w:'<span class="k"><b>Early spring \u2192 Pollen or Balanced.</b> No protein, no brood; no brood, no colony.</span><span class="k"><b>High summer \u2192 Nectar.</b> The flow is at its peak and the pantry has to be filled.</span><span class="k"><b>Autumn \u2192 Nectar.</b> Top it off and stop growing.</span><span class="k">The numbers on each dial show what it pays right now — honey and pollen, cells per week.</span>' },
+        i:'The <span class="kh">golden brush</span>. Comb painted with it becomes the <span class="kh">pantry</span> \u2014 every cell a sealed jar on the shelf for winter.',
+        l:'Foragers bring <span class="kc">nectar</span> home wet \u2014 about four-fifths water. House bees fan it until it thickens, then seal it under a wax cap. That is <span class="kh">honey</span>.',
+        w:'<span class="k"><b>Pick <span class="kh">Honey</span> to give the harvest somewhere to go.</b></span><span class="k">Honey isn\u2019t treasure to them \u2014 it\u2019s <span class="kh">fuel</span>. All <span class="kw">winter</span> the cluster shivers to stay warm, and shivering burns honey.</span><span class="k">Watch the <b>Winter pantry</b> gauge: it fills toward what they will actually need. With no storage cells, nectar coming in is simply wasted.</span>' },
+      expand:{ t:'EXPAND', s:'fresh wax', art:'expand', tc:'cExpand',
+        i:'The <span class="kg">green brush</span>. Flag bare ground beside the comb and the builders draw <span class="kg">fresh wax</span> over it \u2014 new rooms for a growing house.',
+        l:'Builder bees draw new comb wherever you mark it \u2014 but only touching wax that already exists, and only when there is <span class="kh">honey</span> to spare.',
+        w:'<span class="k"><b>Pick <span class="kg">Expand</span> when the comb is full, or the queen is crowded.</b></span><span class="k">Wax is dear: roughly <span class="kh">eight spoons of honey</span> burned for every one of wax. Build a little ahead of need \u2014 not far ahead of it.</span><span class="k">A crowded queen is how colonies decide to <span class="kp">swarm</span> and leave you half a hive.</span>' },
+      forage:{ t:'THE DIALS', s:'where the foragers go', art:'forage', tc:'cCyan',
+        i:'Three <span class="kc">dials</span>, one field force. <span class="kc">Nectar</span>, <span class="kc">Balanced</span>, or <span class="kp">Pollen</span> \u2014 you point, and the foragers fly.',
+        l:'You can\u2019t command bees. You can only say which harvest to favour. <span class="kp">Pollen</span> is protein \u2014 nurses eat it and make food for the young. <span class="kc">Nectar</span> is sugar, and it ripens into <span class="kh">honey</span>.',
+        w:'<span class="k"><b><span class="kg">Early spring</span> \u2192 <span class="kp">Pollen</span> or Balanced.</b> No protein, no brood; no brood, no colony.</span><span class="k"><b><span class="kh">High summer</span> \u2192 <span class="kc">Nectar</span>.</b> The flow is at its peak and the pantry has to be filled.</span><span class="k"><b><span class="kp">Autumn</span> \u2192 <span class="kc">Nectar</span>.</b> Top it off and stop growing.</span><span class="k">The numbers on each dial show what it pays right now \u2014 honey and pollen, cells per week.</span>' },
       year:{ t:'THE YEAR', s:'one race with the calendar', art:'year',
-        l:'It comes down to a single question, asked once a year: did you raise enough bees, and bank enough honey, to reach spring?',
-        w:'<span class="k"><b>Spring</b> — grow the colony.</span><span class="k"><b>Summer</b> — bank the honey while the flow lasts.</span><span class="k"><b>Autumn</b> — harvest what is truly spare, and stop expanding.</span><span class="k"><b>Winter</b> — sit tight and let them eat what you saved.</span><span class="k">The almanac up top shows the bloom, the frost, and this season\u2019s goal.</span>' },
+        i:'The <b>almanac</b>. One strip of coloured seasons \u2014 the bloom, the harvest window, and the white tick of <span class="kw">first frost</span>. Your whole year at a glance.',
+        l:'It comes down to a single question, asked once a year: did you raise enough bees, and bank enough <span class="kh">honey</span>, to reach spring?',
+        w:'<span class="k"><b><span class="kg">Spring</span></b> \u2014 grow the colony.</span><span class="k"><b><span class="kh">Summer</span></b> \u2014 bank the honey while the flow lasts.</span><span class="k"><b><span class="kp">Autumn</span></b> \u2014 harvest what is truly spare, and stop expanding.</span><span class="k"><b><span class="kw">Winter</span></b> \u2014 sit tight and let them eat what you saved.</span><span class="k">The almanac up top shows the bloom, the frost, and this season\u2019s goal.</span>' },
     };
     let lesArt='brood', lesCtx=null, lesT2=0, lesAfter=null, lessonSeen={};
     (function(){ const cv=$('lessonArt'); if(cv&&cv.getContext){ const d=Math.min(devicePixelRatio||1,2);
       cv.width=340*d; cv.height=132*d; lesCtx=cv.getContext('2d'); lesCtx.setTransform(d,0,0,d,0,0); } })();
+    let lesStep=0, lesData=null;
+    function renderLesStep(){
+      for(let i=1;i<=3;i++){ const el=$('lesStep'+i);
+        el.classList.toggle('in', i<=lesStep+1); el.classList.toggle('past', i<lesStep+1); }
+      const dots=$('lesDots').children;
+      for(let i=0;i<dots.length;i++) dots[i].classList.toggle('on', i<=lesStep);
+      $('lesBtn').textContent = lesStep>=2 ? 'Got it' : 'Next \u203a';
+      const ids=['lesI','lesL','lesW'], beats=[lesData.i,lesData.l,lesData.w];
+      typeInto($(ids[lesStep]), beats[lesStep]); }
     function showLesson(key, after, again){ const L=LESSONS[key]; if(!L||(lessonSeen[key]&&!again)){ if(after)after(); return; }
-      lessonSeen[key]=1; lesArt=L.art; lesAfter=after||null; lesT2=0;
-      $('lesT').textContent=L.t; $('lesS').textContent=L.s; $('lesL').innerHTML=L.l; $('lesW').innerHTML=L.w;
+      lessonSeen[key]=1; lesArt=L.art; lesAfter=after||null; lesT2=0; lesData=L;
+      $('lesT').textContent=L.t; $('lesT').className=L.tc||''; $('lesS').textContent=L.s;
+      $('lesI').innerHTML=''; $('lesL').innerHTML=''; $('lesW').innerHTML='';
+      lesStep=0; renderLesStep();
       $('lesson').classList.remove('hide'); paused=true; }
-    press($('lesBtn'),()=>{ $('lesson').classList.add('hide'); paused=false;
+    press($('lesBtn'),()=>{ if(twActive){ finishType(); return; }
+      if(lesStep<2){ lesStep++; renderLesStep(); return; }
+      $('lesson').classList.add('hide'); paused=false;
       const a=lesAfter; lesAfter=null; if(a) a(); });
+    // a tap anywhere on the card lands the rest of the line, like pressing A
+    press($('lesson'),e=>{ if(e.target&&e.target.closest&&e.target.closest('#lesBtn')) return; if(twActive) finishType(); });
     function lhex(g,x,y,s){ g.beginPath(); for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-30);
       const px=x+s*Math.cos(a), py=y+s*Math.sin(a); i?g.lineTo(px,py):g.moveTo(px,py); } g.closePath(); }
     function drawLessonArt(dt){ const g=lesCtx; if(!g||$('lesson').classList.contains('hide')) return;
