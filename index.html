@@ -254,6 +254,19 @@
   .dBees span:nth-child(4){ animation-delay:.36s; } .dBees span:nth-child(5){ animation-delay:.48s; }
   @keyframes beeBop{ 0%,100%{ transform:translateY(0) rotate(-9deg) scale(1); } 50%{ transform:translateY(-22px) rotate(9deg) scale(1.12); } }
   .dCount{ font:700 30px 'JetBrains Mono',monospace; color:var(--gold); margin-bottom:18px; }
+  /* ---------- unlock chip: the prize moment ---------- */
+  #unlockChip{ position:fixed; left:50%; top:38%; transform:translate(-50%,-50%); z-index:10;
+    display:flex; flex-direction:column; align-items:center; gap:4px; padding:18px 30px; text-align:center; }
+  #unlockChip.hide{ display:none; }
+  #unlockChip.pop{ animation:unlockPop 1.65s cubic-bezier(.2,1.1,.3,1) both; }
+  @keyframes unlockPop{ 0%{ opacity:0; transform:translate(-50%,-50%) scale(.55); }
+    12%{ opacity:1; transform:translate(-50%,-50%) scale(1.06); } 20%{ transform:translate(-50%,-50%) scale(1); }
+    85%{ opacity:1; } 100%{ opacity:0; transform:translate(-50%,-50%) scale(1.03); } }
+  #unlockChip .uc1{ font:700 9px 'JetBrains Mono',monospace; letter-spacing:.3em; text-transform:uppercase; color:var(--cyan); }
+  #unlockChip .uc2{ font:800 30px 'Bricolage Grotesque',sans-serif; letter-spacing:.06em;
+    background:linear-gradient(95deg,var(--gold),#fff 55%,var(--honey)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  #unlockChip .uc3{ font:700 11px 'JetBrains Mono',monospace; color:var(--gold); }
+
   /* ---------- cell info sheet (mobile-friendly comb detail) ---------- */
   #cellSheet{ position:fixed; left:50%; transform:translateX(-50%); bottom:14px; z-index:8; width:min(420px, calc(100% - 24px));
     padding:14px 16px; }
@@ -787,6 +800,7 @@
     <div class="rHead"><span>HAZEL’S LOG</span><span id="chatX">✕</span></div>
     <div id="chatRows"></div>
   </div>
+  <div id="unlockChip" class="panel hide"><span class="uc1">✦ keeper’s page unlocked</span><span class="uc2" id="unlockName">BROOD</span><span class="uc3">+1 ✧ royal jelly</span></div>
   <div id="cellSheet" class="panel hide"><div id="csBody"></div><button class="cbtn" id="csClose">Got it</button></div>
   <div id="inspect" class="panel"></div>
   <div id="toast" class="panel"></div>
@@ -1518,7 +1532,7 @@
     canvas.addEventListener('contextmenu',e=>e.preventDefault());
 
     document.querySelectorAll('[data-f]').forEach(b=>press(b,()=>{forage=b.dataset.f;forageTouched=true;document.querySelectorAll('[data-f]').forEach(x=>x.classList.toggle('on',x===b)); forecastCache=forecastToSpring(); checkCoachProgress();}));
-    document.querySelectorAll('[data-brush]').forEach(b=>press(b,()=>{brush=b.dataset.brush;document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x===b));}));
+    document.querySelectorAll('[data-brush]').forEach(b=>press(b,()=>{brush=b.dataset.brush;document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x===b)); checkCoachProgress();}));
     document.querySelectorAll('[data-sp]').forEach(b=>press(b,()=>setSpeed(+b.dataset.sp)));
     function setSpeed(s){ speed=s; document.querySelectorAll('[data-sp]').forEach(x=>x.classList.toggle('on',+x.dataset.sp===s)); }
     press($('tabHive'),()=>setView('hive'));
@@ -2238,18 +2252,29 @@
     function spot(id,on){ const el=$(id); if(el) el.classList.toggle('spotlight',on); }
     function clearSpots(){ ['forageGrp','brushGrp','timeGrp','tabMeadow','reportBtn'].forEach(id=>spot(id,false)); document.querySelectorAll('[data-brush],[data-sp],[data-f]').forEach(e=>e.classList.remove('tapHere')); }
     const COACH=[
-      { ic:'👑', spot:'brushGrp', brushHint:'brood', pause:true, prog:'1 · nursery', lesson:'brood',
-        tx:'Your queen needs a nursery — <em>tap a few wax cells</em> to mark them <span class="kb">Brood</span>.',
-        until:()=>brushedBrood>=3, done:'She begins to lay. New bees in about 20 days.' },
-      { ic:'🍯', spot:'brushGrp', brushHint:'honey', prog:'2 · pantry', lesson:'honey',
-        tx:'Mark a couple of outer cells as <span class="kh">Honey</span> — the winter pantry.',
-        until:()=>paintedHoney>=2, done:'They\u2019ll fill as the nectar ripens.' },
-      { ic:'🔨', spot:'brushGrp', brushHint:'expand', prog:'3 · grow', lesson:'expand',
-        tx:'<span class="kg">Expand</span>: tap just outside the comb and the builders will draw new wax. That\u2019s the craft — the seasons teach the rest.',
-        until:()=>flaggedExpand>=2, done:'The builders get to work.' },
+      { ic:'🖌️', spot:'brushGrp', brushHint:'brood', pause:true, prog:'1 · the brushes',
+        tx:'These below are your <b>brushes</b>. Pick up <span class="kb">Brood</span> \u2014 tap it.',
+        until:()=>brush==='brood' },
+      { ic:'👑', prog:'2 · her first cradle',
+        tx:'Now <em>tap one wax cell</em> near the middle. The soft glow shows where it\u2019s wise.',
+        until:()=>brushedBrood>=1, unlock:'brood' },
+      { ic:'🍯', spot:'brushGrp', brushHint:'honey', prog:'3 · the pantry',
+        tx:'Next craft. Pick up the <span class="kh">Honey</span> brush.',
+        until:()=>brush==='honey' },
+      { ic:'🍯', prog:'4 · first shelf',
+        tx:'Paint <em>one outer cell</em> \u2014 a shelf for the harvest to sleep on.',
+        until:()=>paintedHoney>=1, unlock:'honey' },
+      { ic:'🔨', spot:'brushGrp', brushHint:'expand', prog:'5 · fresh wax',
+        tx:'Last brush: <span class="kg">Expand</span>. Pick it up.',
+        until:()=>brush==='expand' },
+      { ic:'🔨', prog:'6 · make room',
+        tx:'Tap the glowing ground <em>just outside the comb</em>. The builders will draw new wax over it.',
+        until:()=>flaggedExpand>=1, unlock:'expand' },
+      { ic:'🌼', spot:'forageGrp', show:['forageGrp'], prog:'7 · the dials',
+        tx:'One more thing \u2014 the <span class="kc">dials</span> aim your foragers. Tap any one of them.',
+        until:()=>forageTouched, unlock:'forage' },
     ];
     function showCoach(){ const s=COACH[coachStep]; if(!s){ endCoach(); return; }
-      if(s.lesson && !lessonSeen[s.lesson]){ showLesson(s.lesson, showCoach); return; }
       clearSpots();
       if(s.show) s.show.forEach(id=>{ const el=$(id); if(el) el.classList.remove('hidden'); });
       $('coachIc').textContent=s.ic; typeInto($('coachTx'), s.tx); $('coachProg').textContent=s.prog||''; $('coachSkip').style.display='';
@@ -2260,28 +2285,40 @@
       if(s.brushHint){ const el=document.querySelector('[data-brush="'+s.brushHint+'"]'); if(el) el.classList.add('tapHere'); }
       if(s.pause){ setSpeed(0); } else if(speed===0 && coachStep>0){ setSpeed(1); }
     }
-    // a completed step earns a spoken interlude: Hazel reacts to what you just
-    // did while the bees respond, and only then does the next lesson arrive
-    const BRIDGE=[
-      'There she goes \u2014 the <span class="kb">queen</span> is already circling her new nursery. New bees in about twenty days. Next: where the <span class="kh">honey</span> lives.',
-      'Good. Those cells will fill as the <span class="kc">nectar</span> ripens. One last craft \u2014 giving them <span class="kg">room to grow</span>.',
-      'The builders are on it. That\u2019s everything I can teach standing still \u2014 <em>the seasons do the rest</em>.',
-    ];
+    // completing a craft UNLOCKS its keeper's page: fanfare, +1 royal jelly, the
+    // card as the prize \u2014 then Hazel teases the next craft. Doing comes first.
+    const BRIDGE=['',
+      'There \u2014 her first cradle. <em>A bee in twenty days.</em> Next craft: the <span class="kh">pantry</span>.','',
+      'A shelf on the wall. When the <span class="kc">nectar</span> ripens, this is where it sleeps. One craft left: <span class="kg">room</span>.','',
+      'The builders are already reaching for it. Last lesson \u2014 <em>aiming the foragers</em>.',
+      'That\u2019s the whole craft, keeper. The seasons teach the rest \u2014 and I\u2019m right here when you need me.'];
+    const UNLOCK_NAME={brood:'BROOD',honey:'HONEY',expand:'EXPAND',forage:'THE DIALS'};
+    function showUnlockChip(key, after){ $('unlockName').textContent=UNLOCK_NAME[key]||key;
+      const el=$('unlockChip'); el.classList.remove('hide'); el.classList.add('pop');
+      logMsg('✦','Keeper\u2019s page unlocked \u2014 <b>'+(UNLOCK_NAME[key]||key)+'</b> (+1 ✧ royal jelly)');
+      setTimeout(()=>{ el.classList.add('hide'); el.classList.remove('pop'); if(after) after(); },1650); }
     let coachWait=false;
     function advanceCoach(){ if(coachWait) return; coachWait=true; clearSpots();
-      const bridge=BRIDGE[coachStep]||''; coachStep++;
+      const s=COACH[coachStep]; coachStep++;
       if(speed===0) setSpeed(1);
-      $('coachIc').textContent='\ud83d\udc75'; $('coachProg').textContent='hazel';
-      $('coachBtn').style.display='none'; $('coachSkip').style.display='none';
-      $('coach').classList.add('show'); logMsg('👵', bridge);
-      typeInto($('coachTx'), bridge, ()=>{ const b=$('coachBtn'); b.style.display=''; b.textContent='Continue ›'; }); }
+      $('coach').classList.remove('show');
+      const tease=()=>{ const bridge=BRIDGE[coachStep-1]||'';
+        if(!bridge){ coachWait=false; if(!onboard) return;
+          if(coachStep>=COACH.length){ endCoach(); } else showCoach(); return; }
+        $('coachIc').textContent='\ud83d\udc75'; $('coachProg').textContent='hazel';
+        $('coachBtn').style.display='none'; $('coachSkip').style.display='none';
+        $('coach').classList.add('show'); logMsg('👵', bridge);
+        typeInto($('coachTx'), bridge, ()=>{ const b=$('coachBtn'); b.style.display=''; b.textContent='Continue ›'; }); };
+      if(s&&s.unlock){ rj++; fanfare(); burst(W/2,Hh*0.42,26);
+        showUnlockChip(s.unlock, ()=>showLesson(s.unlock, tease, true)); }
+      else setTimeout(tease, 350); }
     // the interlude waits for the player — nothing Hazel says vanishes on a timer
     function coachContinue(){ if(!coachWait) return; coachWait=false;
       $('coach').classList.remove('show'); if(!onboard) return;
       if(coachStep>=COACH.length){ endCoach(); } else showCoach(); }
     function endCoach(){ onboard=false; finishType(false); clearSpots(); $('coach').classList.remove('show'); setReveal(false); forecastCache=forecastToSpring();
       goals=makeGoals(); lastSI=seasonIdx(day); setSpeed(1); saveGame();
-      setTimeout(()=>showLesson('forage', ()=>{ tip('notes','Hazel: Nothing here is a secret — the <b>?</b> up top keeps all of it. Read any of it again whenever you like, and take your time. The bees aren\u2019t going anywhere.'); }), 1500); }
+      setTimeout(()=>{ tip('notes','Hazel: Nothing here is a secret — the <b>?</b> up top keeps all of it. Read any of it again whenever you like, and take your time. The bees aren\u2019t going anywhere.'); }, 1500); }
     press($('coachBtn'),()=>{ if(coachWait){ if(twActive){ finishType(); } else coachContinue(); return; } const s=COACH[coachStep]; if(s&&!s.until) advanceCoach(); });
     press($('coachSkip'),()=>{ coachWait=false; seedStarterZones(); endCoach(); });
     press($('coach'),e=>{ if(e.target&&e.target.closest&&(e.target.closest('#coachBtn')||e.target.closest('#coachSkip'))) return; if(twActive) finishType(); });
@@ -2681,7 +2718,8 @@
     function seedAndPlay(){ clearSave(); tinyComb(); honeyU=8*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; grades=[]; forage='balanced'; activePatch=null;
       queenAge=1; hornet=null; hornetCD=18+Math.random()*22; parts.length=0; shake=0;
       rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=null; lastSI=0; scoutShown=false; seenTips={}; lessonSeen={}; nudged={}; starveT=0; bankAtFrost=0; raidLoss=0;
-      brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=true; yearHist.length=0; histT=2.7; popMilo={}; setReveal(true);
+      brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=true; yearHist.length=0; histT=2.7; popMilo={};
+      brush=null; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.remove('on')); setReveal(true);
       document.querySelectorAll('[data-f]').forEach(x=>x.classList.toggle('on',x.dataset.f==='balanced')); beginCommon();
       setTimeout(()=>{ if(onboard) showCoach(); }, 1800); saveGame(); }
     $('startNew').addEventListener('click',()=>{ startStory(); });
