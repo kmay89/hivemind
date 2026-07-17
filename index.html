@@ -1326,7 +1326,7 @@
 
     // ===================== cosmetic bees =====================
     const bees=[]; let hiveCx=0, hiveCy=0;
-    function makeBee(x,y){ return {x,y,vx:0,vy:0,role:'nurse',state:'idle',tx:x,ty:y,timer:0,carry:null,fieldp:null,tcell:null,lc:null,danceT:0,wob:Math.random()*6.28}; }
+    function makeBee(x,y){ return {x,y,vx:0,vy:0,role:'nurse',state:'idle',tx:x,ty:y,timer:0,carry:null,fieldp:null,tcell:null,lc:null,danceT:0,wob:Math.random()*6.28,pauseT:0,fly:true,ret:false,retI:0,fan:false,fanning:false,fanX:0,fanY:0,followT:0}; }
     function syncBeePool(){
       const want=Math.min(RENDER_BEES, Math.round(P));
       while(bees.length<want){ const a=Math.random()*6.28, rr=size*(1+Math.random()*4); bees.push(makeBee(hiveCx+Math.cos(a)*rr, hiveCy+Math.sin(a)*rr)); }
@@ -1742,12 +1742,38 @@
     // ===================== cosmetic bee animation (inside) =====================
     function stepInside(dt,dd){
       const T=lerpM(tempM,day)+difficulty().temp+M.temp(), Na=lerpM(nectarM,day), winter=T<WIN_TEMP, dancing=forageMult()>1.05;
-      const move=(b,tx,ty,sp)=>{const dx=tx-b.x,dy=ty-b.y,L=Math.hypot(dx,dy)||1,st=Math.min(L,sp*size*dt); b.x+=dx/L*st;b.y+=dy/L*st; if(st>0.05){b.vx=dx/L;b.vy=dy/L;} return L<size*0.5;};
-      for(const b of bees){ b.wob+=dt*8;
-        if(winter){ // the cluster breathes — a slow collective pulse — while each bee shivers
+      const move=(b,tx,ty,sp)=>{const dx=tx-b.x,dy=ty-b.y,L=Math.hypot(dx,dy)||1,st=Math.min(L,sp*size*dt);
+        b.x+=dx/L*st; b.y+=dy/L*st;
+        const sw=Math.sin(b.wob*2.1)*size*dt*(sp>=1.6?0.5:0.16);  // no bee travels a ruler line
+        b.x+=-dy/L*sw; b.y+=dx/L*sw; b.fly=sp>=1.6;
+        if(st>0.05){b.vx=dx/L;b.vy=dy/L;} return L<size*0.5;};
+      // court & duty rosters, refreshed every few seconds
+      dancerRef=null; for(const b of bees){ if(b.state==='waggle'){ dancerRef=b; break; } }
+      retT+=dt; if(retT>2.5){ retT=0;
+        bees.forEach(b=>{ b.ret=false; b.fan=false; });
+        if(!winter){
+          const nurses=bees.filter(b=>b.role==='nurse'&&b.state!=='waggle');
+          nurses.sort((a,b2)=>((a.x-queen.x)**2+(a.y-queen.y)**2)-((b2.x-queen.x)**2+(b2.y-queen.y)**2));
+          nurses.slice(0,4).forEach((b,i)=>{ b.ret=true; b.retI=i; });
+          if(T>=29){ bees.filter(b=>b.role==='clean').slice(0,2).forEach((b,i)=>{
+            b.fan=true; b.fanX=hiveCx+(i?1:-1)*size*3.2; b.fanY=hiveCy+size*5.4; }); } } }
+      for(const b of bees){ b.wob+=dt*(b.fanning?14:8);
+        if(winter){ b.fly=false; // the cluster breathes — a slow collective pulse — while each bee shivers
           const a=b.wob*0.25+(b.x+b.y), breathe=1+0.12*Math.sin(gt*0.7);
           const rr=size*(1.15+1.1*Math.sin(b.x+b.y))*breathe;
           move(b,hiveCx+Math.cos(a)*rr,hiveCy+Math.sin(a)*rr*0.8,0.5); continue; }
+        if(b.pauseT>0){ b.pauseT-=dt; b.fly=false; continue; }  // a grooming moment — antennae still busy
+        if(b.followT>0&&dancerRef&&dancerRef!==b){ b.followT-=dt; const th2=danceAngle();
+          move(b,dancerRef.x-Math.cos(th2)*size*0.9,dancerRef.y-Math.sin(th2)*size*0.9,1.7); continue; }
+        if(b.ret){ const a2=gt*0.25+b.retI*1.571;  // the queen's retinue, always facing her
+          move(b,queen.x+Math.cos(a2)*size*1.2,queen.y+Math.sin(a2)*size*0.95,0.9);
+          const dqx=queen.x-b.x,dqy=queen.y-b.y,Lq=Math.hypot(dqx,dqy)||1; b.vx=dqx/Lq; b.vy=dqy/Lq; b.fly=false; continue; }
+        if(b.fan){ move(b,b.fanX,b.fanY,1.4);  // fanners hold station and pour air through the comb
+          b.fanning=Math.hypot(b.fanX-b.x,b.fanY-b.y)<size*0.7;
+          if(b.fanning){ b.fly=false; b.vx=0; b.vy=-1; } continue; }
+        b.fanning=false;
+        if(Math.random()<dt*0.04&&b.state!=='out'&&b.state!=='return') b.pauseT=0.5+Math.random()*0.8;
+        if(dancerRef&&dancerRef!==b&&b.followT<=0&&b.state!=='out'&&b.state!=='return'&&Math.random()<dt*0.25) b.followT=1.4+Math.random();
         if(b.state==='waggle'){ b.danceT+=dt*5; const s=size*2.2, th=danceAngle(), co=Math.cos(th), sn=Math.sin(th);
           const u=Math.sin(b.danceT)*s, v=Math.sin(b.danceT*2)*s*0.5;
           b.x=hiveCx+u*co-v*sn; b.y=hiveCy-size*4+u*sn+v*co;
@@ -1771,6 +1797,7 @@
       if(Math.random()<dt*1.2){ const bc=randomWhere(c=>c.built&&c.zone==='brood'); if(bc){const p=cellCenter(bc.c,bc.r);queen.tx=p.x;queen.ty=p.y;} }
       const dx=queen.tx-queen.x,dy=queen.ty-queen.y,L=Math.hypot(dx,dy)||1; queen.x+=dx/L*Math.min(L,0.6*size*dt); queen.y+=dy/L*Math.min(L,0.6*size*dt);
     }
+    let dancerRef=null, retT=9;
     function randomWhere(pred){ const pool=cells.filter(pred); return pool.length?pool[(Math.random()*pool.length)|0]:null; }
     function randomLarva(){ return randomWhere(c=>c.brood&&c.brood.stage==='larva'); }
     function randomFlagged(){ return randomWhere(c=>!c.built&&c.flagExpand); }
@@ -1819,7 +1846,7 @@
       for(const b of bees){ if(b.state==='waggle'){ ctx.strokeStyle='rgba(255,210,120,0.35)'; ctx.lineWidth=1.5; ctx.beginPath(); let first=true; for(let t=0;t<6.3;t+=0.3){ const u=Math.sin(t)*size*2.2, v=Math.sin(t*2)*size*1.1; const xx=dcx+u*dco-v*dsn, yy=dcy+u*dsn+v*dco; if(first){ctx.moveTo(xx,yy);first=false;} else ctx.lineTo(xx,yy);} ctx.stroke(); }
         let bx=b.x, by=b.y;
         if(winter){ bx+=Math.sin(gt*26+b.wob*3)*size*0.06; by+=Math.cos(gt*31+b.wob*2)*size*0.05; } // shiver
-        drawBee(bx,by,Math.atan2(b.vy||0,b.vx||0),b.carry,false,b.wob); }
+        drawBee(bx,by,Math.atan2(b.vy||0,b.vx||0),b.carry,false,b.wob,b.fanning?'fan':(b.fly?'fly':'walk')); }
       // when storage is full and nectar still flows, honey visibly drips away
       { const cp=caps(), full=cp.total>0&&(honeyU+pollenU+nectarU)>=cp.total-2, Na2=lerpM(nectarM,day);
         if(started&&!over&&full&&Na2>0.1&&!winter&&Math.random()<lastDt*2.2){
@@ -1836,7 +1863,7 @@
         let sg=ctx.createRadialGradient(lx2,ly2,size*2,lx2,ly2,size*15);
         sg.addColorStop(0,'rgba(255,225,160,0.055)'); sg.addColorStop(1,'rgba(255,225,160,0)');
         ctx.fillStyle=sg; ctx.fillRect(0,0,W,Hh); }
-      drawBee(queen.x,queen.y,0,null,true,queen.wob);
+      drawBee(queen.x,queen.y,Math.atan2(queen.ty-queen.y||0.01,queen.tx-queen.x||0.01),null,true,queen.wob,'walk');
       drawScout(); drawHornet(); drawParts(lastDt);
       // guidance: with hints on, the comb shows where the active brush CAN go
       // (faint rim) and where it's WISE to go (breathing glow) — chess for bees
@@ -1858,15 +1885,47 @@
         hexPath(x,y,s2*1.02); ctx.strokeStyle=okc; ctx.lineWidth=2; ctx.stroke(); }
       if(winter && honeyCellsStored()<28){ const a=(28-honeyCellsStored())/28; let v=ctx.createRadialGradient(W/2,Hh/2,Math.min(W,Hh)*0.2,W/2,Hh/2,Math.max(W,Hh)*0.6); v.addColorStop(0,'rgba(255,60,40,0)'); v.addColorStop(1,'rgba(255,50,35,'+(0.4*a).toFixed(3)+')'); ctx.fillStyle=v; ctx.fillRect(0,0,W,Hh); }
     }
-    function drawBee(x,y,ang,carry,isQueen,wob){ const s=size*(isQueen?0.5:0.32);
-      ctx.save(); ctx.translate(x,y); ctx.rotate(ang+Math.sin(wob||0)*0.12);
-      ctx.fillStyle=isQueen?'#d99a2e':'#e2a52e'; ctx.beginPath(); ctx.ellipse(0,0,s*(isQueen?1.7:1.3),s*0.8,0,0,6.28); ctx.fill();
-      ctx.fillStyle='rgba(30,20,8,0.85)'; for(let i=-1;i<=1;i++){ ctx.beginPath(); ctx.ellipse(i*s*0.5,0,s*0.16,s*0.7,0,0,6.28); ctx.fill(); }
-      ctx.fillStyle='#23180a'; ctx.beginPath(); ctx.arc(s*(isQueen?1.5:1.15),0,s*0.42,0,6.28); ctx.fill();
-      ctx.fillStyle='rgba(220,235,255,0.35)'; const wf=0.6+0.4*Math.sin((wob||0)*3);
-      ctx.beginPath(); ctx.ellipse(-s*0.1,-s*0.6*wf,s*0.7,s*0.32,-0.5,0,6.28); ctx.fill(); ctx.beginPath(); ctx.ellipse(-s*0.1,s*0.6*wf,s*0.7,s*0.32,0.5,0,6.28); ctx.fill();
-      if(carry){ ctx.fillStyle=carry==='nectar'?COL.nectar:carry==='water'?'#9fdcec':COL.pollen; ctx.beginPath(); ctx.arc(-s*0.9,0,s*0.4,0,6.28); ctx.fill(); }
-      if(isQueen){ ctx.strokeStyle='rgba(255,210,120,0.5)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(0,0,s*2,0,6.28); ctx.stroke(); }
+    function drawBee(x,y,ang,carry,isQueen,wob,mode){ const s=size*(isQueen?0.5:0.32); mode=mode||'fly';
+      ctx.save(); ctx.translate(x,y); ctx.rotate(ang+Math.sin(wob||0)*(mode==='walk'?0.05:0.12));
+      const heavy=carry==='nectar', flying=mode==='fly'||mode==='fan';
+      if(!flying){ // wings folded neatly along the back
+        ctx.fillStyle='rgba(215,230,245,0.30)';
+        ctx.beginPath(); ctx.ellipse(-s*0.5,-s*0.13,s*0.75,s*0.16,0.06,0,6.28); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(-s*0.5, s*0.13,s*0.75,s*0.16,-0.06,0,6.28); ctx.fill(); }
+      // abdomen — the striped engine room, tapered, heavier when the honey stomach is full
+      const ab=heavy?s*1.02:s*0.92, ay=(isQueen?s*0.42:s*0.55)*(heavy?1.12:1);
+      ctx.fillStyle=isQueen?'#c98f26':(heavy?'#e8b23a':'#e2a52e');
+      ctx.beginPath(); ctx.ellipse(-s*0.55,0,ab,ay,0,0,6.28); ctx.fill();
+      if(isQueen){ // her abdomen runs long and elegant, stripes worn faint
+        ctx.fillStyle='#c98f26'; ctx.beginPath(); ctx.ellipse(-s*1.45,0,s*0.6,s*0.3,0,0,6.28); ctx.fill(); }
+      ctx.fillStyle=isQueen?'rgba(30,20,8,0.35)':'rgba(30,20,8,0.85)';
+      ctx.save(); ctx.beginPath(); ctx.ellipse(-s*0.55,0,ab,ay+0.5,0,0,6.28); ctx.clip();
+      for(let i=0;i<(isQueen?3:4);i++){ const sx=-s*(0.16+i*0.36); ctx.fillRect(sx-s*0.08,-s,s*0.14,s*2); }
+      ctx.restore();
+      if(heavy){ ctx.fillStyle='rgba(247,183,51,0.4)'; ctx.beginPath(); ctx.ellipse(-s*0.95,0,s*0.4,s*0.3,0,0,6.28); ctx.fill(); }
+      // thorax — the fuzzy motor between the wings
+      ctx.fillStyle=isQueen?'#e0ab3c':'#d9a944'; ctx.beginPath(); ctx.arc(s*0.28,0,s*0.44,0,6.28); ctx.fill();
+      ctx.fillStyle='rgba(255,230,170,0.32)'; ctx.beginPath(); ctx.arc(s*0.28,-s*0.14,s*0.26,0,6.28); ctx.fill();
+      // head + antennae, always reading the air
+      ctx.fillStyle='#23180a'; ctx.beginPath(); ctx.arc(s*0.88,0,s*0.3,0,6.28); ctx.fill();
+      if(s>=4.5){ const aw=Math.sin((wob||0)*2)*0.14;
+        ctx.strokeStyle='rgba(35,24,10,0.9)'; ctx.lineWidth=Math.max(0.7,s*0.07); ctx.lineCap='round';
+        ctx.beginPath(); ctx.moveTo(s*1.0,-s*0.12); ctx.quadraticCurveTo(s*1.28,-s*(0.34+aw),s*1.45,-s*(0.52+aw)); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(s*1.0, s*0.12); ctx.quadraticCurveTo(s*1.28, s*(0.34-aw),s*1.45, s*(0.52-aw)); ctx.stroke(); }
+      if(flying){ // a blur of wingbeats; fanners beat faster still
+        const rate=mode==='fan'?9:5, wf=0.55+0.45*Math.sin((wob||0)*rate);
+        ctx.fillStyle='rgba(220,235,255,'+(mode==='fan'?0.30:0.35)+')';
+        ctx.beginPath(); ctx.ellipse(s*0.1,-s*0.62*wf,s*0.72,s*0.3,-0.5,0,6.28); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(s*0.1, s*0.62*wf,s*0.72,s*0.3, 0.5,0,6.28); ctx.fill();
+        ctx.fillStyle='rgba(220,235,255,0.13)';
+        ctx.beginPath(); ctx.ellipse(s*0.1,-s*0.62*(1-wf)*0.85,s*0.66,s*0.26,-0.5,0,6.28); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(s*0.1, s*0.62*(1-wf)*0.85,s*0.66,s*0.26, 0.5,0,6.28); ctx.fill(); }
+      // the load rides where it really rides: pollen in the leg baskets, water at the mouth
+      if(carry==='pollen'){ ctx.fillStyle=COL.pollen;
+        ctx.beginPath(); ctx.arc(-s*0.35,-s*0.6,s*0.22,0,6.28); ctx.fill();
+        ctx.beginPath(); ctx.arc(-s*0.35, s*0.6,s*0.22,0,6.28); ctx.fill(); }
+      else if(carry==='water'){ ctx.fillStyle='#9fdcec'; ctx.beginPath(); ctx.arc(s*1.12,0,s*0.2,0,6.28); ctx.fill(); }
+      if(isQueen){ ctx.strokeStyle='rgba(255,210,120,0.4)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(0,0,s*2.1,0,6.28); ctx.stroke(); }
       ctx.restore();
     }
 
