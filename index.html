@@ -300,6 +300,12 @@
   .qopt .qm{ font-size:11.5px; color:#e8a0a0; line-height:1.4; }
   #queenBtns{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
 
+  /* ---------- share card ---------- */
+  #sharePop .card{ max-width:min(94vw,440px); }
+  #shareWrap{ width:100%; margin:6px 0 12px; border-radius:14px; overflow:hidden; box-shadow:0 10px 40px rgba(0,0,0,0.5); }
+  #shareCanvas{ display:block; width:100%; height:auto; }
+  #shareBtns{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+
   /* ---------- hive chronicle ---------- */
   #chronBody{ margin:12px 0; max-height:56vh; overflow:auto; text-align:left; }
   .chronCard{ background:rgba(255,255,255,0.04); border:1px solid rgba(255,217,122,0.14); border-left:3px solid rgba(255,180,43,0.55); border-radius:10px; padding:10px 13px; margin-bottom:8px; }
@@ -314,6 +320,7 @@
   .jar{ display:flex; gap:11px; align-items:center; background:rgba(255,255,255,0.045); border:1px solid rgba(255,217,122,0.16); border-radius:12px; padding:10px 12px; }
   .jar.locked{ opacity:0.5; filter:saturate(0.35); }
   .jar .ji{ font-size:25px; line-height:1; }
+  .jar .jarC{ width:38px; height:52px; flex:none; align-self:center; filter:drop-shadow(0 4px 7px rgba(0,0,0,0.45)); }
   .jar .jn{ font-weight:700; font-size:14.5px; color:#f7eed9; }
   .jar .jd{ font-size:12px; color:#c2a97e; line-height:1.45; }
   .rchip{ font:700 9.5px 'JetBrains Mono',monospace; letter-spacing:0.07em; padding:2px 7px; border-radius:20px; border:1px solid currentColor; margin-left:7px; vertical-align:2px; white-space:nowrap; }
@@ -834,6 +841,17 @@
     </div>
   </div>
 
+  <div class="ov hide" id="sharePop">
+    <div class="card panel">
+      <h1 style="font-size:23px">SHARE YOUR APIARY</h1>
+      <div class="sub">a keepsake card of your colony’s story</div>
+      <div id="shareWrap"><canvas id="shareCanvas" width="1080" height="1350"></canvas></div>
+      <div id="shareBtns">
+        <button class="btn ghost" id="shareClose">Close</button>
+        <button class="btn pulse" id="shareDo">Save / Share ▸</button>
+      </div>
+    </div>
+  </div>
   <div class="ov hide" id="confirmPop">
     <div class="card panel" style="max-width:380px">
       <h1 id="confT" style="font-size:23px">—</h1>
@@ -902,6 +920,7 @@
         <div class="mrow"><span class="ml">Keeper’s path</span><button class="mtog" id="menuPath">🗺 Open</button></div>
         <div class="mrow"><span class="ml">Colony roster</span><button class="mtog" id="menuRoster">🐝 <span id="rosterN">0</span></button></div>
         <div class="mrow"><span class="ml">Hive chronicle</span><button class="mtog" id="menuChron">📖 <span id="chronN">0</span></button></div>
+        <div class="mrow"><span class="ml">Share your apiary</span><button class="mtog" id="menuShare">📸 Card</button></div>
         <div class="mrow"><span class="ml">Dance break</span><button class="mtog" id="menuDance">Let’s go!</button></div>
         <div class="mrow"><span class="ml">Keeper’s notes</span><button class="mtog" id="menuGuide">Open</button></div>
         <div class="mrow"><span class="ml">Hazel’s log</span><button class="mtog" id="menuLog">Open</button></div>
@@ -1111,6 +1130,8 @@
         <button class="btn pulse" id="startNew">Found a new colony</button>
         <button class="btn ghost hide" id="startCont">Continue</button>
       </div>
+      <button class="btn ghost" id="startDaily" style="margin-top:8px">☀ Daily Challenge</button>
+      <div id="dailyCap" style="font:500 11px 'JetBrains Mono',monospace; color:var(--dim); margin-top:5px"></div>
       <div class="cardLinks">
         <a href="about.html" target="_blank" rel="noopener">About</a><a href="privacy.html" target="_blank" rel="noopener">Privacy</a><a href="terms.html" target="_blank" rel="noopener">Terms</a>
       </div>
@@ -1152,6 +1173,7 @@
       <div class="trophies" id="yeTrophies"></div>
       <div id="giftHead"><span>Queen's Gifts</span><span id="rjBal">✧0</span></div>
       <div id="giftRow"></div>
+      <button class="btn ghost" id="yeShare" style="margin-right:8px">📸 Share this year</button>
       <button class="btn pulse" id="yeNext">Into Year 2</button>
     </div>
   </div>
@@ -1171,7 +1193,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.23.0';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.26.0';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1549,11 +1571,107 @@
     try{ const l=JSON.parse(localStorage.getItem('hm_life')||'{}'); for(const k of ['y','j','g','p']) if(typeof l[k]==='number') LIFE[k]=l[k]; }catch(e){}
     function lifeSave(){ try{ localStorage.setItem('hm_life',JSON.stringify(LIFE)); }catch(e){} }
     function apiaryScore(){ return LIFE.y*250 + LIFE.j*100 + LIFE.g*50 + LIFE.p + badgeCount()*150; }
+    // ===================== daily challenge: today's scenario, one score, a streak =====================
+    let dailyMode=false; const DAILY_LEN=90;
+    let DAILY={}; try{ DAILY=JSON.parse(localStorage.getItem('hm_daily')||'{}')||{}; }catch(e){}
+    function dailySave(){ try{ localStorage.setItem('hm_daily',JSON.stringify(DAILY)); }catch(e){} }
+    function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+    function yesterKey(){ const d=new Date(); d.setDate(d.getDate()-1); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+    function dateSeedNum(){ const d=new Date(); return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate(); }
+    function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+    function syncDailyCap(){ const el=$('dailyCap'); if(!el) return; const done=DAILY.date===todayKey();
+      el.innerHTML = 'today’s scenario · ' + (DAILY.streak?('streak '+DAILY.streak+'d'):'no streak yet') + (done?(' · best '+ (DAILY.best||0).toLocaleString()):''); }
+    function seedDaily(){ dailyMode=true; const rnd=mulberry32(dateSeedNum());
+      const pool=WEATHERS.filter(x=>x.id!=='calm'&&x.id!=='wander'&&x.id!=='bear'); // a pure test of keeping — no scripted raids
+      curSeason=pool[Math.floor(rnd()*pool.length)]||WEATHERS[0]; seasonEventDone=true; seasonEventFired=null; lastSeasonId=curSeason.id;
+      setPace('medium'); tinyComb(); honeyU=8*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; grades=[]; forage='balanced'; activePatch=null; mix=[0,0,0,0]; roster=[]; corpses=[];
+      queenAge=1; hornet=null; hornetCD=18+rnd()*22; parts.length=0; shake=0; rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=makeGoals(); lastSI=0; scoutShown=false; seenTips={}; lessonSeen={}; nudged={}; starveT=0; bankAtFrost=0; raidLoss=0;
+      brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=false; yearHist.length=0; histT=2.7; popMilo={};
+      brush='brood'; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x.dataset.brush==='brood')); setReveal(false); clearUndo(); }
+    function startDaily(){ $('intro').classList.add('hide'); seedDaily(); beginCommon(); setSpeed(1); paused=false; said={};
+      toast('\u2600 Daily Challenge \u2014 <b>'+curSeason.name+'</b>. Ninety days to raise the strongest colony you can.'+(DAILY.streak?(' Streak: '+DAILY.streak+' \ud83d\udd25'):'')); }
+    function finishDaily(){ const score=Math.round(honeyCellsStored()*4 + peakPop*3 + jars*25);
+      const tk=todayKey(), firstToday=(DAILY.date!==tk);
+      const best=firstToday?score:Math.max(DAILY.best||0, score);
+      let streak=DAILY.streak||0;
+      if(firstToday){ streak=(DAILY.date===yesterKey())?streak+1:1; }
+      DAILY={date:tk, best, streak}; dailySave(); syncDailyCap();
+      dailyMode=false; setSpeed(0); paused=true; over=true;
+      openShare({ label:'Day in the Apiary · '+tk, score:best, pop:Math.max(peakPop,Math.round(P)), honey:Math.round(honeyCellsStored()), streak }); }
+    // ===================== the share card: a keepsake of your apiary =====================
+    function shareStats(){
+      let best=null; try{ for(const j of CELLAR){ if(!best||j.p>best.p) best=j; } }catch(e){}
+      if(!best && LEGACY && LEGACY.heirloom && LEGACY.heirloom.n) best=LEGACY.heirloom;
+      const q=(typeof QUEENS!=='undefined')?QUEENS.find(x=>x.id===queenLine):null;
+      const yearsKept=Math.max(year, (LEGACY&&LEGACY.apex)||year);
+      return { rank:apiaryRank(year), year, col:colonyNum, score:apiaryScore(),
+        pop:Math.max(peakPop,Math.round(P)), jars, badges:badgeCount(), badgeTot:(typeof BADGES!=='undefined'?BADGES.length:12),
+        queen:q, best, yearsKept, daily:null }; }
+    function scHex(g,x,y,r){ g.beginPath(); for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-30); const px=x+r*Math.cos(a),py=y+r*Math.sin(a); i?g.lineTo(px,py):g.moveTo(px,py);} g.closePath(); }
+    function drawShareCard(cv, st){ const g=cv.getContext('2d'), W=cv.width, H=cv.height;
+      const BR="'Bricolage Grotesque',sans-serif", MO="'JetBrains Mono',monospace";
+      let bg=g.createLinearGradient(0,0,0,H); bg.addColorStop(0,'#1a1206'); bg.addColorStop(0.55,'#120d05'); bg.addColorStop(1,'#0a0703'); g.fillStyle=bg; g.fillRect(0,0,W,H);
+      // faint comb field
+      g.strokeStyle='rgba(255,196,110,0.06)'; g.lineWidth=3; const hr=70, dx=hr*Math.sqrt(3), dy=hr*1.5;
+      for(let row=-1;row<H/dy+1;row++){ for(let col=-1;col<W/dx+1;col++){ const x=col*dx+(row%2?dx/2:0), y=row*dy; scHex(g,x,y,hr*0.92); g.stroke(); } }
+      // warm glow behind the score
+      let gl=g.createRadialGradient(W/2,H*0.5,20,W/2,H*0.5,W*0.7); gl.addColorStop(0,'rgba(255,180,43,0.12)'); gl.addColorStop(1,'rgba(255,180,43,0)'); g.fillStyle=gl; g.fillRect(0,0,W,H);
+      g.textAlign='center';
+      // kicker
+      g.fillStyle='#7fe3d6'; g.font='700 26px '+MO; g.fillText(st.daily?'D A I L Y   C H A L L E N G E':('C O L O N Y   '+roman(st.col)), W/2, 118);
+      // wordmark
+      const wm=g.createLinearGradient(0,0,W,0); wm.addColorStop(0,'#ffd97a'); wm.addColorStop(0.5,'#ffffff'); wm.addColorStop(1,'#ffb42b');
+      g.fillStyle=wm; g.font='800 138px '+BR; g.fillText('HIVEMIND', W/2, 250);
+      // rank
+      g.fillStyle='#f7eed9'; g.font='600 46px '+BR; g.fillText(st.rank.ic+'  '+st.rank.nm, W/2, 340);
+      g.fillStyle='#c2a97e'; g.font='500 30px '+BR; g.fillText(st.daily?st.daily.label:('Year '+st.year+' · '+st.yearsKept+' winters weathered'), W/2, 388);
+      // the big number
+      g.fillStyle='#c2a97e'; g.font='700 30px '+MO; g.fillText(st.daily?'TODAY’S SCORE':'APIARY SCORE', W/2, 500);
+      g.fillStyle='#ffd76b'; g.font='800 172px '+MO; g.fillText((st.daily?st.daily.score:st.score).toLocaleString(), W/2, 660);
+      // honeycomb divider
+      for(let i=-2;i<=2;i++){ scHex(g,W/2+i*72,720,26); g.fillStyle=i===0?'#ffb42b':'rgba(255,180,43,0.28)'; g.fill(); }
+      // stat row
+      const stats = st.daily
+        ? [['🐝', st.daily.pop, 'peak bees'], ['🍯', st.daily.honey, 'honey cells'], ['📅', st.daily.streak+'d', 'streak']]
+        : [['🐝', st.pop, 'peak bees'], ['🫙', st.jars, 'jars sealed'], ['✦', st.badges+'/'+st.badgeTot, 'badges']];
+      const n=stats.length, cw=W/n;
+      for(let i=0;i<n;i++){ const cx=cw*(i+0.5);
+        g.font='64px '+BR; g.fillText(stats[i][0], cx, 850);
+        g.fillStyle='#ffe0a0'; g.font='700 56px '+MO; g.fillText(''+stats[i][1], cx, 928);
+        g.fillStyle='#c2a97e'; g.font='500 26px '+MO; g.fillText(stats[i][2], cx, 968); }
+      // finest honey
+      let y=1080;
+      if(st.best && st.best.n){ const RAR=(typeof RARITY!=='undefined')?RARITY:[null,{n:'EVERYDAY',c:'#9fb69d'},{n:'VARIETAL',c:'#7fe3d6'},{n:'SINGLE-ORIGIN',c:'#ffd24a'},{n:'RESERVE',c:'#ff9dc0'}];
+        const rr=RAR[st.best.r]||RAR[1];
+        g.fillStyle='#c2a97e'; g.font='500 28px '+MO; g.fillText('FINEST HONEY', W/2, y); y+=54;
+        g.fillStyle='#f7eed9'; g.font='700 46px '+BR; g.fillText(st.best.n, W/2, y); y+=48;
+        g.fillStyle=rr.c; g.font='700 26px '+MO; g.fillText(rr.n+(st.best.p?('  ·  '+st.best.p+'% PURE'):''), W/2, y); y+=64;
+      }
+      if(st.queen){ g.fillStyle='#c2a97e'; g.font='500 30px '+BR; g.fillText('kept by '+st.queen.ic+' '+st.queen.name+', '+st.queen.ep, W/2, y); }
+      // footer
+      g.fillStyle='rgba(255,217,122,0.9)'; g.font='700 34px '+MO; g.fillText('hive-mind-game.com', W/2, H-70);
+      g.fillStyle='#8a6a36'; g.font='500 24px '+BR; g.fillText('beekeeping, one winter at a time', W/2, H-34);
+      g.textAlign='left';
+    }
+    let shareDaily=null;
+    async function openShare(dailyResult){ shareDaily=dailyResult||null; const st=shareStats(); st.daily=shareDaily;
+      try{ await (document.fonts&&document.fonts.ready); }catch(e){}
+      drawShareCard($('shareCanvas'), st);
+      $('sharePop').classList.remove('hide'); paused=true; }
+    function closeShare(){ $('sharePop').classList.add('hide'); if(shareDaily){ shareDaily=null; location.reload(); return; } if($('menu').classList.contains('hide')&&(!$('yearEnd')||$('yearEnd').classList.contains('hide'))) paused=false; }
+    function doShare(){ const cv=$('shareCanvas'); if(!cv.toBlob){ toast('Sharing isn\u2019t available on this device.'); return; }
+      cv.toBlob(async(blob)=>{ if(!blob){ toast('Could not build the card \u2014 try again.'); return; }
+        const file=new File([blob],'hivemind-apiary.png',{type:'image/png'});
+        const data={ files:[file], title:'HIVEMIND', text:'My apiary in HIVEMIND \ud83d\udc1d \u2014 beekeeping, one winter at a time.', url:'https://hive-mind-game.com' };
+        try{ if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share(data); return; } }catch(e){ if(e&&e.name==='AbortError') return; }
+        try{ const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='hivemind-apiary.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),4000); toast('\ud83d\udc1d Card saved \u2014 share it anywhere.'); }
+        catch(e){ toast('Could not save the card here.'); }
+      },'image/png'); }
     let earned={};
     try{ (JSON.parse(localStorage.getItem('hm_badges')||'[]')).forEach(k=>earned[k]=1); }catch(e){}
     function badgeCount(){ return Object.keys(earned).length; }
     function syncBadgeN(){ const el=$('badgeN'); if(el) el.textContent=badgeCount(); const t=$('badgeTot'); if(t) t.textContent=BADGES.length; }
-    function grantBadge(id){ if(earned[id]) return; const b=BADGES.find(x=>x.id===id); if(!b) return;
+    function grantBadge(id){ if(dailyMode||earned[id]) return; const b=BADGES.find(x=>x.id===id); if(!b) return;
       earned[id]=1; try{ localStorage.setItem('hm_badges',JSON.stringify(Object.keys(earned))); }catch(e){}
       toast('✦ Badge earned — '+b.n+'!'); logMsg('✦','Badge earned — <b>'+b.n+'</b>: '+b.d); fanfare(); syncBadgeN();
       QUEENS.filter(q=>q.lock&&q.lock.badge===id).forEach(q=>{ logMsg('👑','New queen line unlocked — <b>'+q.name+'</b>, '+q.ep+'.');
@@ -2037,16 +2155,69 @@
       if(p>=0.55){ f=di; n=FLOWERS[di].honey; r=p>=0.92?4:p>=0.8?3:2; }
       return {n, f, p:Math.round(p*100), r, y:year, mix:sh.map(x=>Math.round(x*100))}; }
     function mixBar(m){ let b='<div class="rbar">'; for(let i=0;i<4;i++){ if(m[i]>1) b+='<i style="width:'+m[i]+'%;background:'+FLOWERS[i].core+'"></i>'; } return b+'</div>'; }
+    // ===================== a jar worth looking at — Apple-glass optics, Ball-jar soul =====================
+    function _jhx(h){ h=(h||'#ffce54').replace('#',''); if(h.length===3)h=h.split('').map(c=>c+c).join(''); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
+    function _jcl(v){ return Math.max(0,Math.min(255,v|0)); }
+    function _jto(c){ return '#'+c.map(x=>_jcl(x).toString(16).padStart(2,'0')).join(''); }
+    function jLt(h,a){ const c=_jhx(h); return _jto([c[0]+a,c[1]+a,c[2]+a]); }
+    function jDk(h,a){ const c=_jhx(h); return _jto([c[0]-a,c[1]-a,c[2]-a]); }
+    function jRR(g,x,y,w,h,r){ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
+    function drawJar(g,W,H,o){ o=o||{}; const cx=W/2; g.clearRect(0,0,W,H);
+      const fill=o.fill||'#ffce54', cap=o.cap||'#e9b949', glow=o.rarity, level=o.empty?0:(o.level!=null?o.level:0.74);
+      const bw=W*0.64, bx=cx-bw/2, topY=H*0.22, botY=H*0.955, bodyH=botY-topY;
+      const r=bw*0.26, neckW=bw*0.62, neckY=topY, shoulderY=topY+bodyH*0.15;
+      function body(){ g.beginPath();
+        g.moveTo(bx, shoulderY); g.lineTo(bx, botY-r); g.quadraticCurveTo(bx,botY, bx+r,botY);
+        g.lineTo(bx+bw-r, botY); g.quadraticCurveTo(bx+bw,botY, bx+bw,botY-r); g.lineTo(bx+bw, shoulderY);
+        g.quadraticCurveTo(bx+bw, neckY+(shoulderY-neckY)*0.25, cx+neckW/2, neckY);
+        g.lineTo(cx-neckW/2, neckY); g.quadraticCurveTo(bx, neckY+(shoulderY-neckY)*0.25, bx, shoulderY); g.closePath(); }
+      // rarity glow behind
+      if(glow){ const rg=g.createRadialGradient(cx,H*0.56,2,cx,H*0.56,W*0.6); rg.addColorStop(0,glow+'4d'); rg.addColorStop(1,glow+'00'); g.fillStyle=rg; g.fillRect(0,0,W,H); }
+      // cool back-glass tint
+      body(); let bgg=g.createLinearGradient(bx,0,bx+bw,0); bgg.addColorStop(0,'rgba(206,232,244,0.12)'); bgg.addColorStop(0.5,'rgba(238,250,255,0.05)'); bgg.addColorStop(1,'rgba(176,202,218,0.16)'); g.fillStyle=bgg; g.fill();
+      // honey fill
+      if(!o.empty){ g.save(); body(); g.clip();
+        const fy=botY-(botY-shoulderY)*level;
+        let hg=g.createLinearGradient(0,fy,0,botY); hg.addColorStop(0,jLt(fill,26)); hg.addColorStop(0.42,fill); hg.addColorStop(1,jDk(fill,30)); g.fillStyle=hg; g.fillRect(bx,fy,bw,botY-fy);
+        // warm base glow
+        let ig=g.createRadialGradient(cx,botY-bodyH*0.16,2,cx,botY-bodyH*0.16,bw*0.75); ig.addColorStop(0,jLt(fill,22)); ig.addColorStop(1,fill); g.globalAlpha=0.5; g.fillStyle=ig; g.fillRect(bx,fy,bw,botY-fy); g.globalAlpha=1;
+        // meniscus
+        g.fillStyle=jLt(fill,32); g.beginPath(); g.ellipse(cx,fy,bw/2,bw*0.11,0,0,6.2832); g.fill();
+        g.strokeStyle='rgba(255,255,255,0.3)'; g.lineWidth=Math.max(1,W*0.012); g.beginPath(); g.ellipse(cx,fy,bw/2*0.92,bw*0.085,0,Math.PI,6.2832); g.stroke();
+        // specular band gliding down the honey
+        g.fillStyle='rgba(255,255,255,0.15)'; g.fillRect(bx+bw*0.12, fy+(botY-fy)*0.28, bw*0.13, (botY-fy)*0.6);
+        g.restore(); }
+      // glass front optics
+      g.save(); body(); g.clip();
+      let sh=g.createLinearGradient(bx,0,bx+bw*0.55,0); sh.addColorStop(0,'rgba(255,255,255,0.4)'); sh.addColorStop(0.5,'rgba(255,255,255,0.07)'); sh.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=sh; g.fillRect(bx,topY,bw*0.55,bodyH);
+      g.fillStyle='rgba(255,255,255,0.6)'; g.fillRect(bx+bw*0.15, shoulderY+bodyH*0.05, Math.max(1,bw*0.05), bodyH*0.74);   // bright streak
+      g.fillStyle='rgba(58,80,92,0.16)'; g.fillRect(bx+bw*0.85, shoulderY, bw*0.15, bodyH*0.86);                            // right refraction shadow
+      g.fillStyle='rgba(255,255,255,0.32)'; g.fillRect(bx+bw*0.92, shoulderY+bodyH*0.05, Math.max(1,bw*0.03), bodyH*0.72);  // right bright edge
+      g.restore();
+      // outline
+      body(); g.strokeStyle='rgba(255,255,255,0.45)'; g.lineWidth=Math.max(1,W*0.014); g.stroke();
+      // gold screw band + lid
+      const lidH=H*0.12, lidY=topY-lidH*0.72, lidW=neckW*1.18, lx=cx-lidW/2;
+      jRR(g,lx,lidY,lidW,lidH,lidH*0.34); let lg=g.createLinearGradient(0,lidY,0,lidY+lidH); lg.addColorStop(0,jLt(cap,34)); lg.addColorStop(0.5,cap); lg.addColorStop(1,jDk(cap,30)); g.fillStyle=lg; g.fill();
+      g.strokeStyle='rgba(90,60,15,0.45)'; g.lineWidth=1; jRR(g,lx,lidY,lidW,lidH,lidH*0.34); g.stroke();
+      g.strokeStyle='rgba(255,255,255,0.3)'; for(let k=1;k<3;k++){ g.beginPath(); g.moveTo(lx+2,lidY+lidH*k/3); g.lineTo(lx+lidW-2,lidY+lidH*k/3); g.stroke(); }
+      g.fillStyle='rgba(255,255,255,0.45)'; g.fillRect(lx+lidW*0.12, lidY+2, lidW*0.09, lidH-4);
+      // top-left sparkle
+      g.fillStyle='rgba(255,255,255,0.92)'; g.beginPath(); g.ellipse(bx+bw*0.26, shoulderY+bodyH*0.12, W*0.028, W*0.052, -0.5, 0, 6.2832); g.fill();
+    }
+    const JARFILL=['#ffd066','#ffc16b','#e28a1b','#ecb84e'];   // clover, orchard, goldenrod, lavender
+    function paintJars(root){ if(!root) return; root.querySelectorAll('canvas.jarC').forEach(cv=>{ const g=cv.getContext('2d');
+      drawJar(g,cv.width,cv.height,{ empty:cv.dataset.empty==='1', fill:cv.dataset.fill||'#ffce54', rarity:cv.dataset.rar||null, cap:cv.dataset.cap||'#e9b949', level:cv.dataset.empty==='1'?0:0.76 }); }); }
     function renderCellar(){ let h='';
       for(let i=0;i<4;i++){ const js=CELLAR.filter(j=>j.f===i);
-        if(!js.length){ h+='<div class="jar locked"><span class="ji">🫙</span><div><div class="jn">'+FLOWERS[i].honey+'</div><div class="jd">not yet tasted \u2014 follow the '+FLOWERS[i].n.toLowerCase()+' '+FLOWERS[i].ic+' when it blooms, then harvest in autumn</div></div></div>'; continue; }
+        if(!js.length){ h+='<div class="jar locked"><canvas class="jarC" width="76" height="104" data-empty="1"></canvas><div><div class="jn">'+FLOWERS[i].honey+'</div><div class="jd">not yet tasted \u2014 follow the '+FLOWERS[i].n.toLowerCase()+' '+FLOWERS[i].ic+' when it blooms, then harvest in autumn</div></div></div>'; continue; }
         const best=js.reduce((a,b)=>b.p>a.p?b:a), rr=RARITY[best.r];
-        h+='<div class="jar"><span class="ji">'+FLOWERS[i].ic+'</span><div style="flex:1;min-width:0"><div class="jn">'+FLOWERS[i].honey+'<span class="rchip" style="color:'+rr.c+'">'+rr.n+'</span></div><div class="jd">'+FLOWERS[i].note+'</div>'+mixBar(best.mix)+'<div class="jd">best jar: '+best.p+'% '+FLOWERS[i].n.toLowerCase()+' \u00b7 year '+best.y+' \u00b7 '+js.length+' jar'+(js.length>1?'s':'')+'</div></div></div>'; }
+        h+='<div class="jar"><canvas class="jarC" width="76" height="104" data-fill="'+JARFILL[i]+'" data-rar="'+rr.c+'"></canvas><div style="flex:1;min-width:0"><div class="jn">'+FLOWERS[i].honey+'<span class="rchip" style="color:'+rr.c+'">'+rr.n+'</span></div><div class="jd">'+FLOWERS[i].note+'</div>'+mixBar(best.mix)+'<div class="jd">best jar: '+best.p+'% '+FLOWERS[i].n.toLowerCase()+' \u00b7 year '+best.y+' \u00b7 '+js.length+' jar'+(js.length>1?'s':'')+'</div></div></div>'; }
       const wf=CELLAR.filter(j=>j.f===-1);
       if(wf.length){ const last=wf[wf.length-1];
-        h+='<div class="jar"><span class="ji">🌼</span><div style="flex:1;min-width:0"><div class="jn">Wildflower Honey<span class="rchip" style="color:'+RARITY[1].c+'">'+RARITY[1].n+'</span></div><div class="jd">every meadow in one spoon \u2014 no two jars alike</div>'+mixBar(last.mix)+'<div class="jd">'+wf.length+' jar'+(wf.length>1?'s':'')+' on the shelf</div></div></div>'; }
+        h+='<div class="jar"><canvas class="jarC" width="76" height="104" data-fill="#f2a836" data-rar="'+RARITY[1].c+'"></canvas><div style="flex:1;min-width:0"><div class="jn">Wildflower Honey<span class="rchip" style="color:'+RARITY[1].c+'">'+RARITY[1].n+'</span></div><div class="jd">every meadow in one spoon \u2014 no two jars alike</div>'+mixBar(last.mix)+'<div class="jd">'+wf.length+' jar'+(wf.length>1?'s':'')+' on the shelf</div></div></div>'; }
       if(!CELLAR.length) h+='<div class="jd" style="text-align:center;opacity:0.85;padding:10px">The shelf is bare. Come autumn, bank the winter pantry first \u2014 then take a jar, and it lands here with its recipe.</div>';
-      $('cellarGrid').innerHTML=h; }
+      $('cellarGrid').innerHTML=h; paintJars($('cellarGrid')); }
     function harvestState(){ const T=lerpM(tempM,day)+difficulty().temp+M.temp();
       const inWin=day>=HARV0 && day<=HARV1 && T>=WIN_TEMP && !onboard && started && !over;
       const need=winterNeed(); const sur=honeyCellsStored()-need*1.1;
@@ -2284,11 +2455,11 @@
         for(let i=0;i<n&&empties.length;i++){ const k=(Math.random()*empties.length)|0; empties[k].brood={stage:'egg',t:0}; empties.splice(k,1); } }
       honeyU -= P*C_BEE*coldMult(T)*M.eat()*dd;
       if(offline||onboard){ if(honeyU<2*HC)honeyU=2*HC; starveT=0; }
-      else if(honeyU<=0){ honeyU=0; starveT+=dd; if(starveT>2.5) return gameOver('starve'); }
+      else if(honeyU<=0){ honeyU=0; starveT+=dd; if(starveT>2.5 && !dailyMode) return gameOver('starve'); }
       else { starveT=0; if(honeyU<0)honeyU=0; }
       const drate=winter?1/LIFE_W:1/LIFE_S; P-=P*drate*dd*1.2;
       if(!offline) rosterTick(dd, winter);
-      if(!offline && !onboard && P<1) return gameOver('dwindle'); if(P<1)P=1;
+      if(!offline && !onboard && !dailyMode && P<1) return gameOver('dwindle'); if(P<1)P=1;
       if(!onboard && !winter && day<215){ const crowd=(P/CAP)*(1-Math.min(1,space/14)); swarmP=Math.max(0,Math.min(1.2, swarmP+(crowd-0.18)*dd*0.5*(QL().swarm||1)));
         if(swarmP>0.85 && Math.random()<dd*0.22){ const lost=Math.round(P*0.42); P-=lost; swarmP=0.1; puff(hiveCx,hiveCy,'#ffd76b',40,2); shake=Math.max(shake,0.6); buzzAlert(); toast('A swarm has left to found a new colony! '+lost+' bees gone — give them space next time.'); } }
       else swarmP=Math.max(0,swarmP-dd*0.4);
@@ -2748,9 +2919,12 @@
       queenAge++; hornet=null; hornetCD=(year>=4?14+Math.random()*20:18+Math.random()*22); scoutShown=false;
       jarsThisYear=0; fedWinter=false; starveT=0; bankAtFrost=0; yearHist.length=0; histT=2.7; goals=makeGoals(); lastSI=0; syncAlmanacTicks();
       delete nudged.bigNest; delete nudged.bigStore; delete nudged.bigBuild; delete nudged.noGrow;
+      const prevEntry=CHRON.length?CHRON[CHRON.length-1]:null;
       drawSeason();
-      const yn=yearName(year); toast('Year '+year+' — '+yn[0]+': '+yn[1]+'.'+(queenAge>=3?' Your queen is aging.':'')); announceSeason();
-      forecastCache=forecastToSpring(); saveGame(); setSpeed(1); paused=false; said={}; });
+      const yn=yearName(year); forecastCache=forecastToSpring(); saveGame(); said={};
+      startInterlude(buildInterlude(prevEntry), ()=>{
+        toast('Year '+year+' — '+yn[0]+': '+yn[1]+'.'+(queenAge>=3?' Your queen is aging.':'')); announceSeason();
+        setSpeed(1); paused=false; }); });
     function gameOver(kind){ if(over)return; over=true; setSpeed(0); chime(330,165); hornet=null;
       $('ovTitle').textContent=kind==='starve'?'THE COLONY FAILS':'THE COLONY DWINDLES'; $('ovSub').textContent=(kind==='starve'?'the pantry ran dry in '+seasonName(day).toLowerCase():'too few bees remained')+' — but the comb, the shelf, and the queen\u2019s line are yours to keep';
       const {g}=gradeYear(); grades.push({year,g,honey:Math.round(honeyCellsStored()),peak:peakPop});
@@ -2774,7 +2948,7 @@
       const bt=cells.map(c=>c.brood?Math.round(c.brood.t*10):0);
       return {v:4,t:Date.now(),day,year,P,honeyU,pollenU,nectarU,peakPop,bornTotal,swarmP,forage,activePatch,grades,queenAge,cb,bt,
         rj,jars,jy:jarsThisYear,ql:queenLine,rs:roster,se:curSeason?curSeason.id:'calm',sq:seasonEventDone?1:0,sx:seasonEventFired,mx:mix.map(v=>Math.round(v)),ow:Object.keys(owned),fw:fedWinter?1:0,bf:Math.round(bankAtFrost),tp:Object.keys(seenTips),ls:Object.keys(lessonSeen),gd:goals?goals.map(g=>g.done?1:0):[0,0,0,0]}; }
-    function saveGame(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify(serialize())); }catch(e){} }
+    function saveGame(){ if(dailyMode) return; try{ localStorage.setItem(SAVE_KEY,JSON.stringify(serialize())); }catch(e){} }
     function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
     function loadSave(){ try{ const s=localStorage.getItem(SAVE_KEY); return s?JSON.parse(s):null; }catch(e){ return null; } }
     function deserialize(s){ const ZN=['none','brood','honey'], STN=['egg','larva','pupa'];
@@ -3005,6 +3179,7 @@
 
     // ===================== cinematic intro (Hazel's story) =====================
     let storyMode=false, storyIx=0, storyT=0, storySun=0, storyBees=[], camX=0.5, camS=0.9;
+    let curBeats=null, onCineEnd=null;   // the cinematic serves the intro AND the between-year interludes
     // where the camera rests per beat — the hive never leaves the frame
     const SCN={ dawn:{hx:0.5,hs:0.8,far:true}, hive:{hx:0.5,hs:1.0}, swarm:{hx:0.5,hs:1.0}, queen:{hx:0.84,hs:0.6},
                 comb:{hx:0.85,hs:0.54}, year:{hx:0.86,hs:0.5}, flowers:{hx:0.85,hs:0.56}, ready:{hx:0.5,hs:1.12} };
@@ -3022,17 +3197,59 @@
     ];
     function seedStoryBees(){ storyBees=[]; for(let i=0;i<44;i++) storyBees.push({x:Math.random()*W,y:Math.random()*Hh,ph:Math.random()*6.28,sp:0.4+Math.random()*0.9,r:size*(0.09+Math.random()*0.12),dx:(Math.random()-0.5),dy:(Math.random()-0.5)}); }
     function ramp(keys,t){ const n=keys.length-1, x=Math.max(0,Math.min(1,t))*n, i=Math.min(n-1,Math.floor(x)); return lc(keys[i],keys[i+1],x-i); }
-    function storyDots(){ let h=''; for(let i=0;i<STORY.length;i++) h+='<i class="'+(i===storyIx?'on':'')+'"></i>'; $('storyDots').innerHTML=h; }
-    function showStoryBeat(){ const b=STORY[storyIx]; if(!b){ endStory(); return; }
+    function storyDots(){ const beats=curBeats||STORY; let h=''; for(let i=0;i<beats.length;i++) h+='<i class="'+(i===storyIx?'on':'')+'"></i>'; $('storyDots').innerHTML=h; }
+    function showStoryBeat(){ const beats=curBeats||STORY; const b=beats[storyIx]; if(!b){ endStory(); return; }
       const el=$('story'); el.classList.remove('show'); void $('storyLine').offsetWidth;
       $('storyLine').innerHTML=b.line; storyDots(); storyT=0;
-      $('storyNext').textContent = storyIx>=STORY.length-1 ? 'Begin ›' : 'Continue ›';
+      const last=storyIx>=beats.length-1;
+      $('storyNext').textContent = last ? (onCineEnd?'Begin the year ›':'Begin ›') : 'Continue ›';
       requestAnimationFrame(()=>el.classList.add('show'));
     }
-    function advanceStory(){ if(!storyMode) return; storyIx++; if(storyIx>=STORY.length){ endStory(); } else showStoryBeat(); }
-    function startStory(){ $('intro').classList.add('hide'); document.body.classList.add('cine'); storyMode=true; storyIx=0; storySun=0; camX=0.5; camS=0.8;
+    function advanceStory(){ if(!storyMode) return; const beats=curBeats||STORY; storyIx++; if(storyIx>=beats.length){ endStory(); } else showStoryBeat(); }
+    function startStory(){ curBeats=STORY; onCineEnd=null; { const sk=$('storySkip'); if(sk) sk.textContent='Skip intro \u203a'; } $('intro').classList.add('hide'); document.body.classList.add('cine'); storyMode=true; storyIx=0; storySun=0; camX=0.5; camS=0.8;
       if(wantSound){ setSound(true); } seedStoryBees(); layout(); $('story').classList.remove('hide'); showStoryBeat(); }
-    function endStory(){ storyMode=false; $('story').classList.add('hide'); document.body.classList.remove('cine'); seedAndPlay(); layout(); }
+    // between-year interlude — same beautiful backdrop, freshly-written beats, and a resume callback
+    function startInterlude(beats, onEnd){ if(!beats||!beats.length){ if(onEnd)onEnd(); return; }
+      curBeats=beats; onCineEnd=onEnd||null; { const sk=$('storySkip'); if(sk) sk.textContent='Skip \u203a'; } document.body.classList.add('cine'); storyMode=true; storyIx=0; storySun=0.35; camX=0.5; camS=0.85;
+      seedStoryBees(); layout(); $('story').classList.remove('hide'); showStoryBeat(); }
+    function endStory(){ storyMode=false; $('story').classList.add('hide'); document.body.classList.remove('cine');
+      const cb=onCineEnd; onCineEnd=null; curBeats=null; if(cb){ cb(); } else { seedAndPlay(); } layout(); }
+    // ---- the poetry engine: recap what happened, foreshadow what's coming, pose a question (never the answer) ----
+    function seasonComing(x){ return ({
+      bloom:'The whole hill means to flower at once. A rich year asks only one thing — somewhere to put it all.',
+      drought:'The flow will run shy this year. The bees cannot make what the flowers withhold.',
+      frost:'Spring will come late and cold, dragging its feet through the last of the frost.',
+      mild:'A soft, forgiving year — the kind that lets a keeper grow a little bold.',
+      gold:'The goldenrod means to burn late and long, deep into the autumn.',
+      wander:'There’s a swarm loose in the hedgerows this year, looking for a home.',
+      bear:'And there is a bear on the ridge. He remembers where the sweetness is kept.'
+    })[x.id] || 'The year turns as years do.'; }
+    function interludeTip(prev, s){
+      if(prev && prev.fed) return 'The pantry emptied early last year. A keeper wonders — too many mouths at the table, or too few jars set by? You’ll know come spring.';
+      if(s && s.id==='drought') return 'When the flow runs shy, every empty cell becomes a question: build it — and can you fill it?';
+      if(s && s.id==='bloom') return 'When the meadow floods, honey spills where there’s nowhere to land. Where will you put a year of plenty?';
+      if(s && s.id==='bear') return 'They say a bear takes only what lies easy and shallow. What a keeper makes of that, I’ll leave to you.';
+      if(s && s.id==='frost') return 'The cold always bites hardest at the corners. A nursery has a shape that keeps its own warmth — you’ve seen it hold.';
+      if(prev && prev.pop<25) return 'A small colony keeps a small hearth. What might a wider nursery, filled early, become by midsummer?';
+      return 'You need little from me this year. Trust your hands, and watch the bees — they always say what they need.';
+    }
+    function buildInterlude(prev){
+      const beats=[], yn=yearName(year), s=curSeason;
+      if(prev){ let r=''; const g=prev.g||'';
+        if(prev.sEvent==='bear-hit') r='The bear took his share last autumn — and still the hive held through the dark. ';
+        else if(prev.sEvent==='wander') r='A wild swarm threw in its lot with yours; the comb has never hummed so loud. ';
+        else if(prev.fed) r='You slid in a feeder when the shelves ran bare, and saw them through. No shame in a kindness. ';
+        if(!r){ r = /^A/.test(g)?'A fine year behind you — the bees kept the kind of house a keeper dreams of. '
+          : /^B/.test(g)?'A solid year behind you, stitched from small victories into a living hive. '
+          : 'A hard year behind you — but hard years teach what soft ones never can. '; }
+        beats.push({sc:'comb', line:r+'<b>'+prev.pop+'</b> bees at the height of it.'});
+      }
+      let c='Now <b>Year '+year+'</b> opens — <b>'+yn[0]+'</b>. ';
+      c += (s && s.id!=='calm') ? (s.ic+' '+seasonComing(s)) : 'The wind carries nothing unusual; a plain, honest year to keep.';
+      beats.push({sc:'year', line:c});
+      beats.push({sc:'flowers', line:interludeTip(prev, s)});
+      return beats;
+    }
     $('storySkip').addEventListener('click',(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); endStory(); });
     $('storyNext').addEventListener('click',(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); advanceStory(); });
     $('story').addEventListener('click',()=>advanceStory());
@@ -3103,8 +3320,8 @@
     function crown(cx,cy,r){ ctx.fillStyle='rgba(255,214,120,0.95)'; ctx.beginPath(); ctx.moveTo(cx-r,cy+r*0.5); ctx.lineTo(cx-r,cy-r*0.3); ctx.lineTo(cx-r*0.5,cy+r*0.05); ctx.lineTo(cx,cy-r*0.5); ctx.lineTo(cx+r*0.5,cy+r*0.05); ctx.lineTo(cx+r,cy-r*0.3); ctx.lineTo(cx+r,cy+r*0.5); ctx.closePath(); ctx.fill(); }
     function drawStory(dt){ const _s=size; size=mSize; try{ drawStoryBody(dt); } finally { size=_s; } }
     function drawStoryBody(dt){ storyT+=dt;
-      const beat=STORY[storyIx]||STORY[0];
-      const prog = STORY.length>1 ? storyIx/(STORY.length-1) : 1;
+      const beats=curBeats||STORY; const beat=beats[storyIx]||beats[0];
+      const prog = beats.length>1 ? storyIx/(beats.length-1) : 1;
       storySun += (prog-storySun)*Math.min(1,dt*0.42);   // she takes her time
       const s=storySun, horizon=meadowBase(s), sc=beat.sc;
       // camera drifts between beats; the apiary is always somewhere in frame
@@ -3377,6 +3594,10 @@
     press($('rosterClose'),()=>{ $('roster').classList.add('hide'); paused=false; });
     press($('menuChron'),()=>{ renderChronicle(); menuClose(); $('chronicle').classList.remove('hide'); paused=true; });
     press($('chronClose'),()=>{ $('chronicle').classList.add('hide'); paused=false; });
+    press($('menuShare'),()=>{ menuClose(); openShare(null); });
+    press($('shareClose'), closeShare);
+    press($('shareDo'), doShare);
+    if($('yeShare')) press($('yeShare'),()=>openShare(null));
     press($('menuDance'),startDance);
     press($('menuLog'),()=>{ menuClose(); toggleChat(true); });
     press($('menuRestart'),()=>{ const r=$('menuRestart');
@@ -3479,6 +3700,8 @@
         el.innerHTML=h; el.classList.remove('hide');
       } else el.classList.add('hide'); }
     $('startNew').addEventListener('click',()=>{ showLegacyNote(); renderQueens(); $('intro').classList.add('hide'); $('queenPick').classList.remove('hide'); });
+    $('startDaily').addEventListener('click', startDaily);
+    syncDailyCap();
     $('queenBack').addEventListener('click',()=>{ $('queenPick').classList.add('hide'); $('intro').classList.remove('hide'); });
     $('queenGo').addEventListener('click',()=>{ $('queenPick').classList.add('hide');
       const q=QUEENS.find(x=>x.id===queenLine);
@@ -3491,7 +3714,7 @@
 
     // debug/testing handle
     window.__hm=()=>({day,year,P,honeyU,pollenU,nectarU,honeyCells:honeyCells(),broodCells:broodCells(),
-      story:{on:storyMode, ix:storyIx, sc:(STORY[storyIx]||{}).sc, camX, camS, hiveX:W*camX, W, horizon:storyHorizon(), Hh},
+      story:{on:storyMode, ix:storyIx, sc:((curBeats||STORY)[storyIx]||{}).sc, camX, camS, hiveX:W*camX, W, horizon:storyHorizon(), Hh},
       view:{W,Hh,size,mSize,tSize,ox,oy,hiveCx,hiveCy,topH,botH,stage:Math.min(W,STAGE_W),bounds:combBounds()},
       therm:{warmth:nestWarmth(), amb:AMB(lerpM(tempM,day)+difficulty().temp+M.temp()),
         broodHeats:cells.filter(c=>c.brood).map(c=>+c.heat.toFixed(3)),
@@ -3521,7 +3744,8 @@
       $('fastW').classList.toggle('hide',!autoFast);
       if(started && !over && speed>0 && !paused && !frozen){
         const dd=(dt/DAY_LEN)*eff; day+=dd;
-        if(day>=YEAR){ day=YEAR; stepDay(0.0001,false); if(!over){ syncHUD(); endOfYear(); } }
+        if(dailyMode){ if(day>=DAILY_LEN && !over){ day=DAILY_LEN; syncHUD(); finishDaily(); } }
+        else if(day>=YEAR){ day=YEAR; stepDay(0.0001,false); if(!over){ syncHUD(); endOfYear(); } }
         else stepDay(dd,false);
         if(!over){
           stepHornet(dt);
@@ -3574,11 +3798,14 @@
       // when a controller existed at load time (i.e. a genuine version swap)
       const hadController=!!navigator.serviceWorker.controller;
       navigator.serviceWorker.addEventListener('controllerchange',()=>{ if(!hadController||refreshing) return; refreshing=true; location.reload(); });
-      function offerUpdate(reg){ const bar=$('updateBar'); if(!bar||bar.classList.contains('show')) return;
+      let snoozeUntil=0;
+      function offerUpdate(reg){ const bar=$('updateBar'); if(!bar||bar.classList.contains('show')||performance.now()<snoozeUntil) return;
         bar.classList.add('show');
         $('updateGo').onclick=()=>{ try{ if(started&&!over) saveGame(); }catch(e){}
           const w=reg.waiting; if(w) w.postMessage({type:'SKIP_WAITING'}); else location.reload(); };
-        $('updateLater').onclick=()=>bar.classList.remove('show'); }
+        // "later" tucks it away for half an hour; the pending update re-offers itself
+        // when the player next returns to the game, so a Home Screen app never gets stuck on an old build
+        $('updateLater').onclick=()=>{ bar.classList.remove('show'); snoozeUntil=performance.now()+30*60*1000; }; }
       function watchWorker(reg,w){ if(!w) return;
         w.addEventListener('statechange',()=>{ if(w.state==='installed'&&navigator.serviceWorker.controller) offerUpdate(reg); }); }
       navigator.serviceWorker.register('sw.js').then(reg=>{
@@ -3586,7 +3813,8 @@
         watchWorker(reg,reg.installing);
         reg.addEventListener('updatefound',()=>watchWorker(reg,reg.installing));
         // look for new versions when the player returns to the tab, and hourly while it stays open
-        document.addEventListener('visibilitychange',()=>{ if(!document.hidden) reg.update().catch(()=>{}); });
+        document.addEventListener('visibilitychange',()=>{ if(document.hidden) return; reg.update().catch(()=>{});
+          if(reg.waiting && navigator.serviceWorker.controller) offerUpdate(reg); });
         setInterval(()=>reg.update().catch(()=>{}),60*60*1000);
       }).catch(()=>{});
     }
