@@ -300,6 +300,12 @@
   .qopt .qm{ font-size:11.5px; color:#e8a0a0; line-height:1.4; }
   #queenBtns{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
 
+  /* ---------- share card ---------- */
+  #sharePop .card{ max-width:min(94vw,440px); }
+  #shareWrap{ width:100%; margin:6px 0 12px; border-radius:14px; overflow:hidden; box-shadow:0 10px 40px rgba(0,0,0,0.5); }
+  #shareCanvas{ display:block; width:100%; height:auto; }
+  #shareBtns{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+
   /* ---------- hive chronicle ---------- */
   #chronBody{ margin:12px 0; max-height:56vh; overflow:auto; text-align:left; }
   .chronCard{ background:rgba(255,255,255,0.04); border:1px solid rgba(255,217,122,0.14); border-left:3px solid rgba(255,180,43,0.55); border-radius:10px; padding:10px 13px; margin-bottom:8px; }
@@ -834,6 +840,17 @@
     </div>
   </div>
 
+  <div class="ov hide" id="sharePop">
+    <div class="card panel">
+      <h1 style="font-size:23px">SHARE YOUR APIARY</h1>
+      <div class="sub">a keepsake card of your colony’s story</div>
+      <div id="shareWrap"><canvas id="shareCanvas" width="1080" height="1350"></canvas></div>
+      <div id="shareBtns">
+        <button class="btn ghost" id="shareClose">Close</button>
+        <button class="btn pulse" id="shareDo">Save / Share ▸</button>
+      </div>
+    </div>
+  </div>
   <div class="ov hide" id="confirmPop">
     <div class="card panel" style="max-width:380px">
       <h1 id="confT" style="font-size:23px">—</h1>
@@ -902,6 +919,7 @@
         <div class="mrow"><span class="ml">Keeper’s path</span><button class="mtog" id="menuPath">🗺 Open</button></div>
         <div class="mrow"><span class="ml">Colony roster</span><button class="mtog" id="menuRoster">🐝 <span id="rosterN">0</span></button></div>
         <div class="mrow"><span class="ml">Hive chronicle</span><button class="mtog" id="menuChron">📖 <span id="chronN">0</span></button></div>
+        <div class="mrow"><span class="ml">Share your apiary</span><button class="mtog" id="menuShare">📸 Card</button></div>
         <div class="mrow"><span class="ml">Dance break</span><button class="mtog" id="menuDance">Let’s go!</button></div>
         <div class="mrow"><span class="ml">Keeper’s notes</span><button class="mtog" id="menuGuide">Open</button></div>
         <div class="mrow"><span class="ml">Hazel’s log</span><button class="mtog" id="menuLog">Open</button></div>
@@ -1152,6 +1170,7 @@
       <div class="trophies" id="yeTrophies"></div>
       <div id="giftHead"><span>Queen's Gifts</span><span id="rjBal">✧0</span></div>
       <div id="giftRow"></div>
+      <button class="btn ghost" id="yeShare" style="margin-right:8px">📸 Share this year</button>
       <button class="btn pulse" id="yeNext">Into Year 2</button>
     </div>
   </div>
@@ -1171,7 +1190,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.24.0';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.25.0';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1549,6 +1568,75 @@
     try{ const l=JSON.parse(localStorage.getItem('hm_life')||'{}'); for(const k of ['y','j','g','p']) if(typeof l[k]==='number') LIFE[k]=l[k]; }catch(e){}
     function lifeSave(){ try{ localStorage.setItem('hm_life',JSON.stringify(LIFE)); }catch(e){} }
     function apiaryScore(){ return LIFE.y*250 + LIFE.j*100 + LIFE.g*50 + LIFE.p + badgeCount()*150; }
+    // ===================== the share card: a keepsake of your apiary =====================
+    function shareStats(){
+      let best=null; try{ for(const j of CELLAR){ if(!best||j.p>best.p) best=j; } }catch(e){}
+      if(!best && LEGACY && LEGACY.heirloom && LEGACY.heirloom.n) best=LEGACY.heirloom;
+      const q=(typeof QUEENS!=='undefined')?QUEENS.find(x=>x.id===queenLine):null;
+      const yearsKept=Math.max(year, (LEGACY&&LEGACY.apex)||year);
+      return { rank:apiaryRank(year), year, col:colonyNum, score:apiaryScore(),
+        pop:Math.max(peakPop,Math.round(P)), jars, badges:badgeCount(), badgeTot:(typeof BADGES!=='undefined'?BADGES.length:12),
+        queen:q, best, yearsKept, daily:null }; }
+    function scHex(g,x,y,r){ g.beginPath(); for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-30); const px=x+r*Math.cos(a),py=y+r*Math.sin(a); i?g.lineTo(px,py):g.moveTo(px,py);} g.closePath(); }
+    function drawShareCard(cv, st){ const g=cv.getContext('2d'), W=cv.width, H=cv.height;
+      const BR="'Bricolage Grotesque',sans-serif", MO="'JetBrains Mono',monospace";
+      let bg=g.createLinearGradient(0,0,0,H); bg.addColorStop(0,'#1a1206'); bg.addColorStop(0.55,'#120d05'); bg.addColorStop(1,'#0a0703'); g.fillStyle=bg; g.fillRect(0,0,W,H);
+      // faint comb field
+      g.strokeStyle='rgba(255,196,110,0.06)'; g.lineWidth=3; const hr=70, dx=hr*Math.sqrt(3), dy=hr*1.5;
+      for(let row=-1;row<H/dy+1;row++){ for(let col=-1;col<W/dx+1;col++){ const x=col*dx+(row%2?dx/2:0), y=row*dy; scHex(g,x,y,hr*0.92); g.stroke(); } }
+      // warm glow behind the score
+      let gl=g.createRadialGradient(W/2,H*0.5,20,W/2,H*0.5,W*0.7); gl.addColorStop(0,'rgba(255,180,43,0.12)'); gl.addColorStop(1,'rgba(255,180,43,0)'); g.fillStyle=gl; g.fillRect(0,0,W,H);
+      g.textAlign='center';
+      // kicker
+      g.fillStyle='#7fe3d6'; g.font='700 26px '+MO; g.fillText(st.daily?'D A I L Y   C H A L L E N G E':('C O L O N Y   '+roman(st.col)), W/2, 118);
+      // wordmark
+      const wm=g.createLinearGradient(0,0,W,0); wm.addColorStop(0,'#ffd97a'); wm.addColorStop(0.5,'#ffffff'); wm.addColorStop(1,'#ffb42b');
+      g.fillStyle=wm; g.font='800 138px '+BR; g.fillText('HIVEMIND', W/2, 250);
+      // rank
+      g.fillStyle='#f7eed9'; g.font='600 46px '+BR; g.fillText(st.rank.ic+'  '+st.rank.nm, W/2, 340);
+      g.fillStyle='#c2a97e'; g.font='500 30px '+BR; g.fillText(st.daily?st.daily.label:('Year '+st.year+' · '+st.yearsKept+' winters weathered'), W/2, 388);
+      // the big number
+      g.fillStyle='#c2a97e'; g.font='700 30px '+MO; g.fillText(st.daily?'TODAY’S SCORE':'APIARY SCORE', W/2, 500);
+      g.fillStyle='#ffd76b'; g.font='800 172px '+MO; g.fillText((st.daily?st.daily.score:st.score).toLocaleString(), W/2, 660);
+      // honeycomb divider
+      for(let i=-2;i<=2;i++){ scHex(g,W/2+i*72,720,26); g.fillStyle=i===0?'#ffb42b':'rgba(255,180,43,0.28)'; g.fill(); }
+      // stat row
+      const stats = st.daily
+        ? [['🐝', st.daily.pop, 'peak bees'], ['🍯', st.daily.honey, 'honey cells'], ['📅', st.daily.streak+'d', 'streak']]
+        : [['🐝', st.pop, 'peak bees'], ['🫙', st.jars, 'jars sealed'], ['✦', st.badges+'/'+st.badgeTot, 'badges']];
+      const n=stats.length, cw=W/n;
+      for(let i=0;i<n;i++){ const cx=cw*(i+0.5);
+        g.font='64px '+BR; g.fillText(stats[i][0], cx, 850);
+        g.fillStyle='#ffe0a0'; g.font='700 56px '+MO; g.fillText(''+stats[i][1], cx, 928);
+        g.fillStyle='#c2a97e'; g.font='500 26px '+MO; g.fillText(stats[i][2], cx, 968); }
+      // finest honey
+      let y=1080;
+      if(st.best && st.best.n){ const RAR=(typeof RARITY!=='undefined')?RARITY:[null,{n:'EVERYDAY',c:'#9fb69d'},{n:'VARIETAL',c:'#7fe3d6'},{n:'SINGLE-ORIGIN',c:'#ffd24a'},{n:'RESERVE',c:'#ff9dc0'}];
+        const rr=RAR[st.best.r]||RAR[1];
+        g.fillStyle='#c2a97e'; g.font='500 28px '+MO; g.fillText('FINEST HONEY', W/2, y); y+=54;
+        g.fillStyle='#f7eed9'; g.font='700 46px '+BR; g.fillText(st.best.n, W/2, y); y+=48;
+        g.fillStyle=rr.c; g.font='700 26px '+MO; g.fillText(rr.n+(st.best.p?('  ·  '+st.best.p+'% PURE'):''), W/2, y); y+=64;
+      }
+      if(st.queen){ g.fillStyle='#c2a97e'; g.font='500 30px '+BR; g.fillText('kept by '+st.queen.ic+' '+st.queen.name+', '+st.queen.ep, W/2, y); }
+      // footer
+      g.fillStyle='rgba(255,217,122,0.9)'; g.font='700 34px '+MO; g.fillText('hive-mind-game.com', W/2, H-70);
+      g.fillStyle='#8a6a36'; g.font='500 24px '+BR; g.fillText('beekeeping, one winter at a time', W/2, H-34);
+      g.textAlign='left';
+    }
+    let shareDaily=null;
+    async function openShare(dailyResult){ shareDaily=dailyResult||null; const st=shareStats(); st.daily=shareDaily;
+      try{ await (document.fonts&&document.fonts.ready); }catch(e){}
+      drawShareCard($('shareCanvas'), st);
+      $('sharePop').classList.remove('hide'); paused=true; }
+    function closeShare(){ $('sharePop').classList.add('hide'); if($('menu').classList.contains('hide')&&(!$('yearEnd')||$('yearEnd').classList.contains('hide'))) paused=false; }
+    function doShare(){ const cv=$('shareCanvas'); if(!cv.toBlob){ toast('Sharing isn\u2019t available on this device.'); return; }
+      cv.toBlob(async(blob)=>{ if(!blob){ toast('Could not build the card \u2014 try again.'); return; }
+        const file=new File([blob],'hivemind-apiary.png',{type:'image/png'});
+        const data={ files:[file], title:'HIVEMIND', text:'My apiary in HIVEMIND \ud83d\udc1d \u2014 beekeeping, one winter at a time.', url:'https://hive-mind-game.com' };
+        try{ if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share(data); return; } }catch(e){ if(e&&e.name==='AbortError') return; }
+        try{ const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='hivemind-apiary.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),4000); toast('\ud83d\udc1d Card saved \u2014 share it anywhere.'); }
+        catch(e){ toast('Could not save the card here.'); }
+      },'image/png'); }
     let earned={};
     try{ (JSON.parse(localStorage.getItem('hm_badges')||'[]')).forEach(k=>earned[k]=1); }catch(e){}
     function badgeCount(){ return Object.keys(earned).length; }
@@ -3423,6 +3511,10 @@
     press($('rosterClose'),()=>{ $('roster').classList.add('hide'); paused=false; });
     press($('menuChron'),()=>{ renderChronicle(); menuClose(); $('chronicle').classList.remove('hide'); paused=true; });
     press($('chronClose'),()=>{ $('chronicle').classList.add('hide'); paused=false; });
+    press($('menuShare'),()=>{ menuClose(); openShare(null); });
+    press($('shareClose'), closeShare);
+    press($('shareDo'), doShare);
+    if($('yeShare')) press($('yeShare'),()=>openShare(null));
     press($('menuDance'),startDance);
     press($('menuLog'),()=>{ menuClose(); toggleChat(true); });
     press($('menuRestart'),()=>{ const r=$('menuRestart');
