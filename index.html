@@ -336,6 +336,9 @@
   #splash.still #splashWord span{ letter-spacing:normal; }
   #splash.still #splashMark::after{ display:none; }
 
+  /* the cinematic intro owns the whole screen — no HUD peeking through */
+  body.cine #hud-top, body.cine #hud-bottom, body.cine #coach{ display:none; }
+
   /* ---------- overlays ---------- */
   .ov{ position:fixed; inset:0; z-index:9; display:flex; align-items:center; justify-content:center;
     background:rgba(9,6,3,0.74); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); padding:16px; }
@@ -1844,9 +1847,9 @@
       requestAnimationFrame(()=>el.classList.add('show'));
     }
     function advanceStory(){ if(!storyMode) return; storyIx++; if(storyIx>=STORY.length){ endStory(); } else showStoryBeat(); }
-    function startStory(){ $('intro').classList.add('hide'); storyMode=true; storyIx=0; storySun=0; camX=0.5; camS=0.8;
+    function startStory(){ $('intro').classList.add('hide'); document.body.classList.add('cine'); storyMode=true; storyIx=0; storySun=0; camX=0.5; camS=0.8;
       if(wantSound){ setSound(true); } seedStoryBees(); layout(); $('story').classList.remove('hide'); showStoryBeat(); }
-    function endStory(){ storyMode=false; $('story').classList.add('hide'); seedAndPlay(); }
+    function endStory(){ storyMode=false; $('story').classList.add('hide'); document.body.classList.remove('cine'); seedAndPlay(); layout(); }
     $('storySkip').addEventListener('click',(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); endStory(); });
     $('storyNext').addEventListener('click',(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); advanceStory(); });
     $('story').addEventListener('click',()=>advanceStory());
