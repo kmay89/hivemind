@@ -717,9 +717,14 @@
     // ---- press(): game buttons react on pointerdown — iOS Safari's synthesized
     // click can arrive late or get dropped under a busy rAF loop; the duplicate
     // click that follows the pointerdown is swallowed by a short guard ----
-    function press(el, fn){ if(!el) return; let last=0;
-      const h=e=>{ if(e.button>0) return; const now=performance.now(); if(now-last<350) return; last=now; fn(e); };
-      el.addEventListener('pointerdown',h); el.addEventListener('click',h); }
+    function press(el, fn){ if(!el) return; let viaPointer=false;
+      el.addEventListener('pointerdown',e=>{ if(e.button>0) return; viaPointer=true; fn(e); });
+      // the synthesized click that follows a pointer tap is suppressed no matter
+      // how long the press lasted; the flag clears shortly after release so
+      // keyboard activation (Enter fires a bare click) keeps working
+      el.addEventListener('click',e=>{ if(viaPointer) return; fn(e); });
+      el.addEventListener('pointercancel',()=>{ viaPointer=false; });
+      addEventListener('pointerup',()=>{ setTimeout(()=>{ viaPointer=false; },500); }); }
 
     // ---- ErrerLabs studio splash: play once on load, tap or key to skip ----
     (function(){ const sp=$('splash'); if(!sp) return; let gone=false;
