@@ -111,6 +111,7 @@
   .gl u{ text-decoration:none; font-family:'JetBrains Mono',monospace; font-size:8px; opacity:.75; letter-spacing:0; }
   .tb .yld s{ color:var(--good); text-decoration:none; font-weight:700; }
   .tb:not(.on) .yld{ opacity:.62; }
+  .tb.on .yld, .tb.on .yld b, .tb.on .yld em, .tb.on .yld i, .tb.on .yld s{ color:inherit; opacity:.78; }
   /* full-screen lessons: show the thing, then say when to pick it and why */
   .gcard{ max-width:440px; }
   #guideRow{ display:flex; flex-direction:column; gap:7px; margin:18px 0; }
@@ -221,14 +222,100 @@
   .tb.gold.off{ opacity:.42; }
   #fastW{ font-size:10px; color:var(--frost); padding:0 6px; letter-spacing:.05em; font-family:'JetBrains Mono',monospace; align-self:center; }
 
+  /* ---------- year review (Duolingo-hearted) ---------- */
+  .review{ text-align:left; margin:4px 0 2px; }
+  .rvh{ font:700 8.5px 'JetBrains Mono',monospace; letter-spacing:.22em; text-transform:uppercase; color:var(--gold); opacity:.75; margin:10px 0 5px; }
+  .rvi{ font-size:12px; line-height:1.55; color:var(--text); padding:2px 0; }
+  .rvi.good2{ color:var(--good); }
+  .rvi b{ color:var(--gold); font-weight:600; }
+  .ychart{ width:100%; max-width:340px; height:auto; display:block; margin:10px auto 4px; border-radius:10px;
+    border:1px solid var(--border); background:rgba(0,0,0,0.25); }
+  .rvleg{ display:flex; gap:6px; align-items:center; justify-content:center; font:600 9px 'JetBrains Mono',monospace; color:var(--dim); margin-bottom:8px; }
+  .rvleg i{ width:8px; height:8px; border-radius:2px; display:inline-block; }
+  /* ---------- badges ---------- */
+  .bcard{ max-width:420px; }
+  #badgeGrid{ display:grid; grid-template-columns:1fr 1fr; gap:7px; margin:14px 0 16px; text-align:left; }
+  .badge{ display:flex; gap:9px; align-items:center; padding:9px 10px; border-radius:12px; background:rgba(255,255,255,0.035); border:1px solid var(--border); }
+  .badge .bi{ font-size:19px; flex:none; }
+  .badge .bn{ font:700 11px 'Bricolage Grotesque',sans-serif; color:var(--gold); }
+  .badge .bd{ font:500 9px 'JetBrains Mono',monospace; color:var(--dim); margin-top:1px; line-height:1.4; }
+  .badge.locked{ opacity:.32; filter:grayscale(.8); }
+  .badge.earned{ border-color:rgba(255,217,122,0.45); box-shadow:0 0 12px rgba(255,180,43,.12); }
+  /* ---------- dance break ---------- */
+  #dance{ background:radial-gradient(120% 100% at 50% 20%, #241708 0%, #0d0905 60%, #000 100%); flex-direction:column; }
+  #danceIn{ text-align:center; }
+  @keyframes dancePulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.04); } }
+  .dT{ animation:dancePulse 1.9s ease-in-out infinite; font:800 clamp(34px,9vw,64px) 'Bricolage Grotesque',sans-serif; letter-spacing:.06em;
+    background:linear-gradient(95deg,var(--gold),#fff 45%,var(--cyan)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  .dS{ font:600 clamp(10px,2.6vw,13px) 'JetBrains Mono',monospace; color:var(--dim); letter-spacing:.12em; margin-top:10px; }
+  .dBees{ display:flex; gap:14px; justify-content:center; margin:26px 0; font-size:42px; }
+  .dBees span{ display:inline-block; animation:beeBop 0.62s ease-in-out infinite; }
+  .dBees span:nth-child(2){ animation-delay:.12s; } .dBees span:nth-child(3){ animation-delay:.24s; }
+  .dBees span:nth-child(4){ animation-delay:.36s; } .dBees span:nth-child(5){ animation-delay:.48s; }
+  @keyframes beeBop{ 0%,100%{ transform:translateY(0) rotate(-9deg) scale(1); } 50%{ transform:translateY(-22px) rotate(9deg) scale(1.12); } }
+  .dCount{ font:700 30px 'JetBrains Mono',monospace; color:var(--gold); margin-bottom:18px; }
+  /* ---------- cell info sheet (mobile-friendly comb detail) ---------- */
+  #cellSheet{ position:fixed; left:50%; transform:translateX(-50%); bottom:14px; z-index:8; width:min(420px, calc(100% - 24px));
+    padding:14px 16px; }
+  #cellSheet.hide{ display:none; }
+  #cellSheet .it{ font:700 13px 'Bricolage Grotesque',sans-serif; color:var(--text); }
+  #cellSheet .is{ font:500 10.5px 'JetBrains Mono',monospace; color:var(--dim); margin-top:3px; }
+  #cellSheet .ia{ margin-top:8px; padding-top:8px; border-top:1px solid var(--border); font:600 11px 'Bricolage Grotesque',sans-serif; color:var(--gold); }
+  #cellSheet .ia.no{ color:var(--dim); } #cellSheet .ia.bad{ color:var(--bad); }
+  #cellSheet .id2{ font:500 10px 'JetBrains Mono',monospace; color:var(--dim); margin-top:3px; }
+  #cellSheet .cbtn{ margin-top:11px; font-family:'Bricolage Grotesque'; font-weight:700; font-size:12px; padding:8px 16px; border-radius:9px; cursor:pointer; border:none;
+    color:#241503; background:linear-gradient(180deg,var(--gold),var(--honey)); }
+  #inspectBtn.on{ color:#06120f; background:linear-gradient(180deg,var(--cyan),#2bb9ad); }
+  .vslide{ flex:1; max-width:150px; accent-color:#ffb42b; }
+  .stat{ cursor:pointer; }
+  #clockWrap{ cursor:pointer; }
+
+  /* ---------- pause menu ---------- */
+  .mcard{ max-width:380px; }
+  .mcard h1{ font-size:25px; }
+  .mcard>.btn{ display:block; width:100%; margin-bottom:18px; }
+  .mset{ text-align:left; display:flex; flex-direction:column; gap:7px; margin-bottom:16px; }
+  .mrow{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:9px 12px;
+    border-radius:12px; background:rgba(255,255,255,0.035); border:1px solid var(--border); }
+  .mrow.mcol{ flex-direction:column; align-items:stretch; gap:8px; }
+  .ml{ font:600 12px 'Bricolage Grotesque',sans-serif; color:var(--text); }
+  .mtog{ font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:11.5px; padding:7px 16px; border-radius:9px;
+    cursor:pointer; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--dim); transition:all .18s; min-width:74px; }
+  .mtog.on{ color:#241503; background:linear-gradient(180deg,var(--gold),var(--honey)); border-color:transparent; }
+  .mtog.danger{ color:var(--bad); border-color:rgba(255,112,82,0.35); }
+  .mtog.danger.confirm{ color:#2c0d06; background:linear-gradient(180deg,#ff9a7a,#e2593a); border-color:transparent; }
+  .paceMini{ display:flex; gap:6px; }
+  .paceMini .pseg{ padding:7px 4px 6px; font-size:11px; }
+  .paceMini .pseg i{ font-size:7.5px; }
+  .mfoot{ display:flex; gap:14px; justify-content:center; align-items:baseline; font-size:10px; color:var(--dim); flex-wrap:wrap; }
+  .mfoot a{ color:var(--dim); }
+
+  /* ---------- chat log (everything Hazel has said, kept) ---------- */
+  #chatlog{ position:fixed; top:78px; right:max(13px, calc((100% - var(--stage))/2 + 13px)); width:294px;
+    max-height:calc(100vh - 176px); overflow:auto; padding:12px 14px; z-index:6; }
+  #chatX{ cursor:pointer; color:var(--dim); font-size:15px; padding:0 4px; } #chatX:hover{ color:var(--text); }
+  .crow{ display:flex; gap:9px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05); }
+  .crow:last-child{ border-bottom:none; }
+  .crow .ci2{ flex:none; font-size:14px; line-height:1.4; }
+  .crow .cb2{ flex:1; min-width:0; }
+  .crow .cwhen{ font:600 8px 'JetBrains Mono',monospace; letter-spacing:.16em; color:var(--dim); text-transform:uppercase; margin-bottom:3px; }
+  .crow .ctx2{ font-size:11.5px; line-height:1.55; color:var(--text); }
+  .crow .ctx2 b{ color:var(--gold); font-weight:600; } .crow .ctx2 em{ color:var(--cyan); font-style:normal; }
+  #advisor{ cursor:pointer; }
+  #advisor .hist{ flex:none; align-self:center; margin-left:auto; color:var(--dim); opacity:.65; }
+  #advisor .hist svg{ width:15px; height:15px; display:block; }
+  .tab svg, .tb svg{ width:15px; height:15px; display:block; flex:none; }
+  #tabMeadow svg{ margin-right:5px; }
+
   /* ---------- toast ---------- */
   #toast{ position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:8; padding:9px 17px; border-radius:12px;
-    font-size:12.5px; opacity:0; transition:opacity .35s; pointer-events:none; text-align:center; max-width:84vw; line-height:1.45; }
+    font-size:12.5px; opacity:0; transition:opacity .7s; pointer-events:none; text-align:center; max-width:84vw; line-height:1.45; }
   #toast.show{ opacity:1; }
+  #toast b{ color:var(--gold); font-weight:600; } #toast em{ color:var(--cyan); font-style:normal; }
 
   /* ---------- season interstitial ---------- */
   #sb{ position:fixed; inset:0; z-index:6; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; opacity:0; }
-  #sb.show{ animation:sbIn 2.3s cubic-bezier(.3,.6,.3,1) both; }
+  #sb.show{ animation:sbIn 4.4s cubic-bezier(.3,.6,.3,1) both; }
   @keyframes sbIn{ 0%{ opacity:0; transform:scale(1.03); } 14%{ opacity:1; transform:scale(1); } 78%{ opacity:1; } 100%{ opacity:0; } }
   #sbT{ font-weight:800; font-size:clamp(40px,9vw,86px); letter-spacing:.1em; line-height:1;
     background:linear-gradient(95deg,var(--gold),#fff 55%,var(--honey)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
@@ -238,8 +325,34 @@
   #sbS{ margin-top:8px; font-size:12px; letter-spacing:.34em; text-transform:uppercase; color:var(--text); opacity:.85;
     text-shadow:0 2px 12px rgba(0,0,0,.6); font-weight:500; }
 
+  /* ---------- rotate prompt: phone landscape gets a gentle ask ---------- */
+  #rotate{ display:none; }
+  @media (orientation:landscape) and (pointer:coarse) and (max-height:540px){
+    #rotate{ display:flex; position:fixed; inset:0; z-index:13; background:var(--comb);
+      align-items:center; justify-content:center; text-align:center; }
+  }
+  #rotate .rHex{ font-size:44px; color:var(--gold); animation:rotHint 2.4s ease-in-out infinite; display:inline-block; }
+  @keyframes rotHint{ 0%,100%{ transform:rotate(0deg); } 50%{ transform:rotate(90deg); } }
+  #rotate .rT{ font:700 18px 'Bricolage Grotesque',sans-serif; color:var(--text); margin-top:14px; }
+  #rotate .rS{ font:600 9.5px 'JetBrains Mono',monospace; letter-spacing:.3em; text-transform:uppercase; color:var(--dim); margin-top:6px; }
+
+  /* ---------- frost — cold creeps in from the edges ---------- */
+  #frost{ position:fixed; inset:0; z-index:4; pointer-events:none; opacity:0; transition:opacity 2.5s ease;
+    background:
+      radial-gradient(90% 60% at 0% 0%, rgba(207,226,245,0.16), transparent 55%),
+      radial-gradient(90% 60% at 100% 0%, rgba(207,226,245,0.14), transparent 55%),
+      radial-gradient(110% 60% at 50% 100%, rgba(190,215,240,0.18), transparent 60%),
+      linear-gradient(180deg, rgba(207,226,245,0.05), transparent 30%, transparent 70%, rgba(207,226,245,0.07)); }
+  /* cold-tinted panels: icy rim and a breath of frost in the corners */
+  #advisor{ position:relative; }
+  #advisor.cold{ border-color:rgba(207,226,245,0.5); }
+  #advisor.cold::after{ content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+    background:radial-gradient(55% 45% at 0% 0%, rgba(207,226,245,0.16), transparent 70%),
+               radial-gradient(45% 40% at 100% 100%, rgba(207,226,245,0.12), transparent 70%); }
+  #advisor.cold .ic{ filter:drop-shadow(0 0 6px rgba(207,226,245,.55)); }
+
   /* ---------- view wipe ---------- */
-  #wipe{ position:fixed; inset:0; z-index:4; pointer-events:none; opacity:0; transition:opacity .15s;
+  #wipe{ position:fixed; inset:0; z-index:4; pointer-events:none; opacity:0; transition:opacity .3s;
     background:radial-gradient(circle at 50% 55%, rgba(255,190,80,0.5), rgba(13,9,5,0.92) 72%); }
 
   /* ---------- report ---------- */
@@ -281,9 +394,10 @@
 
   .preveal{ transition:opacity .5s, transform .5s; }
   .preveal.hidden{ opacity:0; transform:translateY(-6px); pointer-events:none; }
-  .spotlight{ animation:spot 1.3s ease-in-out infinite; position:relative; z-index:5; }
+  #hud-top .preveal.hidden, #hud-bottom .preveal.hidden{ pointer-events:none; }
+  .spotlight{ animation:spot 2.1s ease-in-out infinite; position:relative; z-index:5; }
   @keyframes spot{ 0%,100%{ box-shadow:0 0 0 0 rgba(255,217,122,0); } 50%{ box-shadow:0 0 0 4px rgba(255,217,122,0.55); } }
-  .tapHere{ animation:spot 1.3s ease-in-out infinite, btnPulse 1.3s ease-in-out infinite; }
+  .tapHere{ animation:spot 2.1s ease-in-out infinite, btnPulse 2.1s ease-in-out infinite; }
   @keyframes btnPulse{ 0%,100%{ filter:brightness(1); } 50%{ filter:brightness(1.25); } }
 
   /* ---------- update bar (new version deployed) ---------- */
@@ -449,6 +563,20 @@
   .card .btn.pulse{ animation:glowPulse 2.2s infinite; }
   @keyframes glowPulse{ 0%,100%{ box-shadow:0 8px 22px rgba(255,160,40,.28);} 50%{ box-shadow:0 8px 34px rgba(255,200,90,.6);} }
   .card .btn.ghost{ margin-left:8px; font-size:13px; padding:11px 18px; }
+  .paceCap{ font-size:9px; letter-spacing:.22em; text-transform:uppercase; color:var(--dim); font-weight:600; margin-bottom:7px; }
+  #paceRow{ display:flex; gap:6px; margin:0 auto 20px; max-width:340px; }
+  .pseg{ flex:1; padding:8px 4px 7px; border-radius:11px; border:1px solid var(--border); background:rgba(255,255,255,0.03);
+    cursor:pointer; text-align:center; font:700 12px 'Bricolage Grotesque',sans-serif; color:var(--dim);
+    transition:all .2s; user-select:none; -webkit-tap-highlight-color:transparent; }
+  .pseg i{ display:block; font-style:normal; font:500 8px 'JetBrains Mono',monospace; letter-spacing:.06em; margin-top:2px; opacity:.75; }
+  .pseg:hover{ color:var(--text); border-color:rgba(255,217,122,0.4); }
+  .pseg.on{ color:#241503; background:linear-gradient(180deg,var(--gold),var(--honey)); border-color:transparent;
+    box-shadow:0 1px 0 rgba(255,255,255,.4) inset, 0 3px 14px rgba(255,170,40,.3); }
+  .pseg.on i{ color:#241503; opacity:.72; }
+  .pseg.locked{ opacity:.45; }
+  .pseg.locked i::before{ content:'🔒 '; }
+  .pseg.deny{ animation:denyShake .4s ease; }
+  @keyframes denyShake{ 25%{ transform:translateX(-3px); } 75%{ transform:translateX(3px); } }
   .cardLinks{ margin-top:22px; display:flex; gap:18px; justify-content:center; font-size:10.5px; }
   .cardLinks a{ color:var(--dim); text-decoration:none; border-bottom:1px solid rgba(194,169,126,0.35); padding-bottom:1px; }
   .cardLinks a:hover{ color:var(--gold); border-color:var(--gold); }
@@ -479,6 +607,7 @@
 
   /* ---- phones: a dense, quiet HUD so the comb gets the screen ---- */
   @media (max-width:760px){
+    #chatlog{ top:auto; left:5vw; right:5vw; bottom:50%; transform:translateY(50%); width:auto; max-height:74vh; }
     #hud-top{ flex-direction:column; align-items:stretch; gap:4px; padding:6px; }
     #hud-bottom{ flex-direction:column; align-items:stretch; gap:4px; padding:6px; }
     /* tabs: one slim strip */
@@ -518,7 +647,7 @@
     /* the coach is repositioned above the bottom HUD from JS */
     #coach{ max-width:none; width:calc(100% - 20px); padding:11px 13px; }
     /* not-yet-revealed panels shouldn't hold empty space on a small screen */
-    .preveal.hidden{ display:none; }
+    #hud-top .preveal.hidden, #hud-bottom .preveal.hidden, #tabs .preveal.hidden{ display:none; }
   }
   @media (max-width:760px) and (pointer:coarse){
     .tab, .tb{ min-height:44px; padding-top:4px; padding-bottom:4px; }
@@ -534,18 +663,19 @@
   <div id="hud-top">
     <div id="tabs" class="panel">
       <div class="tab on" id="tabHive" tabindex="0">⬡ Hive</div>
-      <div class="tab meadow" id="tabMeadow" tabindex="0">☀ Meadow</div>
-      <div class="tab preveal" id="reportBtn" tabindex="0" title="Hive report — trends, honey ledger & winter forecast">📊</div>
+      <div class="tab meadow" id="tabMeadow" tabindex="0"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.6" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1.8" x2="12" y2="4.4"/><line x1="12" y1="19.6" x2="12" y2="22.2"/><line x1="1.8" y1="12" x2="4.4" y2="12"/><line x1="19.6" y1="12" x2="22.2" y2="12"/><line x1="4.8" y1="4.8" x2="6.6" y2="6.6"/><line x1="17.4" y1="17.4" x2="19.2" y2="19.2"/><line x1="4.8" y1="19.2" x2="6.6" y2="17.4"/><line x1="17.4" y1="6.6" x2="19.2" y2="4.8"/></g></svg>Meadow</div>
+      <div class="tab preveal" id="reportBtn" tabindex="0" title="Hive report — trends, honey ledger & winter forecast"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="4" y="12" width="4" height="8" rx="1.2"/><rect x="10" y="6.5" width="4" height="13.5" rx="1.2"/><rect x="16" y="9.5" width="4" height="10.5" rx="1.2"/></svg></div>
       <div class="tab" id="helpBtn" tabindex="0" title="What does what — read any lesson again">?</div>
-      <div class="tab" id="sndBtn" tabindex="0" title="Hive sound on/off">🔇</div>
+      <div class="tab" id="sndBtn" tabindex="0" title="Hive sound on/off"></div>
+      <div class="tab" id="menuBtn" tabindex="0" title="Pause &amp; settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h0a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55h0a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v0a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg></div>
     </div>
 
     <div id="res" class="panel preveal">
       <div class="stat honey" id="stHoney"><div class="lab">Honey</div><div class="val"><span class="n" id="vHoney">0</span><span class="arr flat" id="aHoney">▬</span></div><div class="sub" id="sHoney">need —</div></div>
-      <div class="stat pollen"><div class="lab">Pollen</div><div class="val"><span class="n" id="vPollen">0</span><span class="arr flat" id="aPollen">▬</span></div><div class="sub">protein</div></div>
+      <div class="stat pollen" id="stPollen" tabindex="0"><div class="lab">Pollen</div><div class="val"><span class="n" id="vPollen">0</span><span class="arr flat" id="aPollen">▬</span></div><div class="sub">protein</div></div>
       <div class="stat pop" id="stPop"><div class="lab">Bees</div><div class="val"><span class="n" id="vPop">0</span><span class="arr flat" id="aPop">▬</span></div><div class="sub" id="sPop">0 out</div></div>
-      <div class="stat brood"><div class="lab">Brood</div><div class="val"><span class="n" id="vBrood">0</span><span class="arr flat" id="aBrood">▬</span></div><div class="sub" id="sBrood">e·l·p</div></div>
-      <div class="stat keeper"><div class="lab">Keeper</div><div class="val"><span class="n" id="vRJ">✧0</span></div><div class="sub" id="sJars">0 jars</div></div>
+      <div class="stat brood" id="stBrood" tabindex="0"><div class="lab">Brood</div><div class="val"><span class="n" id="vBrood">0</span><span class="arr flat" id="aBrood">▬</span></div><div class="sub" id="sBrood">e·l·p</div></div>
+      <div class="stat keeper" id="stKeeper" tabindex="0"><div class="lab">Keeper</div><div class="val"><span class="n" id="vRJ">✧0</span></div><div class="sub" id="sJars">0 jars</div></div>
     </div>
 
     <div id="clockWrap" class="panel preveal">
@@ -558,7 +688,7 @@
   </div>
 
   <div id="hud-bottom">
-    <div id="advisor" class="panel preveal"><canvas class="ic" id="hazelC" width="46" height="46" aria-label="Hazel"></canvas><div class="tx"><span id="advTx">Welcome to your colony.</span><button id="feedBtn" class="hide">Feed syrup — once</button></div></div>
+    <div id="advisor" class="panel preveal" title="Hazel’s log — every word she’s said"><canvas class="ic" id="hazelC" width="46" height="46" aria-label="Hazel"></canvas><div class="tx"><span id="advTx">Welcome home, keeper.</span><button id="feedBtn" class="hide">Feed syrup — once</button></div><span class="hist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.3c-1.3 0-2.6-.3-3.7-.8L3 20l1.2-4.4a8.1 8.1 0 0 1-1.2-4.1A8.4 8.4 0 0 1 11.5 3.2 8.4 8.4 0 0 1 21 11.5z"/></svg></span></div>
     <div id="ctl" class="panel">
       <div class="grp preveal" id="forageGrp">
         <span class="gl">Forage <u>🍯·🌼 wk</u></span>
@@ -571,6 +701,7 @@
         <div class="tb brood y on" data-brush="brood" tabindex="0" title="Paint where the queen lays"><span>Brood</span><i class="yld" id="yBrood">—</i></div>
         <div class="tb honeyb y" data-brush="honey" tabindex="0" title="Paint storage cells"><span>Honey</span><i class="yld" id="yHon">—</i></div>
         <div class="tb expand y" data-brush="expand" tabindex="0" title="Flag fresh wax to build"><span>Expand</span><i class="yld" id="yExp">—</i></div>
+        <div class="tb" id="inspectBtn" tabindex="0" title="What is this cell? Tap this, then tap any cell">ⓘ</div>
       </div>
       <div class="grp preveal hidden" id="apiaryGrp">
         <span class="gl">Apiary</span>
@@ -578,14 +709,61 @@
       </div>
       <div class="grp" id="timeGrp">
         <span class="gl">Time</span>
-        <div class="tb" data-sp="0" tabindex="0" title="Pause &amp; plan (space)">❚❚</div>
-        <div class="tb on" data-sp="1" tabindex="0">▶</div>
-        <div class="tb" data-sp="3" tabindex="0" title="Fast">▶▶</div>
+        <div class="tb" data-sp="0" tabindex="0" title="Pause &amp; plan (space)"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4.2" height="14" rx="1.4"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.4"/></svg></div>
+        <div class="tb on" data-sp="1" tabindex="0" title="Play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7.5 5.2v13.6a.8.8 0 0 0 1.2.7l11-6.8a.8.8 0 0 0 0-1.4l-11-6.8a.8.8 0 0 0-1.2.7z"/></svg></div>
+        <div class="tb" data-sp="3" tabindex="0" title="Fast"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.8 5.6v12.8a.7.7 0 0 0 1.1.6l8-6.4a.7.7 0 0 0 0-1.2l-8-6.4a.7.7 0 0 0-1.1.6z"/><path d="M12.6 5.6v12.8a.7.7 0 0 0 1.1.6l8-6.4a.7.7 0 0 0 0-1.2l-8-6.4a.7.7 0 0 0-1.1.6z"/></svg></div>
         <span id="fastW" class="hide">❄ fast</span>
       </div>
     </div>
   </div>
 
+  <div class="ov hide" id="menu">
+    <div class="card mcard">
+      <h1>PAUSED</h1>
+      <button class="btn pulse" id="menuResume">Back to the hive ▶</button>
+      <div class="mset">
+        <div class="mrow"><span class="ml">Sound</span><button class="mtog" id="menuSnd">Off</button></div>
+        <div class="mrow mcol"><span class="ml" id="paceLabel2">Pace</span>
+          <div class="paceMini" role="radiogroup" aria-labelledby="paceLabel2">
+            <div class="pseg" data-pace="easy" tabindex="0" role="radio" aria-checked="false">Easy<i>gentle</i></div>
+            <div class="pseg" data-pace="medium" tabindex="0" role="radio" aria-checked="false">Medium<i>steady</i></div>
+            <div class="pseg" data-pace="hard" tabindex="0" role="radio" aria-checked="false">Hard<i>swift</i></div>
+          </div>
+        </div>
+        <div class="mrow"><span class="ml">Music</span><input type="range" class="vslide" id="volMusic" min="0" max="100"></div>
+        <div class="mrow"><span class="ml">Hive hum</span><input type="range" class="vslide" id="volHum" min="0" max="100"></div>
+        <div class="mrow"><span class="ml">Effects</span><input type="range" class="vslide" id="volFx" min="0" max="100"></div>
+        <div class="mrow"><span class="ml">Placement hints</span><button class="mtog on" id="menuHints">On</button></div>
+        <div class="mrow"><span class="ml">Badges</span><button class="mtog" id="menuBadges">✦ <span id="badgeN">0</span>/10</button></div>
+        <div class="mrow"><span class="ml">Dance break</span><button class="mtog" id="menuDance">Let’s go!</button></div>
+        <div class="mrow"><span class="ml">Keeper’s notes</span><button class="mtog" id="menuGuide">Open</button></div>
+        <div class="mrow"><span class="ml">Hazel’s log</span><button class="mtog" id="menuLog">Open</button></div>
+        <div class="mrow"><span class="ml">Restart colony</span><button class="mtog danger" id="menuRestart">Restart</button></div>
+      </div>
+      <div class="mfoot">
+        <span>HIVEMIND · ErrerLabs</span>
+        <a href="about.html" target="_blank" rel="noopener">About</a>
+        <a href="privacy.html" target="_blank" rel="noopener">Privacy</a>
+        <a href="terms.html" target="_blank" rel="noopener">Terms</a>
+      </div>
+    </div>
+  </div>
+  <div class="ov hide" id="badges">
+    <div class="card bcard">
+      <h1>BADGES</h1><div class="sub">a keeper’s wall of little victories</div>
+      <div id="badgeGrid"></div>
+      <button class="btn ghost" id="badgesClose">Back</button>
+    </div>
+  </div>
+  <div class="ov hide" id="dance">
+    <div id="danceIn">
+      <div class="dT">DANCE BREAK!</div>
+      <div class="dS">stand up · shake your wings · waggle like you found the good flowers</div>
+      <div class="dBees"><span>🐝</span><span>🐝</span><span>🐝</span><span>🐝</span><span>🐝</span></div>
+      <div class="dCount" id="danceCount">30</div>
+      <button class="btn" id="danceEnd">back to the hive</button>
+    </div>
+  </div>
   <div class="ov hide" id="guide">
     <div class="card gcard">
       <h1>THE KEEPER'S NOTES</h1><div class="sub">nothing here is a secret — read any of it, any time</div>
@@ -605,9 +783,16 @@
       <div id="lesFoot"><div id="lesDots"><i></i><i></i><i></i></div><button class="btn pulse" id="lesBtn">Next ›</button></div>
     </div>
   </div>
+  <div id="chatlog" class="panel hide">
+    <div class="rHead"><span>HAZEL’S LOG</span><span id="chatX">✕</span></div>
+    <div id="chatRows"></div>
+  </div>
+  <div id="cellSheet" class="panel hide"><div id="csBody"></div><button class="cbtn" id="csClose">Got it</button></div>
   <div id="inspect" class="panel"></div>
   <div id="toast" class="panel"></div>
   <div id="sb"><div id="sbT"></div><div id="sbS"></div></div>
+  <div id="frost" aria-hidden="true"></div>
+  <div id="rotate"><div class="rIn"><div class="rHex">⬡</div><div class="rT">Turn your phone upright</div><div class="rS">the hive stands tall</div></div></div>
   <div id="wipe"></div>
 
   <div id="coach" class="panel">
@@ -689,6 +874,12 @@
       <div id="sndInvite" class="on" tabindex="0" role="checkbox" aria-checked="true">
         <span class="box"><i>✓</i></span><span>🎧 Play with sound<span class="sub2"> — music &amp; the hive</span></span>
       </div>
+      <div class="paceCap" id="paceLabel">how fast should the seasons turn?</div>
+      <div id="paceRow" role="radiogroup" aria-labelledby="paceLabel">
+        <div class="pseg" data-pace="easy" tabindex="0" role="radio" aria-checked="false">Easy<i>gentle days</i></div>
+        <div class="pseg" data-pace="medium" tabindex="0" role="radio" aria-checked="false">Medium<i>keeper’s pace</i></div>
+        <div class="pseg" data-pace="hard" tabindex="0" role="radio" aria-checked="false">Hard<i>seasons rush</i></div>
+      </div>
       <div>
         <button class="btn pulse" id="startNew">Found a new colony</button>
         <button class="btn ghost hide" id="startCont">Continue</button>
@@ -715,6 +906,8 @@
       <h1 class="good" id="yeTitle">YEAR 1 SURVIVED</h1>
       <div class="sub" id="yeSub">winter is past · spring returns</div>
       <div class="grade" id="yeGrade"></div>
+      <div class="review" id="yeReview"></div>
+      <canvas class="ychart" id="yeChart" width="640" height="170"></canvas>
       <div class="trophies" id="yeTrophies"></div>
       <div id="giftHead"><span>Queen's Gifts</span><span id="rjBal">✧0</span></div>
       <div id="giftRow"></div>
@@ -728,6 +921,8 @@
       <h1 id="ovTitle" class="bad">THE COLONY FAILS</h1>
       <div class="sub" id="ovSub"></div>
       <div class="grade" id="ovStats"></div>
+      <div class="review" id="ovReview"></div>
+      <canvas class="ychart" id="ovChart" width="640" height="170"></canvas>
       <div class="trophies" id="ovTrophies"></div>
       <button class="btn pulse" id="ovRestart">A new swarm arrives in spring ▶</button>
     </div>
@@ -751,21 +946,27 @@
       el.addEventListener('pointercancel',()=>{ viaPointer=false; });
       addEventListener('pointerup',()=>{ setTimeout(()=>{ viaPointer=false; },500); }); }
 
+    const ICON_SND_ON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.2v5.6h3.6L13 19V5L7.6 9.2H4z" fill="currentColor"/><path d="M15.8 8.6a4.8 4.8 0 0 1 0 6.8M18.4 6a8.6 8.6 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
+    const ICON_SND_OFF='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.2v5.6h3.6L13 19V5L7.6 9.2H4z" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="16" y1="9.5" x2="21" y2="14.5"/><line x1="21" y1="9.5" x2="16" y2="14.5"/></g></svg>';
+
+    $('sndBtn').innerHTML=ICON_SND_OFF;
+
     // ---- typewriter: text arrives at reading pace, Zelda-style; markup tags
     // are swallowed whole so colours appear with their words. One channel —
     // lessons and coach speech never type at the same time. ----
     let twActive=null;
-    function finishType(){ if(!twActive) return; clearInterval(twActive.t);
-      twActive.el.innerHTML=twActive.html; twActive.el.classList.remove('typing'); twActive=null; }
-    function typeInto(el, html, done){ finishType(); if(!el) return;
+    function finishType(runDone){ if(!twActive) return; clearInterval(twActive.t);
+      twActive.el.innerHTML=twActive.html; twActive.el.classList.remove('typing');
+      const d=twActive.done; twActive=null; if(runDone!==false && d) d(); }
+    function typeInto(el, html, done){ finishType(false); if(!el) return;
       el.classList.add('typing'); el.innerHTML=''; let i=0;
       const t=setInterval(()=>{
         do{ if(html[i]==='<'){ const j=html.indexOf('>',i); i=(j<0?html.length:j+1); }
             else if(html[i]==='&'){ const j=html.indexOf(';',i); i=(j>0&&j-i<9)?j+1:i+1; }
             else i++; } while(i<html.length && html[i]==='<');
         el.innerHTML=html.slice(0,i);
-        if(i>=html.length){ finishType(); if(done)done(); } },13);
-      twActive={el,html,t}; }
+        if(i>=html.length){ finishType(); } },13);
+      twActive={el,html,t,done}; }
 
     // ---- ErrerLabs studio splash: play once on load, tap or key to skip ----
     (function(){ const sp=$('splash'); if(!sp) return; let gone=false;
@@ -785,7 +986,35 @@
     const NEC_PF=4.0, POL_PF=2.2;
     const BROOD_H=0.28, BROOD_P=0.20, WAX_H=3.5, LAYMAX=6.0;
     const FOR_FRAC=0.45, NURSE_FRAC=0.30, BUILD_FRAC=0.17;
-    const DAY_LEN=1.0, YEAR=360, WIN_TEMP=6;
+    const YEAR=360, WIN_TEMP=6;
+    // pace: how many real seconds one hive-day takes — a player choice, not a law
+    const PACES={ easy:2.5, medium:1.0, hard:0.6 };
+    let pace='easy', DAY_LEN=PACES.easy;
+    // faster seasons are earned: Medium by surviving a winter, Hard by mastering Medium
+    let unlocked={m:false,h:false};
+    try{ const u=JSON.parse(localStorage.getItem('hm_unlock')||'{}'); unlocked.m=!!u.m; unlocked.h=!!u.h; }catch(e){}
+    try{ const sp0=localStorage.getItem('hm_pace');  // grandfather players already on a faster pace
+      if(sp0==='medium'){ unlocked.m=true; } if(sp0==='hard'){ unlocked.m=true; unlocked.h=true; }
+      localStorage.setItem('hm_unlock',JSON.stringify({m:unlocked.m?1:0,h:unlocked.h?1:0})); }catch(e){}
+    function paceLocked(p){ return (p==='medium'&&!unlocked.m)||(p==='hard'&&!unlocked.h); }
+    function syncPaceLocks(){ document.querySelectorAll('.pseg').forEach(x=>{ const lk=paceLocked(x.dataset.pace);
+      x.classList.toggle('locked',lk); x.setAttribute('aria-disabled',lk?'true':'false'); }); }
+    function unlockPace(p){
+      if(p==='medium'&&!unlocked.m){ unlocked.m=true; toast('🔓 <b>Medium</b> pace unlocked — the seasons walk faster now, if you let them.'); }
+      else if(p==='hard'&&!unlocked.h){ unlocked.h=true; toast('🔓 <b>Hard</b> pace unlocked — for keepers who like the wind in their veil.'); }
+      else return;
+      try{ localStorage.setItem('hm_unlock',JSON.stringify({m:unlocked.m?1:0,h:unlocked.h?1:0})); }catch(e){}
+      syncPaceLocks(); }
+    function setPace(p){ if(!PACES[p]||paceLocked(p)) p='easy'; pace=p; DAY_LEN=PACES[p];
+      document.querySelectorAll('.pseg').forEach(x=>{ const on=x.dataset.pace===p;
+        x.classList.toggle('on',on); x.setAttribute('aria-checked',on?'true':'false'); });
+      try{ localStorage.setItem('hm_pace',p); }catch(e){} }
+    document.querySelectorAll('.pseg').forEach(b=>press(b,()=>{ const p=b.dataset.pace;
+      if(paceLocked(p)){ b.classList.add('deny'); const i=b.querySelector('i'); if(i){ const t=i.textContent;
+        i.textContent = p==='medium' ? 'survive a winter first' : 'first master Medium';
+        setTimeout(()=>{ b.classList.remove('deny'); i.textContent=t; },1900); } return; }
+      setPace(p); }));
+    (function(){ let p='easy'; try{ p=localStorage.getItem('hm_pace')||'easy'; }catch(e){} setPace(p); syncPaceLocks(); })();
     const FN={nectar:0.85, balanced:0.6, pollen:0.25};
     const SAVE_KEY='hivemind.save.v3';
     const OFFLINE_SEC_PER_DAY=900, OFFLINE_CAP=3, OFFLINE_FLOOR=8*HC;
@@ -890,10 +1119,46 @@
     let rate={h:0,p:0,b:0,br:0}, prevv={h:0,p:0,b:0,br:0}, forecastCache=null, fcTimer=0, sparkCtx=null;
     let onboard=false, coachStep=0, brushedBrood=0, flaggedExpand=0, paintedHoney=0, forageTouched=false;
     let queenAge=1, hornet=null, hornetCD=18+Math.random()*22, shake=0, gt=0, hitstop=0;
+    let yearHist=[], histT=2.7, drips=[], danceMode=false, hints=true, inspectMode=false;
+    // every colony size sounds different — say so when they get there
+    const POPM=[
+      [25,'Twenty-five bees. The comb is starting to sound like something.'],
+      [50,'Fifty bees strong \u2014 you can hear the hum from the porch now.'],
+      [80,'Eighty bees! The queen is being very casual about how proud she is.'],
+      [120,'A hundred and twenty. The neighbours have started asking about honey.'],
+      [180,'A hundred and eighty bees. Less a hive, more a small golden weather system.'],
+    ];
+    let popMilo={};
+    try{ hints = localStorage.getItem('hm_hints')!=='0'; }catch(e){}
     let rj=0, jars=0, jarsThisYear=0, fedWinter=false, goals=null, lastSI=0, scoutShown=false, raidLoss=0, starveT=0, bankAtFrost=0, seenTips={};
     const queenVigour=()=>Math.max(0.7, 1-(queenAge-1)*0.12);
 
     // ===================== season goals (the reward cadence inside each year) =====================
+    // ---- badges: a keeper's wall of little victories ----
+    const BADGES=[
+      {id:'firstjar', ic:'🫙', n:'First Jar',        d:'seal your first jar of honey'},
+      {id:'survivor', ic:'❄️', n:'Wintered',         d:'bring a colony into a second spring'},
+      {id:'century',  ic:'🐝', n:'A Hundred Strong', d:'a hundred bees alive at once'},
+      {id:'pantry',   ic:'🍯', n:'Full Pantry',      d:'meet the winter need before first frost'},
+      {id:'guardian', ic:'🛡️', n:'Guardian',         d:'drive off a raiding hornet'},
+      {id:'waggler',  ic:'💃', n:'Read the Dance',   d:'send the foragers to a meadow patch'},
+      {id:'softheart',ic:'🥄', n:'Soft Heart',       d:'feed the bees when the shelves ran bare'},
+      {id:'scholar',  ic:'📖', n:'Scholar',          d:'read all five keeper’s notes'},
+      {id:'dancer',   ic:'🕺', n:'Dance Break',      d:'take a dance break with the bees'},
+      {id:'master',   ic:'👑', n:'Master Keeper',    d:'finish a year with all four season goals'},
+    ];
+    let earned={};
+    try{ (JSON.parse(localStorage.getItem('hm_badges')||'[]')).forEach(k=>earned[k]=1); }catch(e){}
+    function badgeCount(){ return Object.keys(earned).length; }
+    function syncBadgeN(){ const el=$('badgeN'); if(el) el.textContent=badgeCount(); }
+    function grantBadge(id){ if(earned[id]) return; const b=BADGES.find(x=>x.id===id); if(!b) return;
+      earned[id]=1; try{ localStorage.setItem('hm_badges',JSON.stringify(Object.keys(earned))); }catch(e){}
+      toast('✦ Badge earned — '+b.n+'!'); logMsg('✦','Badge earned — <b>'+b.n+'</b>: '+b.d); fanfare(); syncBadgeN(); }
+    function renderBadges(){ $('badgeGrid').innerHTML=BADGES.map(b=>'<div class="badge '+(earned[b.id]?'earned':'locked')+'"><span class="bi">'+b.ic+'</span><div><div class="bn">'+b.n+'</div><div class="bd">'+b.d+'</div></div></div>').join(''); }
+    function checkBadges(){ if(!started||over) return;
+      if(peakPop>=100) grantBadge('century');
+      for(const [n,msg] of POPM){ if(P>=n && !popMilo[n]){ popMilo[n]=1; toast('\ud83d\udc1d '+msg); chime(660,880); } }
+      if(Object.keys(lessonSeen).length>=5) grantBadge('scholar'); }
     function makeGoals(){
       const y=year;
       const g0=30+9*Math.min(3,y-1), g1=24+8*Math.min(4,y-1), g2=1+Math.min(2,y-1);
@@ -909,7 +1174,7 @@
       g.label='Midwinter check · '+g.tgt+' cells on day 316';
       if(!silent) toast('Winter goal set: reach day 316 with '+g.tgt+' cells still capped.'); }
     function completeGoal(g){ if(g.done) return; g.done=true; rj++;
-      fanfare(); burst(W/2,topH+40,26); toast('Season goal complete — +1 ✧ royal jelly');
+      fanfare(); burst(W/2,topH+40,26); toast('Season goal met \u2014 +1 ✧ royal jelly. The queen pretends not to be pleased.');
       const el=$('goal'); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
       saveGame(); }
     function checkGoals(){ if(onboard||!goals||over) return;
@@ -934,10 +1199,18 @@
       ctx.globalAlpha=1; }
 
     // ===================== sound (WebAudio, all synthesized, opt-in) =====================
-    const AU={ctx:null,on:false,master:null,humG:null,musicG:null,musDry:null,musWet:null};
+    const AU={ctx:null,on:false,master:null,humG:null,musicG:null,musDry:null,musWet:null,sfxG:null};
+    // player mix: music / hive hum / effects, each 0..1, remembered
+    const VOL={music:1,hum:1,fx:1};
+    (function(){ try{ const v=JSON.parse(localStorage.getItem('hm_vol')||'{}');
+      for(const k of ['music','hum','fx']) if(typeof v[k]==='number') VOL[k]=Math.max(0,Math.min(1,v[k])); }catch(e){} })();
+    function setVol(k,v){ VOL[k]=Math.max(0,Math.min(1,v));
+      if(AU.sfxG) AU.sfxG.gain.value=VOL.fx;
+      try{ localStorage.setItem('hm_vol',JSON.stringify(VOL)); }catch(e){} }
     function sndInit(){ if(AU.ctx) return; try{
       const c=new (window.AudioContext||window.webkitAudioContext)(); AU.ctx=c;
       AU.master=c.createGain(); AU.master.gain.value=0; AU.master.connect(c.destination);
+      AU.sfxG=c.createGain(); AU.sfxG.gain.value=VOL.fx; AU.sfxG.connect(AU.master);
       AU.humG=c.createGain(); AU.humG.gain.value=0;
       const lp=c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=420; lp.Q.value=0.8;
       AU.humG.connect(lp); lp.connect(AU.master);
@@ -960,11 +1233,12 @@
     function setSound(on){ sndInit(); if(!AU.ctx) return; AU.on=on;
       if(AU.ctx.state==='suspended'){ try{ AU.ctx.resume(); }catch(e){} }
       try{ AU.master.gain.setTargetAtTime(on?0.5:0, AU.ctx.currentTime, 0.09); }catch(e){ AU.master.gain.value=on?0.5:0; }
-      const b=$('sndBtn'); if(b){ b.textContent=on?'🔊':'🔇'; b.classList.toggle('on',on); } }
+      const b=$('sndBtn'); if(b){ b.innerHTML=on?ICON_SND_ON:ICON_SND_OFF; b.classList.toggle('on',on); } }
     function sndToggle(){ sndInit(); if(!AU.ctx) return; setSound(!AU.on); }
 
     // ===================== music (generative ambient — sparse, floating, unhurried) =====================
     const MOODS={
+      dance:  {prog:[[48,52,55,60,64],[50,53,57,62,65],[52,55,59,64,67],[45,48,52,57,60]], bar:[1.7,2.1], dens:1.6, vel:0.4},
       story:  {prog:[[45,52,57,60,64,71],[41,48,53,57,60,64],[48,55,60,64,67,71],[43,50,55,59,62,66]], bar:[5.0,6.4], dens:0.8, vel:0.30},
       spring: {prog:[[48,55,60,64,67,71],[43,50,55,59,62,67],[45,52,57,60,64,69],[41,48,53,57,60,65]], bar:[5.0,6.6], dens:0.75, vel:0.26},
       summer: {prog:[[41,48,53,57,60,64],[48,55,60,64,67,71],[43,50,55,59,62,66],[45,52,57,60,64,69]], bar:[4.6,6.0], dens:0.9, vel:0.27},
@@ -1001,13 +1275,13 @@
       const o=c.createOscillator(),g=c.createGain(); o.type='sine'; o.frequency.setValueAtTime(f1,t);
       if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+0.18);
       g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.2,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+0.45);
-      o.connect(g); g.connect(AU.master); o.start(t); o.stop(t+0.5); }
+      o.connect(g); g.connect(AU.sfxG||AU.master); o.start(t); o.stop(t+0.5); }
     function fanfare(){ if(!AU.on||!AU.ctx)return; [[523,659],[659,784],[784,1175]].forEach((p,i)=>setTimeout(()=>chime(p[0],p[1]), i*110)); }
     function clink(){ chime(1240,880); }
     function buzzAlert(){ if(!AU.on||!AU.ctx)return; const c=AU.ctx,t=c.currentTime;
       const o=c.createOscillator(),g=c.createGain(); o.type='sawtooth'; o.frequency.setValueAtTime(74,t); o.frequency.linearRampToValueAtTime(52,t+0.7);
       g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.28,t+0.05); g.gain.exponentialRampToValueAtTime(0.0001,t+0.85);
-      o.connect(g); g.connect(AU.master); o.start(t); o.stop(t+0.9); }
+      o.connect(g); g.connect(AU.sfxG||AU.master); o.start(t); o.stop(t+0.9); }
     function windGust(){ if(!AU.on||!AU.ctx)return; const c=AU.ctx,t=c.currentTime, n=c.sampleRate*1.4;
       const buf=c.createBuffer(1,n,c.sampleRate), d=buf.getChannelData(0);
       for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);
@@ -1042,7 +1316,7 @@
       if(Math.hypot(p.x-h.x,p.y-h.y)>size*2.4) return false;
       h.hp--; h.x+=(Math.random()-0.5)*size*1.5; h.y-=size*0.4; shake=Math.max(shake,0.22); hitstop=0.055;
       puff(h.x,h.y,'#ff9a7a',6,1.4); chime(220+(h.maxhp-h.hp)*130, 160);
-      if(h.hp<=0){ h.state='flee'; puff(h.x,h.y,'#ffd76b',18,1.8); chime(520,880);
+      if(h.hp<=0){ h.state='flee'; grantBadge('guardian'); puff(h.x,h.y,'#ffd76b',18,1.8); chime(520,880);
         if(raidLoss===0){ rj++; burst(h.x,h.y,22); toast('Perfect defense — not one bee lost! +1 ✧ royal jelly 🛡'); fanfare(); }
         else toast('Hornet driven off! The guard bees prevail. 🛡'); saveGame(); }
       return true; }
@@ -1075,7 +1349,7 @@
 
     // ===================== cosmetic bees =====================
     const bees=[]; let hiveCx=0, hiveCy=0;
-    function makeBee(x,y){ return {x,y,vx:0,vy:0,role:'nurse',state:'idle',tx:x,ty:y,timer:0,carry:null,fieldp:null,tcell:null,lc:null,danceT:0,wob:Math.random()*6.28}; }
+    function makeBee(x,y){ return {x,y,vx:0,vy:0,role:'nurse',state:'idle',tx:x,ty:y,timer:0,carry:null,fieldp:null,tcell:null,lc:null,danceT:0,wob:Math.random()*6.28,pauseT:0,fly:true,ret:false,retI:0,fan:false,fanning:false,fanX:0,fanY:0,followT:0}; }
     function syncBeePool(){
       const want=Math.min(RENDER_BEES, Math.round(P));
       while(bees.length<want){ const a=Math.random()*6.28, rr=size*(1+Math.random()*4); bees.push(makeBee(hiveCx+Math.cos(a)*rr, hiveCy+Math.sin(a)*rr)); }
@@ -1086,6 +1360,8 @@
     const flyers=[];
 
     // ===================== layout =====================
+    const ptr={x:innerWidth/2,y:innerHeight/2};
+    addEventListener('pointermove',e=>{ ptr.x=e.clientX; ptr.y=e.clientY; });
     let DPR=1,W=0,Hh=0,topH=120,botH=120;
     function layout(){
       DPR=Math.min(devicePixelRatio||1,2); W=innerWidth; Hh=innerHeight;
@@ -1139,6 +1415,10 @@
       flits=[]; for(let i=0;i<6;i++) flits.push({x:Math.random()*W, y:groundY-mSize*(1+Math.random()*4), ph:Math.random()*6.28, vx:(Math.random()-0.5)*20});
     }
     function patchPos(i){ return {x:PATCHES[i].fx*W, y:Hh*0.72-mSize*0.4}; }
+    // the dance is a map: its axis points where the flowers are. A patch far to
+    // the meadow's left tilts the figure-eight left; foragers leave on the same bearing.
+    function danceAngle(){ const i=activePatch!=null?activePatch:bestPatch(day).i;
+      return -Math.PI/2 + (PATCHES[i].fx-0.5)*Math.PI*0.95; }
 
     // ===================== input =====================
     function cellAtPx(px,py){ let best=null,bd=(size*1.05)**2; const rr=Math.round((py-oy)/(size*1.5));
@@ -1155,7 +1435,7 @@
     // per idea, never twice, and never a scolding — she has done this for forty years.
     let nudgeCool=0, nudged={};
     function nudge(key,msg,mood){ if(onboard||over||!started||nudgeCool>0||nudged[key]) return;
-      nudged[key]=1; nudgeCool=13; if(mood){ hzMood=mood; hzHold=4.5; } toast(msg); }
+      nudged[key]=1; nudgeCool=26; if(mood){ hzMood=mood; hzHold=4.5; } toast(msg); }
     let hzHold=0;
     function coachCheck(){
       if(onboard||!started||over) return;
@@ -1184,12 +1464,15 @@
     function rel(e){ const r=canvas.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; }
     function selectPatch(p){ let best=null,bd=(W*0.14)**2;
       for(let i=0;i<PATCHES.length;i++){ const q=patchQuality(i,day); if(q<=0.02)continue; const pp=patchPos(i); const d=(pp.x-p.x)**2+(pp.y-p.y)**2; if(d<bd){bd=d;best=i;} }
-      if(best!=null){ activePatch=best; forecastCache=forecastToSpring();
+      if(best!=null){ activePatch=best; grantBadge('waggler'); forecastCache=forecastToSpring();
         toast('Foragers recruited to a '+(patchQuality(best,day)>0.6?'rich':'modest')+' patch — watch the waggle dance in the hive.'); } }
     let brush='brood', painting=false, paintErase=false;
     canvas.addEventListener('pointerdown',e=>{ if(!started||over)return; const p=rel(e);
       if(view==='hive' && hitHornet(p)) return;
       if(view==='meadow'){ selectPatch(p); return; }
+      if(inspectMode){ const cell=cellAtPx(p.x,p.y);
+        if(cell){ $('csBody').innerHTML=inspectHTML(cell); $('cellSheet').classList.remove('hide'); }
+        inspectMode=false; $('inspectBtn').classList.remove('on'); return; }
       painting=true; paintErase=(e.button===2)||e.shiftKey; applyBrush(cellAtPx(p.x,p.y)); });
     canvas.addEventListener('pointermove',e=>{ const p=rel(e);
       if(view==='hive'){ hoveredCell=cellAtPx(p.x,p.y); if(painting)applyBrush(hoveredCell); showInspect(e.clientX,e.clientY); }
@@ -1247,7 +1530,7 @@
     function setView(v){ if(v==='meadow') tip('meadow','Hazel: When a forager finds good flowers, she comes home and <em>dances</em> \u2014 the waggle dance \u2014 to send the others there. Tapping a patch is you pointing the way.');
       if(v===view){ applyViewCls(); return; }
       if(RM){ view=v; applyViewCls(); return; }
-      const w=$('wipe'); w.style.opacity=1; setTimeout(()=>{ view=v; applyViewCls(); w.style.opacity=0; },150); }
+      const w=$('wipe'); w.style.opacity=1; setTimeout(()=>{ view=v; applyViewCls(); w.style.opacity=0; },300); }
     addEventListener('keydown',e=>{ if(e.key===' '){e.preventDefault(); setSpeed(speed===0?1:0);} if(e.key==='1')pickBrush('brood'); if(e.key==='2')pickBrush('honey'); if(e.key==='3')pickBrush('expand'); if(e.key==='h'||e.key==='H')harvestSurplus(); if(e.key==='Tab'){e.preventDefault(); setView(view==='hive'?'meadow':'hive');} });
     function pickBrush(b){ brush=b; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x.dataset.brush===b)); }
 
@@ -1257,17 +1540,17 @@
       const need=winterNeed(); const sur=honeyCellsStored()-need*1.1;
       return {inWin, ok:inWin&&sur>=8, sur, need}; }
     function harvestSurplus(){ const hs=harvestState();
-      if(!hs.inWin){ if(started&&!over&&!onboard) toast('Harvest is an autumn job — the window is marked on the timeline.'); return; }
-      if(!hs.ok){ toast('No safe surplus yet. Bank '+Math.ceil(hs.need*1.25+8)+' cells before you take a jar.'); return; }
-      honeyU-=8*HC; jars++; jarsThisYear++; clink(); burst(hiveCx,hiveCy,16);
+      if(!hs.inWin){ if(started&&!over&&!onboard) toast('Not yet \u2014 harvest is an autumn job. The amber window on the timeline knows when.'); return; }
+      if(!hs.ok){ toast('The bees need this honey more than the shelf does. Bank '+Math.ceil(hs.need*1.25+8)+' cells, then take your jar.'); return; }
+      honeyU-=8*HC; jars++; jarsThisYear++; grantBadge('firstjar'); clink(); burst(hiveCx,hiveCy,16);
       forecastCache=forecastToSpring(); setN('vRJ','✧'+rj); $('sJars').textContent=jars+(jars===1?' jar':' jars');
       toast('🫙 Jar sealed — '+jars+' on the shelf. The bees keep the rest.'); checkGoals(); syncHUD(); saveGame(); }
     press($('harvestBtn'),harvestSurplus);
 
     // ===================== emergency feed (one comeback per winter) =====================
-    function feedSyrup(){ if(fedWinter||over) return; fedWinter=true; honeyU+=10*HC; starveT=0;
+    function feedSyrup(){ if(fedWinter||over) return; fedWinter=true; grantBadge('softheart'); honeyU+=10*HC; starveT=0;
       chime(320,540); puff(hiveCx,hiveCy,'#ffd97a',18,1.2);
-      toast('You slide a syrup feeder into the hive — the cluster stirs. +10 cells. (This year grades no higher than B.)');
+      toast('You slide in a syrup feeder \u2014 the whole cluster leans toward it. +10 cells. (Kindness caps the year at a B. Worth it.)');
       $('feedBtn').classList.add('hide'); forecastCache=forecastToSpring(); saveGame(); }
     press($('feedBtn'),feedSyrup);
 
@@ -1318,14 +1601,30 @@
     }
 
     // ===================== toast / advisor =====================
+    // ---- Hazel's log: nothing she says is ever lost; tap the advisor to read back ----
+    const MSGLOG=[];
+    function logMsg(ic, html){ const last=MSGLOG[MSGLOG.length-1];
+      if(last && last.html===html) return;
+      MSGLOG.push({ic, html, day:Math.max(0,Math.floor(day)), year});
+      if(MSGLOG.length>90) MSGLOG.shift();
+      if(!$('chatlog').classList.contains('hide')) renderChat(); }
+    function renderChat(force){ const r=$('chatRows'), el=$('chatlog');
+      const atBottom = force || (el.scrollHeight-el.clientHeight-el.scrollTop < 24);
+      r.innerHTML = MSGLOG.length ? MSGLOG.map(m=>'<div class="crow"><span class="ci2">'+m.ic+'</span><div class="cb2"><div class="cwhen">Y'+m.year+' · '+seasonName(m.day)+' · d'+(m.day+1)+'</div><div class="ctx2">'+m.html+'</div></div></div>').join('')
+        : '<div class="ctx2" style="color:var(--dim)">Nothing yet — Hazel will speak as the seasons turn.</div>';
+      if(atBottom) el.scrollTop=el.scrollHeight; }
+    function toggleChat(show){ const el=$('chatlog');
+      const want = show===undefined ? el.classList.contains('hide') : show;
+      el.classList.toggle('hide', !want); if(want) renderChat(true); }
     let toastT=null, said={};
     function tip(key,msg){ if(seenTips[key]||onboard||!started) return; seenTips[key]=1; toast(msg); }
-    function toast(s,once){ if(once){if(said[once])return; said[once]=1;} const el=$('toast'); el.textContent=s; el.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),2700); }
+    function toast(s,once){ if(once){if(said[once])return; said[once]=1;} logMsg('🐝', s); const el=$('toast'); el.innerHTML=s; el.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),6500); }
+    let advCur='', advSince=0;
     function advise(){
       const T=lerpM(tempM,day)+difficulty().temp+M.temp(), Na=lerpM(nectarM,day), winter=T<WIN_TEMP;
       const hc=honeyCellsStored(), need=winterNeed(), br=countBrood(), fc=forecastCache;
       const bp=bestPatch(day); const hs=harvestState();
-      let ic='🐝', tx='The colony hums along.', warn=false;
+      let ic='🐝', tx='All\u2019s well. You can tell by the hum.', warn=false;
       const raiding=!!hornet && hornet.state!=='flee';
       $('advisor').classList.toggle('raid', raiding);
       const feedable=(winter || day<75 || day>235) && hc<5 && !fedWinter && started && !over && !onboard;
@@ -1344,13 +1643,20 @@
       else if(hs.ok){ ic='🫙'; tx='Surplus honey is banked — you can <b>Harvest</b> a jar for your shelf. The window closes at first frost.'; }
       else if(!winter && bp.q>0.5 && (activePatch==null || patchQuality(activePatch,day)<bp.q-0.18)){ ic='💃'; tx='A <b>rich patch</b> is blooming. Open the <b>☀ Meadow</b> and tap it to send your foragers there.'; }
       else if(winter && hc<need*0.5){ ic='❄️'; tx='Deep winter and the shelves are thin — but spring is coming.'; }
-      else if(day<55){ ic='🌱'; tx='Early spring. Favour <b>Pollen</b> or Balanced so the queen has protein to grow the colony.'; }
-      else if(day>=85&&day<175){ ic='🌻'; tx='Peak <b>nectar flow</b>. Lean <b>Nectar</b>, <b>Expand</b> storage, and chase the best <b>patch</b>.'; }
-      else if(day>=175&&day<250){ ic='🍂'; tx='Autumn — flow is fading. Top off honey with <b>Nectar</b> and stop expanding.'; }
+      else if(day<55){ ic='🌱'; tx='Early spring \u2014 feed the babies first. <b>Pollen</b> or Balanced stocks the nursery kitchen.'; }
+      else if(day>=85&&day<175){ ic='🌻'; tx='The meadow is pouring. Lean <b>Nectar</b>, <b>Expand</b> the shelves, and chase the best <b>patch</b>.'; }
+      else if(day>=175&&day<250){ ic='🍂'; tx='Autumn \u2014 the meadow is closing up shop. Top off with <b>Nectar</b>; build nothing you can\u2019t fill.'; }
       else if(day>=250&&!winter){ ic='🍂'; tx='Brood eats your honey. Shrink the <b>brood zone</b> so fewer mouths face winter.'; }
-      else if(winter){ ic='❄️'; tx='Winter. No forage now — the cluster lives on stored honey. Hold on for spring.'; }
+      else if(winter){ ic='❄️'; tx='Winter. The meadow sleeps, and the cluster dreams on stored honey. Hold on for spring.'; }
       else if(br.total<6 && Na>0.2){ ic='👑'; tx='Brood is sparse. Ensure there\u2019s <b>pollen</b> and empty <b>brood</b> cells for the queen.'; }
-      if(hzHold<=0) hzMood=MOODOF[ic]||'calm'; $('advTx').innerHTML=tx; $('advisor').classList.toggle('warn',warn);
+      if(hzHold<=0) hzMood=MOODOF[ic]||'calm';
+      // Hazel keeps a thought for a while: a new line only replaces the old one
+      // after a proper dwell, unless something is genuinely urgent
+      if(tx!==advCur){ const urgent=warn||raiding;
+        if(urgent || !advCur || (performance.now()-advSince)>12000){
+          advCur=tx; advSince=performance.now(); $('advTx').innerHTML=tx; logMsg(ic,tx); } }
+      $('advisor').classList.toggle('warn',warn);
+      $('advisor').classList.toggle('cold', ic==='❄️'||coldSnap>0);
     }
 
     // ===================== sim core =====================
@@ -1421,7 +1727,7 @@
         if(c.brood.t>=dur){ c.brood.t=0;
           if(c.brood.stage==='egg')c.brood.stage='larva';
           else if(c.brood.stage==='larva')c.brood.stage='pupa';
-          else { c.brood=null; if(P<CAP){ P+=1; bornTotal++; if(!offline&&bees.length<RENDER_BEES){ const pp=cellCenter(c.c,c.r); bees.push(makeBee(pp.x,pp.y)); puff(pp.x,pp.y,'#ffe9b0',5,0.9); } if(!offline&&!said['firstborn']) chime(660,980); toast('A new worker emerges.','firstborn'); } } } }
+          else { c.brood=null; if(P<CAP){ P+=1; bornTotal++; if(!offline&&bees.length<RENDER_BEES){ const pp=cellCenter(c.c,c.r); bees.push(makeBee(pp.x,pp.y)); puff(pp.x,pp.y,'#ffe9b0',5,0.9); } if(!offline&&!said['firstborn']) chime(660,980); toast('A new bee unfolds her wings \u2014 and gets straight to work.','firstborn'); } } } }
       const space=cells.filter(c=>c.built&&c.zone==='brood'&&!c.brood).length;
       const pollenF=Math.max(0,Math.min(1,pollenU/400));
       const layRate=Math.min(LAYMAX*lv*M.lay(),nurses*0.8,space)*pollenF*(P<CAP?1:0.15)*queenVigour();
@@ -1441,7 +1747,8 @@
       if(!offline && cells.some(c=>c.built&&c.flagExpand)) tip('hex','Hazel: Why six sides? It\u2019s the cheapest wall there is \u2014 a hexagon fences off its space with less wax than any other tile. People suspected that for two thousand years; a mathematician named Hales only proved it in 1999. And the bees didn\u2019t work it out \u2014 they build round cells, and the warm wax settles into hexagons by itself.');
       if(!offline && broodCells()>=7) tip('rings','Hazel: Watch how a nest grows \u2014 a ring at a time. One cell, then six around it, then twelve, then eighteen: 1, 7, 19, 37. Round is the shape with the least edge for the space inside, so it\u2019s both the cheapest to build and the warmest to hold. The cold always bites at the corners.');
       if(!offline && day>10 && day<80) tip('forage','Hazel: Pollen is protein \u2014 it\u2019s what nurse bees eat to make food for the young. Nectar is sugar, for honey. The dials just tell your foragers which to favour.');
-      if(coldSnap>0) coldSnap-=dd; else if(year>1 && !winter && day>150 && Math.random()<dd*0.006){ coldSnap=3; toast('A cold snap — the bees burn extra honey to stay warm.'); }
+      histT+=dd; if(histT>=3){ histT=0; yearHist.push({d:day, p:Math.round(P), h:honeyCellsStored()}); if(yearHist.length>140) yearHist.shift(); }
+      if(coldSnap>0) coldSnap-=dd; else if(year>1 && !winter && day>150 && Math.random()<dd*0.006){ coldSnap=3; toast('A cold snap. Inside, forty thousand tiny furnaces turn up the heat \u2014 and the honey pays for it.'); }
       if(!offline && !onboard && !over){
         const w=hornetWindow();
         if(!hornet){ hornetCD-=dd;
@@ -1458,13 +1765,50 @@
     // ===================== cosmetic bee animation (inside) =====================
     function stepInside(dt,dd){
       const T=lerpM(tempM,day)+difficulty().temp+M.temp(), Na=lerpM(nectarM,day), winter=T<WIN_TEMP, dancing=forageMult()>1.05;
-      const move=(b,tx,ty,sp)=>{const dx=tx-b.x,dy=ty-b.y,L=Math.hypot(dx,dy)||1,st=Math.min(L,sp*size*dt); b.x+=dx/L*st;b.y+=dy/L*st; if(st>0.05){b.vx=dx/L;b.vy=dy/L;} return L<size*0.5;};
-      for(const b of bees){ b.wob+=dt*8;
-        if(winter){ const a=b.wob*0.25+(b.x+b.y), rr=size*(1.4+1.3*Math.sin(b.x+b.y)); move(b,hiveCx+Math.cos(a)*rr,hiveCy+Math.sin(a)*rr*0.8,0.5); continue; }
-        if(b.state==='waggle'){ b.danceT+=dt*5; const s=size*2.2; b.x=hiveCx+Math.sin(b.danceT)*s; b.y=hiveCy-size*4+Math.sin(b.danceT*2)*s*0.5; b.vx=Math.cos(b.danceT); b.vy=Math.sin(b.danceT*2); if(b.danceT>10){b.state='idle';} continue; }
+      const move=(b,tx,ty,sp)=>{const dx=tx-b.x,dy=ty-b.y,L=Math.hypot(dx,dy)||1,st=Math.min(L,sp*size*dt);
+        b.x+=dx/L*st; b.y+=dy/L*st;
+        const sw=Math.sin(b.wob*2.1)*size*dt*(sp>=1.6?0.5:0.16);  // no bee travels a ruler line
+        b.x+=-dy/L*sw; b.y+=dx/L*sw; b.fly=sp>=1.6;
+        if(st>0.05){b.vx=dx/L;b.vy=dy/L;} return L<size*0.5;};
+      // court & duty rosters, refreshed every few seconds
+      dancerRef=null; for(const b of bees){ if(b.state==='waggle'){ dancerRef=b; break; } }
+      retT+=dt; if(retT>2.5){ retT=0;
+        bees.forEach(b=>{ b.ret=false; b.fan=false; });
+        if(!winter){
+          const nurses=bees.filter(b=>b.role==='nurse'&&b.state!=='waggle');
+          nurses.sort((a,b2)=>((a.x-queen.x)**2+(a.y-queen.y)**2)-((b2.x-queen.x)**2+(b2.y-queen.y)**2));
+          nurses.slice(0,4).forEach((b,i)=>{ b.ret=true; b.retI=i; });
+          if(T>=29){ bees.filter(b=>b.role==='clean').slice(0,2).forEach((b,i)=>{
+            b.fan=true; b.fanX=hiveCx+(i?1:-1)*size*3.2; b.fanY=hiveCy+size*5.4; }); } } }
+      for(const b of bees){ b.wob+=dt*(b.fanning?14:8);
+        if(winter){ b.fly=false; // the cluster breathes — a slow collective pulse — while each bee shivers
+          const a=b.wob*0.25+(b.x+b.y), breathe=1+0.12*Math.sin(gt*0.7);
+          const rr=size*(1.15+1.1*Math.sin(b.x+b.y))*breathe;
+          move(b,hiveCx+Math.cos(a)*rr,hiveCy+Math.sin(a)*rr*0.8,0.5); continue; }
+        if(b.pauseT>0){ b.pauseT-=dt; b.fly=false; continue; }  // a grooming moment — antennae still busy
+        if(b.followT>0&&dancerRef&&dancerRef!==b){ b.followT-=dt; const th2=danceAngle();
+          move(b,dancerRef.x-Math.cos(th2)*size*0.9,dancerRef.y-Math.sin(th2)*size*0.9,1.7); continue; }
+        if(b.ret){ const a2=gt*0.25+b.retI*1.571;  // the queen's retinue, always facing her
+          move(b,queen.x+Math.cos(a2)*size*1.2,queen.y+Math.sin(a2)*size*0.95,0.9);
+          const dqx=queen.x-b.x,dqy=queen.y-b.y,Lq=Math.hypot(dqx,dqy)||1; b.vx=dqx/Lq; b.vy=dqy/Lq; b.fly=false; continue; }
+        if(b.fan){ move(b,b.fanX,b.fanY,1.4);  // fanners hold station and pour air through the comb
+          b.fanning=Math.hypot(b.fanX-b.x,b.fanY-b.y)<size*0.7;
+          if(b.fanning){ b.fly=false; b.vx=0; b.vy=-1; } continue; }
+        b.fanning=false;
+        if(Math.random()<dt*0.04&&b.state!=='out'&&b.state!=='return') b.pauseT=0.5+Math.random()*0.8;
+        if(dancerRef&&dancerRef!==b&&b.followT<=0&&b.state!=='out'&&b.state!=='return'&&Math.random()<dt*0.25) b.followT=1.4+Math.random();
+        if(b.state==='waggle'){ b.danceT+=dt*5; const s=size*2.2, th=danceAngle(), co=Math.cos(th), sn=Math.sin(th);
+          const u=Math.sin(b.danceT)*s, v=Math.sin(b.danceT*2)*s*0.5;
+          b.x=hiveCx+u*co-v*sn; b.y=hiveCy-size*4+u*sn+v*co;
+          b.vx=Math.cos(b.danceT)*co-Math.sin(b.danceT*2)*sn; b.vy=Math.cos(b.danceT)*sn+Math.sin(b.danceT*2)*co;
+          if(b.danceT>10){b.state='idle';} continue; }
         if(b.role==='forage'){
-          if(b.state==='idle'){ if(Na>0.05){ b.state='out'; const px=activePatch!=null?activePatch:bestPatch(day).i; const a=(px/PATCHES.length)*1.6-0.8; b.fieldp={x:hiveCx+Math.cos(a-1.2)*size*16, y:hiveCy-size*10+Math.sin(a)*size*4}; b.carry=null; } else move(b,hiveCx+(Math.random()-0.5)*size*8,hiveCy+(Math.random()-0.5)*size*6,0.4); }
-          else if(b.state==='out'){ if(move(b,b.fieldp.x,b.fieldp.y,2.4)){ b.carry=Math.random()<FN[forage]?'nectar':'pollen'; b.state='return'; } }
+          if(b.state==='idle'){ if(Na>0.05){ b.state='out'; const a=danceAngle()+(Math.random()-0.5)*0.25; b.fieldp={x:hiveCx+Math.cos(a)*size*17, y:hiveCy+Math.sin(a)*size*13}; b.carry=null; } else move(b,hiveCx+(Math.random()-0.5)*size*8,hiveCy+(Math.random()-0.5)*size*6,0.4); }
+          else if(b.state==='out'){ if(move(b,b.fieldp.x,b.fieldp.y,2.4)){
+            const hot=T>=29;
+            b.carry = hot&&Math.random()<0.22 ? 'water' : (Math.random()<FN[forage]?'nectar':'pollen');
+            if(b.carry==='water') tip('water','Hazel: See the <em>silver drops</em>? On hot days some foragers haul <b>water</b> — spread thin and fanned, it cools the nest. A colony is its own air-conditioner.');
+            b.state='return'; } }
           else { if(move(b,hiveCx+(Math.random()-0.5)*size*5,hiveCy+(Math.random()-0.5)*size*4,2.4)){ if(dancing&&Math.random()<0.18){ b.state='waggle'; b.danceT=0; } else b.state='idle'; b.carry=null; } } }
         else if(b.role==='build'){ const site=b.tcell;
           if(site&&!site.built&&site.flagExpand){ const p=cellCenter(site.c,site.r); move(b,p.x,p.y,1.4); } else { b.tcell=randomFlagged(); if(!b.tcell) move(b,hiveCx+(Math.random()-0.5)*size*8,hiveCy+(Math.random()-0.5)*size*6,0.7); } }
@@ -1476,6 +1820,7 @@
       if(Math.random()<dt*1.2){ const bc=randomWhere(c=>c.built&&c.zone==='brood'); if(bc){const p=cellCenter(bc.c,bc.r);queen.tx=p.x;queen.ty=p.y;} }
       const dx=queen.tx-queen.x,dy=queen.ty-queen.y,L=Math.hypot(dx,dy)||1; queen.x+=dx/L*Math.min(L,0.6*size*dt); queen.y+=dy/L*Math.min(L,0.6*size*dt);
     }
+    let dancerRef=null, retT=9;
     function randomWhere(pred){ const pool=cells.filter(pred); return pool.length?pool[(Math.random()*pool.length)|0]:null; }
     function randomLarva(){ return randomWhere(c=>c.brood&&c.brood.stage==='larva'); }
     function randomFlagged(){ return randomWhere(c=>!c.built&&c.flagExpand); }
@@ -1520,24 +1865,90 @@
         ctx.save(); hexPath(x,y,s2*0.92); ctx.clip(); ctx.fillStyle=col; const fh=s2*1.7*frac; ctx.fillRect(x-s2,y+s2*0.85-fh,s2*2,fh+0.5);
         if(kind==='honey'){ ctx.fillStyle='rgba(255,255,255,'+(0.14+0.08*Math.sin(gt*1.6+x*0.05+y*0.07)).toFixed(3)+')'; ctx.fillRect(x-s2,y+s2*0.85-fh,s2*2,Math.min(fh,s2*0.3)); } ctx.restore();
         hexPath(x,y,s2); ctx.strokeStyle=COL.wallRim; ctx.lineWidth=1; ctx.stroke(); }
-      for(const b of bees){ if(b.state==='waggle'){ ctx.strokeStyle='rgba(255,210,120,0.35)'; ctx.lineWidth=1.5; ctx.beginPath(); let first=true; for(let t=0;t<6.3;t+=0.3){ const xx=hiveCx+Math.sin(t)*size*2.2, yy=hiveCy-size*4+Math.sin(t*2)*size*1.1; if(first){ctx.moveTo(xx,yy);first=false;} else ctx.lineTo(xx,yy);} ctx.stroke(); } drawBee(b.x,b.y,Math.atan2(b.vy||0,b.vx||0),b.carry,false,b.wob); }
-      drawBee(queen.x,queen.y,0,null,true,queen.wob);
+      const dA=danceAngle(), dcx=hiveCx, dcy=hiveCy-size*4, dco=Math.cos(dA), dsn=Math.sin(dA);
+      for(const b of bees){ if(b.state==='waggle'){ ctx.strokeStyle='rgba(255,210,120,0.35)'; ctx.lineWidth=1.5; ctx.beginPath(); let first=true; for(let t=0;t<6.3;t+=0.3){ const u=Math.sin(t)*size*2.2, v=Math.sin(t*2)*size*1.1; const xx=dcx+u*dco-v*dsn, yy=dcy+u*dsn+v*dco; if(first){ctx.moveTo(xx,yy);first=false;} else ctx.lineTo(xx,yy);} ctx.stroke(); }
+        let bx=b.x, by=b.y;
+        if(winter){ bx+=Math.sin(gt*26+b.wob*3)*size*0.06; by+=Math.cos(gt*31+b.wob*2)*size*0.05; } // shiver
+        drawBee(bx,by,Math.atan2(b.vy||0,b.vx||0),b.carry,false,b.wob,b.fanning?'fan':(b.fly?'fly':'walk')); }
+      // when storage is full and nectar still flows, honey visibly drips away
+      { const cp=caps(), full=cp.total>0&&(honeyU+pollenU+nectarU)>=cp.total-2, Na2=lerpM(nectarM,day);
+        if(started&&!over&&full&&Na2>0.1&&!winter&&Math.random()<lastDt*2.2){
+          const hcs=cells.filter(c=>c.built&&c.zone==='honey');
+          if(hcs.length){ const c0=hcs[(Math.random()*hcs.length)|0], p0=cellCenter(c0.c,c0.r);
+            drips.push({x:p0.x+(Math.random()-0.5)*size*0.5, y:p0.y+size*0.8, vy:0, life:2.6}); } }
+        for(const d of drips){ d.vy+=lastDt*size*2.4; d.y+=d.vy*lastDt*3; d.life-=lastDt;
+          ctx.strokeStyle='rgba(247,183,51,0.65)'; ctx.lineWidth=2;
+          ctx.beginPath(); ctx.moveTo(d.x,d.y-size*0.35); ctx.lineTo(d.x,d.y); ctx.stroke();
+          ctx.fillStyle='rgba(247,183,51,0.85)'; ctx.beginPath(); ctx.arc(d.x,d.y,size*0.09,0,6.28); ctx.fill(); }
+        drips=drips.filter(d=>d.life>0&&d.y<Hh); }
+      // living light: a warm sheen drifts over the comb and leans toward your hand
+      { const lx2=hiveCx+Math.sin(gt*0.22)*size*4+(ptr.x-W/2)*0.04, ly2=hiveCy+Math.cos(gt*0.17)*size*3+(ptr.y-Hh/2)*0.04;
+        let sg=ctx.createRadialGradient(lx2,ly2,size*2,lx2,ly2,size*15);
+        sg.addColorStop(0,'rgba(255,225,160,0.055)'); sg.addColorStop(1,'rgba(255,225,160,0)');
+        ctx.fillStyle=sg; ctx.fillRect(0,0,W,Hh); }
+      drawBee(queen.x,queen.y,Math.atan2(queen.ty-queen.y||0.01,queen.tx-queen.x||0.01),null,true,queen.wob,'walk');
       drawScout(); drawHornet(); drawParts(lastDt);
+      // guidance: with hints on, the comb shows where the active brush CAN go
+      // (faint rim) and where it's WISE to go (breathing glow) — chess for bees
+      if(hints && started && !over && view==='hive' && !inspectMode){
+        const pulse=0.5+0.5*Math.sin(gt*2.2);
+        const HB={brood:'143,196,255', honey:'255,180,43', expand:'167,224,124'}[brush];
+        if(HB) for(const cell of cells){ const adjB=!cell.built&&neighbors(cell.c,cell.r).reduce((a,[c,r])=>a+(cells[idx(c,r)].built?1:0),0);
+          let valid=false, rec=false;
+          if(brush==='brood'){ valid=cell.built&&cell.zone!=='brood'; rec=valid&&!cell.brood&&hexDist(cell.c,cell.r,CCC,CCR)<=2; }
+          else if(brush==='honey'){ valid=cell.built&&cell.zone!=='honey'; rec=valid&&hexDist(cell.c,cell.r,CCC,CCR)>=3; }
+          else if(brush==='expand'){ valid=!cell.built&&!cell.flagExpand&&adjB>=1; rec=valid&&adjB>=2; }
+          if(!valid) continue; const {x,y}=cellCenter(cell.c,cell.r);
+          hexPath(x,y,s2*0.9);
+          ctx.strokeStyle='rgba('+HB+','+(rec?(0.28+0.34*pulse).toFixed(2):'0.10')+')';
+          ctx.lineWidth=rec?2.2:1; ctx.stroke(); } }
       if(view==='hive'&&started&&!over&&hoveredCell){ const {x,y}=cellCenter(hoveredCell.c,hoveredCell.r); let okc;
         if(brush==='expand'){ const adj=neighbors(hoveredCell.c,hoveredCell.r).some(([c,r])=>cells[idx(c,r)].built); okc=(!hoveredCell.built&&adj)?'rgba(180,240,150,0.95)':'rgba(255,120,90,0.5)'; }
         else okc=hoveredCell.built?(brush==='brood'?'rgba(150,200,255,0.95)':'rgba(247,200,90,0.95)'):'rgba(255,120,90,0.5)';
         hexPath(x,y,s2*1.02); ctx.strokeStyle=okc; ctx.lineWidth=2; ctx.stroke(); }
       if(winter && honeyCellsStored()<28){ const a=(28-honeyCellsStored())/28; let v=ctx.createRadialGradient(W/2,Hh/2,Math.min(W,Hh)*0.2,W/2,Hh/2,Math.max(W,Hh)*0.6); v.addColorStop(0,'rgba(255,60,40,0)'); v.addColorStop(1,'rgba(255,50,35,'+(0.4*a).toFixed(3)+')'); ctx.fillStyle=v; ctx.fillRect(0,0,W,Hh); }
     }
-    function drawBee(x,y,ang,carry,isQueen,wob){ const s=size*(isQueen?0.5:0.32);
-      ctx.save(); ctx.translate(x,y); ctx.rotate(ang+Math.sin(wob||0)*0.12);
-      ctx.fillStyle=isQueen?'#d99a2e':'#e2a52e'; ctx.beginPath(); ctx.ellipse(0,0,s*(isQueen?1.7:1.3),s*0.8,0,0,6.28); ctx.fill();
-      ctx.fillStyle='rgba(30,20,8,0.85)'; for(let i=-1;i<=1;i++){ ctx.beginPath(); ctx.ellipse(i*s*0.5,0,s*0.16,s*0.7,0,0,6.28); ctx.fill(); }
-      ctx.fillStyle='#23180a'; ctx.beginPath(); ctx.arc(s*(isQueen?1.5:1.15),0,s*0.42,0,6.28); ctx.fill();
-      ctx.fillStyle='rgba(220,235,255,0.35)'; const wf=0.6+0.4*Math.sin((wob||0)*3);
-      ctx.beginPath(); ctx.ellipse(-s*0.1,-s*0.6*wf,s*0.7,s*0.32,-0.5,0,6.28); ctx.fill(); ctx.beginPath(); ctx.ellipse(-s*0.1,s*0.6*wf,s*0.7,s*0.32,0.5,0,6.28); ctx.fill();
-      if(carry){ ctx.fillStyle=carry==='nectar'?COL.nectar:COL.pollen; ctx.beginPath(); ctx.arc(-s*0.9,0,s*0.4,0,6.28); ctx.fill(); }
-      if(isQueen){ ctx.strokeStyle='rgba(255,210,120,0.5)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(0,0,s*2,0,6.28); ctx.stroke(); }
+    function drawBee(x,y,ang,carry,isQueen,wob,mode){ const s=size*(isQueen?0.5:0.32); mode=mode||'fly';
+      ctx.save(); ctx.translate(x,y); ctx.rotate(ang+Math.sin(wob||0)*(mode==='walk'?0.05:0.12));
+      const heavy=carry==='nectar', flying=mode==='fly'||mode==='fan';
+      if(!flying){ // wings folded neatly along the back
+        ctx.fillStyle='rgba(215,230,245,0.30)';
+        ctx.beginPath(); ctx.ellipse(-s*0.5,-s*0.13,s*0.75,s*0.16,0.06,0,6.28); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(-s*0.5, s*0.13,s*0.75,s*0.16,-0.06,0,6.28); ctx.fill(); }
+      // abdomen — the striped engine room, tapered, heavier when the honey stomach is full
+      const ab=heavy?s*1.02:s*0.92, ay=(isQueen?s*0.42:s*0.55)*(heavy?1.12:1);
+      ctx.fillStyle=isQueen?'#c98f26':(heavy?'#e8b23a':'#e2a52e');
+      ctx.beginPath(); ctx.ellipse(-s*0.55,0,ab,ay,0,0,6.28); ctx.fill();
+      if(isQueen){ // her abdomen runs long and elegant, stripes worn faint
+        ctx.fillStyle='#c98f26'; ctx.beginPath(); ctx.ellipse(-s*1.45,0,s*0.6,s*0.3,0,0,6.28); ctx.fill(); }
+      ctx.fillStyle=isQueen?'rgba(30,20,8,0.35)':'rgba(30,20,8,0.85)';
+      ctx.save(); ctx.beginPath(); ctx.ellipse(-s*0.55,0,ab,ay+0.5,0,0,6.28); ctx.clip();
+      for(let i=0;i<(isQueen?3:4);i++){ const sx=-s*(0.16+i*0.36); ctx.fillRect(sx-s*0.08,-s,s*0.14,s*2); }
+      ctx.restore();
+      if(heavy){ ctx.fillStyle='rgba(247,183,51,0.4)'; ctx.beginPath(); ctx.ellipse(-s*0.95,0,s*0.4,s*0.3,0,0,6.28); ctx.fill(); }
+      // thorax — the fuzzy motor between the wings
+      ctx.fillStyle=isQueen?'#e0ab3c':'#d9a944'; ctx.beginPath(); ctx.arc(s*0.28,0,s*0.44,0,6.28); ctx.fill();
+      ctx.fillStyle='rgba(255,230,170,0.32)'; ctx.beginPath(); ctx.arc(s*0.28,-s*0.14,s*0.26,0,6.28); ctx.fill();
+      // head + antennae, always reading the air
+      ctx.fillStyle='#23180a'; ctx.beginPath(); ctx.arc(s*0.88,0,s*0.3,0,6.28); ctx.fill();
+      if(s>=4.5){ const aw=Math.sin((wob||0)*2)*0.14;
+        ctx.strokeStyle='rgba(35,24,10,0.9)'; ctx.lineWidth=Math.max(0.7,s*0.07); ctx.lineCap='round';
+        ctx.beginPath(); ctx.moveTo(s*1.0,-s*0.12); ctx.quadraticCurveTo(s*1.28,-s*(0.34+aw),s*1.45,-s*(0.52+aw)); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(s*1.0, s*0.12); ctx.quadraticCurveTo(s*1.28, s*(0.34-aw),s*1.45, s*(0.52-aw)); ctx.stroke(); }
+      if(flying){ // a blur of wingbeats; fanners beat faster still
+        const rate=mode==='fan'?9:5, wf=0.55+0.45*Math.sin((wob||0)*rate);
+        ctx.fillStyle='rgba(220,235,255,'+(mode==='fan'?0.30:0.35)+')';
+        ctx.beginPath(); ctx.ellipse(s*0.1,-s*0.62*wf,s*0.72,s*0.3,-0.5,0,6.28); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(s*0.1, s*0.62*wf,s*0.72,s*0.3, 0.5,0,6.28); ctx.fill();
+        ctx.fillStyle='rgba(220,235,255,0.13)';
+        ctx.beginPath(); ctx.ellipse(s*0.1,-s*0.62*(1-wf)*0.85,s*0.66,s*0.26,-0.5,0,6.28); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(s*0.1, s*0.62*(1-wf)*0.85,s*0.66,s*0.26, 0.5,0,6.28); ctx.fill(); }
+      // the load rides where it really rides: pollen in the leg baskets, water at the mouth
+      if(carry==='pollen'){ ctx.fillStyle=COL.pollen;
+        ctx.beginPath(); ctx.arc(-s*0.35,-s*0.6,s*0.22,0,6.28); ctx.fill();
+        ctx.beginPath(); ctx.arc(-s*0.35, s*0.6,s*0.22,0,6.28); ctx.fill(); }
+      else if(carry==='water'){ ctx.fillStyle='#9fdcec'; ctx.beginPath(); ctx.arc(s*1.12,0,s*0.2,0,6.28); ctx.fill(); }
+      if(isQueen){ ctx.strokeStyle='rgba(255,210,120,0.4)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(0,0,s*2.1,0,6.28); ctx.stroke(); }
       ctx.restore();
     }
 
@@ -1690,7 +2101,7 @@
       const {g,gdone}=gradeYear(); grades.push({year,g,honey:Math.round(honeyCellsStored()),peak:peakPop}); const est=(year===3);
       $('yeTitle').textContent=est?'APIARY ESTABLISHED':('YEAR '+year+' SURVIVED'); $('yeTitle').className='good';
       $('yeSub').textContent=est?'three winters weathered — the colony endures':'winter is past';
-      $('yeGrade').innerHTML='this year\u2019s grade<span class="G '+g+'">'+g+'</span>goals <b>'+gdone+'/4</b> · jars <b>'+jarsThisYear+'</b> · peak <b>'+peakPop+'</b> bees';
+      $('yeGrade').innerHTML='this year\u2019s grade<span class="G '+g+'">'+g+'</span>'; buildReview('ye'); grantBadge('survivor'); unlockPace('medium'); if(pace!=='easy') unlockPace('hard');
       trophyRow($('yeTrophies')); renderGifts();
       { const host=$('yeTrophies'); const old=host.parentNode.querySelector('.beenote'); if(old) old.remove(); host.insertAdjacentHTML('afterend', beeNote()); }
       const yn=yearName(year+1); $('yeNext').textContent='Into Year '+(year+1)+' — '+yn[0]+' ▶';
@@ -1698,21 +2109,21 @@
     }
     $('yeNext').addEventListener('click',()=>{ $('yearEnd').classList.add('hide'); year++; day=0; peakPop=Math.round(P); coldSnap=0; swarmP=0; activePatch=null;
       queenAge++; hornet=null; hornetCD=(year>=4?14+Math.random()*20:18+Math.random()*22); scoutShown=false;
-      jarsThisYear=0; fedWinter=false; starveT=0; bankAtFrost=0; goals=makeGoals(); lastSI=0; syncAlmanacTicks();
+      jarsThisYear=0; fedWinter=false; starveT=0; bankAtFrost=0; yearHist.length=0; histT=2.7; goals=makeGoals(); lastSI=0; syncAlmanacTicks();
       delete nudged.bigNest; delete nudged.bigStore; delete nudged.bigBuild; delete nudged.noGrow;
       const yn=yearName(year); toast('Year '+year+' — '+yn[0]+': '+yn[1]+'.'+(queenAge>=3?' Your queen is aging.':''));
       forecastCache=forecastToSpring(); saveGame(); setSpeed(1); paused=false; said={}; });
     function gameOver(kind){ if(over)return; over=true; setSpeed(0); chime(330,165); hornet=null;
       $('ovTitle').textContent=kind==='starve'?'THE COLONY FAILS':'THE COLONY DWINDLES'; $('ovSub').textContent=(kind==='starve'?'the pantry ran dry in '+seasonName(day).toLowerCase():'too few bees remained')+' — but the comb, the shelf, and the queen\u2019s line are yours to keep';
       const {g}=gradeYear(); grades.push({year,g,honey:Math.round(honeyCellsStored()),peak:peakPop});
-      $('ovStats').innerHTML='Year '+year+' ends early<span class="G '+g+'">'+g+'</span><b>'+jars+'</b> jars on the shelf · <b>'+bornTotal+'</b> bees raised in all';
+      $('ovStats').innerHTML='Year '+year+' ends early<span class="G '+g+'">'+g+'</span><b>'+jars+'</b> jars on the shelf · <b>'+bornTotal+'</b> bees raised'; buildReview('ov');
       trophyRow($('ovTrophies'));
       { const host=$('ovTrophies'); const old=host.parentNode.querySelector('.beenote'); if(old) old.remove(); host.insertAdjacentHTML('afterend', beeNote()); }
       saveGame(); $('over').classList.remove('hide'); }
     $('ovRestart').addEventListener('click',()=>{ // renewal: the apiary persists; a wild swarm takes the comb
       year++; day=0; P=12; honeyU=6*HC; pollenU=3*HC; nectarU=0; peakPop=12; swarmP=0; coldSnap=0; activePatch=null;
       queenAge=1; hornet=null; hornetCD=18+Math.random()*22; scoutShown=false; raidLoss=0; starveT=0;
-      jarsThisYear=0; fedWinter=false; bankAtFrost=0; goals=makeGoals(); lastSI=0; said={};
+      jarsThisYear=0; fedWinter=false; bankAtFrost=0; yearHist.length=0; histT=2.7; goals=makeGoals(); lastSI=0; said={};
       for(const c of cells){ c.brood=null; c.flagExpand=false; }
       over=false; $('over').classList.add('hide'); syncAlmanacTicks(); forecastCache=forecastToSpring();
       const yn=yearName(year); toast('A wild swarm settles into your comb — the line continues. Year '+year+': '+yn[0]+'.');
@@ -1862,14 +2273,18 @@
       if(speed===0) setSpeed(1);
       $('coachIc').textContent='\ud83d\udc75'; $('coachProg').textContent='hazel';
       $('coachBtn').style.display='none'; $('coachSkip').style.display='none';
-      $('coach').classList.add('show'); typeInto($('coachTx'), bridge);
-      setTimeout(()=>{ coachWait=false; $('coach').classList.remove('show'); if(!onboard) return;
-        if(coachStep>=COACH.length){ endCoach(); } else showCoach(); }, 4600); }
-    function endCoach(){ onboard=false; finishType(); clearSpots(); $('coach').classList.remove('show'); setReveal(false); forecastCache=forecastToSpring();
+      $('coach').classList.add('show'); logMsg('👵', bridge);
+      typeInto($('coachTx'), bridge, ()=>{ const b=$('coachBtn'); b.style.display=''; b.textContent='Continue ›'; }); }
+    // the interlude waits for the player — nothing Hazel says vanishes on a timer
+    function coachContinue(){ if(!coachWait) return; coachWait=false;
+      $('coach').classList.remove('show'); if(!onboard) return;
+      if(coachStep>=COACH.length){ endCoach(); } else showCoach(); }
+    function endCoach(){ onboard=false; finishType(false); clearSpots(); $('coach').classList.remove('show'); setReveal(false); forecastCache=forecastToSpring();
       goals=makeGoals(); lastSI=seasonIdx(day); setSpeed(1); saveGame();
       setTimeout(()=>showLesson('forage', ()=>{ tip('notes','Hazel: Nothing here is a secret — the <b>?</b> up top keeps all of it. Read any of it again whenever you like, and take your time. The bees aren\u2019t going anywhere.'); }), 1500); }
-    press($('coachBtn'),()=>{ const s=COACH[coachStep]; if(s&&!s.until) advanceCoach(); });
-    press($('coachSkip'),()=>{ seedStarterZones(); endCoach(); });
+    press($('coachBtn'),()=>{ if(coachWait){ if(twActive){ finishType(); } else coachContinue(); return; } const s=COACH[coachStep]; if(s&&!s.until) advanceCoach(); });
+    press($('coachSkip'),()=>{ coachWait=false; seedStarterZones(); endCoach(); });
+    press($('coach'),e=>{ if(e.target&&e.target.closest&&(e.target.closest('#coachBtn')||e.target.closest('#coachSkip'))) return; if(twActive) finishType(); });
     function checkCoachProgress(){ if(!onboard||coachWait) return; const s=COACH[coachStep]; if(s&&s.until&&s.until()){ advanceCoach(); } }
     function seedStarterZones(){ for(const cell of cells){ if(cell.built&&cell.zone==='none'){ cell.zone = cellDist(cell.c,cell.r)<1.2?'brood':'honey'; } }
       let n=0; for(const cell of cells){ if(cell.zone==='brood'&&!cell.brood&&n<4){ cell.brood={stage:'larva',t:Math.random()*LAR_D}; n++; } } }
@@ -2096,6 +2511,39 @@
     press($('lesson'),e=>{ if(e.target&&e.target.closest&&e.target.closest('#lesBtn')) return; if(twActive) finishType(); });
     function lhex(g,x,y,s){ g.beginPath(); for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-30);
       const px=x+s*Math.cos(a), py=y+s*Math.sin(a); i?g.lineTo(px,py):g.moveTo(px,py); } g.closePath(); }
+    // ---- the year, reviewed like a good teacher: what worked, what to try ----
+    function drawYearChart(cv){ if(!cv) return; const g=cv.getContext('2d'), Wc=cv.width, Hc=cv.height;
+      g.clearRect(0,0,Wc,Hc);
+      const bands=['rgba(124,190,87,0.10)','rgba(231,193,74,0.10)','rgba(192,106,58,0.12)','rgba(125,147,176,0.12)'];
+      for(let i=0;i<4;i++){ g.fillStyle=bands[i]; g.fillRect(Wc*i/4,0,Wc/4,Hc); }
+      if(yearHist.length<2){ g.fillStyle='rgba(194,169,126,0.7)'; g.font='600 13px JetBrains Mono'; g.fillText('a short year — little to chart',14,26); return; }
+      const maxP=Math.max(20,...yearHist.map(h=>h.p)), maxH=Math.max(10,...yearHist.map(h=>h.h));
+      const line=(get,max,col)=>{ g.strokeStyle=col; g.lineWidth=3; g.lineJoin='round'; g.beginPath();
+        yearHist.forEach((h,i)=>{ const x=Wc*h.d/360, y=Hc-8-(Hc-20)*get(h)/max; i?g.lineTo(x,y):g.moveTo(x,y); }); g.stroke(); };
+      line(h=>h.h,maxH,'#7fe3d6'); line(h=>h.p,maxP,'#ffd97a'); }
+    function buildReview(prefix){
+      const need=winterNeed(), gdone=goals?goals.filter(g=>g.done).length:0;
+      const well=[], next=[];
+      if(gdone>0) well.push(gdone+' of 4 season goals met');
+      if(jarsThisYear>0) well.push(jarsThisYear+' jar'+(jarsThisYear>1?'s':'')+' sealed at harvest');
+      if(peakPop>=80) well.push('a strong colony — peaked at '+peakPop+' bees');
+      else if(peakPop>=45) well.push('the colony grew to '+peakPop+' bees at its peak');
+      if(bankAtFrost>=need&&need>0) well.push('the pantry met the winter need before frost');
+      if(raidLoss===0) well.push('no bees lost to hornets');
+      if(!well.length) well.push('you kept bees — that’s how every keeper starts');
+      if(need>0&&bankAtFrost<need) next.push('lean <b>Nectar</b> through high summer — the pantry wanted '+Math.max(1,Math.round(need-bankAtFrost))+' more cells at frost');
+      if(peakPop<45) next.push('a wider spring <b>nursery</b> raises the workforce that gathers everything else');
+      if(jarsThisYear===0) next.push('watch the amber <b>harvest window</b> on the timeline in autumn — jars are your keeper’s legacy');
+      if(gdone<2) next.push('the season <b>goal line</b> under the year bar is a good compass');
+      if(raidLoss>6) next.push('tap raiding <b>hornets</b> — the guards fight harder with your help');
+      well.splice(3); next.splice(2);
+      if(gdone>=4) grantBadge('master');
+      if(need>0&&bankAtFrost>=need) grantBadge('pantry');
+      const el=$(prefix+'Review'); if(!el) return;
+      el.innerHTML='<div class="rvh">What went well</div>'+well.map(w=>'<div class="rvi good2">✔ '+w+'</div>').join('')
+        +(next.length?'<div class="rvh">For next year</div>'+next.map(w=>'<div class="rvi">→ '+w+'</div>').join(''):'')
+        +'<div class="rvleg"><i style="background:#ffd97a"></i>bees <i style="background:#7fe3d6"></i>honey cells</div>';
+      drawYearChart($(prefix+'Chart')); }
     function drawLessonArt(dt){ const g=lesCtx; if(!g||$('lesson').classList.contains('hide')) return;
       lesT2+=dt; const t=lesT2, W2=340, H2=132; g.clearRect(0,0,W2,H2);
       const cy=H2*0.5, s=26;
@@ -2164,6 +2612,60 @@
         d.innerHTML='<span class="gi2">'+GICON[k]+'</span><div><b>'+L.t+'</b><br><span>'+L.s+'</span></div>';
         d.addEventListener('click',()=>{ $('guide').classList.add('hide'); showLesson(k,()=>{ $('guide').classList.remove('hide'); }, true); });
         row.appendChild(d); }); })();
+    // ---- dance break: a real one, away from the screen ----
+    let danceTimer=null, danceLeft=30;
+    function startDance(){ if(danceMode) return; danceMode=true; grantBadge('dancer');
+      $('menu').classList.add('hide'); paused=true; danceLeft=30; $('danceCount').textContent=danceLeft;
+      $('dance').classList.remove('hide');
+      if(!AU.on) { /* silent dance is still a dance */ }
+      danceTimer=setInterval(()=>{ danceLeft--; $('danceCount').textContent=Math.max(0,danceLeft);
+        if(danceLeft<=0) endDance(); },1000); }
+    function endDance(){ if(!danceMode) return; danceMode=false; clearInterval(danceTimer);
+      $('dance').classList.add('hide'); paused=false;
+      toast('🕺 Good dancing, keeper. The bees approve.'); }
+    press($('danceEnd'),endDance);
+
+    // ---- pause menu ----
+    let menuWasPaused=false, restartArm=0, menuOpenedAt=0;
+    function menuOpen(){ menuWasPaused=paused; paused=true; syncMenuSnd(); syncPaceLocks(); menuOpenedAt=performance.now(); $('menu').classList.remove('hide'); }
+    function menuClose(){ $('menu').classList.add('hide'); paused=menuWasPaused;
+      const r=$('menuRestart'); r.classList.remove('confirm'); r.textContent='Restart'; restartArm=0; }
+    function syncMenuSnd(){ const b=$('menuSnd'); if(!b) return; const on=!!(AU&&AU.ctx&&AU.on);
+      b.textContent=on?'On':'Off'; b.classList.toggle('on',on); }
+    press($('menuBtn'),()=>{ if($('menu').classList.contains('hide')) menuOpen(); else menuClose(); });
+    press($('menuResume'),menuClose);
+    // ignore the synthesized click that retargets onto the backdrop right after opening
+    press($('menu'),e=>{ if(performance.now()-menuOpenedAt<650) return; if(e.target===$('menu')) menuClose(); });
+    press($('menuSnd'),()=>{ sndToggle(); setTimeout(syncMenuSnd,50); });
+    press($('menuGuide'),()=>{ menuClose(); $('guide').classList.remove('hide'); paused=true; });
+    ['Music','Hum','Fx'].forEach(k=>{ const el=$('vol'+k), key=k.toLowerCase()==='music'?'music':k.toLowerCase()==='hum'?'hum':'fx';
+      if(!el) return; el.value=Math.round(VOL[key]*100);
+      el.addEventListener('input',()=>setVol(key, el.value/100)); });
+    function syncHints(){ const b=$('menuHints'); if(b){ b.textContent=hints?'On':'Off'; b.classList.toggle('on',hints); } }
+    press($('menuHints'),()=>{ hints=!hints; try{ localStorage.setItem('hm_hints',hints?'1':'0'); }catch(e){} syncHints(); });
+    syncHints(); syncBadgeN();
+    press($('menuBadges'),()=>{ renderBadges(); menuClose(); $('badges').classList.remove('hide'); paused=true; });
+    press($('badgesClose'),()=>{ $('badges').classList.add('hide'); paused=false; });
+    press($('menuDance'),startDance);
+    press($('menuLog'),()=>{ menuClose(); toggleChat(true); });
+    press($('menuRestart'),()=>{ const r=$('menuRestart');
+      if(!restartArm){ restartArm=1; r.classList.add('confirm'); r.textContent='Sure?'; setTimeout(()=>{ if(restartArm){ restartArm=0; r.classList.remove('confirm'); r.textContent='Restart'; } },4000); return; }
+      clearSave(); location.reload(); });
+    addEventListener('keydown',e=>{ if(e.key==='Escape'&&started&&!storyMode){ e.preventDefault();
+      if($('menu').classList.contains('hide')) menuOpen(); else menuClose(); } });
+    // everything explains itself: numbers and the almanac open their own lessons
+    press($('clockWrap'),()=>{ if(!$('clockWrap').classList.contains('hidden')) showLesson('year',null,true); });
+    press($('stHoney'),()=>showLesson('honey',null,true));
+    press($('stPollen'),()=>showLesson('forage',null,true));
+    press($('stPop'),()=>showLesson('brood',null,true));
+    press($('stBrood'),()=>showLesson('brood',null,true));
+    press($('stKeeper'),()=>{ $('guide').classList.remove('hide'); paused=true; });
+    // ⓘ then any cell: a themed info sheet, touch-friendly
+    press($('inspectBtn'),()=>{ inspectMode=!inspectMode; $('inspectBtn').classList.toggle('on',inspectMode);
+      if(inspectMode) toast('Now tap any cell of the comb to read it.'); });
+    press($('csClose'),()=>$('cellSheet').classList.add('hide'));
+    press($('advisor'),e=>{ if($('advisor').classList.contains('hidden')) return; if(e.target&&e.target.closest&&e.target.closest('#feedBtn')) return; toggleChat(); });
+    press($('chatX'),()=>toggleChat(false));
     press($('helpBtn'),()=>{ $('guide').classList.remove('hide'); paused=true; });
     press($('guideClose'),()=>{ $('guide').classList.add('hide'); paused=false; });
 
@@ -2179,7 +2681,7 @@
     function seedAndPlay(){ clearSave(); tinyComb(); honeyU=8*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; grades=[]; forage='balanced'; activePatch=null;
       queenAge=1; hornet=null; hornetCD=18+Math.random()*22; parts.length=0; shake=0;
       rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=null; lastSI=0; scoutShown=false; seenTips={}; lessonSeen={}; nudged={}; starveT=0; bankAtFrost=0; raidLoss=0;
-      brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=true; setReveal(true);
+      brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=true; yearHist.length=0; histT=2.7; popMilo={}; setReveal(true);
       document.querySelectorAll('[data-f]').forEach(x=>x.classList.toggle('on',x.dataset.f==='balanced')); beginCommon();
       setTimeout(()=>{ if(onboard) showCoach(); }, 1800); saveGame(); }
     $('startNew').addEventListener('click',()=>{ startStory(); });
@@ -2206,7 +2708,7 @@
       let dt=(now-last)/1000; last=now; if(dt>0.05)dt=0.05; if(dt<0)dt=0;
       gt+=dt; lastDt=dt; shake=Math.max(0,shake-dt*1.2);
       const frozen=hitstop>0; if(frozen) hitstop-=dt;
-      relayoutT+=dt; if(relayoutT>1){ relayoutT=0; const t=$('hud-top'),b=$('hud-bottom');
+      relayoutT+=dt; if(relayoutT>1){ relayoutT=0; checkBadges(); const t=$('hud-top'),b=$('hud-bottom');
         if(Math.abs((t.offsetHeight+8)-topH)>6 || Math.abs((b.offsetHeight+8)-botH)>6) layout(); }
       // the view eases out as the comb grows — intimate when small, whole-hive when large
       fitT+=dt; if(fitT>0.3){ fitT=0; fitComb(false); }
@@ -2238,13 +2740,17 @@
       }
       // music: mood follows the story, then the seasons; gameplay sits a touch below the narration
       if(AU.ctx&&AU.on){
-        musMood = storyMode ? 'story' : ['spring','summer','autumn','winter'][seasonIdx(day)];
+        musMood = danceMode ? 'dance' : (storyMode ? 'story' : ['spring','summer','autumn','winter'][seasonIdx(day)]);
         musicTick();
-        if(AU.musicG){ const mt2=storyMode?1:(over?0.5:0.62);
+        if(AU.musicG){ const mt2=(danceMode?1.15:(storyMode?1:(over?0.5:0.62)))*VOL.music;
           try{ AU.musicG.gain.setTargetAtTime(mt2, AU.ctx.currentTime, 0.5); }catch(e){} } }
       if(AU.ctx&&AU.on&&AU.humG){ const T=lerpM(tempM,day)+difficulty().temp+M.temp(), winter=T<WIN_TEMP;
-        const tgt=(started&&!over)?(0.08+0.5*Math.min(1,P/CAP))*(winter?0.45:1)*(speed===0?0.3:1)*(hornet&&hornet.state==='raid'?1.4:1):0;
+        const tgt=((started&&!over)?(0.08+0.5*Math.min(1,P/CAP))*(winter?0.45:1)*(speed===0?0.3:1)*(hornet&&hornet.state==='raid'?1.4:1):0)*VOL.hum;
         AU.humG.gain.value+= (tgt-AU.humG.gain.value)*Math.min(1,dt*2.5); }
+      // frost overlay follows the true temperature — deep winter frosts the glass
+      { const Tf=lerpM(tempM,day)+difficulty().temp+M.temp()+(coldSnap>0?M.snap():0);
+        const coldFx=(started&&!over)?Math.max(coldSnap>0?0.5:0, Math.min(1,(WIN_TEMP-Tf)/9)):0;
+        const fEl=$('frost'); if(fEl) fEl.style.opacity=(Math.max(0,coldFx)*0.85).toFixed(2); }
       const shx=shake>0.005?(Math.random()-0.5)*shake*size*0.8:0, shy=shake>0.005?(Math.random()-0.5)*shake*size*0.8:0;
       ctx.setTransform(DPR,0,0,DPR,shx*DPR,shy*DPR);
       drawLessonArt(dt);
