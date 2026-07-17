@@ -2137,7 +2137,10 @@
     // ===================== PWA: offline play + update reminder =====================
     if('serviceWorker' in navigator && (location.protocol==='https:'||['localhost','127.0.0.1'].includes(location.hostname))){
       let refreshing=false;
-      navigator.serviceWorker.addEventListener('controllerchange',()=>{ if(refreshing) return; refreshing=true; location.reload(); });
+      // on a first visit clients.claim() also fires controllerchange — only reload
+      // when a controller existed at load time (i.e. a genuine version swap)
+      const hadController=!!navigator.serviceWorker.controller;
+      navigator.serviceWorker.addEventListener('controllerchange',()=>{ if(!hadController||refreshing) return; refreshing=true; location.reload(); });
       function offerUpdate(reg){ const bar=$('updateBar'); if(!bar||bar.classList.contains('show')) return;
         bar.classList.add('show');
         $('updateGo').onclick=()=>{ try{ if(started&&!over) saveGame(); }catch(e){}

@@ -41,7 +41,7 @@ self.addEventListener('fetch', (e) => {
       if (hit) return hit;
       try {
         const res = await fetch(req);
-        if (res.ok || res.type === 'opaque') cache.put(req, res.clone());
+        if (res.ok || res.type === 'opaque') await cache.put(req, res.clone()).catch(() => {});
         return res;
       } catch (err) {
         return hit || Response.error();
@@ -59,7 +59,7 @@ self.addEventListener('fetch', (e) => {
       const cache = await caches.open(CACHE);
       try {
         const res = await fetch(req);
-        if (res.ok) cache.put(req, res.clone());
+        if (res.ok) await cache.put(req, res.clone()).catch(() => {});
         return res;
       } catch (err) {
         return (await cache.match(req)) || (await cache.match('/')) || Response.error();
@@ -74,7 +74,7 @@ self.addEventListener('fetch', (e) => {
     const hit = await cache.match(req);
     if (hit) return hit;
     const res = await fetch(req);
-    if (res.ok) cache.put(req, res.clone());
+    if (res.ok) await cache.put(req, res.clone()).catch(() => {});
     return res;
   })());
 });
