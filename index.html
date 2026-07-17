@@ -81,9 +81,9 @@
   .stat{ min-width:58px; padding:5px 9px; border-radius:11px; background:rgba(255,255,255,0.03); text-align:center; transition:background .3s; }
   .stat .lab{ font-size:8px; letter-spacing:.18em; text-transform:uppercase; color:var(--dim); font-weight:600; }
   .stat .val{ font-family:'JetBrains Mono',monospace; font-size:15px; font-weight:700; margin-top:1px; display:flex; align-items:center; justify-content:center; gap:3px; font-variant-numeric:tabular-nums; }
-  .stat.honey .val .n{ color:var(--honey); } .stat.pollen .val .n{ color:#f3953c; }
-  .stat.pop .val .n{ color:var(--gold); } .stat.brood .val .n{ color:#e9dcc4; }
-  .stat.keeper .val .n{ color:var(--gold); text-shadow:0 0 10px rgba(255,217,122,.45); }
+  .stat.honey .val .n{ color:#ffb42b; } .stat.pollen .val .n{ color:#f5a24a; }
+  .stat.pop .val .n{ color:#ffd76b; } .stat.brood .val .n{ color:#8fc4ff; }
+  .stat.keeper .val .n{ color:#c6a2ff; text-shadow:0 0 10px rgba(198,162,255,.5); }
   .arr{ font-size:9px; line-height:1; transition:color .3s; }
   .arr.up{ color:var(--good); } .arr.down{ color:var(--bad); } .arr.flat{ color:rgba(194,169,126,0.4); }
   .stat .sub{ font-size:8px; color:var(--dim); font-family:'JetBrains Mono',monospace; }
@@ -222,6 +222,41 @@
   .tb.gold:hover{ background:rgba(255,217,122,0.16); color:var(--gold); }
   .tb.gold.off{ opacity:.42; }
   #fastW{ font-size:10px; color:var(--frost); padding:0 6px; letter-spacing:.05em; font-family:'JetBrains Mono',monospace; align-self:center; }
+
+  /* ============ colour identity: every control breathes its purpose ============ */
+  /* one hue per function — calm at rest, bold when chosen. The tray reads like a strategy game,
+     not a wall of amber: warm resources on the left cool toward brood-blue and keeper-violet. */
+  #tabHive{ --ac:#ffd066; } #tabMeadow{ --ac:#9cc8ff; } #reportBtn{ --ac:#c6a2ff; } #helpBtn{ --ac:#74e2d3; } #sndBtn{ --ac:#ffd066; } #menuBtn{ --ac:#cbb489; }
+  .stat.honey{ --ac:#ffb42b; } .stat.pollen{ --ac:#f5a24a; } .stat.pop{ --ac:#ffd76b; } .stat.brood{ --ac:#8fc4ff; } .stat.keeper{ --ac:#c6a2ff; }
+  .tb.brood{ --ac:#8fc4ff; } .tb.honeyb{ --ac:#ffc65a; } .tb.expand{ --ac:#a7e07c; }
+  [data-f="nectar"]{ --ac:#ffd36a; } [data-f="balanced"]{ --ac:#74e2d3; } [data-f="pollen"]{ --ac:#f5a24a; }
+  [data-sp="0"]{ --ac:#cbb489; } [data-sp="1"]{ --ac:#8ad66a; } [data-sp="3"]{ --ac:#8fc4ff; }
+  #inspectBtn{ --ac:#74e2d3; } #heatBtn{ --ac:#ff9d5a; } #harvestBtn{ --ac:#ffd97a; } #undoBtn{ --ac:#d9b48a; }
+
+  /* resting: accent-tinted label/icon, a faint colour wash, and a colour footline */
+  .tab:not(.on){ color:var(--ac,#c2a97e); background:color-mix(in srgb, var(--ac,transparent) 9%, rgba(255,255,255,0.02)); border-color:color-mix(in srgb, var(--ac,transparent) 20%, transparent); }
+  .tab:not(.on):hover{ background:color-mix(in srgb, var(--ac,transparent) 17%, rgba(255,255,255,0.03)); color:#fff; }
+  .tb:not(.on):not(.gold){ color:var(--ac,var(--dim)); background:color-mix(in srgb, var(--ac,transparent) 10%, rgba(255,255,255,0.025)); border-color:color-mix(in srgb, var(--ac,transparent) 22%, transparent); box-shadow:inset 0 -2px 0 color-mix(in srgb, var(--ac,transparent) 28%, transparent); }
+  .tb:not(.on):not(.gold):hover{ background:color-mix(in srgb, var(--ac,transparent) 18%, rgba(255,255,255,0.04)); color:#fff; }
+  /* the little tile-yield numbers keep their own semantic colours */
+  .tb:not(.on) .yld b{ color:var(--honey); } .tb:not(.on) .yld em{ color:var(--pollen); } .tb:not(.on) .yld i{ color:var(--dim); } .tb:not(.on) .yld s{ color:var(--good); }
+
+  /* vitals: each tile wears its resource colour as a tint + a bottom colour strip */
+  .stat{ background:color-mix(in srgb, var(--ac,#ffd97a) 8%, rgba(255,255,255,0.022)); box-shadow:inset 0 -2px 0 color-mix(in srgb, var(--ac,#ffd97a) 36%, transparent); }
+  .stat .lab{ color:color-mix(in srgb, var(--ac,#ffd97a) 64%, var(--dim)); }
+
+  /* bold, meaningful active states so the time tray reads at a glance */
+  .tb[data-sp="1"].on{ background:linear-gradient(180deg,#bff0a0,#74bf59); color:#0e2408; box-shadow:0 1px 0 rgba(255,255,255,.45) inset, 0 3px 15px rgba(120,200,90,.45); }
+  .tb[data-sp="3"].on{ background:linear-gradient(180deg,#bcdcff,#6aa2e2); color:#0a1a2c; box-shadow:0 1px 0 rgba(255,255,255,.45) inset, 0 3px 15px rgba(110,160,230,.45); }
+  .tb[data-sp="0"].on{ background:linear-gradient(180deg,#e8dcc4,#b7a684); color:#241503; }
+  /* forage dials, each its own flavour (out-specify the shared .tb.on.cyan) */
+  .tb.on[data-f="nectar"]{ background:linear-gradient(180deg,#ffe08a,#f0a72a); color:#241503; }
+  .tb.on[data-f="balanced"]{ background:linear-gradient(180deg,#a9ebe0,#3bbcae); color:#06120f; }
+  .tb.on[data-f="pollen"]{ background:linear-gradient(180deg,#ffc078,#e0791f); color:#241503; }
+
+  /* attention & timing: unhurried, satisfying transitions */
+  .tab{ transition:background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease; }
+  .tb{ transition:transform .08s ease, background .18s ease, color .18s ease, box-shadow .18s ease, border-color .18s ease; }
 
   /* ---------- year review (Duolingo-hearted) ---------- */
   .review{ text-align:left; margin:4px 0 2px; }
@@ -1193,7 +1228,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.26.1';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.27.1';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
