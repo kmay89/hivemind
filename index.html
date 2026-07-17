@@ -281,6 +281,12 @@
   .prow .pn{ font-weight:700; font-size:13px; color:#f7eed9; }
   .prow .pd{ font-size:11.5px; color:#c2a97e; line-height:1.4; }
 
+  /* ---------- saga & legacy ---------- */
+  .legacyNote{ background:linear-gradient(180deg,rgba(255,217,122,0.12),rgba(255,180,43,0.06)); border:1px solid rgba(255,217,122,0.32); border-radius:12px; padding:11px 13px; margin:0 0 12px; font-size:12.5px; line-height:1.5; color:#f7eed9; text-align:left; }
+  .legacyNote b{ color:#ffd97a; }
+  .chronCard.saga{ border-left-color:#ffd76b; background:rgba(255,215,107,0.07); }
+  .chronCard.saga .chronH{ color:#ffe6a0; }
+
   /* ---------- queen lines ---------- */
   #queenRow{ display:grid; grid-template-columns:1fr; gap:8px; margin:14px 0; max-height:50vh; overflow:auto; text-align:left; }
   .qopt{ display:flex; gap:11px; align-items:center; background:rgba(255,255,255,0.045); border:1.5px solid rgba(255,217,122,0.16); border-radius:12px; padding:10px 12px; cursor:pointer; }
@@ -872,6 +878,7 @@
         <div class="mrow"><span class="ml">Placement hints</span><button class="mtog on" id="menuHints">On</button></div>
         <div class="mrow"><span class="ml">Apiary score</span><span class="ml" id="menuScore" style="color:var(--gold)">0</span></div>
         <div class="mrow"><span class="ml">Queen line</span><span class="ml" id="menuQueen" style="color:var(--gold)">—</span></div>
+        <div class="mrow"><span class="ml">Apiary</span><span class="ml" id="menuRank" style="color:var(--gold)">—</span></div>
         <div class="mrow"><span class="ml">Badges</span><button class="mtog" id="menuBadges">✦ <span id="badgeN">0</span>/<span id="badgeTot">10</span></button></div>
         <div class="mrow"><span class="ml">Honey cellar</span><button class="mtog" id="menuCellar">🫙 <span id="jarN">0</span></button></div>
         <div class="mrow"><span class="ml">Keeper’s path</span><button class="mtog" id="menuPath">🗺 Open</button></div>
@@ -1097,6 +1104,7 @@
     <div class="card panel">
       <h1>CHOOSE YOUR QUEEN</h1>
       <div class="sub">every line keeps bees its own way — the rules never change, the temperament does</div>
+      <div id="legacyNote" class="legacyNote hide"></div>
       <div id="queenRow"></div>
       <div id="queenBtns">
         <button class="btn ghost" id="queenBack">‹ Back</button>
@@ -1145,7 +1153,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.21.1';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.22.2';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1334,25 +1342,39 @@
       CHRON.push({ k:kind, col:colonyNum, y:year, name:yearName(year)[0], g,
         pop:peakPop, born:bornTotal, q:q?q.name:null,
         jars:jarsThisYear, best:best?{n:best.n,r:best.r,p:best.p}:null,
-        elder:chronElder(), fed:fedWinter, why:why||null });
+        elder:chronElder(), fed:fedWinter, why:why||null,
+        season:(curSeason&&curSeason.id!=='calm')?curSeason.name:null, sIc:(curSeason&&curSeason.id!=='calm')?curSeason.ic:null, sEvent:seasonEventFired,
+        rank:(kind==='year'&&SAGA_YEARS.includes(year))?apiaryRank(year).nm:null });
       chronSave();
       if(kind==='year') setTimeout(()=>toast('\ud83d\udcd6 A new page is written in your <b>Chronicle</b>.'),1400); }
     function chronPhrase(e){ const p=[];
       if(e.k==='end'){ p.push(e.why==='starve'?'The pantry ran dry, and the colony failed.':'Too few bees remained, and the colony dwindled.');
         p.push('In its time it raised <b>'+e.born+'</b> bees'+(e.jars?' and sealed '+e.jars+' jar'+(e.jars===1?'':'s')+' that last year':'')+'.'); }
-      else { p.push((e.q?e.q+'\u2019s line':'The colony')+' brought the hive to <b>'+e.pop+'</b> bees and graded <b>'+e.g+'</b>.');
+      if(e.season){ p.push((e.sIc?e.sIc+' ':'')+'<b>'+e.season+'</b> \u2014 '+
+        (e.sEvent==='bear-hit'?'a bear raided the stores':e.sEvent==='bear-held'?'a bear came, but the hive held':e.sEvent==='wander'?'a wandering swarm joined':'the year turned as it would')+'.'); }
+      if(e.k!=='end'){ p.push((e.q?e.q+'\u2019s line':'The colony')+' brought the hive to <b>'+e.pop+'</b> bees and graded <b>'+e.g+'</b>.');
         if(e.jars>0 && e.best){ const rn=(RARITY[e.best.r]||{n:'a jar'}).n.toLowerCase(); p.push('Of '+e.jars+' jar'+(e.jars===1?'':'s')+' sealed, the finest was '+rn+' <b>'+e.best.n+'</b>'+(e.best.r>=3?', '+e.best.p+'% pure':'')+'.'); }
         else if(e.jars>0){ p.push(e.jars+' jar'+(e.jars===1?'':'s')+' went to the shelf.'); } }
       if(e.elder){ p.push('<b>'+e.elder.nm+'</b>, a '+e.elder.role+', saw <b>'+e.elder.age+'</b> day'+(e.elder.age===1?'':'s')+'.'); }
       if(e.fed && e.k!=='end'){ p.push('You fed them once when the shelves ran bare \u2014 a kindness they repaid.'); }
+      if(e.rank){ p.push('\ud83c\udf1f The apiary is now a <b>'+e.rank+'</b>.'); }
       return p.join(' '); }
     function renderChronicle(){
       if(!CHRON.length){ $('chronBody').innerHTML='<div class="jd" style="text-align:center;padding:16px;color:#c2a97e">Your colony\u2019s story writes itself. Survive your first winter, and the first page appears here \u2014 kept forever, across every hive you\u2019ll ever keep.</div>'; return; }
       let h='', lastCol=null;
       CHRON.forEach(e=>{ if(e.col!==lastCol){ lastCol=e.col; h+='<div class="psec">COLONY '+roman(e.col)+'</div>'; }
-        h+='<div class="chronCard'+(e.k==='end'?' ended':'')+'"><div class="chronH">'+(e.k==='end'?'\u2020 ':'')+'Year '+e.y+' \u00b7 '+e.name+(e.k==='end'?'':'  \u00b7  grade '+e.g)+'</div><div class="chronB">'+chronPhrase(e)+'</div></div>'; });
+        h+='<div class="chronCard'+(e.k==='end'?' ended':'')+(e.rank?' saga':'')+'"><div class="chronH">'+(e.k==='end'?'\u2020 ':'')+'Year '+e.y+' \u00b7 '+e.name+(e.k==='end'?'':'  \u00b7  grade '+e.g)+'</div><div class="chronB">'+chronPhrase(e)+'</div></div>'; });
       $('chronBody').innerHTML=h; }
     function syncChronN(){ const el=$('chronN'); if(el) el.textContent=CHRON.length; }
+    // ---- the saga: an apiary earns a title as it endures, and leaves a legacy ----
+    const RANKS=[[10,'Legendary Apiary','\ud83c\udfc6'],[6,'Renowned Apiary','\ud83c\udf1f'],[3,'Established Apiary','\ud83c\udf05'],[1,'Fledgling Apiary','\ud83c\udf31']];
+    function apiaryRank(y){ for(const r of RANKS){ if(y>=r[0]) return {th:r[0],nm:r[1],ic:r[2]}; } return {th:1,nm:'Fledgling Apiary',ic:'\ud83c\udf31'}; }
+    const SAGA_YEARS=[3,6,10];
+    let LEGACY={}; try{ LEGACY=JSON.parse(localStorage.getItem('hm_legacy')||'{}')||{}; }catch(e){}
+    function legacySave(){ try{ localStorage.setItem('hm_legacy',JSON.stringify(LEGACY)); }catch(e){} }
+    function updateLegacy(){ LEGACY.queen=queenLine; LEGACY.apex=Math.max(LEGACY.apex||0, year);
+      let best=(LEGACY.heirloom&&typeof LEGACY.heirloom.p==='number')?LEGACY.heirloom:null; for(const j of CELLAR){ if(!best||j.p>best.p) best={n:j.n,r:j.r,p:j.p,y:j.y}; }
+      LEGACY.heirloom=best; legacySave(); }
     // the cellar is career-deep: jars outlive any one colony
     let CELLAR=[];
     try{ CELLAR=JSON.parse(localStorage.getItem('hm_cellar')||'[]'); }catch(e){}
@@ -1712,7 +1734,28 @@
       ctx.fillStyle='#c07a1c'; ctx.beginPath(); ctx.ellipse(-s*0.3,0,s*0.22,s*0.7,0,0,6.28); ctx.fill();
       ctx.globalAlpha=1; ctx.restore(); }
 
-    function difficulty(){ return {flow:Math.max(0.62,1-(year-1)*0.055), temp:Math.max(-4.8,-(year-1)*1.2)+(year===1?0.8:0)}; }
+    // ===================== emergent seasons: each year draws its own weather =====================
+    // Folded straight into difficulty(), so the whole engine — sim, ledger, forecast, meadow,
+    // and the honest almanac projection — all honour the year's mood with no other wiring.
+    const WEATHERS=[
+      {id:'calm',   ic:'\ud83c\udf24', name:'A Steady Year',       flow:1.0,  temp:0,    note:'nothing unusual on the wind', tip:''},
+      {id:'bloom',  ic:'\ud83c\udf3b', name:'The Great Bloom',     flow:1.32, temp:0.4,  note:'the meadow overflowed', tip:'Hazel: The whole hill is in flower this year. Lean <b>Nectar</b> and build shelves fast \u2014 a bloom like this won\u2019t come twice.'},
+      {id:'drought',ic:'\ud83c\udff5', name:'The Dry Summer',      flow:0.72, temp:1.0,  note:'the flow ran thin', tip:'Hazel: A dry one. The flowers will hold their nectar back \u2014 grow the colony carefully, and don\u2019t build more comb than you can fill.'},
+      {id:'frost',  ic:'\ud83c\udf28', name:'The Late Frost',      flow:0.92, temp:-2.2, note:'spring came late and cruel', tip:'Hazel: Winter\u2019s hanging on. Keep the nursery small and tight until the cold breaks \u2014 warmth first, growth after.'},
+      {id:'mild',   ic:'\ud83c\udf38', name:'The Gentle Year',     flow:1.08, temp:2.0,  note:'a kind, mild year', tip:'Hazel: A soft year \u2014 warm and forgiving. A fine season to grow bold and raise a big colony.'},
+      {id:'gold',   ic:'\ud83c\udf41', name:'The Golden Autumn',   flow:1.12, temp:-0.4, note:'the goldenrod poured late', tip:'Hazel: The goldenrod is heavy this year \u2014 the autumn flow runs long. Keep shelves open right up to the frost.'},
+      {id:'wander', ic:'\ud83d\udc1d', name:'The Wandering Swarm', flow:1.0,  temp:0,    note:'a wild swarm was on the wing', tip:'Hazel: There\u2019s a wild swarm roaming the hedgerows this year. Keep room in the comb \u2014 they just might move in.'},
+      {id:'bear',   ic:'\ud83d\udc3b', name:'The Year of the Bear',flow:1.02, temp:0,    note:'a bear came down the hill', tip:'Hazel: A bear\u2019s been seen on the ridge. Bank your honey early and deep \u2014 if he comes, he takes what\u2019s easy to reach. A guard helps.'},
+    ];
+    let curSeason=WEATHERS[0], seasonEventDone=false, seasonEventFired=null, lastSeasonId='calm';
+    function drawSeason(){ if(year<=1){ curSeason=WEATHERS[0]; seasonEventDone=false; seasonEventFired=null; lastSeasonId='calm'; return; }
+      const pool=WEATHERS.filter(x=>x.id!=='calm' && x.id!==lastSeasonId);
+      curSeason=pool[(Math.random()*pool.length)|0]; seasonEventDone=false; seasonEventFired=null; lastSeasonId=curSeason.id; }
+    function announceSeason(){ if(!curSeason||curSeason.id==='calm') return;
+      logMsg(curSeason.ic,'<b>'+curSeason.name+'</b> \u2014 '+curSeason.note+'.');
+      if(curSeason.tip) setTimeout(()=>toast(curSeason.tip),1100); }
+    function difficulty(){ const sf=curSeason?curSeason.flow:1, st=curSeason?curSeason.temp:0;
+      return {flow:Math.max(0.5,(1-(year-1)*0.055)*sf), temp:Math.max(-4.8,-(year-1)*1.2)+(year===1?0.8:0)+st}; }
     function honeyCellsStored(){ return honeyU/HC; }
 
     // ===================== cosmetic bees =====================
@@ -2187,6 +2230,18 @@
       if(!onboard && !winter && day<215){ const crowd=(P/CAP)*(1-Math.min(1,space/14)); swarmP=Math.max(0,Math.min(1.2, swarmP+(crowd-0.18)*dd*0.5*(QL().swarm||1)));
         if(swarmP>0.85 && Math.random()<dd*0.22){ const lost=Math.round(P*0.42); P-=lost; swarmP=0.1; puff(hiveCx,hiveCy,'#ffd76b',40,2); shake=Math.max(shake,0.6); buzzAlert(); toast('A swarm has left to found a new colony! '+lost+' bees gone — give them space next time.'); } }
       else swarmP=Math.max(0,swarmP-dd*0.4);
+      if(!offline && !onboard && !over && curSeason && !seasonEventDone){
+        if(curSeason.id==='wander' && day>=110 && !winter){ seasonEventDone=true;
+          const add=Math.min(CAP-Math.round(P), 10+((Math.random()*7)|0));
+          if(add>0){ P+=add; peakPop=Math.max(peakPop,Math.round(P)); puff(hiveCx,hiveCy,'#ffd76b',34,1.6); chime(560,820);
+            toast('\ud83d\udc1d A <b>wandering swarm</b> moved into your comb \u2014 '+add+' bees join the colony!'); logMsg('\ud83d\udc1d','A wandering swarm joined \u2014 +'+add+' bees.'); seasonEventFired='wander'; } }
+        else if(curSeason.id==='bear' && day>=140 && !winter){ seasonEventDone=true;
+          const guarded=(owned.guard?1:0)+(queenLine==='bramble'?1:0), banked=honeyCellsStored();
+          const take=Math.max(0, Math.round(banked*(0.30 - guarded*0.12)));
+          if(take>2){ honeyU=Math.max(0, honeyU-take*HC); shake=Math.max(shake,0.85); buzzAlert(); puff(hiveCx,hiveCy,'#a06a3a',44,2.1);
+            toast('\ud83d\udc3b A <b>bear</b> raided the hive and tore out '+take+' cells of honey! '+(guarded?'Your guards drove him off before worse.':'Next year \u2014 bank deeper, and a guard would help.')); logMsg('\ud83d\udc3b','A bear raided the hive \u2014 '+take+' cells of honey lost.'); seasonEventFired='bear-hit'; }
+          else { chime(520,760); toast('\ud83d\udc3b A bear came down the hill \u2014 but found your hive '+(guarded?'too deep and too well guarded':'too deep')+' to bother. He moved on.'); logMsg('\ud83d\udc3b', guarded?'A bear came, but the hive was too well kept \u2014 he left empty-pawed.':'A bear came, but found too little honey to bother.'); seasonEventFired='bear-held'; } }
+      }
       if(day>=262 && bankAtFrost===0) bankAtFrost=honeyCellsStored();
       if(!offline && cells.some(c=>c.built&&c.flagExpand)) tip('hex','Hazel: Why six sides? It\u2019s the cheapest wall there is \u2014 a hexagon fences off its space with less wax than any other tile. People suspected that for two thousand years; a mathematician named Hales only proved it in 1999. And the bees didn\u2019t work it out \u2014 they build round cells, and the warm wax settles into hexagons by itself.');
       if(!offline && broodCells()>=7) tip('rings','Hazel: Watch how a nest grows \u2014 a ring at a time. One cell, then six around it, then twelve, then eighteen: 1, 7, 19, 37. Round is the shape with the least edge for the space inside, so it\u2019s both the cheapest to build and the warmest to hold. The cold always bites at the corners.');
@@ -2573,7 +2628,7 @@
       fill.style.background=pantry>=1?'var(--good)':pantry>=0.5?'var(--gold)':'var(--honey)';
       $('wrPct').textContent=hc+' / '+need;
       let lab='', cls='';
-      if(day<100) lab='The year is young — build and grow.';
+      if(day<118) lab=(curSeason&&curSeason.id!=='calm'?curSeason.ic+' '+curSeason.name+'. ':'')+'The year is young — build and grow.';
       else if(fc && fc.starve!==null && day>=150){ lab='At this pace it runs dry ~day '+fc.starve+'.'; cls='bad'; }
       else if(pantry>=1){ lab='Full for the winter ahead.'; cls='good'; }
       else if(day>=HARV0) lab='Fill it before the frost.';
@@ -2615,11 +2670,13 @@
         row.appendChild(d); });
     }
     function endOfYear(){
-      const {g,gdone}=gradeYear(); grades.push({year,g,honey:Math.round(honeyCellsStored()),peak:peakPop}); const est=(year===3);
-      $('yeTitle').textContent=est?'APIARY ESTABLISHED':('YEAR '+year+' SURVIVED'); $('yeTitle').className='good';
-      $('yeSub').textContent=est?'three winters weathered — the colony endures':'winter is past';
+      const {g,gdone}=gradeYear(); grades.push({year,g,honey:Math.round(honeyCellsStored()),peak:peakPop});
+      const milestone=SAGA_YEARS.includes(year), rank=apiaryRank(year);
+      $('yeTitle').textContent=milestone?(rank.ic+' '+rank.nm.toUpperCase()):('YEAR '+year+' SURVIVED'); $('yeTitle').className='good';
+      $('yeSub').textContent=milestone?(year+' winters weathered — a name that carries'):'winter is past';
       $('yeGrade').innerHTML='this year\u2019s grade<span class="G '+g+'">'+g+'</span>'; buildReview('ye'); grantBadge('survivor'); unlockPace('medium'); if(pace!=='easy') unlockPace('hard');
-      recordChronicle('year', g);
+      recordChronicle('year', g); updateLegacy();
+      if(milestone){ fanfare(); logMsg(rank.ic,'Your apiary is now a <b>'+rank.nm+'</b> \u2014 '+year+' winters weathered.'); }
       trophyRow($('yeTrophies')); renderGifts();
       { const host=$('yeTrophies'); const old=host.parentNode.querySelector('.beenote'); if(old) old.remove(); host.insertAdjacentHTML('afterend', beeNote()); }
       const yn=yearName(year+1); $('yeNext').textContent='Into Year '+(year+1)+' — '+yn[0]+' ▶';
@@ -2629,12 +2686,13 @@
       queenAge++; hornet=null; hornetCD=(year>=4?14+Math.random()*20:18+Math.random()*22); scoutShown=false;
       jarsThisYear=0; fedWinter=false; starveT=0; bankAtFrost=0; yearHist.length=0; histT=2.7; goals=makeGoals(); lastSI=0; syncAlmanacTicks();
       delete nudged.bigNest; delete nudged.bigStore; delete nudged.bigBuild; delete nudged.noGrow;
-      const yn=yearName(year); toast('Year '+year+' — '+yn[0]+': '+yn[1]+'.'+(queenAge>=3?' Your queen is aging.':''));
+      drawSeason();
+      const yn=yearName(year); toast('Year '+year+' — '+yn[0]+': '+yn[1]+'.'+(queenAge>=3?' Your queen is aging.':'')); announceSeason();
       forecastCache=forecastToSpring(); saveGame(); setSpeed(1); paused=false; said={}; });
     function gameOver(kind){ if(over)return; over=true; setSpeed(0); chime(330,165); hornet=null;
       $('ovTitle').textContent=kind==='starve'?'THE COLONY FAILS':'THE COLONY DWINDLES'; $('ovSub').textContent=(kind==='starve'?'the pantry ran dry in '+seasonName(day).toLowerCase():'too few bees remained')+' — but the comb, the shelf, and the queen\u2019s line are yours to keep';
       const {g}=gradeYear(); grades.push({year,g,honey:Math.round(honeyCellsStored()),peak:peakPop});
-      recordChronicle('end', g, kind);
+      recordChronicle('end', g, kind); updateLegacy();
       $('ovStats').innerHTML='Year '+year+' ends early<span class="G '+g+'">'+g+'</span><b>'+jars+'</b> jars on the shelf · <b>'+bornTotal+'</b> bees raised'; buildReview('ov');
       trophyRow($('ovTrophies'));
       { const host=$('ovTrophies'); const old=host.parentNode.querySelector('.beenote'); if(old) old.remove(); host.insertAdjacentHTML('afterend', beeNote()); }
@@ -2644,8 +2702,8 @@
       queenAge=1; hornet=null; hornetCD=18+Math.random()*22; scoutShown=false; raidLoss=0; starveT=0;
       jarsThisYear=0; fedWinter=false; bankAtFrost=0; yearHist.length=0; histT=2.7; goals=makeGoals(); lastSI=0; said={};
       for(const c of cells){ c.brood=null; c.flagExpand=false; }
-      over=false; $('over').classList.add('hide'); syncAlmanacTicks(); forecastCache=forecastToSpring();
-      const yn=yearName(year); toast('A wild swarm settles into your comb — the line continues. Year '+year+': '+yn[0]+'.');
+      over=false; $('over').classList.add('hide'); syncAlmanacTicks(); drawSeason();
+      const yn=yearName(year); toast('A wild swarm settles into your comb — the line continues. Year '+year+': '+yn[0]+'.'); announceSeason(); forecastCache=forecastToSpring();
       setSpeed(1); paused=false; saveGame(); });
 
     // ===================== persistence =====================
@@ -2653,13 +2711,14 @@
       const cb=cells.map(c=>(c.built?1:0)|(Z[c.zone]<<1)|((c.flagExpand?1:0)<<3)|((c.brood?1:0)<<4)|(c.brood?ST[c.brood.stage]<<5:0));
       const bt=cells.map(c=>c.brood?Math.round(c.brood.t*10):0);
       return {v:4,t:Date.now(),day,year,P,honeyU,pollenU,nectarU,peakPop,bornTotal,swarmP,forage,activePatch,grades,queenAge,cb,bt,
-        rj,jars,jy:jarsThisYear,ql:queenLine,rs:roster,mx:mix.map(v=>Math.round(v)),ow:Object.keys(owned),fw:fedWinter?1:0,bf:Math.round(bankAtFrost),tp:Object.keys(seenTips),ls:Object.keys(lessonSeen),gd:goals?goals.map(g=>g.done?1:0):[0,0,0,0]}; }
+        rj,jars,jy:jarsThisYear,ql:queenLine,rs:roster,se:curSeason?curSeason.id:'calm',sq:seasonEventDone?1:0,sx:seasonEventFired,mx:mix.map(v=>Math.round(v)),ow:Object.keys(owned),fw:fedWinter?1:0,bf:Math.round(bankAtFrost),tp:Object.keys(seenTips),ls:Object.keys(lessonSeen),gd:goals?goals.map(g=>g.done?1:0):[0,0,0,0]}; }
     function saveGame(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify(serialize())); }catch(e){} }
     function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
     function loadSave(){ try{ const s=localStorage.getItem(SAVE_KEY); return s?JSON.parse(s):null; }catch(e){ return null; } }
     function deserialize(s){ const ZN=['none','brood','honey'], STN=['egg','larva','pupa'];
       day=s.day; year=s.year; P=s.P; honeyU=s.honeyU; pollenU=s.pollenU; nectarU=s.nectarU; peakPop=s.peakPop||Math.round(P); bornTotal=s.bornTotal||0; swarmP=s.swarmP||0; forage=s.forage||'balanced'; activePatch=(s.activePatch===undefined?null:s.activePatch); grades=s.grades||[]; queenAge=s.queenAge||1;
       rj=s.rj||0; jars=s.jars||0; jarsThisYear=s.jy||0; queenLine=(s.ql&&QUEENS.some(q=>q.id===s.ql))?s.ql:'meadow'; roster=Array.isArray(s.rs)?s.rs.filter(b=>b&&b.nm):[]; mix=(s.mx&&s.mx.length===4)?s.mx.slice():[0,0,0,0]; owned={}; (s.ow||[]).forEach(k=>owned[k]=true); fedWinter=!!s.fw; bankAtFrost=s.bf||0; seenTips={}; (s.tp||[]).forEach(k=>seenTips[k]=1); lessonSeen={}; (s.ls||[]).forEach(k=>lessonSeen[k]=1);
+      curSeason=WEATHERS.find(x=>x.id===s.se)||WEATHERS[0]; lastSeasonId=curSeason.id; seasonEventDone=!!s.sq; seasonEventFired=s.sx||null;
       goals=makeGoals(); (s.gd||[]).forEach((d,i)=>{ if(goals[i]) goals[i].done=!!d; });
       if(day>=270) armMidwinter(true);
       lastSI=seasonIdx(day);
@@ -3209,7 +3268,8 @@
     // ---- pause menu ----
     let menuWasPaused=false, restartArm=0, menuOpenedAt=0;
     function menuOpen(){ menuWasPaused=paused; paused=true; syncMenuSnd(); syncPaceLocks(); const ms=$('menuScore'); if(ms) ms.textContent=apiaryScore().toLocaleString();
-      const mq=$('menuQueen'); if(mq){ const q=QUEENS.find(x=>x.id===queenLine); mq.textContent=q?q.ic+' '+q.name:'—'; } syncRosterN(); syncChronN(); menuOpenedAt=performance.now(); $('menu').classList.remove('hide'); }
+      const mq=$('menuQueen'); if(mq){ const q=QUEENS.find(x=>x.id===queenLine); mq.textContent=q?q.ic+' '+q.name:'—'; }
+      const mr=$('menuRank'); if(mr){ const rk=apiaryRank(year); mr.textContent=rk.ic+' '+rk.nm+' \u00b7 yr '+year; } syncRosterN(); syncChronN(); menuOpenedAt=performance.now(); $('menu').classList.remove('hide'); }
     function menuClose(){ $('menu').classList.add('hide'); paused=menuWasPaused;
       const r=$('menuRestart'); r.classList.remove('confirm'); r.textContent='Restart'; restartArm=0; }
     function syncMenuSnd(){ const b=$('menuSnd'); if(!b) return; const on=!!(AU&&AU.ctx&&AU.on);
@@ -3330,7 +3390,7 @@
 
     function beginCommon(){ $('intro').classList.add('hide'); started=true; queen.x=hiveCx; queen.y=hiveCy; queen.tx=hiveCx; queen.ty=hiveCy; syncBeePool();
       prevv={h:honeyU,p:pollenU,b:P,br:countBrood().total}; rate={h:0,p:0,b:0,br:0}; waxRateEMA=0; forecastCache=forecastToSpring(); layout(); setSpeed(1); }
-    function seedAndPlay(){ colonyNum=CHRON.length?CHRON[CHRON.length-1].col+1:1; colonySave(); clearSave(); tinyComb(); honeyU=8*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; grades=[]; forage='balanced'; activePatch=null; mix=[0,0,0,0]; roster=[]; corpses=[];
+    function seedAndPlay(){ colonyNum=CHRON.length?CHRON[CHRON.length-1].col+1:1; colonySave(); clearSave(); tinyComb(); honeyU=(CHRON.length&&LEGACY&&LEGACY.heirloom&&LEGACY.heirloom.n?12:8)*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; grades=[]; forage='balanced'; activePatch=null; mix=[0,0,0,0]; roster=[]; corpses=[]; drawSeason();
       queenAge=1; hornet=null; hornetCD=18+Math.random()*22; parts.length=0; shake=0;
       rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=null; lastSI=0; scoutShown=false; seenTips={}; lessonSeen={}; nudged={}; starveT=0; bankAtFrost=0; raidLoss=0;
       brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=true; yearHist.length=0; histT=2.7; popMilo={};
@@ -3348,7 +3408,15 @@
       row.querySelectorAll('.qopt').forEach(el=>press(el,()=>{ const q=QUEENS.find(x=>x.id===el.dataset.q);
         if(q.lock&&!earned[q.lock.badge]) return;
         queenLine=q.id; renderQueens(); })); }
-    $('startNew').addEventListener('click',()=>{ renderQueens(); $('intro').classList.add('hide'); $('queenPick').classList.remove('hide'); });
+    function showLegacyNote(){ const el=$('legacyNote'); if(!el) return;
+      if(CHRON.length && LEGACY && (LEGACY.queen || LEGACY.heirloom)){
+        const q=LEGACY.queen?QUEENS.find(x=>x.id===LEGACY.queen):null;
+        let h='<b>Your line continues.</b> ';
+        if(q){ h+='The granddaughter of <b>'+q.name+'</b> answers your call — already crowned below. '; queenLine=LEGACY.queen; }
+        if(LEGACY.heirloom&&LEGACY.heirloom.n){ h+='You carry the heirloom <b>'+LEGACY.heirloom.n+'</b> from your old cellar, a gift of honey to start the new comb.'; }
+        el.innerHTML=h; el.classList.remove('hide');
+      } else el.classList.add('hide'); }
+    $('startNew').addEventListener('click',()=>{ showLegacyNote(); renderQueens(); $('intro').classList.add('hide'); $('queenPick').classList.remove('hide'); });
     $('queenBack').addEventListener('click',()=>{ $('queenPick').classList.add('hide'); $('intro').classList.remove('hide'); });
     $('queenGo').addEventListener('click',()=>{ $('queenPick').classList.add('hide');
       const q=QUEENS.find(x=>x.id===queenLine);
