@@ -500,6 +500,12 @@
   .spotlight{ animation:spot 2.1s ease-in-out infinite; position:relative; z-index:5; }
   @keyframes spot{ 0%,100%{ box-shadow:0 0 0 0 rgba(255,217,122,0); } 50%{ box-shadow:0 0 0 4px rgba(255,217,122,0.55); } }
   .tapHere{ animation:spot 2.1s ease-in-out infinite, btnPulse 2.1s ease-in-out infinite; }
+  .attn{ animation:attnPulse 1.5s ease-in-out infinite; }
+  @keyframes attnPulse{ 0%,100%{ box-shadow:0 0 0 0 rgba(255,201,84,0); } 50%{ box-shadow:0 0 0 3px rgba(255,201,84,0.6), 0 0 13px rgba(255,201,84,0.55); } }
+  .confChk{ display:inline-flex; align-items:center; gap:8px; font-size:12.5px; color:#c2a97e; cursor:pointer; margin:12px 0 4px; }
+  .confChk .box{ width:18px; height:18px; border:1.5px solid rgba(255,217,122,0.4); border-radius:5px; display:inline-flex; align-items:center; justify-content:center; }
+  .confChk .box i{ opacity:0; color:#ffd97a; font-style:normal; font-size:12px; }
+  .confChk.on .box i{ opacity:1; }
   @keyframes btnPulse{ 0%,100%{ filter:brightness(1); } 50%{ filter:brightness(1.25); } }
 
   /* ---------- update bar (new version deployed) ---------- */
@@ -828,6 +834,17 @@
     </div>
   </div>
 
+  <div class="ov hide" id="confirmPop">
+    <div class="card panel" style="max-width:380px">
+      <h1 id="confT" style="font-size:23px">—</h1>
+      <p id="confB" style="line-height:1.55; font-size:14px; color:#e8dcc4; text-transform:none; letter-spacing:normal; margin:8px 0">—</p>
+      <div id="confChk" class="confChk" role="checkbox" tabindex="0" aria-checked="false"><span class="box"><i>✓</i></span>Don’t ask me this again</div>
+      <div style="display:flex; gap:10px; justify-content:center; margin-top:4px">
+        <button class="btn ghost" id="confNo">Keep it</button>
+        <button class="btn pulse" id="confYes">Do it anyway</button>
+      </div>
+    </div>
+  </div>
   <div id="hud-bottom">
     <div id="advisor" class="panel preveal" title="Hazel’s log — every word she’s said"><canvas class="ic" id="hazelC" width="46" height="46" aria-label="Hazel"></canvas><div class="tx"><span id="advTx">Welcome home, keeper.</span><button id="feedBtn" class="hide">Feed syrup — once</button></div><span class="hist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.3c-1.3 0-2.6-.3-3.7-.8L3 20l1.2-4.4a8.1 8.1 0 0 1-1.2-4.1A8.4 8.4 0 0 1 11.5 3.2 8.4 8.4 0 0 1 21 11.5z"/></svg></span><span class="fold" title="Tuck Hazel away">⌄</span></div>
     <div id="ctl" class="panel">
@@ -842,6 +859,7 @@
         <div class="tb brood y on" data-brush="brood" tabindex="0" title="Paint where the queen lays"><span>Brood</span><i class="yld" id="yBrood">—</i></div>
         <div class="tb honeyb y" data-brush="honey" tabindex="0" title="Paint storage cells"><span>Honey</span><i class="yld" id="yHon">—</i></div>
         <div class="tb expand y" data-brush="expand" tabindex="0" title="Flag fresh wax to build"><span>Expand</span><i class="yld" id="yExp">—</i></div>
+        <div class="tb hide" id="undoBtn" tabindex="0" title="Undo the last comb change (Z)">↩ Undo</div>
         <div class="tb" id="inspectBtn" tabindex="0" title="What is this cell? Tap this, then tap any cell">ⓘ</div>
         <div class="tb" id="heatBtn" tabindex="0" title="Heat lens — see the warmth the nest is holding"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 13.5V5a2 2 0 1 1 4 0v8.5a4.5 4.5 0 1 1-4 0z"/><circle cx="12" cy="17.5" r="1.6" fill="currentColor" stroke="none"/></svg></div>
       </div>
@@ -1153,7 +1171,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.22.2';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.23.0';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1842,8 +1860,44 @@
       if(brush==='expand'){ if(cell.built)return; if(neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built)){ if(!cell.flagExpand&&!paintErase)flaggedExpand++; cell.flagExpand=!paintErase; checkCoachProgress(); watchHands(); } return; }
       if(!cell.built)return;
       if(paintErase){ if(cell.zone==='brood'&&cell.brood)return; cell.zone='none'; }
-      else { if(brush==='brood'){ if(cell.zone!=='brood')brushedBrood++; cell.zone='brood'; } else if(brush==='honey'){ if(cell.zone!=='honey')paintedHoney++; cell.zone='honey'; } checkCoachProgress(); watchHands(); }
+      else { if(brush==='brood'){ if(cell.zone!=='brood')brushedBrood++; cell.zone='brood'; } else if(brush==='honey'){ if(cell.zone!=='honey')paintedHoney++; cell.zone='honey'; if(cell.brood) cell.brood=null; } checkCoachProgress(); watchHands(); }
     }
+    // ---- undo: take back the last comb change (over-expansion, a stray paint) ----
+    let undoStack=[], strokeSnap=null;
+    function combSnap(){ return cells.map(c=>({z:c.zone,f:c.flagExpand,b:c.brood})); }
+    function combRestore(sn){ for(let i=0;i<cells.length;i++){ const c=cells[i],v=sn[i]; if(!v)continue; c.zone=v.z; c.flagExpand=v.f; c.brood=v.b; } }
+    function syncUndoBtn(){ const b=$('undoBtn'); if(b) b.classList.toggle('hide', undoStack.length===0||onboard||!started||over); }
+    function commitStroke(){ if(!strokeSnap) return; let ch=false;
+      for(let i=0;i<cells.length;i++){ const c=cells[i],v=strokeSnap[i]; if(c.zone!==v.z||c.flagExpand!==v.f||c.brood!==v.b){ ch=true; break; } }
+      if(ch){ undoStack.push(strokeSnap); if(undoStack.length>24) undoStack.shift(); syncUndoBtn(); } strokeSnap=null; }
+    function doUndo(){ if(!undoStack.length||onboard) return; combRestore(undoStack.pop()); syncUndoBtn();
+      forecastCache=forecastToSpring(); syncHUD(); toast('\u21a9 Last comb change undone.'); }
+    function clearUndo(){ undoStack.length=0; strokeSnap=null; syncUndoBtn(); }
+    // ---- teaching confirm: warn once (dismissible) before a costly overwrite ----
+    let noConfirm=false; try{ noConfirm=localStorage.getItem('hm_noconfirm')==='1'; }catch(e){}
+    let pendConfirm=null, confDismiss=false, confPrevPaused=false;
+    function needsConfirm(cell){ if(!cell||!cell.built||onboard) return null;
+      if(brush==='honey' && cell.zone!=='honey' && cell.brood) return 'brood';
+      if(brush==='brood' && cell.zone==='honey' && honeyCellsStored()>=Math.max(6,honeyCells()*0.6)) return 'honey';
+      return null; }
+    function openConfirm(cell,reason){ pendConfirm={cell}; confDismiss=false;
+      $('confT').textContent = reason==='brood' ? 'Paint over the brood?' : 'Paint over full shelves?';
+      $('confB').innerHTML = reason==='brood'
+        ? 'This cell is a <b>nursery with brood growing</b> in it. Painting <b>Honey</b> here ends those young \u2014 they can\u2019t be moved. You can always \u21a9 Undo.'
+        : 'These <b>Honey</b> cells are holding your winter stores. Painting <b>Brood</b> over full shelves <b>spills the honey</b> they can\u2019t re-shelve. You can always \u21a9 Undo.';
+      $('confChk').classList.remove('on'); $('confChk').setAttribute('aria-checked','false');
+      confPrevPaused=paused; paused=true; $('confirmPop').classList.remove('hide'); }
+    function closeConfirm(){ $('confirmPop').classList.add('hide'); pendConfirm=null; paused=confPrevPaused; }
+    function confirmYes(){ if(pendConfirm){ strokeSnap=combSnap(); applyBrush(pendConfirm.cell); commitStroke(); forecastCache=forecastToSpring(); syncHUD(); }
+      if(confDismiss){ noConfirm=true; try{ localStorage.setItem('hm_noconfirm','1'); }catch(e){} }
+      closeConfirm(); }
+    // ---- gentle attention: in Easy mode, glow the control Hazel is pointing at ----
+    let attnEl=null;
+    function setAttn(sel){ const el=sel?document.querySelector(sel):null; if(attnEl===el) return; if(attnEl) attnEl.classList.remove('attn'); attnEl=el; if(el) el.classList.add('attn'); }
+    function guideEasy(ic,tx){ if(pace!=='easy'||onboard||!started||over){ setAttn(null); return; }
+      if(ic==='🐝'||ic==='❄️'){ setAttn(null); return; }
+      const sel=/Expand/.test(tx)?'[data-brush="expand"]':/rood|nursery/.test(tx)?'[data-brush="brood"]':/Honey|shelves/.test(tx)?'[data-brush="honey"]':/Meadow/.test(tx)?'#tabMeadow':/Harvest/.test(tx)?'#harvestBtn':/Nectar/.test(tx)?'[data-f="nectar"]':null;
+      setAttn(sel); }
     // She'd rather catch it while your hand is still on it than tell you afterwards. One remark
     // per idea, never twice, and never a scolding — she has done this for forty years.
     let nudgeCool=0, nudged={};
@@ -1905,7 +1959,9 @@
       if(inspectMode){ const cell=cellAtPx(p.x,p.y);
         if(cell){ $('csBody').innerHTML=inspectHTML(cell); $('cellSheet').classList.remove('hide'); }
         inspectMode=false; $('inspectBtn').classList.remove('on'); return; }
-      painting=true; paintErase=(e.button===2)||e.shiftKey; applyBrush(cellAtPx(p.x,p.y)); });
+      const c0=cellAtPx(p.x,p.y), erase0=(e.button===2)||e.shiftKey;
+      if(!erase0){ const rz=needsConfirm(c0); if(rz && !noConfirm){ openConfirm(c0, rz); return; } }
+      strokeSnap=combSnap(); painting=true; paintErase=erase0; applyBrush(c0); });
     canvas.addEventListener('pointermove',e=>{ const p=rel(e);
       if(view==='hive'){ hoveredCell=cellAtPx(p.x,p.y); if(painting)applyBrush(hoveredCell); showInspect(e.clientX,e.clientY); }
       else { hoveredCell=null; hideInspect(); } });
@@ -1945,12 +2001,17 @@
       const w=el.offsetWidth||200, h=el.offsetHeight||70;
       el.style.left=Math.max(8, Math.min(W-w-8, cx+18))+'px';
       el.style.top=Math.max(8, Math.min(Hh-h-8, cy+16))+'px'; }
-    addEventListener('pointerup',()=>{painting=false;});
+    addEventListener('pointerup',()=>{ if(painting) commitStroke(); painting=false; });
     canvas.addEventListener('pointerleave',()=>{hoveredCell=null; hideInspect();});
     canvas.addEventListener('contextmenu',e=>e.preventDefault());
 
     document.querySelectorAll('[data-f]').forEach(b=>press(b,()=>{forage=b.dataset.f;forageTouched=true;document.querySelectorAll('[data-f]').forEach(x=>x.classList.toggle('on',x===b)); forecastCache=forecastToSpring(); checkCoachProgress();}));
     document.querySelectorAll('[data-brush]').forEach(b=>press(b,()=>{brush=b.dataset.brush;document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x===b)); checkCoachProgress();}));
+    press($('undoBtn'), doUndo);
+    press($('confYes'), confirmYes);
+    press($('confNo'), ()=>closeConfirm());
+    press($('confChk'), ()=>{ confDismiss=!confDismiss; $('confChk').classList.toggle('on',confDismiss); $('confChk').setAttribute('aria-checked',confDismiss?'true':'false'); });
+    addEventListener('keydown',e=>{ if((e.key==='z'||e.key==='Z')&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&started&&!over){ e.preventDefault(); doUndo(); } });
     document.querySelectorAll('[data-sp]').forEach(b=>press(b,()=>setSpeed(+b.dataset.sp)));
     function setSpeed(s){ speed=s; document.querySelectorAll('[data-sp]').forEach(x=>x.classList.toggle('on',+x.dataset.sp===s)); }
     press($('tabHive'),()=>setView('hive'));
@@ -2116,6 +2177,7 @@
           if(urgent&&advFold){ advFold=false; try{ localStorage.setItem('hm_advfold','0'); }catch(err){} syncFold(); } } }
       $('advisor').classList.toggle('warn',warn);
       $('advisor').classList.toggle('cold', ic==='❄️'||coldSnap>0);
+      guideEasy(ic, tx);
     }
 
     // ===================== sim core =====================
@@ -3388,7 +3450,7 @@
     if(existing && existing.cb){ $('startCont').classList.remove('hide');
       $('startCont').textContent='Continue — Year '+existing.year+', '+seasonName(existing.day)+' day '+(Math.floor(existing.day)+1); }
 
-    function beginCommon(){ $('intro').classList.add('hide'); started=true; queen.x=hiveCx; queen.y=hiveCy; queen.tx=hiveCx; queen.ty=hiveCy; syncBeePool();
+    function beginCommon(){ $('intro').classList.add('hide'); started=true; clearUndo(); queen.x=hiveCx; queen.y=hiveCy; queen.tx=hiveCx; queen.ty=hiveCy; syncBeePool();
       prevv={h:honeyU,p:pollenU,b:P,br:countBrood().total}; rate={h:0,p:0,b:0,br:0}; waxRateEMA=0; forecastCache=forecastToSpring(); layout(); setSpeed(1); }
     function seedAndPlay(){ colonyNum=CHRON.length?CHRON[CHRON.length-1].col+1:1; colonySave(); clearSave(); tinyComb(); honeyU=(CHRON.length&&LEGACY&&LEGACY.heirloom&&LEGACY.heirloom.n?12:8)*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; grades=[]; forage='balanced'; activePatch=null; mix=[0,0,0,0]; roster=[]; corpses=[]; drawSeason();
       queenAge=1; hornet=null; hornetCD=18+Math.random()*22; parts.length=0; shake=0;
