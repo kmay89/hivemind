@@ -270,6 +270,41 @@
     background:linear-gradient(95deg,var(--gold),#fff 55%,var(--honey)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
   #unlockChip .uc3{ font:700 11px 'JetBrains Mono',monospace; color:var(--gold); }
 
+  /* ---------- keeper's path ---------- */
+  #pathBody{ margin:12px 0; max-height:56vh; overflow:auto; text-align:left; }
+  .psec{ font:700 10.5px 'JetBrains Mono',monospace; letter-spacing:0.14em; color:#c2a97e; margin:12px 2px 6px; }
+  .prow{ display:flex; gap:9px; align-items:center; padding:7px 9px; border-radius:10px; background:rgba(255,255,255,0.035); border:1px solid rgba(255,217,122,0.10); margin-bottom:5px; opacity:0.62; }
+  .prow.ok{ opacity:1; border-color:rgba(255,217,122,0.22); }
+  .prow .pk{ font-size:13px; width:18px; text-align:center; flex:none; }
+  .prow.ok .pk{ color:#9fe3b0; }
+  .prow .pi{ font-size:17px; flex:none; }
+  .prow .pn{ font-weight:700; font-size:13px; color:#f7eed9; }
+  .prow .pd{ font-size:11.5px; color:#c2a97e; line-height:1.4; }
+
+  /* ---------- queen lines ---------- */
+  #queenRow{ display:grid; grid-template-columns:1fr; gap:8px; margin:14px 0; max-height:50vh; overflow:auto; text-align:left; }
+  .qopt{ display:flex; gap:11px; align-items:center; background:rgba(255,255,255,0.045); border:1.5px solid rgba(255,217,122,0.16); border-radius:12px; padding:10px 12px; cursor:pointer; }
+  .qopt.sel{ border-color:#ffd97a; background:rgba(255,217,122,0.10); box-shadow:0 0 0 1px rgba(255,217,122,0.35); }
+  .qopt.locked{ opacity:0.55; filter:saturate(0.35); }
+  .qopt .qi{ font-size:24px; line-height:1; }
+  .qopt .qn{ font-weight:700; font-size:14.5px; color:#f7eed9; }
+  .qopt .qn em{ font-style:normal; color:#c2a97e; font-weight:600; }
+  .qopt .qd{ font-size:12px; color:#c2a97e; line-height:1.45; }
+  .qopt .qp{ font-size:11.5px; color:#9fe3b0; line-height:1.4; margin-top:3px; }
+  .qopt .qm{ font-size:11.5px; color:#e8a0a0; line-height:1.4; }
+  #queenBtns{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+
+  /* ---------- honey cellar ---------- */
+  #cellarGrid{ display:grid; grid-template-columns:1fr; gap:8px; margin:14px 0; max-height:54vh; overflow:auto; text-align:left; }
+  .jar{ display:flex; gap:11px; align-items:center; background:rgba(255,255,255,0.045); border:1px solid rgba(255,217,122,0.16); border-radius:12px; padding:10px 12px; }
+  .jar.locked{ opacity:0.5; filter:saturate(0.35); }
+  .jar .ji{ font-size:25px; line-height:1; }
+  .jar .jn{ font-weight:700; font-size:14.5px; color:#f7eed9; }
+  .jar .jd{ font-size:12px; color:#c2a97e; line-height:1.45; }
+  .rchip{ font:700 9.5px 'JetBrains Mono',monospace; letter-spacing:0.07em; padding:2px 7px; border-radius:20px; border:1px solid currentColor; margin-left:7px; vertical-align:2px; white-space:nowrap; }
+  .rbar{ display:flex; height:6px; border-radius:4px; overflow:hidden; margin:5px 0 3px; width:100%; max-width:230px; background:rgba(255,255,255,0.06); }
+  .rbar i{ display:block; height:100%; }
+
   /* ---------- heat lens ---------- */
   #heatBtn.on{ color:#2c1206; background:linear-gradient(180deg,#ffb37a,#e2703a); }
   #heatLegend{ position:fixed; left:50%; transform:translateX(-50%); bottom:auto; z-index:6;
@@ -278,7 +313,7 @@
     width:min(380px, calc(100vw - 24px)); }
   #heatLegend .hl2{ flex:1; min-width:0; }
   #heatLegend .hgrad{ width:64px; height:8px; border-radius:4px; flex:none;
-    background:linear-gradient(90deg,#2b4a74,#8a5a2a,#ff9236); }
+    background:linear-gradient(90deg,#1d3a5f,#2e6f6b,#b0762c,#ffb42b); }
   #heatLegend .hl2{ color:var(--text); text-transform:none; letter-spacing:0; font:500 10px 'Bricolage Grotesque',sans-serif; }
 
   /* ---------- one-tap tooltips: what a number means, live, in one breath ---------- */
@@ -464,6 +499,28 @@
   #updateGo:active{ transform:scale(.95); }
   #updateLater{ font-size:10px; color:var(--dim); cursor:pointer; text-decoration:underline; flex:none; }
   @media(max-width:520px){ #updateBar .ut{ white-space:normal; font-size:11.5px; } }
+
+  /* ---------- game boot splash ---------- */
+  #gsplash{ position:fixed; inset:0; z-index:11; cursor:pointer;
+    background:radial-gradient(120% 100% at 50% 42%, #14100a 0%, #0d0905 55%, #060402 100%);
+    display:flex; align-items:center; justify-content:center; opacity:1; transition:opacity .55s ease; }
+  #gsplash.hide{ display:none; }
+  #gsplash.out{ opacity:0; pointer-events:none; }
+  #gsIn{ text-align:center; position:relative; overflow:hidden; padding:10px 26px; }
+  .gsT{ font:800 clamp(44px,10vw,84px) 'Bricolage Grotesque',sans-serif; letter-spacing:.06em; line-height:1;
+    background:linear-gradient(95deg,var(--gold),#fff 55%,var(--honey)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    opacity:0; transform:scale(1.12); transition:opacity .7s cubic-bezier(.2,.8,.3,1), transform .9s cubic-bezier(.2,.8,.3,1); }
+  #gsplash.go .gsT{ opacity:1; transform:scale(1); }
+  #gsIn::after{ content:''; position:absolute; top:0; bottom:0; width:34%; left:-52%;
+    background:linear-gradient(78deg, transparent, rgba(255,255,255,.26), transparent); transform:skewX(-16deg); pointer-events:none; }
+  #gsplash.go #gsIn::after{ animation:spSweep .8s ease-in-out .55s forwards; }
+  .gsV{ margin-top:12px; font:700 12px 'JetBrains Mono',monospace; letter-spacing:.3em; color:var(--cyan);
+    opacity:0; transition:opacity .6s ease .45s; }
+  .gsC{ margin-top:14px; font:600 10.5px 'JetBrains Mono',monospace; letter-spacing:.14em; color:var(--dim);
+    opacity:0; transition:opacity .6s ease .65s; }
+  .gsC2{ margin-top:4px; font:500 9px 'JetBrains Mono',monospace; letter-spacing:.14em; color:rgba(194,169,126,.55);
+    opacity:0; transition:opacity .6s ease .8s; }
+  #gsplash.go .gsV, #gsplash.go .gsC, #gsplash.go .gsC2{ opacity:1; }
 
   /* ---------- ErrerLabs studio splash (Echo Resonance Research) ---------- */
   #splash{ position:fixed; inset:0; z-index:12; cursor:pointer;
@@ -805,14 +862,18 @@
         <div class="mrow"><span class="ml">Effects</span><input type="range" class="vslide" id="volFx" min="0" max="100"></div>
         <div class="mrow"><span class="ml">Placement hints</span><button class="mtog on" id="menuHints">On</button></div>
         <div class="mrow"><span class="ml">Apiary score</span><span class="ml" id="menuScore" style="color:var(--gold)">0</span></div>
-        <div class="mrow"><span class="ml">Badges</span><button class="mtog" id="menuBadges">✦ <span id="badgeN">0</span>/10</button></div>
+        <div class="mrow"><span class="ml">Queen line</span><span class="ml" id="menuQueen" style="color:var(--gold)">—</span></div>
+        <div class="mrow"><span class="ml">Badges</span><button class="mtog" id="menuBadges">✦ <span id="badgeN">0</span>/<span id="badgeTot">10</span></button></div>
+        <div class="mrow"><span class="ml">Honey cellar</span><button class="mtog" id="menuCellar">🫙 <span id="jarN">0</span></button></div>
+        <div class="mrow"><span class="ml">Keeper’s path</span><button class="mtog" id="menuPath">🗺 Open</button></div>
+        <div class="mrow"><span class="ml">Colony roster</span><button class="mtog" id="menuRoster">🐝 <span id="rosterN">0</span></button></div>
         <div class="mrow"><span class="ml">Dance break</span><button class="mtog" id="menuDance">Let’s go!</button></div>
         <div class="mrow"><span class="ml">Keeper’s notes</span><button class="mtog" id="menuGuide">Open</button></div>
         <div class="mrow"><span class="ml">Hazel’s log</span><button class="mtog" id="menuLog">Open</button></div>
         <div class="mrow"><span class="ml">Restart colony</span><button class="mtog danger" id="menuRestart">Restart</button></div>
       </div>
       <div class="mfoot">
-        <span>HIVEMIND · ErrerLabs</span>
+        <span>HIVEMIND v<span id="menuVer"></span> · © ErrerLabs · Karl Meves</span>
         <a href="about.html" target="_blank" rel="noopener">About</a>
         <a href="privacy.html" target="_blank" rel="noopener">Privacy</a>
         <a href="terms.html" target="_blank" rel="noopener">Terms</a>
@@ -824,6 +885,27 @@
       <h1>BADGES</h1><div class="sub">a keeper’s wall of little victories</div>
       <div id="badgeGrid"></div>
       <button class="btn ghost" id="badgesClose">Back</button>
+    </div>
+  </div>
+  <div class="ov hide" id="cellar">
+    <div class="card bcard">
+      <h1>THE HONEY CELLAR</h1><div class="sub">every jar remembers its flowers</div>
+      <div id="cellarGrid"></div>
+      <button class="btn ghost" id="cellarClose">Back</button>
+    </div>
+  </div>
+  <div class="ov hide" id="roster">
+    <div class="card bcard">
+      <h1>THE COLONY ROSTER</h1><div class="sub">a few of the forty thousand, by name</div>
+      <div id="rosterBody" style="margin:12px 0;max-height:56vh;overflow:auto;text-align:left"></div>
+      <button class="btn ghost" id="rosterClose">Back</button>
+    </div>
+  </div>
+  <div class="ov hide" id="path">
+    <div class="card bcard">
+      <h1>THE KEEPER'S PATH</h1><div class="sub">everything the seasons can still teach you</div>
+      <div id="pathBody"></div>
+      <button class="btn ghost" id="pathClose">Back</button>
     </div>
   </div>
   <div class="ov hide" id="dance">
@@ -859,7 +941,7 @@
     <div id="chatRows"></div>
   </div>
   <div id="unlockChip" class="panel hide"><span class="uc1">✦ keeper’s page unlocked</span><span class="uc2" id="unlockName">BROOD</span><span class="uc3">+1 ✧ royal jelly</span></div>
-  <div id="heatLegend" class="panel hide"><i class="hgrad"></i><span>cold</span><span class="hl2">the nest holds ~35° at its heart — brood wants the warm middle</span><span>warm</span></div>
+  <div id="heatLegend" class="panel hide"><i class="hgrad"></i><span>cold</span><span class="hl2">each ring is one step cooler — hold a single glowing heart</span><span>warm</span></div>
   <div id="tipPop" class="panel hide"><div class="tpT"></div><div class="tpB"></div><span class="tpMore hide">Read more ›</span></div>
   <div id="cellSheet" class="panel hide"><div id="csBody"></div><button class="cbtn" id="csClose">Got it</button></div>
   <div id="inspect" class="panel"></div>
@@ -880,6 +962,12 @@
 
   <div id="report" class="panel hide">
     <div class="rHead"><span>Hive report</span><span id="reportX">✕</span></div>
+    <div class="sec" id="planSec">
+      <h3>This season's plan</h3>
+      <div class="cap" id="planFocus" style="color:var(--gold);font-weight:600">—</div>
+      <div id="planRows" style="margin:6px 0"></div>
+      <div class="cap" id="planTip">—</div>
+    </div>
     <div class="sec">
       <h3>Honey ledger · per day</h3>
       <div class="ledger">
@@ -926,6 +1014,16 @@
     <span id="updateLater">later</span>
   </div>
 
+  <!-- game title splash: the build card, console-style -->
+  <div id="gsplash" class="hide" aria-hidden="true">
+    <div id="gsIn">
+      <div class="gsT">HIVEMIND</div>
+      <div class="gsV">v<span id="gsVer"></span></div>
+      <div class="gsC">© 2026 ErrerLabs · Karl Meves</div>
+      <div class="gsC2">MIT License · hive-mind-game.com</div>
+    </div>
+  </div>
+
   <!-- ErrerLabs studio splash -->
   <div id="splash" aria-hidden="true">
     <div id="splashPing"></div>
@@ -946,6 +1044,7 @@
       <div class="sub">before we begin, a word about bees</div>
       <p>Every <b>third bite</b> of food on your plate exists because a bee visited a flower first. Apples, almonds, berries, pumpkins — pollinated, quietly, for free, forever.</p>
       <p>A honeybee colony is one of nature’s gentlest miracles: <b>forty thousand tiny lives thinking together as one mind</b>. This game puts that mind in your hands for a few seasons.</p>
+      <p>And honeybees are only the famous ones. <b>Bumblebees, mason bees, and thousands of wild bees</b> do the same quiet work with no hive and no honey at all. The kindest thing anyone can do for every one of them is simple: <b>plant flowers</b> — clover in the lawn, herbs left to bloom, one corner gone a little wild.</p>
       <p>Everything Hazel teaches here is <em>real beekeeping</em> — the same craft, the same calendar, the same stakes. Play it with your kids. Play it with your grandparents. The bees don’t mind who keeps them — they only ask that you pay attention.</p>
       <button class="btn pulse" id="welcomeBtn">Meet the bees ▶</button>
     </div>
@@ -956,7 +1055,7 @@
     <div class="card panel">
       <h1>HIVEMIND</h1>
       <div class="sub">a beekeeping story</div>
-      <p>An old beekeeper is hanging up her veil, and her hillside of hives needs a new pair of hands. Yours.</p>
+      <p>After forty years, a beekeeper is hanging up her veil — and her hillside of hives needs a new pair of hands. Yours.</p>
       <div id="sndInvite" class="on" tabindex="0" role="checkbox" aria-checked="true">
         <span class="box"><i>✓</i></span><span>🎧 Play with sound<span class="sub2"> — music &amp; the hive</span></span>
       </div>
@@ -972,6 +1071,19 @@
       </div>
       <div class="cardLinks">
         <a href="about.html" target="_blank" rel="noopener">About</a><a href="privacy.html" target="_blank" rel="noopener">Privacy</a><a href="terms.html" target="_blank" rel="noopener">Terms</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- choose your queen: same rules, different temperament -->
+  <div class="ov hide" id="queenPick">
+    <div class="card panel">
+      <h1>CHOOSE YOUR QUEEN</h1>
+      <div class="sub">every line keeps bees its own way — the rules never change, the temperament does</div>
+      <div id="queenRow"></div>
+      <div id="queenBtns">
+        <button class="btn ghost" id="queenBack">‹ Back</button>
+        <button class="btn pulse" id="queenGo">Crown her ▶</button>
       </div>
     </div>
   </div>
@@ -1016,6 +1128,7 @@
 
   <script>
   (function(){
+    const GAME_VER='2026.07.20.8';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1036,6 +1149,7 @@
     const ICON_SND_OFF='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.2v5.6h3.6L13 19V5L7.6 9.2H4z" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="16" y1="9.5" x2="21" y2="14.5"/><line x1="21" y1="9.5" x2="16" y2="14.5"/></g></svg>';
 
     $('sndBtn').innerHTML=ICON_SND_OFF;
+    { const mv=$('menuVer'); if(mv) mv.textContent=GAME_VER; }
     (function(){ let seen=false; try{ seen=localStorage.getItem('hm_welcomed')==='1'; }catch(e){}
       if(!seen && !loadSave()) $('welcome').classList.remove('hide'); })();
     press($('welcomeBtn'),()=>{ try{ localStorage.setItem('hm_welcomed','1'); }catch(e){} $('welcome').classList.add('hide'); });
@@ -1059,7 +1173,11 @@
 
     // ---- ErrerLabs studio splash: play once on load, tap or key to skip ----
     (function(){ const sp=$('splash'); if(!sp) return; let gone=false;
-      function end(){ if(gone) return; gone=true; sp.classList.add('out'); setTimeout(()=>sp.remove(),700); }
+      function end(){ if(gone) return; gone=true; sp.classList.add('out'); setTimeout(()=>sp.remove(),700); bootTitle(); }
+      function bootTitle(){ const g=$('gsplash'); if(!g) return; $('gsVer').textContent=GAME_VER;
+        g.classList.remove('hide'); requestAnimationFrame(()=>g.classList.add('go'));
+        let byeDone=false; const bye=()=>{ if(byeDone) return; byeDone=true; g.classList.add('out'); setTimeout(()=>g.remove(),600); };
+        g.addEventListener('pointerdown',bye); setTimeout(bye, RM?1300:2600); }
       if(RM){ sp.classList.add('go','still'); setTimeout(end,1400); }
       else{ requestAnimationFrame(()=>sp.classList.add('go')); setTimeout(end,3300); }
       sp.addEventListener('click',end);
@@ -1129,12 +1247,70 @@
     ];
     function yearName(y){ return y<YEARNAMES.length?YEARNAMES[y]:['Endurance '+(y-5),'the seasons only sharpen']; }
 
-    // meadow flower patches (waggle-dance targets) — bloom at different times of year
-    const PATCHES=[ {fx:0.13,base:0.95,phase:0.2}, {fx:0.31,base:0.85,phase:1.9}, {fx:0.50,base:1.0,phase:3.3}, {fx:0.67,base:0.82,phase:4.9} ];
+    // the meadow is a field, not a menu: every patch is a real spot at a real
+    // distance from the hive, and forage economics run the way bees run them —
+    // net gain is bloom richness minus the cost of the flight. The waggle dance
+    // encodes exactly those two numbers: direction and distance. Each flower has
+    // a near-but-modest patch and a far-but-lush one, so purity has a price.
+    const PATCHES=[
+      {f:1, fx:0.62, fy:0.30, base:0.85, phase:1.9,  dist:0.25},
+      {f:1, fx:0.25, fy:0.75, base:1.05, phase:2.15, dist:0.72},
+      {f:0, fx:0.45, fy:0.62, base:0.88, phase:0.2,  dist:0.45},
+      {f:0, fx:0.08, fy:0.42, base:1.12, phase:0.45, dist:0.92},
+      {f:3, fx:0.55, fy:0.82, base:0.72, phase:4.7,  dist:0.33},
+      {f:3, fx:0.13, fy:0.66, base:1.05, phase:4.9,  dist:0.85},
+      {f:2, fx:0.70, fy:0.68, base:0.8,  phase:3.5,  dist:0.17},
+      {f:2, fx:0.33, fy:0.34, base:1.02, phase:3.3,  dist:0.62},
+    ];
     function patchQuality(i,d){ const p=PATCHES[i]; const bloom=0.5+0.5*Math.sin(2*Math.PI*d/360 + p.phase);
       return Math.max(0, Math.min(1, p.base*bloom*Math.max(0,lerpM(nectarM,d)) )); }
-    function bestPatch(d){ let b=0,bq=-1; for(let i=0;i<PATCHES.length;i++){const q=patchQuality(i,d); if(q>bq){bq=q;b=i;}} return {i:b,q:bq}; }
-    function forageMult(){ if(activePatch==null) return 1.0; return Math.max(0.9, Math.min(1.3, 0.9+0.45*patchQuality(activePatch,day))); }
+    // what a patch is truly worth once the flying is paid for
+    function patchEff(i,d){ return patchQuality(i,d)*(1.15-0.45*PATCHES[i].dist); }
+    function bestPatch(d){ let b=0,bq=-1; for(let i=0;i<PATCHES.length;i++){const q=patchEff(i,d); if(q>bq){bq=q;b=i;}} return {i:b,q:bq}; }
+    function forageMult(){ if(activePatch==null) return 1.0;
+      return Math.max(0.85, Math.min(1.35, 0.88+0.5*patchEff(activePatch,day))); }
+
+    // ===================== flowers & the honey cellar =====================
+    // the flowers of the meadow — nectar remembers where it grew. PATCHES carry a
+    // flower index f into this table; blooms: orchard in earliest spring, clover
+    // ~day 79, lavender at midsummer ~day 168, goldenrod ~day 260 in autumn.
+    const FLOWERS=[
+      {n:'White Clover',    ic:'🍀', col:'#f2f7ea', core:'#cfe0a8', honey:'Clover Honey',
+       note:'the classic \u2014 pale gold, soft as butter on warm toast'},
+      {n:'Orchard Blossom', ic:'🌸', col:'#ffc9d8', core:'#e8899f', honey:'Orchard Blossom Honey',
+       note:'light and quick, with a whisper of apples'},
+      {n:'Goldenrod',       ic:'🌼', col:'#ffd24a', core:'#e8902b', honey:'Goldenrod Honey',
+       note:'deep amber, bold and spicy \u2014 the meadow\u2019s last word'},
+      {n:'Lavender',        ic:'💜', col:'#b58cff', core:'#8a5fd0', honey:'Lavender Honey',
+       note:'perfumed and prized \u2014 midsummer, kept in a jar'},
+    ];
+    const RARITY=[null,
+      {n:'EVERYDAY',      c:'#9fb69d'},
+      {n:'VARIETAL',      c:'#7fe3d6'},
+      {n:'SINGLE-ORIGIN', c:'#ffd24a'},
+      {n:'KEEPER\u2019S RESERVE', c:'#ff9dc0'},
+    ];
+    // named daughters (this colony) and the career tally of those carried out
+    const BEE_NAMES=['Clover','Poppy','Willow','Fern','Tansy','Sage','Briar','Dahlia','Pearl','Wren','Olive','Maple','Hollis','Juno','Fig','Reed','Vetch','Sorrel','Linden','Rue','Comfrey','Yarrow','Nettle','Mabel','Opal','Plum','Birch','Heather'];
+    let roster=[];
+    let memorial=0; try{ memorial=parseInt(localStorage.getItem('hm_memorial')||'0')||0; }catch(e){}
+    function memorialSave(){ try{ localStorage.setItem('hm_memorial',String(memorial)); }catch(e){} }
+    function beeAgeDays(b){ return (year-b.by)*YEAR + (day-b.bd); }
+    function beeRole(b){ const a=beeAgeDays(b); return a<8?'house bee':a<20?'nurse':'forager'; }
+    function addRosterBee(){ if(roster.length>=6) return; const used=roster.map(b=>b.nm);
+      const pool=BEE_NAMES.filter(n=>!used.includes(n)); if(!pool.length) return;
+      const bd=Math.floor(day); const lf=(bd>=205?150+Math.random()*40:34+Math.random()*12);
+      roster.push({nm:pool[(Math.random()*pool.length)|0], by:year, bd, lf:Math.round(lf)}); syncRosterN(); }
+    function syncRosterN(){ const el=$('rosterN'); if(el) el.textContent=roster.length; }
+    // the cellar is career-deep: jars outlive any one colony
+    let CELLAR=[];
+    try{ CELLAR=JSON.parse(localStorage.getItem('hm_cellar')||'[]'); }catch(e){}
+    function cellarSave(){ try{ localStorage.setItem('hm_cellar',JSON.stringify(CELLAR.slice(-60))); }catch(e){} }
+    function syncCellarN(){ const el=$('jarN'); if(el) el.textContent=CELLAR.length; }
+    // pollen colours collected across the career — real bee bread is a painter's box
+    let polSeen={};
+    try{ (JSON.parse(localStorage.getItem('hm_pollen')||'[]')).forEach(i=>polSeen[i]=1); }catch(e){}
+    function polSave(){ try{ localStorage.setItem('hm_pollen',JSON.stringify(Object.keys(polSeen))); }catch(e){} }
 
     // ===================== queen's gifts (roguelite meta between years) =====================
     const GIFTS=[
@@ -1145,16 +1321,52 @@
       {id:'guard',    ic:'🛡️', name:'Guard Wall',     tx:'Hornets fall faster and steal half as many bees.'},
       {id:'insulated',ic:'🧣', name:'Insulated Hive', tx:'Cold bites less — milder winters and cold snaps.'},
     ];
+    // ===================== queen lines (pick your temperament at founding) =====================
+    // like great strategy games: the rules never change, but who leads does. Each line
+    // bends the same numbers a different way — one honest strength, one honest cost.
+    const QUEENS=[
+      {id:'meadow',  ic:'🌾', name:'Queen Meadow',   ep:'the Evenwing',
+       d:'steady in all weathers — takes the seasons exactly as they come',
+       plus:'true to the book — no surprises either way', minus:'', mods:{}},
+      {id:'aster',   ic:'🧭', name:'Queen Aster',    ep:'the Wanderer',
+       d:'restless blood — her scouts find every bloom first',
+       plus:'foragers bring home 18% more', minus:'the urge to swarm builds half again as fast — give them room',
+       mods:{forage:1.18, swarm:1.5}},
+      {id:'juniper', ic:'❄️', name:'Queen Juniper',  ep:'the Frostborn',
+       d:'a northern line — patient, thrifty, hard to kill',
+       plus:'winter bees burn 12% less honey, and the cold bites softer', minus:'she lays 12% slower — springs start quiet',
+       mods:{eat:0.88, temp:1.2, snap:1.5, lay:0.88}},
+      {id:'marigold',ic:'🔥', name:'Queen Marigold', ep:'the Emberline',
+       d:'boom and blaze — the comb fills with daughters overnight',
+       plus:'she lays 18% faster', minus:'all those mouths — honey burns 10% quicker',
+       mods:{lay:1.18, eat:1.1}, lock:{badge:'survivor', hint:'winter a colony into a second spring to court the Emberline'}},
+      {id:'bramble', ic:'🛡️', name:'Queen Bramble', ep:'the Stoneguard',
+       d:'her guards meet trouble at the door — and win',
+       plus:'hornets fall faster and steal half as much', minus:'guard duty costs — 8% less foraging',
+       mods:{hHP:-2, steal:0.5, forage:0.92}, lock:{badge:'guardian', hint:'drive off a raiding hornet to earn the Stoneguard’s trust'}},
+      {id:'iris',    ic:'🎨', name:'Queen Iris',     ep:'the Painter',
+       d:'her daughters come home dusted in every colour there is',
+       plus:'pollen comes home 22% richer', minus:'nectar takes second place — 4% less foraging',
+       mods:{pol:1.22, forage:0.96}, lock:{badge:'palette', hint:'bring home pollen from all four flowers to charm the Painter'}},
+      {id:'rosalind',ic:'⚗️', name:'Queen Rosalind', ep:'the Alchemist',
+       d:'in her comb, nectar becomes honey like a secret being kept',
+       plus:'nectar ripens into honey 25% faster', minus:'a taster’s tithe — honey burns 5% quicker',
+       mods:{ripe:1.25, eat:1.05}, lock:{badge:'cellar', hint:'shelf all four single-flower honeys to meet the Alchemist'}},
+    ];
+    let queenLine='meadow';
+    const QL=()=>{ const q=QUEENS.find(x=>x.id===queenLine); return q?q.mods:{}; };
     let owned={};
     const M={
-      eat:   ()=>owned.hardy?0.88:1,
+      eat:   ()=>(owned.hardy?0.88:1)*(QL().eat||1),
       wax:   ()=>owned.wax?0.65:1,
-      forage:()=>owned.forager?1.12:1,
-      lay:   ()=>owned.prolific?1.15:1,
-      hHP:   ()=>owned.guard?3:5,
-      steal: ()=>owned.guard?0.5:1,
-      temp:  ()=>owned.insulated?1.5:0,
-      snap:  ()=>owned.insulated?-3:-5,
+      forage:()=>(owned.forager?1.12:1)*(QL().forage||1),
+      lay:   ()=>(owned.prolific?1.15:1)*(QL().lay||1),
+      hHP:   ()=>Math.max(2,(owned.guard?3:5)+(QL().hHP||0)),
+      steal: ()=>(owned.guard?0.5:1)*(QL().steal||1),
+      temp:  ()=>(owned.insulated?1.5:0)+(QL().temp||0),
+      snap:  ()=>(owned.insulated?-3:-5)+(QL().snap||0),
+      ripe:  ()=>QL().ripe||1,
+      pol:   ()=>QL().pol||1,
     };
 
     // ===================== hex grid =====================
@@ -1208,7 +1420,8 @@
     let rate={h:0,p:0,b:0,br:0}, prevv={h:0,p:0,b:0,br:0}, forecastCache=null, fcTimer=0, sparkCtx=null;
     let onboard=false, coachStep=0, brushedBrood=0, flaggedExpand=0, paintedHoney=0, forageTouched=false;
     let queenAge=1, hornet=null, hornetCD=18+Math.random()*22, shake=0, gt=0, hitstop=0;
-    let yearHist=[], histT=2.7, drips=[], danceMode=false, hints=true, inspectMode=false, heatView=false;
+    let yearHist=[], histT=2.7, drips=[], corpses=[], danceMode=false, hints=true, inspectMode=false, heatView=false;
+    let danceVotes=null;   // per-patch consensus, eased toward each patch's true worth
     // every colony size sounds different — say so when they get there
     const POPM=[
       [25,'Twenty-five bees. The comb is starting to sound like something.'],
@@ -1219,6 +1432,7 @@
     ];
     let popMilo={};
     try{ hints = localStorage.getItem('hm_hints')!=='0'; }catch(e){}
+    let mix=[0,0,0,0];   // nectar provenance since the last jar, one bucket per flower
     let rj=0, jars=0, jarsThisYear=0, fedWinter=false, goals=null, lastSI=0, scoutShown=false, raidLoss=0, starveT=0, bankAtFrost=0, seenTips={};
     const queenVigour=()=>Math.max(0.7, 1-(queenAge-1)*0.12);
 
@@ -1235,6 +1449,8 @@
       {id:'scholar',  ic:'📖', n:'Scholar',          d:'read all five keeper’s notes'},
       {id:'dancer',   ic:'🕺', n:'Dance Break',      d:'take a dance break with the bees'},
       {id:'master',   ic:'👑', n:'Master Keeper',    d:'finish a year with all four season goals'},
+      {id:'palette',  ic:'🎨', n:'The Full Palette', d:'bring home pollen from all four flowers'},
+      {id:'cellar',   ic:'🍯', n:'Connoisseur',      d:'shelf every single-flower honey in the cellar'},
     ];
     // the apiary score: a lifetime number that only ever grows — your whole
     // keeping career in one figure, comparable but never punishing
@@ -1245,10 +1461,12 @@
     let earned={};
     try{ (JSON.parse(localStorage.getItem('hm_badges')||'[]')).forEach(k=>earned[k]=1); }catch(e){}
     function badgeCount(){ return Object.keys(earned).length; }
-    function syncBadgeN(){ const el=$('badgeN'); if(el) el.textContent=badgeCount(); }
+    function syncBadgeN(){ const el=$('badgeN'); if(el) el.textContent=badgeCount(); const t=$('badgeTot'); if(t) t.textContent=BADGES.length; }
     function grantBadge(id){ if(earned[id]) return; const b=BADGES.find(x=>x.id===id); if(!b) return;
       earned[id]=1; try{ localStorage.setItem('hm_badges',JSON.stringify(Object.keys(earned))); }catch(e){}
-      toast('✦ Badge earned — '+b.n+'!'); logMsg('✦','Badge earned — <b>'+b.n+'</b>: '+b.d); fanfare(); syncBadgeN(); }
+      toast('✦ Badge earned — '+b.n+'!'); logMsg('✦','Badge earned — <b>'+b.n+'</b>: '+b.d); fanfare(); syncBadgeN();
+      QUEENS.filter(q=>q.lock&&q.lock.badge===id).forEach(q=>{ logMsg('👑','New queen line unlocked — <b>'+q.name+'</b>, '+q.ep+'.');
+        setTimeout(()=>toast('👑 A letter arrives — <b>'+q.name+'</b>, '+q.ep+', will answer at your next founding.'),2600); }); }
     function renderBadges(){ $('badgeGrid').innerHTML=BADGES.map(b=>'<div class="badge '+(earned[b.id]?'earned':'locked')+'"><span class="bi">'+b.ic+'</span><div><div class="bn">'+b.n+'</div><div class="bd">'+b.d+'</div></div></div>').join(''); }
     function checkBadges(){ if(!started||over) return;
       if(peakPop>=100) grantBadge('century');
@@ -1515,11 +1733,11 @@
       clouds=[]; for(let i=0;i<5;i++) clouds.push({x:Math.random()*W, y:Hh*(0.08+Math.random()*0.26), s:mSize*(3+Math.random()*4), v:6+Math.random()*10});
       flits=[]; for(let i=0;i<6;i++) flits.push({x:Math.random()*W, y:groundY-mSize*(1+Math.random()*4), ph:Math.random()*6.28, vx:(Math.random()-0.5)*20});
     }
-    function patchPos(i){ return {x:PATCHES[i].fx*W, y:Hh*0.72-mSize*0.4}; }
-    // the dance is a map: its axis points where the flowers are. A patch far to
-    // the meadow's left tilts the figure-eight left; foragers leave on the same bearing.
+    function patchPos(i){ const p=PATCHES[i], gy=Hh*0.72; return {x:p.fx*W, y:gy+(Hh-gy)*(0.03+0.25*p.fy)}; }
+    // the dance is a map: its axis is the true bearing from the hive to the
+    // flowers, and the length of the waggle run is the distance. Real bees, real math.
     function danceAngle(){ const i=activePatch!=null?activePatch:bestPatch(day).i;
-      return -Math.PI/2 + (PATCHES[i].fx-0.5)*Math.PI*0.95; }
+      const pp=patchPos(i), hx=W*0.85, hy=Hh*0.72; return Math.atan2(pp.y-hy, pp.x-hx); }
 
     // ===================== input =====================
     function cellAtPx(px,py){ let best=null,bd=(size*1.05)**2; const rr=Math.round((py-oy)/(size*1.5));
@@ -1560,13 +1778,32 @@
       else if(nb>=7 && pop>=10 && nestRing()<=2 && nestWarmth()>0.8)
         nudge('goodNest','Hazel: That\u2019s exactly the shape — one round patch, held snug. The warmth keeps itself. Well done.','happy');
     }
-    function watchHands(){ coachCheck(); }
-    function watchIdle(){ coachCheck(); }
+    // Hazel knows the line she's talking to — her advice bends to the crown.
+    const QTIPS=[
+      {q:'meadow',  k:'q0m', when:()=>day>6, mood:'happy', msg:'Hazel: Queen Meadow, the Evenwing. No tricks in her line \u2014 just good bees, kept well. My favourite kind of boring.'},
+      {q:'aster',   k:'q0a', when:()=>day>6, mood:'happy', msg:'Hazel: A Wanderer on the throne. Her foragers out-fly every line I\u2019ve kept \u2014 and one morning they\u2019ll all want the horizon. Keep them roomy.'},
+      {q:'aster',   k:'qa1', when:()=>swarmP>0.5, mood:'worry', msg:'Hazel: Feel that hum? Aster\u2019s blood is packing its bags. <b>Expand</b> now, or watch half the hive take the sky.'},
+      {q:'juniper', k:'q0j', when:()=>day>6, mood:'happy', msg:'Hazel: Juniper\u2019s line \u2014 quiet springs, iron winters. Don\u2019t panic at a slow April; she\u2019s saving it.'},
+      {q:'juniper', k:'qj1', when:()=>day>285, mood:'happy', msg:'Hazel: A Frostborn winter. Listen at the wall \u2014 the cluster sips where other lines gulp.'},
+      {q:'marigold',k:'q0g', when:()=>day>6, mood:'think', msg:'Hazel: An Emberline queen \u2014 gorgeous, greedy. She\u2019ll fill every cradle you paint, and empty every shelf. Keep the pantry a step ahead of the nursery.'},
+      {q:'marigold',k:'qg1', when:()=>honeyU<6*HC&&day>30&&day<250, mood:'worry', msg:'Hazel: Marigold\u2019s daughters eat like a bonfire. Lean <b>Nectar</b> and build shelves before she out-lays the larder.'},
+      {q:'bramble', k:'q0b', when:()=>day>6, mood:'happy', msg:'Hazel: Stoneguard blood. The porch is a fortress and the field a little thinner for it \u2014 send them only to the best bloom.'},
+      {q:'bramble', k:'qb1', when:()=>hornet!=null, mood:'happy', msg:'Hazel: A hornet, against Bramble\u2019s door? I almost feel sorry for it. Tap it anyway.'},
+      {q:'iris',    k:'q0i', when:()=>day>6, mood:'happy', msg:'Hazel: The Painter\u2019s line. Watch them land \u2014 every colour of the meadow on their legs. The nursery will never want for bee bread.'},
+      {q:'rosalind',k:'q0r', when:()=>day>6, mood:'happy', msg:'Hazel: An Alchemist on the throne \u2014 her house turns nectar to gold faster than any line I\u2019ve kept. Build shelves worthy of her.'},
+      {q:'rosalind',k:'qr1', when:()=>nectarU>5*HC, mood:'happy', msg:'Hazel: See the comb glisten? Rosalind\u2019s ripening it as fast as they haul it. More <b>Honey</b> cells \u2014 don\u2019t make her wait.'},
+    ];
+    function queenCheck(){ for(const t of QTIPS){ if(t.q===queenLine && !nudged[t.k] && t.when()){ nudge(t.k,t.msg,t.mood); return; } } }
+    function watchHands(){ coachCheck(); queenCheck(); }
+    function watchIdle(){ coachCheck(); queenCheck(); }
     function rel(e){ const r=canvas.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; }
     function selectPatch(p){ let best=null,bd=(W*0.14)**2;
       for(let i=0;i<PATCHES.length;i++){ const q=patchQuality(i,day); if(q<=0.02)continue; const pp=patchPos(i); const d=(pp.x-p.x)**2+(pp.y-p.y)**2; if(d<bd){bd=d;best=i;} }
       if(best!=null){ activePatch=best; grantBadge('waggler'); forecastCache=forecastToSpring();
-        toast('Foragers recruited to a '+(patchQuality(best,day)>0.6?'rich':'modest')+' patch — watch the waggle dance in the hive.'); } }
+        const q=patchQuality(best,day), D=PATCHES[best].dist;
+        const bl=q>0.6?'a rich bloom':q>0.25?'a modest bloom':'a thin bloom';
+        const fl=D<0.35?'a short flight':D<0.65?'a fair flight':'a long flight \u2014 it had better be worth it';
+        toast('Foragers recruited to the <b>'+FLOWERS[PATCHES[best].f].n.toLowerCase()+'</b> \u2014 '+bl+', '+fl+'. Watch the waggle dance.'); } }
     let brush='brood', painting=false, paintErase=false;
     canvas.addEventListener('pointerdown',e=>{ if(!started||over)return; const p=rel(e);
       if(view==='hive' && hitHornet(p)) return;
@@ -1628,7 +1865,7 @@
     press($('reportX'),()=>toggleReport(false));
     function toggleReport(v){ reportOpen=(v===undefined)?!reportOpen:v; $('reportBtn').classList.toggle('on',reportOpen); $('report').classList.toggle('hide',!reportOpen); }
     function applyViewCls(){ $('tabHive').classList.toggle('on',view==='hive'); $('tabMeadow').classList.toggle('on',view==='meadow'); $('brushGrp').classList.toggle('dim',view!=='hive'); hoveredCell=null; }
-    function setView(v){ if(v==='meadow') tip('meadow','Hazel: When a forager finds good flowers, she comes home and <em>dances</em> \u2014 the waggle dance \u2014 to send the others there. Tapping a patch is you pointing the way.');
+    function setView(v){ if(v==='meadow') tip('meadow','Hazel: When a forager finds flowers she comes home and <em>dances</em> \u2014 the angle points the way, the waggle counts the distance. Tap a patch to send the others. Mind the flight: <b>near patches fly cheap</b>, far ones must bloom hard to pay for the trip. And one secret more \u2014 stay true to <b>one flower</b> all season, and the honey remembers it.');
       if(v===view){ applyViewCls(); return; }
       if(RM){ view=v; applyViewCls(); return; }
       const w=$('wipe'); w.style.opacity=1; setTimeout(()=>{ view=v; applyViewCls(); w.style.opacity=0; },300); }
@@ -1636,6 +1873,25 @@
     function pickBrush(b){ brush=b; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x.dataset.brush===b)); }
 
     // ===================== harvest (push-your-luck legacy score) =====================
+    // a jar is a record: whichever flowers filled the comb, in exactly those shares.
+    // purity is earned by following one bloom all season — even when it isn't the best patch.
+    function sealJar(){ const tot=mix.reduce((a,b)=>a+b,0);
+      const sh=tot>0?mix.map(v=>v/tot):[0.25,0.25,0.25,0.25];
+      let di=0; for(let i=1;i<4;i++) if(sh[i]>sh[di])di=i;
+      const p=sh[di]; let f=-1, r=1, n='Wildflower Honey';
+      if(p>=0.55){ f=di; n=FLOWERS[di].honey; r=p>=0.92?4:p>=0.8?3:2; }
+      return {n, f, p:Math.round(p*100), r, y:year, mix:sh.map(x=>Math.round(x*100))}; }
+    function mixBar(m){ let b='<div class="rbar">'; for(let i=0;i<4;i++){ if(m[i]>1) b+='<i style="width:'+m[i]+'%;background:'+FLOWERS[i].core+'"></i>'; } return b+'</div>'; }
+    function renderCellar(){ let h='';
+      for(let i=0;i<4;i++){ const js=CELLAR.filter(j=>j.f===i);
+        if(!js.length){ h+='<div class="jar locked"><span class="ji">🫙</span><div><div class="jn">'+FLOWERS[i].honey+'</div><div class="jd">not yet tasted \u2014 follow the '+FLOWERS[i].n.toLowerCase()+' '+FLOWERS[i].ic+' when it blooms, then harvest in autumn</div></div></div>'; continue; }
+        const best=js.reduce((a,b)=>b.p>a.p?b:a), rr=RARITY[best.r];
+        h+='<div class="jar"><span class="ji">'+FLOWERS[i].ic+'</span><div style="flex:1;min-width:0"><div class="jn">'+FLOWERS[i].honey+'<span class="rchip" style="color:'+rr.c+'">'+rr.n+'</span></div><div class="jd">'+FLOWERS[i].note+'</div>'+mixBar(best.mix)+'<div class="jd">best jar: '+best.p+'% '+FLOWERS[i].n.toLowerCase()+' \u00b7 year '+best.y+' \u00b7 '+js.length+' jar'+(js.length>1?'s':'')+'</div></div></div>'; }
+      const wf=CELLAR.filter(j=>j.f===-1);
+      if(wf.length){ const last=wf[wf.length-1];
+        h+='<div class="jar"><span class="ji">🌼</span><div style="flex:1;min-width:0"><div class="jn">Wildflower Honey<span class="rchip" style="color:'+RARITY[1].c+'">'+RARITY[1].n+'</span></div><div class="jd">every meadow in one spoon \u2014 no two jars alike</div>'+mixBar(last.mix)+'<div class="jd">'+wf.length+' jar'+(wf.length>1?'s':'')+' on the shelf</div></div></div>'; }
+      if(!CELLAR.length) h+='<div class="jd" style="text-align:center;opacity:0.85;padding:10px">The shelf is bare. Come autumn, bank the winter pantry first \u2014 then take a jar, and it lands here with its recipe.</div>';
+      $('cellarGrid').innerHTML=h; }
     function harvestState(){ const T=lerpM(tempM,day)+difficulty().temp+M.temp();
       const inWin=day>=HARV0 && day<=HARV1 && T>=WIN_TEMP && !onboard && started && !over;
       const need=winterNeed(); const sur=honeyCellsStored()-need*1.1;
@@ -1644,8 +1900,14 @@
       if(!hs.inWin){ if(started&&!over&&!onboard) toast('Not yet \u2014 harvest is an autumn job. The amber window on the timeline knows when.'); return; }
       if(!hs.ok){ toast('The bees need this honey more than the shelf does. Bank '+Math.ceil(hs.need*1.25+8)+' cells, then take your jar.'); return; }
       honeyU-=8*HC; jars++; jarsThisYear++; LIFE.j++; lifeSave(); grantBadge('firstjar'); clink(); burst(hiveCx,hiveCy,16);
+      const jar=sealJar(); CELLAR.push(jar); cellarSave(); syncCellarN(); mix=[0,0,0,0];
+      if(new Set(CELLAR.filter(j=>j.f>-1&&j.r>=2).map(j=>j.f)).size>=4) grantBadge('cellar');
       forecastCache=forecastToSpring(); setN('vRJ','✧'+rj); $('sJars').textContent=jars+(jars===1?' jar':' jars');
-      toast('🫙 Jar sealed — '+jars+' on the shelf. The bees keep the rest.'); checkGoals(); syncHUD(); saveGame(); }
+      const rr=RARITY[jar.r];
+      toast('🫙 <b>'+jar.n+'</b> sealed — '+rr.n.toLowerCase()+(jar.f>-1?', '+jar.p+'% '+FLOWERS[jar.f].n.toLowerCase():'')+'. Onto the cellar shelf.');
+      logMsg('🫙','Sealed: <b>'+jar.n+'</b> ('+rr.n.toLowerCase()+') — year '+year);
+      tip('cellar','Hazel: Taste that jar — it remembers which flowers filled it. Follow <b>one bloom</b> all season and you\u2019ll seal a <b>single-origin</b>. Four flowers, four honeys; my cellar shelf has room for them all.');
+      checkGoals(); syncHUD(); saveGame(); }
     press($('harvestBtn'),harvestSurplus);
 
     // ===================== emergency feed (one comeback per winter) =====================
@@ -1743,7 +2005,7 @@
       else if(!winter && fc && fc.starve!==null && day>135 && day<252){ ic='📉'; warn=true; tx='At this pace the pantry won\u2019t last the winter — favour <b>Nectar</b> for a while.'; }
       else if(!winter && fc && fc.minW<8 && day>150 && day<252){ ic='🍂'; tx='The pantry looks a little light for winter — lean <b>Nectar</b> when you can.'; }
       else if(hs.ok){ ic='🫙'; tx='Surplus honey is banked — you can <b>Harvest</b> a jar for your shelf. The window closes at first frost.'; }
-      else if(!winter && bp.q>0.5 && (activePatch==null || patchQuality(activePatch,day)<bp.q-0.18)){ ic='💃'; tx='A <b>rich patch</b> is blooming. Open the <b>☀ Meadow</b> and tap it to send your foragers there.'; }
+      else if(!winter && bp.q>0.5 && (activePatch==null || patchEff(activePatch,day)<bp.q-0.15)){ ic='💃'; tx='A <b>rich patch</b> is blooming within easy reach. Open the <b>☀ Meadow</b> and tap it to send your foragers there.'; }
       else if(winter && hc<need*0.5){ ic='❄️'; tx='Deep winter and the shelves are thin — but spring is coming.'; }
       else if(day<55){ ic='🌱'; tx='Early spring \u2014 feed the babies first. <b>Pollen</b> or Balanced stocks the nursery kitchen.'; }
       else if(day>=85&&day<175){ ic='🌻'; tx='The meadow is pouring. Lean <b>Nectar</b>, <b>Expand</b> the shelves, and chase the best <b>patch</b>.'; }
@@ -1792,6 +2054,27 @@
     function nestWarmth(){ let s=0,n=0; for(const c of cells) if(c.brood){ s+=c.heat; n++; } return n?s/n:0; }
     function countBrood(){ let e=0,l=0,p=0; for(const c of cells)if(c.brood){ if(c.brood.stage==='egg')e++; else if(c.brood.stage==='larva')l++; else p++; } return {e,l,p,total:e+l+p}; }
     function winterNeed(){ return Math.round(Math.max(24, peakPop*0.62)); }
+    // real bees don't mourn — undertakers simply carry the dead clear of the comb
+    // (necrophoresis). Named daughters age through their roles and, at the end, are
+    // carried out; ambient deaths draw the odd undertaker too, so the house stays clean.
+    let rosterAcc=0;
+    function undertake(){ const built=cells.filter(c=>c.built); if(!built.length||corpses.length>=2) return;
+      const c=built[(Math.random()*built.length)|0], p=cellCenter(c.c,c.r); corpses.push({x:p.x,y:p.y,t:0});
+      tip('undertaker','Hazel: When a bee dies, the others can\u2019t mourn her \u2014 so an <b>undertaker</b> lifts the body and carries it clear of the comb, sometimes a hundred feet off. A tidy house is how forty thousand of them stay well.'); }
+    function rosterTick(dd, winter){ if(onboard||over) return;
+      rosterAcc+=dd; if(rosterAcc<0.5) return; rosterAcc=0;
+      for(let i=roster.length-1;i>=0;i--){ const b=roster[i]; if(beeAgeDays(b)>=b.lf){
+        const rl=beeRole(b); roster.splice(i,1); memorial++; memorialSave(); syncRosterN();
+        logMsg('\ud83d\udd6f\ufe0f','<b>'+b.nm+'</b>, a good '+rl+', was carried gently from the comb today.'); undertake(); } }
+      if(!winter && P>25 && Math.random()<dd*0.05) undertake(); }
+    function renderRoster(){ const roleIc={'house bee':'\ud83e\uddf9','nurse':'\ud83c\udf7c','forager':'\ud83e\udded'};
+      let h='';
+      if(!roster.length) h='<div class="pd" style="text-align:center;padding:12px">Your first named daughters will step forward as the colony grows.</div>';
+      else h=roster.slice().sort((a,b)=>beeAgeDays(b)-beeAgeDays(a)).map(b=>{ const ag=Math.round(beeAgeDays(b)), rl=beeRole(b);
+        return '<div class="prow ok"><span class="pi">'+(roleIc[rl]||'\ud83d\udc1d')+'</span><div style="flex:1;min-width:0"><div class="pn">'+b.nm+'</div><div class="pd">'+rl+' \u00b7 '+ag+' day'+(ag===1?'':'s')+' old \u00b7 born in '+seasonName(b.bd)+', year '+b.by+'</div></div></div>'; }).join('');
+      h+='<div class="psec">IN MEMORIAM</div>';
+      h+='<div class="pd" style="padding:2px 2px 10px">'+memorial+' bee'+(memorial===1?'':'s')+' carried out with care across your keeping. Bees keep no graves \u2014 they keep a clean house, and the colony lives on.</div>';
+      $('rosterBody').innerHTML=h; }
     function clampStores(dd){ const cp=caps(); let tot=cp.total, pol=cp.pollen; const k=Math.max(0,1-(dd===undefined?1:dd)*0.05);
       if(onboard){ tot=Math.max(tot,14*HC); pol=Math.max(pol,8*HC); }
       const soft=(cur,cap)=>cur<=cap?Math.max(0,cur):cap+(cur-cap)*k; // displaced stores drain, not vanish
@@ -1816,8 +2099,14 @@
       const Na=lerpM(nectarM,day)*dif.flow, Pa=lerpM(pollenM,day)*dif.flow, lv=lerpM(layM,day);
       const winter=T<WIN_TEMP; const fN=FN[forage]; const mult=forageMult()*M.forage();
       const foragers=P*FOR_FRAC, nurses=P*NURSE_FRAC;
-      nectarU += foragers*NEC_PF*Na*fN*mult*dd; pollenU += foragers*POL_PF*Pa*(1-fN)*mult*dd;
-      clampStores(dd); const rip=Math.min(nectarU,nectarU*RIPE*dd); nectarU-=rip; honeyU+=rip; clampStores(dd);
+      const srcP=activePatch!=null?activePatch:bestPatch(day).i, srcF=PATCHES[srcP].f;
+      const dNec=foragers*NEC_PF*Na*fN*mult*dd, dPol=foragers*POL_PF*Pa*(1-fN)*mult*M.pol()*dd;
+      nectarU+=dNec; pollenU+=dPol; if(dNec>0) mix[srcF]+=dNec;
+      if(dPol>0 && Pa>0.08 && patchQuality(srcP,day)>0.2 && !polSeen[srcF]){ polSeen[srcF]=1; polSave();
+        const nCol=Object.keys(polSeen).length;
+        if(!offline){ toast('🎨 First <b>'+FLOWERS[srcF].n.toLowerCase()+'</b> pollen in the pantry \u2014 colour '+nCol+' of 4. Every flower paints its own.'); chime(620,840); }
+        if(nCol>=4) grantBadge('palette'); }
+      clampStores(dd); const rip=Math.min(nectarU,nectarU*RIPE*M.ripe()*dd); nectarU-=rip; honeyU+=rip; clampStores(dd);
       if(!offline) buildFromFlags(dd);
       const br=countBrood();
       const needH=br.l*BROOD_H*dd, needP=br.l*BROOD_P*dd; const foodOK=(honeyU>=needH)&&(pollenU>=needP);
@@ -1830,7 +2119,7 @@
         if(c.brood.t>=dur){ c.brood.t=0;
           if(c.brood.stage==='egg')c.brood.stage='larva';
           else if(c.brood.stage==='larva')c.brood.stage='pupa';
-          else { c.brood=null; if(P<CAP){ P+=1; bornTotal++; if(!offline&&bees.length<RENDER_BEES){ const pp=cellCenter(c.c,c.r); bees.push(makeBee(pp.x,pp.y)); puff(pp.x,pp.y,'#ffe9b0',5,0.9); } if(!offline&&!said['firstborn']) chime(660,980); toast('A new bee unfolds her wings \u2014 and gets straight to work.','firstborn'); } } } }
+          else { c.brood=null; if(P<CAP){ P+=1; bornTotal++; if(!offline && (roster.length<3 || Math.random()<0.12)) addRosterBee(); if(!offline&&bees.length<RENDER_BEES){ const pp=cellCenter(c.c,c.r); bees.push(makeBee(pp.x,pp.y)); puff(pp.x,pp.y,'#ffe9b0',5,0.9); } if(!offline&&!said['firstborn']) chime(660,980); toast('A new bee unfolds her wings \u2014 and gets straight to work.','firstborn'); } } } }
       const space=cells.filter(c=>c.built&&c.zone==='brood'&&!c.brood).length;
       const pollenF=Math.max(0,Math.min(1,pollenU/400));
       const layRate=Math.min(LAYMAX*lv*M.lay(),nurses*0.8,space)*pollenF*(P<CAP?1:0.15)*queenVigour();
@@ -1842,8 +2131,9 @@
       else if(honeyU<=0){ honeyU=0; starveT+=dd; if(starveT>2.5) return gameOver('starve'); }
       else { starveT=0; if(honeyU<0)honeyU=0; }
       const drate=winter?1/LIFE_W:1/LIFE_S; P-=P*drate*dd*1.2;
+      if(!offline) rosterTick(dd, winter);
       if(!offline && !onboard && P<1) return gameOver('dwindle'); if(P<1)P=1;
-      if(!onboard && !winter && day<215){ const crowd=(P/CAP)*(1-Math.min(1,space/14)); swarmP=Math.max(0,Math.min(1.2, swarmP+(crowd-0.18)*dd*0.5));
+      if(!onboard && !winter && day<215){ const crowd=(P/CAP)*(1-Math.min(1,space/14)); swarmP=Math.max(0,Math.min(1.2, swarmP+(crowd-0.18)*dd*0.5*(QL().swarm||1)));
         if(swarmP>0.85 && Math.random()<dd*0.22){ const lost=Math.round(P*0.42); P-=lost; swarmP=0.1; puff(hiveCx,hiveCy,'#ffd76b',40,2); shake=Math.max(shake,0.6); buzzAlert(); toast('A swarm has left to found a new colony! '+lost+' bees gone — give them space next time.'); } }
       else swarmP=Math.max(0,swarmP-dd*0.4);
       if(day>=262 && bankAtFrost===0) bankAtFrost=honeyCellsStored();
@@ -1932,8 +2222,20 @@
     const COL={ wallEmpty:'#3a2c16', wallRim:'#5a4624', egg:'#f3ead6', larva:'#f0dcae', pupa:'#caa86a', nectar:'#e9c64f', honey:'#f7b733', pollen:'#ef8c2c',
       broodZone:'rgba(120,170,235,0.16)', honeyZone:'rgba(247,183,51,0.10)', unbuilt:'rgba(150,120,70,0.16)', frontier:'rgba(150,200,120,0.28)' };
     function hexPath(x,y,s){ ctx.beginPath(); for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-30), px=x+s*Math.cos(a), py=y+s*Math.sin(a); i?ctx.lineTo(px,py):ctx.moveTo(px,py);} ctx.closePath(); }
+    // heat palette: deep night-blue through teal and umber to honey-gold —
+    // a smooth 4-stop lerp over the simulated 0..1 warmth
+    const HEAT_STOPS=[[0,29,58,95],[0.38,46,111,107],[0.68,176,118,44],[1,255,180,43]];
+    function heatColor(h,a){ h=Math.max(0,Math.min(1,h));
+      let i=0; while(i<HEAT_STOPS.length-2&&h>HEAT_STOPS[i+1][0]) i++;
+      const A=HEAT_STOPS[i], B=HEAT_STOPS[i+1], t=(h-A[0])/((B[0]-A[0])||1);
+      const r=Math.round(A[1]+(B[1]-A[1])*t), g=Math.round(A[2]+(B[2]-A[2])*t), b=Math.round(A[3]+(B[3]-A[3])*t);
+      return 'rgba('+r+','+g+','+b+','+a.toFixed(3)+')'; }
+    let heatBands=null;
     function drawInside(){
       const T=lerpM(tempM,day)+difficulty().temp+M.temp(), winter=T<WIN_TEMP;
+      if(heatView){ if(!heatBands||heatBands.length!==cells.length) heatBands=new Int8Array(cells.length);
+        for(let i=0;i<cells.length;i++){ const c0=cells[i];
+          heatBands[i]=c0.built?Math.max(0,Math.min(4,Math.floor(c0.heat*5))):-1; } }
       let g=ctx.createLinearGradient(0,0,0,Hh); g.addColorStop(0,winter?'#10131c':'#1a1305'); g.addColorStop(1,winter?'#0b0d14':'#0f0b05'); ctx.fillStyle=g; ctx.fillRect(0,0,W,Hh);
       // on a large display the surround falls away, so the comb reads as the subject
       if(W>1100||Hh>860){ const vr=Math.max(W,Hh)*0.8;
@@ -1955,15 +2257,32 @@
         if(cell.zone==='brood'){ ctx.fillStyle=COL.broodZone; ctx.fill(); } else if(cell.zone==='honey'){ ctx.fillStyle=COL.honeyZone; ctx.fill(); }
         const hw=cell.heat-AMB(T);
         if(heatView){ const h=Math.max(0,Math.min(1,cell.heat));
-          const r=Math.round(43+(255-43)*h), g2=Math.round(74+(146-74)*h), b=Math.round(116+(54-116)*h);
-          ctx.fillStyle='rgba('+r+','+g2+','+b+',0.55)'; ctx.fill(); }
+          ctx.fillStyle=heatColor(h,0.82*(0.92+0.06*Math.sin(gt*0.8))); ctx.fill();
+          // isolines: stroke every hex standing on the edge of a warmer band —
+          // the comb reads as a contour map of the nest's own physics
+          const bi=idx(cell.c,cell.r), band=heatBands?heatBands[bi]:-1;
+          if(band>0){ let edge=false;
+            for(const [cc,rr] of neighbors(cell.c,cell.r)){ const nb=heatBands[idx(cc,rr)]; if(nb>-1&&nb<band){ edge=true; break; } }
+            if(edge){ ctx.strokeStyle=heatColor(Math.min(1,(band+0.6)/5),0.95); ctx.lineWidth=2; ctx.stroke(); } } }
         else if(hw>0.06){ ctx.fillStyle='rgba(255,146,54,'+Math.min(0.34,hw*0.42).toFixed(3)+')'; ctx.fill(); }
         ctx.strokeStyle=COL.wallRim; ctx.lineWidth=1; ctx.stroke();
-        if(cell.brood){ const st=cell.brood.stage;
+        if(!heatView){
+          // hand-built wax: a stable per-cell tone and a soft emboss so the comb
+          // reads as sculpted rather than printed — light falls from the upper-left
+          const tn=((cell.c*29+cell.r*53)%7)/7;
+          ctx.fillStyle='rgba(255,208,138,'+(0.010+tn*0.03).toFixed(3)+')'; ctx.fill();
+          const bv=s2*0.055;
+          ctx.lineWidth=1; ctx.strokeStyle='rgba(255,236,178,0.13)'; hexPath(x-bv,y-bv,s2*0.9); ctx.stroke();
+          ctx.strokeStyle='rgba(38,24,7,0.24)'; hexPath(x+bv,y+bv,s2*0.9); ctx.stroke();
+        }
+        if(cell.brood){ if(heatView) ctx.globalAlpha=0.25; const st=cell.brood.stage;
           if(st==='egg'){ ctx.fillStyle=COL.egg; ctx.beginPath(); ctx.ellipse(x,y,s2*0.10,s2*0.22,0.5,0,6.28); ctx.fill(); }
           else if(st==='larva'){ const gr=0.2+0.7*(cell.brood.t/LAR_D); ctx.fillStyle=COL.larva; ctx.beginPath(); ctx.arc(x,y,s2*0.34*gr+s2*0.12,0,6.28); ctx.fill(); ctx.strokeStyle='rgba(180,140,80,0.5)'; ctx.lineWidth=1; ctx.stroke(); }
-          else { hexPath(x,y,s2*0.86); ctx.fillStyle=COL.pupa; ctx.fill(); ctx.fillStyle='rgba(120,90,50,0.35)'; ctx.beginPath(); ctx.arc(x,y,s2*0.4,0,6.28); ctx.fill(); } } }
+          else { hexPath(x,y,s2*0.86); ctx.fillStyle=COL.pupa; ctx.fill(); ctx.fillStyle='rgba(120,90,50,0.35)'; ctx.beginPath(); ctx.arc(x,y,s2*0.4,0,6.28); ctx.fill(); }
+          ctx.globalAlpha=1; } }
       const sorted=cells.filter(c=>c.built&&c.zone==='honey').sort((a,b)=>cellDist(a.c,a.r)-cellDist(b.c,b.r));
+      // under the heat lens the stores ghost out — temperature owns the color
+      if(heatView) ctx.globalAlpha=0.16;
       let pol=pollenU,nec=nectarU,hon=honeyU;
       for(const cell of sorted){ let kind=null,frac=0;
         if(pol>0){kind='pollen';frac=Math.min(1,pol/HC);pol-=HC;} else if(nec>0){kind='nectar';frac=Math.min(1,nec/HC);nec-=HC;} else if(hon>0){kind='honey';frac=Math.min(1,hon/HC);hon-=HC;} else break;
@@ -1971,6 +2290,7 @@
         ctx.save(); hexPath(x,y,s2*0.92); ctx.clip(); ctx.fillStyle=col; const fh=s2*1.7*frac; ctx.fillRect(x-s2,y+s2*0.85-fh,s2*2,fh+0.5);
         if(kind==='honey'){ ctx.fillStyle='rgba(255,255,255,'+(0.14+0.08*Math.sin(gt*1.6+x*0.05+y*0.07)).toFixed(3)+')'; ctx.fillRect(x-s2,y+s2*0.85-fh,s2*2,Math.min(fh,s2*0.3)); } ctx.restore();
         hexPath(x,y,s2); ctx.strokeStyle=COL.wallRim; ctx.lineWidth=1; ctx.stroke(); }
+      ctx.globalAlpha=1;
       const dA=danceAngle(), dcx=hiveCx, dcy=hiveCy-size*4, dco=Math.cos(dA), dsn=Math.sin(dA);
       for(const b of bees){ if(b.state==='waggle'){ ctx.strokeStyle='rgba(255,210,120,0.35)'; ctx.lineWidth=1.5; ctx.beginPath(); let first=true; for(let t=0;t<6.3;t+=0.3){ const u=Math.sin(t)*size*2.2, v=Math.sin(t*2)*size*1.1; const xx=dcx+u*dco-v*dsn, yy=dcy+u*dsn+v*dco; if(first){ctx.moveTo(xx,yy);first=false;} else ctx.lineTo(xx,yy);} ctx.stroke(); }
         let bx=b.x, by=b.y;
@@ -1994,6 +2314,12 @@
           ctx.beginPath(); ctx.moveTo(d.x,d.y-size*0.35); ctx.lineTo(d.x,d.y); ctx.stroke();
           ctx.fillStyle='rgba(247,183,51,0.85)'; ctx.beginPath(); ctx.arc(d.x,d.y,size*0.09,0,6.28); ctx.fill(); }
         drips=drips.filter(d=>d.life>0&&d.y<Hh); }
+      // undertakers carry the dead up toward the entrance and away
+      for(const cp of corpses){ cp.t+=lastDt; const tx=hiveCx, ty=topH-size*4;
+        const dx=tx-cp.x,dy=ty-cp.y,L=Math.hypot(dx,dy)||1,sp=size*3.0*lastDt; cp.x+=dx/L*Math.min(L,sp); cp.y+=dy/L*Math.min(L,sp);
+        ctx.fillStyle='rgba(70,55,30,0.65)'; ctx.beginPath(); ctx.ellipse(cp.x-size*0.24,cp.y+size*0.22,size*0.24,size*0.13,0.5,0,6.28); ctx.fill();
+        drawBee(cp.x,cp.y,Math.atan2(dy,dx),null,false,cp.t*4,'walk'); }
+      corpses=corpses.filter(cp=>cp.y>topH-size*3.5 && cp.t<9);
       // living light: a warm sheen drifts over the comb and leans toward your hand
       { const lx2=hiveCx+Math.sin(gt*0.22)*size*4+(ptr.x-W/2)*0.04, ly2=hiveCy+Math.cos(gt*0.17)*size*3+(ptr.y-Hh/2)*0.04;
         let sg=ctx.createRadialGradient(lx2,ly2,size*2,lx2,ly2,size*15);
@@ -2077,6 +2403,13 @@
     function drawMeadowBody(dt){
       mt+=dt; const dif=difficulty(); const T=lerpM(tempM,day)+dif.temp+M.temp(), Na=lerpM(nectarM,day)*dif.flow, Pa=lerpM(pollenM,day)*dif.flow;
       const winter=T<WIN_TEMP, bloom=Math.max(Na,Pa), groundY=Hh*0.72;
+      // honeybee democracy: scouts dance for the patch they found — longer and harder
+      // for the better bloom — and the votes ease toward each patch's true worth until
+      // a quorum forms. The keeper can always overrule the swarm with a tap.
+      if(!danceVotes||danceVotes.length!==PATCHES.length) danceVotes=PATCHES.map(()=>0);
+      let voteSum=0, voteLead=0;
+      for(let i=0;i<PATCHES.length;i++){ const eff=winter?0:patchEff(i,day); danceVotes[i]+=(eff-danceVotes[i])*Math.min(1,dt*0.6); if(danceVotes[i]<0)danceVotes[i]=0; voteSum+=danceVotes[i]; if(danceVotes[i]>danceVotes[voteLead])voteLead=i; }
+      if(voteSum>0.4 && !winter) tip('quorum','Hazel: See the rings fill? That\u2019s the colony <b>voting</b>. Each scout dances for the patch she found, harder for the richer bloom, until enough agree and the swarm commits. A beekeeper named Tom Seeley called it <em>honeybee democracy</em>.');
       const [si,sf]=sblend(SKY); let g=ctx.createLinearGradient(0,0,0,Hh);
       g.addColorStop(0,lc(SKY[si][0],SKY[si+1][0],sf)); g.addColorStop(0.7,lc(SKY[si][1],SKY[si+1][1],sf)); g.addColorStop(1,lc(SKY[si][1],SKY[si+1][1],sf)); ctx.fillStyle=g; ctx.fillRect(0,0,W,Hh);
       const sunF=(lerpM(tempM,day)+2)/28, sx=W*(0.18+0.64*((Math.sin(mt*0.05+1)+1)/2)), sy=Hh*(0.42-0.26*Math.max(0,Math.min(1,sunF))), sr=size*2.6, sunC=winter?'255,238,200':'255,236,170';
@@ -2097,14 +2430,29 @@
       // gameplay PATCHES — tappable; richness pips + glow; arrow marks the best
       const best=bestPatch(day).i;
       for(let i=0;i<PATCHES.length;i++){ const q=patchQuality(i,day); const pp=patchPos(i); if(q<=0.02 && activePatch!==i) continue;
-        const n=2+Math.round(q*7), spread=size*3.2;
+        const F=FLOWERS[PATCHES[i].f], ds=0.72+0.5*PATCHES[i].fy;   // nearer rows draw bigger — cheap depth
+        const n=2+Math.round(q*7), spread=size*3.2*ds;
         if(q>0.04){ let gg=ctx.createRadialGradient(pp.x,pp.y-size,0,pp.x,pp.y-size,spread*1.6); gg.addColorStop(0,'rgba(255,220,120,'+(0.06+0.18*q)+')'); gg.addColorStop(1,'rgba(255,220,120,0)'); ctx.fillStyle=gg; ctx.beginPath(); ctx.arc(pp.x,pp.y-size,spread*1.6,0,6.28); ctx.fill(); }
         for(let k=0;k<n;k++){ const a=k*2.39+i, rx=pp.x+Math.cos(a)*spread*(0.3+(k%3)*0.3), ry=pp.y-size*0.5+Math.sin(a)*spread*0.4*(0.4+(k%2)*0.3)+Math.sin(mt*1.5+k)*size*0.1;
-          const ps=size*(0.5+0.4*q); ctx.strokeStyle='rgba(80,140,70,0.8)'; ctx.lineWidth=Math.max(1,size*0.07); ctx.beginPath(); ctx.moveTo(rx,ry+ps*1.6); ctx.lineTo(rx,ry); ctx.stroke();
-          const col=['#ffd24a','#ff7aa8','#b58cff','#ff9d5a'][i%4]; ctx.fillStyle=col; for(let j=0;j<5;j++){ const aa=j/5*6.28; ctx.beginPath(); ctx.ellipse(rx+Math.cos(aa)*ps*0.4,ry+Math.sin(aa)*ps*0.4,ps*0.3,ps*0.16,aa,0,6.28); ctx.fill(); } ctx.fillStyle='#e8902b'; ctx.beginPath(); ctx.arc(rx,ry,ps*0.22,0,6.28); ctx.fill(); }
+          const ps=size*(0.5+0.4*q)*ds; ctx.strokeStyle='rgba(80,140,70,0.8)'; ctx.lineWidth=Math.max(1,size*0.07); ctx.beginPath(); ctx.moveTo(rx,ry+ps*1.6); ctx.lineTo(rx,ry); ctx.stroke();
+          ctx.fillStyle=F.col; for(let j=0;j<5;j++){ const aa=j/5*6.28; ctx.beginPath(); ctx.ellipse(rx+Math.cos(aa)*ps*0.4,ry+Math.sin(aa)*ps*0.4,ps*0.3,ps*0.16,aa,0,6.28); ctx.fill(); } ctx.fillStyle=F.core; ctx.beginPath(); ctx.arc(rx,ry,ps*0.22,0,6.28); ctx.fill(); }
+        const lx=Math.max(size*4.5, Math.min(W-size*4.5, pp.x));
+        if(q>0.04||activePatch===i){ ctx.fillStyle='rgba(255,255,255,0.72)'; ctx.font='600 '+Math.round(size*0.85*ds)+'px Bricolage Grotesque'; ctx.textAlign='center'; ctx.fillText(F.n, lx, pp.y+size*1.7*ds); ctx.textAlign='left'; }
         for(let p2=0;p2<5;p2++){ ctx.fillStyle = p2 < Math.round(q*5) ? '#ffd76b' : 'rgba(255,255,255,0.18)'; ctx.fillRect(pp.x-12+p2*5, pp.y-spread*1.7, 3, 6); }
+        // the patch's share of the colony's vote — a compact dance meter under the name
+        if(!winter){ const share=voteSum>0?danceVotes[i]/voteSum:0;
+          const bw=size*3.4*ds, bh=Math.max(3,size*0.34*ds), by2=pp.y+size*2.5*ds, bx2=lx-bw/2;
+          ctx.fillStyle='rgba(20,30,14,0.45)'; rr2(bx2,by2,bw,bh,bh/2); ctx.fill();
+          ctx.fillStyle=F.core; ctx.globalAlpha=0.92; rr2(bx2,by2,Math.max(bh,bw*Math.min(1,share*1.6)),bh,bh/2); ctx.fill(); ctx.globalAlpha=1;
+          if(i===voteLead && share>0.16){ ctx.fillStyle='rgba(255,235,150,0.95)'; ctx.font='700 '+Math.round(size*0.72*ds)+'px Bricolage Grotesque'; ctx.textAlign='center'; ctx.fillText('\ud83d\udc1d the swarm favours this', lx, by2+bh+size*1.0*ds); ctx.textAlign='left'; } }
         if(activePatch===i){ ctx.strokeStyle='rgba(255,210,120,0.95)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(pp.x,pp.y-size,spread*1.5,0,6.28); ctx.stroke();
-          ctx.fillStyle='rgba(255,210,120,0.95)'; ctx.font='600 '+Math.round(size*0.9)+'px Bricolage Grotesque'; ctx.textAlign='center'; ctx.fillText('foraging here', pp.x, pp.y-spread*1.95); ctx.textAlign='left'; }
+          const lx2=Math.max(size*7.5, Math.min(W-size*7.5, pp.x));
+          const fl=PATCHES[i].dist<0.35?'a short flight':PATCHES[i].dist<0.65?'a fair flight':'a long flight';
+          const bl=q>0.6?'rich bloom':q>0.25?'modest bloom':'thin bloom';
+          ctx.fillStyle='rgba(255,210,120,0.95)'; ctx.font='600 '+Math.round(size*0.9)+'px Bricolage Grotesque'; ctx.textAlign='center';
+          ctx.fillText('foraging here', lx2, pp.y-spread*1.95);
+          ctx.font='500 '+Math.round(size*0.78)+'px Bricolage Grotesque'; ctx.fillStyle='rgba(255,235,180,0.85)';
+          ctx.fillText(bl+' \u00b7 '+fl, lx2, pp.y-spread*1.95+size*1.0); ctx.textAlign='left'; }
         else if(i===best && q>0.5 && !winter){ const bob=Math.sin(mt*3)*size*0.3; ctx.fillStyle='rgba(255,235,150,0.9)'; ctx.beginPath(); ctx.moveTo(pp.x,pp.y-spread*2.1+bob); ctx.lineTo(pp.x-size*0.5,pp.y-spread*2.1-size*0.7+bob); ctx.lineTo(pp.x+size*0.5,pp.y-spread*2.1-size*0.7+bob); ctx.closePath(); ctx.fill(); }
       }
       if(day>=170&&day<250){ ctx.fillStyle='rgba(210,130,50,0.8)'; for(let i=0;i<22;i++){ const t=(mt*30+i*60)%Hh, x=(i*W/22+Math.sin(t*0.05+i)*40)%W; ctx.beginPath(); ctx.ellipse(x,t%Hh,size*0.18,size*0.1,t*0.1,0,6.28); ctx.fill(); } }
@@ -2115,6 +2463,9 @@
       ctx.fillStyle='#8a6a36'; rr2(bx-bw/2-2,by-boxes*size*1.8-size*0.5,bw+4,size*0.6,3); ctx.fill();
       ctx.fillStyle='#9a7438'; ctx.fillRect(bx-bw/2,by-size*0.2,bw,size*0.5); ctx.fillStyle='#1c1206'; ctx.fillRect(bx-bw*0.3,by-size*0.2,bw*0.6,size*0.18);
       if(winter){ ctx.fillStyle='rgba(255,255,255,0.92)'; rr2(bx-bw/2-3,by-boxes*size*1.8-size*0.9,bw+6,size*0.5,3); ctx.fill(); }
+      if(activePatch!=null && !winter){ const ap=patchPos(activePatch);
+        ctx.strokeStyle='rgba(255,220,140,0.35)'; ctx.lineWidth=1.5; ctx.setLineDash([5,6]);
+        ctx.beginPath(); ctx.moveTo(bx,by-size*2.2); ctx.quadraticCurveTo((bx+ap.x)/2, Math.min(by,ap.y)-size*5, ap.x, ap.y-size); ctx.stroke(); ctx.setLineDash([]); }
       const tgt=activePatch!=null?activePatch:best; const tp=patchPos(tgt);
       const want=winter?0:Math.min(34,Math.round(P*FOR_FRAC*0.18*(0.4+Na)*(patchQuality(tgt,day)>0.05?1:0.3)));
       while(flyers.length<want) flyers.push({x:bx,y:by-size,st:'out',ph:Math.random()*6.28});
@@ -2123,7 +2474,9 @@
         const dx=tx-fb.x,dy=ty-fb.y,L=Math.hypot(dx,dy)||1,sp=size*4.5*dt; fb.x+=dx/L*Math.min(L,sp); fb.y+=dy/L*Math.min(L,sp)+Math.sin(fb.ph)*0.4;
         if(L<size*0.8){ fb.st=fb.st==='out'?'back':'out'; } drawBee(fb.x,fb.y,Math.atan2(dy,dx),fb.st==='back'?'nectar':null,false,fb.ph); }
       ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.font='800 '+Math.round(size*3.2)+'px Bricolage Grotesque'; ctx.textAlign='center'; ctx.fillText(seasonName(day).toUpperCase(),W/2,Hh*0.5); ctx.textAlign='left';
-      if(activePatch==null && !winter){ ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.font='500 '+Math.round(size*1.1)+'px Bricolage Grotesque'; ctx.textAlign='center'; ctx.fillText('tap a flower patch to send your foragers', W/2, groundY+(Hh-groundY)*0.5); ctx.textAlign='left'; }
+      if(activePatch==null && !winter){ ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.font='500 '+Math.round(size*0.95)+'px Bricolage Grotesque'; ctx.textAlign='center';
+        ctx.fillText('tap a patch to send the foragers', W/2, groundY+(Hh-groundY)*0.46);
+        ctx.fillText('near flies cheap \u00b7 far must bloom hard to pay for the trip', W/2, groundY+(Hh-groundY)*0.46+size*1.25); ctx.textAlign='left'; }
     }
     function rr2(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
 
@@ -2247,13 +2600,13 @@
       const cb=cells.map(c=>(c.built?1:0)|(Z[c.zone]<<1)|((c.flagExpand?1:0)<<3)|((c.brood?1:0)<<4)|(c.brood?ST[c.brood.stage]<<5:0));
       const bt=cells.map(c=>c.brood?Math.round(c.brood.t*10):0);
       return {v:4,t:Date.now(),day,year,P,honeyU,pollenU,nectarU,peakPop,bornTotal,swarmP,forage,activePatch,grades,queenAge,cb,bt,
-        rj,jars,jy:jarsThisYear,ow:Object.keys(owned),fw:fedWinter?1:0,bf:Math.round(bankAtFrost),tp:Object.keys(seenTips),ls:Object.keys(lessonSeen),gd:goals?goals.map(g=>g.done?1:0):[0,0,0,0]}; }
+        rj,jars,jy:jarsThisYear,ql:queenLine,rs:roster,mx:mix.map(v=>Math.round(v)),ow:Object.keys(owned),fw:fedWinter?1:0,bf:Math.round(bankAtFrost),tp:Object.keys(seenTips),ls:Object.keys(lessonSeen),gd:goals?goals.map(g=>g.done?1:0):[0,0,0,0]}; }
     function saveGame(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify(serialize())); }catch(e){} }
     function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
     function loadSave(){ try{ const s=localStorage.getItem(SAVE_KEY); return s?JSON.parse(s):null; }catch(e){ return null; } }
     function deserialize(s){ const ZN=['none','brood','honey'], STN=['egg','larva','pupa'];
       day=s.day; year=s.year; P=s.P; honeyU=s.honeyU; pollenU=s.pollenU; nectarU=s.nectarU; peakPop=s.peakPop||Math.round(P); bornTotal=s.bornTotal||0; swarmP=s.swarmP||0; forage=s.forage||'balanced'; activePatch=(s.activePatch===undefined?null:s.activePatch); grades=s.grades||[]; queenAge=s.queenAge||1;
-      rj=s.rj||0; jars=s.jars||0; jarsThisYear=s.jy||0; owned={}; (s.ow||[]).forEach(k=>owned[k]=true); fedWinter=!!s.fw; bankAtFrost=s.bf||0; seenTips={}; (s.tp||[]).forEach(k=>seenTips[k]=1); lessonSeen={}; (s.ls||[]).forEach(k=>lessonSeen[k]=1);
+      rj=s.rj||0; jars=s.jars||0; jarsThisYear=s.jy||0; queenLine=(s.ql&&QUEENS.some(q=>q.id===s.ql))?s.ql:'meadow'; roster=Array.isArray(s.rs)?s.rs.filter(b=>b&&b.nm):[]; mix=(s.mx&&s.mx.length===4)?s.mx.slice():[0,0,0,0]; owned={}; (s.ow||[]).forEach(k=>owned[k]=true); fedWinter=!!s.fw; bankAtFrost=s.bf||0; seenTips={}; (s.tp||[]).forEach(k=>seenTips[k]=1); lessonSeen={}; (s.ls||[]).forEach(k=>lessonSeen[k]=1);
       goals=makeGoals(); (s.gd||[]).forEach((d,i)=>{ if(goals[i]) goals[i].done=!!d; });
       if(day>=270) armMidwinter(true);
       lastSI=seasonIdx(day);
@@ -2286,6 +2639,27 @@
       const L=ledger();
       $('yExp').innerHTML= L.wax>0.02 ? ('<i>wax </i><b>-'+(L.wax*7).toFixed(1)+'</b>') : '<i>+room</i>';
     }
+    // the almanac's coach: what a good keeper aims for this season, in real numbers
+    function seasonPlan(){
+      const g=(goals&&goals[0]&&goals[0].tgt)||(30+9*Math.min(3,year-1));
+      const need=winterNeed(), banked=honeyCellsStored();
+      const pop=Math.round(P), nb=broodCells(), st=honeyCells(), d=day;
+      const row=(label,cur,goal,unit)=>({label,cur:Math.round(cur),goal:Math.round(goal),ok:cur>=goal,unit:unit||''});
+      let season,focus,rows,tip;
+      if(d<85){ season='Spring'; focus='Build the workforce — a bee raised now works the whole summer.';
+        rows=[ row('Colony',pop,g,'bees'), row('Brood cells',nb,Math.max(12,pop*0.7)), row('Honey shelves',st,Math.max(14,need)) ];
+        tip='Lean <b>Nectar</b> or <b>Balanced</b>, keep the nursery one tight round patch, and <b>Expand</b> just ahead of the crowd.'; }
+      else if(d<175){ season='Summer'; focus='Bank the winter pantry while the meadow pours.';
+        rows=[ row('Pantry banked',banked,need*1.25,'cells'), row('Colony',pop,g,'bees'), row('Honey shelves',st,need*1.4,'cells') ];
+        tip='This is the flow. Chase the richest reachable patch and build shelves before the comb overflows.'; }
+      else if(d<250){ season='Autumn'; focus='Seal the stores; harvest only the true surplus.';
+        rows=[ row('Pantry banked',banked,need*1.1,'cells'), row('Winter need',banked,need,'cells') ];
+        tip='Top off with <b>Nectar</b>, build nothing you can\u2019t fill, and take a jar only once winter is safely covered.'; }
+      else { season='Winter'; focus='Hold the cluster — the bees live on what you stored.';
+        rows=[ row('Pantry left',banked,need,'cells') ];
+        tip='Don\u2019t build, don\u2019t harvest. Keep the nursery small and warm, and ride it to spring.'; }
+      return {season,focus,rows,tip};
+    }
     function forecastToSpring(){ const dif=difficulty(), fN=FN[forage], cp=caps(), m=forageMult()*M.forage();
       let p=P,Hn=honeyU,Po=pollenU,Ne=nectarU; const br=countBrood();
       let eggs=Array(EGG_D).fill(br.e/EGG_D), larv=Array(LAR_D).fill(br.l/LAR_D), pup=Array(PUP_D).fill(br.p/PUP_D);
@@ -2302,6 +2676,10 @@
       if(minW===Infinity)minW=Hn; return {minW:minW/HC,endH:Hn/HC,starve,series}; }
     function setRow(id,txt){ const el=$(id); el.querySelector('b').textContent=txt+' /day'; }
     function drawReport(){ const L=ledger();
+      { const sp=seasonPlan();
+        $('planFocus').innerHTML='<b>'+sp.season+'</b> \u00b7 '+sp.focus;
+        $('planRows').innerHTML=sp.rows.map(r=>'<div class="hexrow"><span>'+r.label+'</span><b class="'+(r.ok?'good':'')+'">'+r.cur+' / '+r.goal+(r.unit?' '+r.unit:'')+(r.ok?' \u2713':'')+'</b></div>').join('');
+        $('planTip').innerHTML=sp.tip; }
       $('rIncome').querySelector('b').textContent=L.full?'storage full':('+'+L.income.toFixed(1)+(L.mult!==1?(' ×'+L.mult.toFixed(2)):'')+' /day');
       setRow('rEaten','−'+L.eaten.toFixed(1)); setRow('rBrood','−'+L.brood.toFixed(1)); setRow('rWax','−'+L.wax.toFixed(1));
       const net=$('rNet'); net.className='row net '+(L.net>=0?'pos':'neg'); net.querySelector('b').textContent=(L.net>=0?'+':'−')+Math.abs(L.net).toFixed(1)+' /day';
@@ -2465,7 +2843,8 @@
       { sc:'comb',    line:'You won\u2019t command them \u2014 nobody commands bees. You only choose <em>where they build</em> and <em>where they forage</em>. They\u2019ve managed the rest for a hundred million years.' },
       { sc:'year',    line:'It comes down to one race with the calendar: raise enough bees, and store enough <b>honey</b>, to last the winter. Honey isn\u2019t treasure to them \u2014 it\u2019s fuel. In the cold they huddle and shiver to stay warm, and shivering burns honey.' },
       { sc:'flowers', line:'And every flower they visit, they leave a little <b>pollen</b> behind. Near a third of the food on your plate grows because bees did that. Keep them well, plant them flowers \u2014 you\u2019re tending far more than honey.' },
-      { sc:'ready',   line:'That\u2019s plenty from an old woman. The queen\u2019s waiting on you. Let\u2019s give her a nursery.' },
+      { sc:'flowers', line:'Honeybees aren\u2019t alone out here, either. <b>Bumblebees, mason bees, leafcutters</b> \u2014 thousands of wild kinds, most with no hive and no honey at all \u2014 do the same work. Plant <b>clover</b>, leave the dandelions, let one corner grow wild: a single patch of bloom feeds them all.' },
+      { sc:'ready',   line:'That\u2019s plenty of talk for one morning. The queen\u2019s waiting on you. Let\u2019s give her a nursery.' },
     ];
     function seedStoryBees(){ storyBees=[]; for(let i=0;i<44;i++) storyBees.push({x:Math.random()*W,y:Math.random()*Hh,ph:Math.random()*6.28,sp:0.4+Math.random()*0.9,r:size*(0.09+Math.random()*0.12),dx:(Math.random()-0.5),dy:(Math.random()-0.5)}); }
     function ramp(keys,t){ const n=keys.length-1, x=Math.max(0,Math.min(1,t))*n, i=Math.min(n-1,Math.floor(x)); return lc(keys[i],keys[i+1],x-i); }
@@ -2776,7 +3155,8 @@
 
     // ---- pause menu ----
     let menuWasPaused=false, restartArm=0, menuOpenedAt=0;
-    function menuOpen(){ menuWasPaused=paused; paused=true; syncMenuSnd(); syncPaceLocks(); const ms=$('menuScore'); if(ms) ms.textContent=apiaryScore().toLocaleString(); menuOpenedAt=performance.now(); $('menu').classList.remove('hide'); }
+    function menuOpen(){ menuWasPaused=paused; paused=true; syncMenuSnd(); syncPaceLocks(); const ms=$('menuScore'); if(ms) ms.textContent=apiaryScore().toLocaleString();
+      const mq=$('menuQueen'); if(mq){ const q=QUEENS.find(x=>x.id===queenLine); mq.textContent=q?q.ic+' '+q.name:'—'; } syncRosterN(); menuOpenedAt=performance.now(); $('menu').classList.remove('hide'); }
     function menuClose(){ $('menu').classList.add('hide'); paused=menuWasPaused;
       const r=$('menuRestart'); r.classList.remove('confirm'); r.textContent='Restart'; restartArm=0; }
     function syncMenuSnd(){ const b=$('menuSnd'); if(!b) return; const on=!!(AU&&AU.ctx&&AU.on);
@@ -2792,9 +3172,34 @@
       el.addEventListener('input',()=>setVol(key, el.value/100)); });
     function syncHints(){ const b=$('menuHints'); if(b){ b.textContent=hints?'On':'Off'; b.classList.toggle('on',hints); } }
     press($('menuHints'),()=>{ hints=!hints; try{ localStorage.setItem('hm_hints',hints?'1':'0'); }catch(e){} syncHints(); });
-    syncHints(); syncBadgeN();
+    syncHints(); syncBadgeN(); syncCellarN();
     press($('menuBadges'),()=>{ renderBadges(); menuClose(); $('badges').classList.remove('hide'); paused=true; });
     press($('badgesClose'),()=>{ $('badges').classList.add('hide'); paused=false; });
+    press($('menuCellar'),()=>{ renderCellar(); menuClose(); $('cellar').classList.remove('hide'); paused=true; });
+    press($('cellarClose'),()=>{ $('cellar').classList.add('hide'); paused=false; });
+    // the whole progression on one page: what's earned, what's waiting, and how
+    function renderPath(){
+      const row=(ok,ic,n,d)=>'<div class="prow'+(ok?' ok':'')+'"><span class="pk">'+(ok?'✓':'🔒')+'</span><span class="pi">'+ic+'</span><div style="flex:1;min-width:0"><div class="pn">'+n+'</div><div class="pd">'+d+'</div></div></div>';
+      let h='';
+      h+='<div class="psec">THE PACE</div>';
+      h+=row(true,'🌿','Easy — gentle days','yours from the first morning');
+      h+=row(unlocked.m,'🐝','Medium — keeper’s pace','bring a colony into a second spring');
+      h+=row(unlocked.h,'🌪','Hard — the seasons rush','finish a year at Medium or faster');
+      h+='<div class="psec">THE QUEENS</div>';
+      for(const q of QUEENS){ const ok=!q.lock||!!earned[q.lock.badge];
+        h+=row(ok,q.ic,q.name+' · '+q.ep, ok?q.plus:q.lock.hint); }
+      h+='<div class="psec">THE CELLAR</div>';
+      for(let i=0;i<4;i++){ const js=CELLAR.filter(j=>j.f===i), ok=js.length>0;
+        h+=row(ok,FLOWERS[i].ic,FLOWERS[i].honey, ok?'sealed — best jar '+Math.max.apply(null,js.map(j=>j.p))+'% pure':'follow the '+FLOWERS[i].n.toLowerCase()+' in season, then harvest'); }
+      h+=row(CELLAR.some(j=>j.r>=4),'🏆','A Keeper’s Reserve','seal any jar at 92% purity — one bloom, all season');
+      h+='<div class="psec">THE WALL</div>';
+      h+=row(badgeCount()>=BADGES.length,'✦','All '+BADGES.length+' badges', badgeCount()+' of '+BADGES.length+' earned — the wall remembers everything');
+      h+=row(true,'🍯','Apiary Score','<b>'+apiaryScore().toLocaleString()+'</b> — it only ever grows');
+      $('pathBody').innerHTML=h; }
+    press($('menuPath'),()=>{ renderPath(); menuClose(); $('path').classList.remove('hide'); paused=true; });
+    press($('pathClose'),()=>{ $('path').classList.add('hide'); paused=false; });
+    press($('menuRoster'),()=>{ renderRoster(); menuClose(); $('roster').classList.remove('hide'); paused=true; });
+    press($('rosterClose'),()=>{ $('roster').classList.add('hide'); paused=false; });
     press($('menuDance'),startDance);
     press($('menuLog'),()=>{ menuClose(); toggleChat(true); });
     press($('menuRestart'),()=>{ const r=$('menuRestart');
@@ -2870,14 +3275,30 @@
 
     function beginCommon(){ $('intro').classList.add('hide'); started=true; queen.x=hiveCx; queen.y=hiveCy; queen.tx=hiveCx; queen.ty=hiveCy; syncBeePool();
       prevv={h:honeyU,p:pollenU,b:P,br:countBrood().total}; rate={h:0,p:0,b:0,br:0}; waxRateEMA=0; forecastCache=forecastToSpring(); layout(); setSpeed(1); }
-    function seedAndPlay(){ clearSave(); tinyComb(); honeyU=8*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; grades=[]; forage='balanced'; activePatch=null;
+    function seedAndPlay(){ clearSave(); tinyComb(); honeyU=8*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; grades=[]; forage='balanced'; activePatch=null; mix=[0,0,0,0]; roster=[]; corpses=[];
       queenAge=1; hornet=null; hornetCD=18+Math.random()*22; parts.length=0; shake=0;
       rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=null; lastSI=0; scoutShown=false; seenTips={}; lessonSeen={}; nudged={}; starveT=0; bankAtFrost=0; raidLoss=0;
       brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=true; yearHist.length=0; histT=2.7; popMilo={};
       brush=null; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.remove('on')); setReveal(true);
       document.querySelectorAll('[data-f]').forEach(x=>x.classList.toggle('on',x.dataset.f==='balanced')); beginCommon();
       setTimeout(()=>{ if(onboard) showCoach(); }, 1800); saveGame(); }
-    $('startNew').addEventListener('click',()=>{ startStory(); });
+    function renderQueens(){ const row=$('queenRow'); row.innerHTML=QUEENS.map(q=>{
+        const locked=q.lock&&!earned[q.lock.badge];
+        return '<div class="qopt'+(locked?' locked':'')+(q.id===queenLine&&!locked?' sel':'')+'" data-q="'+q.id+'" role="radio" tabindex="0" aria-checked="'+(q.id===queenLine)+'"'+(locked?' aria-disabled="true"':'')+'>'+
+          '<span class="qi">'+q.ic+'</span><div style="flex:1;min-width:0">'+
+          '<div class="qn">'+q.name+' <em>· '+q.ep+'</em></div>'+
+          '<div class="qd">'+(locked?'🔒 '+q.lock.hint:q.d)+'</div>'+
+          (locked?'':'<div class="qp">＋ '+q.plus+'</div>'+(q.minus?'<div class="qm">− '+q.minus+'</div>':''))+
+          '</div></div>'; }).join('');
+      row.querySelectorAll('.qopt').forEach(el=>press(el,()=>{ const q=QUEENS.find(x=>x.id===el.dataset.q);
+        if(q.lock&&!earned[q.lock.badge]) return;
+        queenLine=q.id; renderQueens(); })); }
+    $('startNew').addEventListener('click',()=>{ renderQueens(); $('intro').classList.add('hide'); $('queenPick').classList.remove('hide'); });
+    $('queenBack').addEventListener('click',()=>{ $('queenPick').classList.add('hide'); $('intro').classList.remove('hide'); });
+    $('queenGo').addEventListener('click',()=>{ $('queenPick').classList.add('hide');
+      const q=QUEENS.find(x=>x.id===queenLine);
+      logMsg(q.ic,'Crowned: <b>'+q.name+'</b>, '+q.ep+' — '+q.d+'.');
+      startStory(); });
     $('startCont').addEventListener('click',()=>{ const s=loadSave(); if(!s){ $('startNew').click(); return; } onboard=false; setReveal(false); deserialize(s); beginCommon();
       if(broodCells()===0) seedStarterZones();
       const rep=offlineCatchup(s); if(rep){ const sign=v=>(v>=0?'+':'')+v; toast('While you were away ('+rep.time+'): ~'+rep.days+' days passed. Bees '+sign(rep.dP)+', honey '+sign(rep.dH)+' cells.'); } saveGame(); });
