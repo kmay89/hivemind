@@ -745,8 +745,8 @@
   /* ---- phones & portrait tablets/tiles: a dense, quiet HUD so the comb gets the screen ---- */
   @media (max-width:760px), (max-width:1080px) and (orientation:portrait){
     #chatlog{ top:auto; left:5vw; right:5vw; bottom:50%; transform:translateY(50%); width:auto; max-height:74vh; }
-    #hud-top{ flex-direction:column; align-items:stretch; gap:4px; padding:6px; }
-    #hud-bottom{ flex-direction:column; align-items:stretch; gap:4px; padding:6px; }
+    #hud-top{ flex-direction:column; align-items:stretch; gap:4px; padding:max(6px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right)) 6px max(6px, env(safe-area-inset-left)); }
+    #hud-bottom{ flex-direction:column; align-items:stretch; gap:4px; padding:6px max(6px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left)); }
     /* tabs: one slim strip */
     #tabs{ align-self:stretch; padding:3px; gap:3px; }
     .tab{ flex:1; justify-content:center; font-size:11.5px; padding:5px 4px; border-radius:9px; }
@@ -791,7 +791,7 @@
   }
   /* ---- short windows (tiled iPad, half-height splits): compact rows ---- */
   @media (max-height:640px) and (min-width:761px) and (orientation:landscape){
-    #hud-top{ padding:7px 10px; gap:7px; } #hud-bottom{ padding:7px 10px; gap:7px; }
+    #hud-top{ padding:max(7px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) 7px max(10px, env(safe-area-inset-left)); gap:7px; } #hud-bottom{ padding:7px max(10px, env(safe-area-inset-right)) max(7px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left)); gap:7px; }
     .tab{ font-size:11px; padding:5px 8px; min-height:32px; }
     #res{ padding:4px; gap:4px; } .stat{ min-width:46px; padding:3px 6px; }
     .stat .lab{ font-size:7px; } .stat .val{ font-size:12.5px; } .stat .sub{ display:none; }
@@ -1193,7 +1193,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.26.0';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.26.1';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
