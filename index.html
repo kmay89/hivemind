@@ -714,6 +714,18 @@
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    // ---- press(): game buttons react on pointerdown — iOS Safari's synthesized
+    // click can arrive late or get dropped under a busy rAF loop; the duplicate
+    // click that follows the pointerdown is swallowed by a short guard ----
+    function press(el, fn){ if(!el) return; let viaPointer=false;
+      el.addEventListener('pointerdown',e=>{ if(e.button>0) return; viaPointer=true; fn(e); });
+      // the synthesized click that follows a pointer tap is suppressed no matter
+      // how long the press lasted; the flag clears shortly after release so
+      // keyboard activation (Enter fires a bare click) keeps working
+      el.addEventListener('click',e=>{ if(viaPointer) return; fn(e); });
+      el.addEventListener('pointercancel',()=>{ viaPointer=false; });
+      addEventListener('pointerup',()=>{ setTimeout(()=>{ viaPointer=false; },500); }); }
+
     // ---- ErrerLabs studio splash: play once on load, tap or key to skip ----
     (function(){ const sp=$('splash'); if(!sp) return; let gone=false;
       function end(){ if(gone) return; gone=true; sp.classList.add('out'); setTimeout(()=>sp.remove(),700); }
@@ -962,7 +974,7 @@
       const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=340; bp.Q.value=0.7;
       const g=c.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.22,t+0.25); g.gain.exponentialRampToValueAtTime(0.0001,t+1.35);
       src.connect(bp); bp.connect(g); g.connect(AU.master); src.start(t); }
-    $('sndBtn').addEventListener('click',sndToggle);
+    press($('sndBtn'),sndToggle);
 
     // ===================== hornet raids — telegraphed, juicy, defensible =====================
     function hornetWindow(){ const early=year>=4; return {a:early?120:140, b:early?268:258}; }
@@ -1181,14 +1193,14 @@
     canvas.addEventListener('pointerleave',()=>{hoveredCell=null; hideInspect();});
     canvas.addEventListener('contextmenu',e=>e.preventDefault());
 
-    document.querySelectorAll('[data-f]').forEach(b=>b.addEventListener('click',()=>{forage=b.dataset.f;forageTouched=true;document.querySelectorAll('[data-f]').forEach(x=>x.classList.toggle('on',x===b)); forecastCache=forecastToSpring(); checkCoachProgress();}));
-    document.querySelectorAll('[data-brush]').forEach(b=>b.addEventListener('click',()=>{brush=b.dataset.brush;document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x===b));}));
-    document.querySelectorAll('[data-sp]').forEach(b=>b.addEventListener('click',()=>setSpeed(+b.dataset.sp)));
+    document.querySelectorAll('[data-f]').forEach(b=>press(b,()=>{forage=b.dataset.f;forageTouched=true;document.querySelectorAll('[data-f]').forEach(x=>x.classList.toggle('on',x===b)); forecastCache=forecastToSpring(); checkCoachProgress();}));
+    document.querySelectorAll('[data-brush]').forEach(b=>press(b,()=>{brush=b.dataset.brush;document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x===b));}));
+    document.querySelectorAll('[data-sp]').forEach(b=>press(b,()=>setSpeed(+b.dataset.sp)));
     function setSpeed(s){ speed=s; document.querySelectorAll('[data-sp]').forEach(x=>x.classList.toggle('on',+x.dataset.sp===s)); }
-    $('tabHive').addEventListener('click',()=>setView('hive'));
-    $('tabMeadow').addEventListener('click',()=>setView('meadow'));
-    $('reportBtn').addEventListener('click',()=>toggleReport());
-    $('reportX').addEventListener('click',()=>toggleReport(false));
+    press($('tabHive'),()=>setView('hive'));
+    press($('tabMeadow'),()=>setView('meadow'));
+    press($('reportBtn'),()=>toggleReport());
+    press($('reportX'),()=>toggleReport(false));
     function toggleReport(v){ reportOpen=(v===undefined)?!reportOpen:v; $('reportBtn').classList.toggle('on',reportOpen); $('report').classList.toggle('hide',!reportOpen); }
     function applyViewCls(){ $('tabHive').classList.toggle('on',view==='hive'); $('tabMeadow').classList.toggle('on',view==='meadow'); $('brushGrp').classList.toggle('dim',view!=='hive'); hoveredCell=null; }
     function setView(v){ if(v==='meadow') tip('meadow','Hazel: When a forager finds good flowers, she comes home and <em>dances</em> \u2014 the waggle dance \u2014 to send the others there. Tapping a patch is you pointing the way.');
@@ -1209,14 +1221,14 @@
       honeyU-=8*HC; jars++; jarsThisYear++; clink(); burst(hiveCx,hiveCy,16);
       forecastCache=forecastToSpring(); setN('vRJ','✧'+rj); $('sJars').textContent=jars+(jars===1?' jar':' jars');
       toast('🫙 Jar sealed — '+jars+' on the shelf. The bees keep the rest.'); checkGoals(); syncHUD(); saveGame(); }
-    $('harvestBtn').addEventListener('click',harvestSurplus);
+    press($('harvestBtn'),harvestSurplus);
 
     // ===================== emergency feed (one comeback per winter) =====================
     function feedSyrup(){ if(fedWinter||over) return; fedWinter=true; honeyU+=10*HC; starveT=0;
       chime(320,540); puff(hiveCx,hiveCy,'#ffd97a',18,1.2);
       toast('You slide a syrup feeder into the hive — the cluster stirs. +10 cells. (This year grades no higher than B.)');
       $('feedBtn').classList.add('hide'); forecastCache=forecastToSpring(); saveGame(); }
-    $('feedBtn').addEventListener('click',feedSyrup);
+    press($('feedBtn'),feedSyrup);
 
     // ===================== Hazel =====================
     // She sits with you the whole time. Her face carries the mood of the advice so a glance is
@@ -1796,14 +1808,20 @@
       if(s.brushHint){ const el=document.querySelector('[data-brush="'+s.brushHint+'"]'); if(el) el.classList.add('tapHere'); }
       if(s.pause){ setSpeed(0); } else if(speed===0 && coachStep>0){ setSpeed(1); }
     }
-    function advanceCoach(){ const s=COACH[coachStep]; if(s&&s.done) toast(s.done); coachStep++;
-      if(coachStep>=COACH.length){ endCoach(); } else showCoach(); }
+    // a completed step earns a quiet beat: the result toast plays, the bees do
+    // their thing, and only then does the next lesson arrive
+    let coachWait=false;
+    function advanceCoach(){ if(coachWait) return; const s=COACH[coachStep]; if(s&&s.done) toast(s.done);
+      coachWait=true; $('coach').classList.remove('show'); clearSpots(); coachStep++;
+      if(speed===0) setSpeed(1);
+      setTimeout(()=>{ coachWait=false; if(!onboard) return;
+        if(coachStep>=COACH.length){ endCoach(); } else showCoach(); }, 3200); }
     function endCoach(){ onboard=false; clearSpots(); $('coach').classList.remove('show'); setReveal(false); forecastCache=forecastToSpring();
       goals=makeGoals(); lastSI=seasonIdx(day); setSpeed(1); saveGame();
-      showLesson('forage', ()=>{ tip('notes','Hazel: Nothing here is a secret — the <b>?</b> up top keeps all of it. Read any of it again whenever you like, and take your time. The bees aren\u2019t going anywhere.'); }); }
-    $('coachBtn').addEventListener('click',()=>{ const s=COACH[coachStep]; if(s&&!s.until) advanceCoach(); });
-    $('coachSkip').addEventListener('click',()=>{ seedStarterZones(); endCoach(); });
-    function checkCoachProgress(){ if(!onboard) return; const s=COACH[coachStep]; if(s&&s.until&&s.until()){ advanceCoach(); } }
+      setTimeout(()=>showLesson('forage', ()=>{ tip('notes','Hazel: Nothing here is a secret — the <b>?</b> up top keeps all of it. Read any of it again whenever you like, and take your time. The bees aren\u2019t going anywhere.'); }), 1500); }
+    press($('coachBtn'),()=>{ const s=COACH[coachStep]; if(s&&!s.until) advanceCoach(); });
+    press($('coachSkip'),()=>{ seedStarterZones(); endCoach(); });
+    function checkCoachProgress(){ if(!onboard||coachWait) return; const s=COACH[coachStep]; if(s&&s.until&&s.until()){ advanceCoach(); } }
     function seedStarterZones(){ for(const cell of cells){ if(cell.built&&cell.zone==='none'){ cell.zone = cellDist(cell.c,cell.r)<1.2?'brood':'honey'; } }
       let n=0; for(const cell of cells){ if(cell.zone==='brood'&&!cell.brood&&n<4){ cell.brood={stage:'larva',t:Math.random()*LAR_D}; n++; } } }
 
@@ -2005,7 +2023,7 @@
       lessonSeen[key]=1; lesArt=L.art; lesAfter=after||null; lesT2=0;
       $('lesT').textContent=L.t; $('lesS').textContent=L.s; $('lesL').innerHTML=L.l; $('lesW').innerHTML=L.w;
       $('lesson').classList.remove('hide'); paused=true; }
-    $('lesBtn').addEventListener('click',()=>{ $('lesson').classList.add('hide'); paused=false;
+    press($('lesBtn'),()=>{ $('lesson').classList.add('hide'); paused=false;
       const a=lesAfter; lesAfter=null; if(a) a(); });
     function lhex(g,x,y,s){ g.beginPath(); for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-30);
       const px=x+s*Math.cos(a), py=y+s*Math.sin(a); i?g.lineTo(px,py):g.moveTo(px,py); } g.closePath(); }
@@ -2077,8 +2095,8 @@
         d.innerHTML='<span class="gi2">'+GICON[k]+'</span><div><b>'+L.t+'</b><br><span>'+L.s+'</span></div>';
         d.addEventListener('click',()=>{ $('guide').classList.add('hide'); showLesson(k,()=>{ $('guide').classList.remove('hide'); }, true); });
         row.appendChild(d); }); })();
-    $('helpBtn').addEventListener('click',()=>{ $('guide').classList.remove('hide'); paused=true; });
-    $('guideClose').addEventListener('click',()=>{ $('guide').classList.add('hide'); paused=false; });
+    press($('helpBtn'),()=>{ $('guide').classList.remove('hide'); paused=true; });
+    press($('guideClose'),()=>{ $('guide').classList.add('hide'); paused=false; });
 
     // ===================== boot =====================
     layout(); addEventListener('resize',()=>{ layout(); sparkCtx=null; });
@@ -2093,7 +2111,8 @@
       queenAge=1; hornet=null; hornetCD=18+Math.random()*22; parts.length=0; shake=0;
       rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=null; lastSI=0; scoutShown=false; seenTips={}; lessonSeen={}; nudged={}; starveT=0; bankAtFrost=0; raidLoss=0;
       brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=true; setReveal(true);
-      document.querySelectorAll('[data-f]').forEach(x=>x.classList.toggle('on',x.dataset.f==='balanced')); beginCommon(); showCoach(); saveGame(); }
+      document.querySelectorAll('[data-f]').forEach(x=>x.classList.toggle('on',x.dataset.f==='balanced')); beginCommon();
+      setTimeout(()=>{ if(onboard) showCoach(); }, 1800); saveGame(); }
     $('startNew').addEventListener('click',()=>{ startStory(); });
     $('startCont').addEventListener('click',()=>{ const s=loadSave(); if(!s){ $('startNew').click(); return; } onboard=false; setReveal(false); deserialize(s); beginCommon();
       if(broodCells()===0) seedStarterZones();
