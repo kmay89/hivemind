@@ -27,6 +27,7 @@ You guide a colony through a 360-day year across four seasons — Spring, Summer
 - Simulation-driven: population dynamics, forage yields, comb economy, and weather all tick per in-game day.
 - Fonts loaded from Google Fonts (Bricolage Grotesque + JetBrains Mono); everything else is self-contained.
 - No accounts, no analytics, no server — saves live in your browser's localStorage. See the [privacy policy](https://hive-mind-game.com/privacy.html).
+- Installable PWA: add it to your Home Screen and it runs fullscreen, works offline (service worker), and shows an in-game banner when a new version is deployed.
 
 ## Hosting
 
