@@ -18,12 +18,12 @@
 <meta property="og:site_name" content="HIVEMIND">
 <meta property="og:title" content="HIVEMIND — keep a honeybee colony alive, year after year">
 <meta property="og:description" content="A beekeeping survival sim in your browser. Paint the comb, steer the foragers, and stock enough honey to survive the winter. Free & open source.">
-<meta property="og:image" content="https://hive-mind-game.com/social-card.png">
+<meta property="og:image" content="https://hive-mind-game.com/social-card.png?v=2">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="HIVEMIND — a honeycomb with glowing cells and a bee. Keep a honeybee colony alive, year after year.">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://hive-mind-game.com/social-card.png">
+<meta name="twitter:image" content="https://hive-mind-game.com/social-card.png?v=2">
 <title>HIVEMIND — keep a honeybee colony alive, year after year</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -336,6 +336,9 @@
   #splash.still #splashWord span{ letter-spacing:normal; }
   #splash.still #splashMark::after{ display:none; }
 
+  /* the cinematic intro owns the whole screen — no HUD peeking through */
+  body.cine #hud-top, body.cine #hud-bottom, body.cine #coach{ display:none; }
+
   /* ---------- overlays ---------- */
   .ov{ position:fixed; inset:0; z-index:9; display:flex; align-items:center; justify-content:center;
     background:rgba(9,6,3,0.74); backdrop-filter:blur(5px); -webkit-backdrop-filter:blur(5px); padding:16px; }
@@ -453,17 +456,51 @@
   .gift.owned:hover{ transform:none; }
   .gift.owned .gc{ color:var(--good); }
 
+  /* ---- phones: a dense, quiet HUD so the comb gets the screen ---- */
   @media (max-width:760px){
-    #hud-top{ flex-direction:column; align-items:stretch; gap:7px; padding:8px; }
-    #hud-bottom{ flex-direction:column; align-items:stretch; gap:7px; padding:8px; }
-    #tabs{ align-self:flex-start; }
-    #res{ width:100%; } #res .stat{ flex:1; min-width:0; padding:5px 4px; } .stat .sub{ display:none; }
-    #clockWrap{ width:100%; min-width:0; } #wx{ display:none; }
+    #hud-top{ flex-direction:column; align-items:stretch; gap:4px; padding:6px; }
+    #hud-bottom{ flex-direction:column; align-items:stretch; gap:4px; padding:6px; }
+    /* tabs: one slim strip */
+    #tabs{ align-self:stretch; padding:3px; gap:3px; }
+    .tab{ flex:1; justify-content:center; font-size:11.5px; padding:5px 4px; border-radius:9px; }
+    /* vitals: tight tiles, headline numbers only */
+    #res{ width:100%; padding:4px; gap:3px; }
+    #res .stat{ flex:1; min-width:0; padding:3px 2px; border-radius:8px; }
+    .stat .lab{ font-size:6.5px; letter-spacing:.09em; }
+    .stat .val{ font-size:12.5px; }
+    .stat .sub{ display:none; }
+    /* almanac: everything on a diet */
+    #clockWrap{ width:100%; min-width:0; padding:6px 9px 7px; }
+    #yearLab{ font-size:12px; } #seasonLab{ font-size:9.5px; }
+    #wx{ display:none; }
+    #tl{ margin-top:4px; height:6px; }
+    #tlHarv,#tlBloom{ top:-1px; height:8px; } #tlFrost{ top:-2px; height:10px; } #tlNow{ top:-1px; height:8px; }
+    #goal{ margin-top:4px; padding:3px 7px; gap:6px; border-radius:8px; }
+    #goalIc{ font-size:11px; } #goalTx{ font-size:9px; line-height:1.25; } #goalBar{ margin-top:2px; height:3px; }
+    #wr{ margin-top:4px; } #wrTop{ font-size:6.5px; margin-bottom:2px; } #wrBar{ height:4px; } #wrLab{ font-size:8px; margin-top:2px; }
+    /* advisor: a whisper, not a billboard */
+    #advisor{ max-width:none; padding:6px 10px; gap:8px; align-items:center; }
+    #advisor .ic{ width:28px; height:28px; margin-top:0; }
+    #advisor .tx{ font-size:10px; line-height:1.35; }
+    #feedBtn{ margin-top:4px; font-size:10.5px; padding:5px 10px; }
+    /* controls: equal-width buttons in two tight rows */
+    #ctl{ width:100%; padding:4px; gap:3px; }
+    .grp{ padding:2px; gap:2px; }
     .gl{ display:none; }
-    #advisor{ max-width:none; }
-    #ctl{ width:100%; }
+    .tb{ font-size:10.5px; padding:4px 5px; gap:1px; border-radius:8px; }
+    .tb .yld{ font-size:7px; }
+    #forageGrp{ width:100%; } #forageGrp .tb{ flex:1; align-items:center; }
+    #brushGrp{ flex:1; } #brushGrp .tb{ flex:1; align-items:center; }
+    #apiaryGrp{ flex:1; } #apiaryGrp .tb{ flex:1; justify-content:center; }
     #report{ top:auto; left:6vw; right:6vw; bottom:50%; transform:translateY(50%); width:auto; max-height:78vh; }
     #giftRow{ flex-direction:column; }
+    /* the coach is repositioned above the bottom HUD from JS */
+    #coach{ max-width:none; width:calc(100% - 20px); padding:11px 13px; }
+    /* not-yet-revealed panels shouldn't hold empty space on a small screen */
+    .preveal.hidden{ display:none; }
+  }
+  @media (max-width:760px) and (pointer:coarse){
+    .tab, .tb{ min-height:44px; padding-top:4px; padding-bottom:4px; }
   }
   @media (prefers-reduced-motion: reduce){
     *,*::before,*::after{ animation-duration:.001s !important; transition-duration:.05s !important; }
@@ -1003,6 +1040,8 @@
       ctx.setTransform(DPR,0,0,DPR,0,0);
       const t=$('hud-top'), b=$('hud-bottom');
       topH=(t?t.offsetHeight:110)+8; botH=(b?b.offsetHeight:110)+8;
+      // on phones the bottom HUD is tall — keep the coach clear of the controls it points at
+      const co=$('coach'); if(co) co.style.bottom = W<=760 ? (botH+2)+'px' : '';
       const availW=W*0.94, availH=Math.max(120,Hh-topH-botH);
       const needW=(COLS+0.5)*SQ3, needH=(ROWS-1)*1.5+2;
       mSize=Math.max(6, Math.min(availW/needW, availH/needH));
@@ -1015,7 +1054,8 @@
       if(!any) return {c0:ccx-2.5,c1:ccx+2.5,r0:ccy-2.5,r1:ccy+2.5};
       return {c0,c1,r0,r1}; }
     function fitComb(hard){
-      const b=combBounds(), pad=2.6;
+      // phones: hug the comb tighter so it fills the little space between the HUDs
+      const b=combBounds(), pad=Math.min(W,Hh)<640?1.4:2.6;
       const needW=((b.c1-b.c0)+1.5+pad*2)*SQ3, needH=(b.r1-b.r0)*1.5+2+pad*2;
       const availW=Math.min(W, STAGE_W)*0.96, availH=Math.max(120, Hh-topH-botH);
       const s=Math.max(7, Math.min(50, Math.min(availW/needW, availH/needH)));
@@ -1807,9 +1847,9 @@
       requestAnimationFrame(()=>el.classList.add('show'));
     }
     function advanceStory(){ if(!storyMode) return; storyIx++; if(storyIx>=STORY.length){ endStory(); } else showStoryBeat(); }
-    function startStory(){ $('intro').classList.add('hide'); storyMode=true; storyIx=0; storySun=0; camX=0.5; camS=0.8;
+    function startStory(){ $('intro').classList.add('hide'); document.body.classList.add('cine'); storyMode=true; storyIx=0; storySun=0; camX=0.5; camS=0.8;
       if(wantSound){ setSound(true); } seedStoryBees(); layout(); $('story').classList.remove('hide'); showStoryBeat(); }
-    function endStory(){ storyMode=false; $('story').classList.add('hide'); seedAndPlay(); }
+    function endStory(){ storyMode=false; $('story').classList.add('hide'); document.body.classList.remove('cine'); seedAndPlay(); layout(); }
     $('storySkip').addEventListener('click',(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); endStory(); });
     $('storyNext').addEventListener('click',(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); advanceStory(); });
     $('story').addEventListener('click',()=>advanceStory());
