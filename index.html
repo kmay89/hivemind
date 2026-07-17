@@ -1145,7 +1145,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.21.0';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.21.1';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1322,7 +1322,7 @@
     // the hive chronicle: a keepable, auto-written diary of the colonies you've
     // kept. One page per year, drawn from what actually happened, surviving every
     // colony you'll ever found — the shoebox of photos you look back on.
-    let CHRON=[]; try{ CHRON=JSON.parse(localStorage.getItem('hm_chronicle')||'[]'); }catch(e){}
+    let CHRON=[]; try{ const parsed=JSON.parse(localStorage.getItem('hm_chronicle')||'[]'); CHRON=Array.isArray(parsed)?parsed:[]; }catch(e){}
     function chronSave(){ try{ localStorage.setItem('hm_chronicle',JSON.stringify(CHRON.slice(-48))); }catch(e){} }
     let colonyNum=1; try{ colonyNum=parseInt(localStorage.getItem('hm_colony')||'1')||1; }catch(e){}
     function colonySave(){ try{ localStorage.setItem('hm_colony',String(colonyNum)); }catch(e){} }
@@ -1330,7 +1330,7 @@
     function chronElder(){ let best=null; for(const b of roster){ const a=beeAgeDays(b); if(!best||a>best.age) best={nm:b.nm, role:beeRole(b), age:Math.round(a)}; } return best; }
     function recordChronicle(kind, g, why){
       const q=QUEENS.find(x=>x.id===queenLine);
-      let best=null; for(const j of CELLAR){ if(j.y===year && (!best||j.p>best.p)) best=j; }
+      const recent=jarsThisYear>0?CELLAR.slice(-jarsThisYear):[]; let best=null; for(const j of recent){ if(!best||j.p>best.p) best=j; }
       CHRON.push({ k:kind, col:colonyNum, y:year, name:yearName(year)[0], g,
         pop:peakPop, born:bornTotal, q:q?q.name:null,
         jars:jarsThisYear, best:best?{n:best.n,r:best.r,p:best.p}:null,
@@ -3330,7 +3330,7 @@
 
     function beginCommon(){ $('intro').classList.add('hide'); started=true; queen.x=hiveCx; queen.y=hiveCy; queen.tx=hiveCx; queen.ty=hiveCy; syncBeePool();
       prevv={h:honeyU,p:pollenU,b:P,br:countBrood().total}; rate={h:0,p:0,b:0,br:0}; waxRateEMA=0; forecastCache=forecastToSpring(); layout(); setSpeed(1); }
-    function seedAndPlay(){ if(CHRON.length) colonyNum++; colonySave(); clearSave(); tinyComb(); honeyU=8*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; grades=[]; forage='balanced'; activePatch=null; mix=[0,0,0,0]; roster=[]; corpses=[];
+    function seedAndPlay(){ colonyNum=CHRON.length?CHRON[CHRON.length-1].col+1:1; colonySave(); clearSave(); tinyComb(); honeyU=8*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; grades=[]; forage='balanced'; activePatch=null; mix=[0,0,0,0]; roster=[]; corpses=[];
       queenAge=1; hornet=null; hornetCD=18+Math.random()*22; parts.length=0; shake=0;
       rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=null; lastSI=0; scoutShown=false; seenTips={}; lessonSeen={}; nudged={}; starveT=0; bankAtFrost=0; raidLoss=0;
       brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=true; yearHist.length=0; histT=2.7; popMilo={};
