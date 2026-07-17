@@ -294,6 +294,15 @@
   .qopt .qm{ font-size:11.5px; color:#e8a0a0; line-height:1.4; }
   #queenBtns{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
 
+  /* ---------- hive chronicle ---------- */
+  #chronBody{ margin:12px 0; max-height:56vh; overflow:auto; text-align:left; }
+  .chronCard{ background:rgba(255,255,255,0.04); border:1px solid rgba(255,217,122,0.14); border-left:3px solid rgba(255,180,43,0.55); border-radius:10px; padding:10px 13px; margin-bottom:8px; }
+  .chronCard.ended{ border-left-color:rgba(180,150,120,0.6); }
+  .chronH{ font-weight:700; font-size:13.5px; color:#ffd97a; margin-bottom:4px; }
+  .chronCard.ended .chronH{ color:#c9b48f; }
+  .chronB{ font-size:12.5px; color:#e8dcc4; line-height:1.55; }
+  .chronB b{ color:#ffe0a0; font-weight:700; }
+
   /* ---------- honey cellar ---------- */
   #cellarGrid{ display:grid; grid-template-columns:1fr; gap:8px; margin:14px 0; max-height:54vh; overflow:auto; text-align:left; }
   .jar{ display:flex; gap:11px; align-items:center; background:rgba(255,255,255,0.045); border:1px solid rgba(255,217,122,0.16); border-radius:12px; padding:10px 12px; }
@@ -867,6 +876,7 @@
         <div class="mrow"><span class="ml">Honey cellar</span><button class="mtog" id="menuCellar">🫙 <span id="jarN">0</span></button></div>
         <div class="mrow"><span class="ml">Keeper’s path</span><button class="mtog" id="menuPath">🗺 Open</button></div>
         <div class="mrow"><span class="ml">Colony roster</span><button class="mtog" id="menuRoster">🐝 <span id="rosterN">0</span></button></div>
+        <div class="mrow"><span class="ml">Hive chronicle</span><button class="mtog" id="menuChron">📖 <span id="chronN">0</span></button></div>
         <div class="mrow"><span class="ml">Dance break</span><button class="mtog" id="menuDance">Let’s go!</button></div>
         <div class="mrow"><span class="ml">Keeper’s notes</span><button class="mtog" id="menuGuide">Open</button></div>
         <div class="mrow"><span class="ml">Hazel’s log</span><button class="mtog" id="menuLog">Open</button></div>
@@ -892,6 +902,13 @@
       <h1>THE HONEY CELLAR</h1><div class="sub">every jar remembers its flowers</div>
       <div id="cellarGrid"></div>
       <button class="btn ghost" id="cellarClose">Back</button>
+    </div>
+  </div>
+  <div class="ov hide" id="chronicle">
+    <div class="card bcard">
+      <h1>THE HIVE CHRONICLE</h1><div class="sub">the story your bees wrote, kept forever</div>
+      <div id="chronBody"></div>
+      <button class="btn ghost" id="chronClose">Back</button>
     </div>
   </div>
   <div class="ov hide" id="roster">
@@ -1128,7 +1145,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.20.8';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.21.1';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1302,6 +1319,40 @@
       const bd=Math.floor(day); const lf=(bd>=205?150+Math.random()*40:34+Math.random()*12);
       roster.push({nm:pool[(Math.random()*pool.length)|0], by:year, bd, lf:Math.round(lf)}); syncRosterN(); }
     function syncRosterN(){ const el=$('rosterN'); if(el) el.textContent=roster.length; }
+    // the hive chronicle: a keepable, auto-written diary of the colonies you've
+    // kept. One page per year, drawn from what actually happened, surviving every
+    // colony you'll ever found — the shoebox of photos you look back on.
+    let CHRON=[]; try{ const parsed=JSON.parse(localStorage.getItem('hm_chronicle')||'[]'); CHRON=Array.isArray(parsed)?parsed:[]; }catch(e){}
+    function chronSave(){ try{ localStorage.setItem('hm_chronicle',JSON.stringify(CHRON.slice(-48))); }catch(e){} }
+    let colonyNum=1; try{ colonyNum=parseInt(localStorage.getItem('hm_colony')||'1')||1; }catch(e){}
+    function colonySave(){ try{ localStorage.setItem('hm_colony',String(colonyNum)); }catch(e){} }
+    function roman(n){ return ['','I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'][n]||(''+n); }
+    function chronElder(){ let best=null; for(const b of roster){ const a=beeAgeDays(b); if(!best||a>best.age) best={nm:b.nm, role:beeRole(b), age:Math.round(a)}; } return best; }
+    function recordChronicle(kind, g, why){
+      const q=QUEENS.find(x=>x.id===queenLine);
+      const recent=jarsThisYear>0?CELLAR.slice(-jarsThisYear):[]; let best=null; for(const j of recent){ if(!best||j.p>best.p) best=j; }
+      CHRON.push({ k:kind, col:colonyNum, y:year, name:yearName(year)[0], g,
+        pop:peakPop, born:bornTotal, q:q?q.name:null,
+        jars:jarsThisYear, best:best?{n:best.n,r:best.r,p:best.p}:null,
+        elder:chronElder(), fed:fedWinter, why:why||null });
+      chronSave();
+      if(kind==='year') setTimeout(()=>toast('\ud83d\udcd6 A new page is written in your <b>Chronicle</b>.'),1400); }
+    function chronPhrase(e){ const p=[];
+      if(e.k==='end'){ p.push(e.why==='starve'?'The pantry ran dry, and the colony failed.':'Too few bees remained, and the colony dwindled.');
+        p.push('In its time it raised <b>'+e.born+'</b> bees'+(e.jars?' and sealed '+e.jars+' jar'+(e.jars===1?'':'s')+' that last year':'')+'.'); }
+      else { p.push((e.q?e.q+'\u2019s line':'The colony')+' brought the hive to <b>'+e.pop+'</b> bees and graded <b>'+e.g+'</b>.');
+        if(e.jars>0 && e.best){ const rn=(RARITY[e.best.r]||{n:'a jar'}).n.toLowerCase(); p.push('Of '+e.jars+' jar'+(e.jars===1?'':'s')+' sealed, the finest was '+rn+' <b>'+e.best.n+'</b>'+(e.best.r>=3?', '+e.best.p+'% pure':'')+'.'); }
+        else if(e.jars>0){ p.push(e.jars+' jar'+(e.jars===1?'':'s')+' went to the shelf.'); } }
+      if(e.elder){ p.push('<b>'+e.elder.nm+'</b>, a '+e.elder.role+', saw <b>'+e.elder.age+'</b> day'+(e.elder.age===1?'':'s')+'.'); }
+      if(e.fed && e.k!=='end'){ p.push('You fed them once when the shelves ran bare \u2014 a kindness they repaid.'); }
+      return p.join(' '); }
+    function renderChronicle(){
+      if(!CHRON.length){ $('chronBody').innerHTML='<div class="jd" style="text-align:center;padding:16px;color:#c2a97e">Your colony\u2019s story writes itself. Survive your first winter, and the first page appears here \u2014 kept forever, across every hive you\u2019ll ever keep.</div>'; return; }
+      let h='', lastCol=null;
+      CHRON.forEach(e=>{ if(e.col!==lastCol){ lastCol=e.col; h+='<div class="psec">COLONY '+roman(e.col)+'</div>'; }
+        h+='<div class="chronCard'+(e.k==='end'?' ended':'')+'"><div class="chronH">'+(e.k==='end'?'\u2020 ':'')+'Year '+e.y+' \u00b7 '+e.name+(e.k==='end'?'':'  \u00b7  grade '+e.g)+'</div><div class="chronB">'+chronPhrase(e)+'</div></div>'; });
+      $('chronBody').innerHTML=h; }
+    function syncChronN(){ const el=$('chronN'); if(el) el.textContent=CHRON.length; }
     // the cellar is career-deep: jars outlive any one colony
     let CELLAR=[];
     try{ CELLAR=JSON.parse(localStorage.getItem('hm_cellar')||'[]'); }catch(e){}
@@ -2568,6 +2619,7 @@
       $('yeTitle').textContent=est?'APIARY ESTABLISHED':('YEAR '+year+' SURVIVED'); $('yeTitle').className='good';
       $('yeSub').textContent=est?'three winters weathered — the colony endures':'winter is past';
       $('yeGrade').innerHTML='this year\u2019s grade<span class="G '+g+'">'+g+'</span>'; buildReview('ye'); grantBadge('survivor'); unlockPace('medium'); if(pace!=='easy') unlockPace('hard');
+      recordChronicle('year', g);
       trophyRow($('yeTrophies')); renderGifts();
       { const host=$('yeTrophies'); const old=host.parentNode.querySelector('.beenote'); if(old) old.remove(); host.insertAdjacentHTML('afterend', beeNote()); }
       const yn=yearName(year+1); $('yeNext').textContent='Into Year '+(year+1)+' — '+yn[0]+' ▶';
@@ -2582,6 +2634,7 @@
     function gameOver(kind){ if(over)return; over=true; setSpeed(0); chime(330,165); hornet=null;
       $('ovTitle').textContent=kind==='starve'?'THE COLONY FAILS':'THE COLONY DWINDLES'; $('ovSub').textContent=(kind==='starve'?'the pantry ran dry in '+seasonName(day).toLowerCase():'too few bees remained')+' — but the comb, the shelf, and the queen\u2019s line are yours to keep';
       const {g}=gradeYear(); grades.push({year,g,honey:Math.round(honeyCellsStored()),peak:peakPop});
+      recordChronicle('end', g, kind);
       $('ovStats').innerHTML='Year '+year+' ends early<span class="G '+g+'">'+g+'</span><b>'+jars+'</b> jars on the shelf · <b>'+bornTotal+'</b> bees raised'; buildReview('ov');
       trophyRow($('ovTrophies'));
       { const host=$('ovTrophies'); const old=host.parentNode.querySelector('.beenote'); if(old) old.remove(); host.insertAdjacentHTML('afterend', beeNote()); }
@@ -3156,7 +3209,7 @@
     // ---- pause menu ----
     let menuWasPaused=false, restartArm=0, menuOpenedAt=0;
     function menuOpen(){ menuWasPaused=paused; paused=true; syncMenuSnd(); syncPaceLocks(); const ms=$('menuScore'); if(ms) ms.textContent=apiaryScore().toLocaleString();
-      const mq=$('menuQueen'); if(mq){ const q=QUEENS.find(x=>x.id===queenLine); mq.textContent=q?q.ic+' '+q.name:'—'; } syncRosterN(); menuOpenedAt=performance.now(); $('menu').classList.remove('hide'); }
+      const mq=$('menuQueen'); if(mq){ const q=QUEENS.find(x=>x.id===queenLine); mq.textContent=q?q.ic+' '+q.name:'—'; } syncRosterN(); syncChronN(); menuOpenedAt=performance.now(); $('menu').classList.remove('hide'); }
     function menuClose(){ $('menu').classList.add('hide'); paused=menuWasPaused;
       const r=$('menuRestart'); r.classList.remove('confirm'); r.textContent='Restart'; restartArm=0; }
     function syncMenuSnd(){ const b=$('menuSnd'); if(!b) return; const on=!!(AU&&AU.ctx&&AU.on);
@@ -3200,6 +3253,8 @@
     press($('pathClose'),()=>{ $('path').classList.add('hide'); paused=false; });
     press($('menuRoster'),()=>{ renderRoster(); menuClose(); $('roster').classList.remove('hide'); paused=true; });
     press($('rosterClose'),()=>{ $('roster').classList.add('hide'); paused=false; });
+    press($('menuChron'),()=>{ renderChronicle(); menuClose(); $('chronicle').classList.remove('hide'); paused=true; });
+    press($('chronClose'),()=>{ $('chronicle').classList.add('hide'); paused=false; });
     press($('menuDance'),startDance);
     press($('menuLog'),()=>{ menuClose(); toggleChat(true); });
     press($('menuRestart'),()=>{ const r=$('menuRestart');
@@ -3275,7 +3330,7 @@
 
     function beginCommon(){ $('intro').classList.add('hide'); started=true; queen.x=hiveCx; queen.y=hiveCy; queen.tx=hiveCx; queen.ty=hiveCy; syncBeePool();
       prevv={h:honeyU,p:pollenU,b:P,br:countBrood().total}; rate={h:0,p:0,b:0,br:0}; waxRateEMA=0; forecastCache=forecastToSpring(); layout(); setSpeed(1); }
-    function seedAndPlay(){ clearSave(); tinyComb(); honeyU=8*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; grades=[]; forage='balanced'; activePatch=null; mix=[0,0,0,0]; roster=[]; corpses=[];
+    function seedAndPlay(){ colonyNum=CHRON.length?CHRON[CHRON.length-1].col+1:1; colonySave(); clearSave(); tinyComb(); honeyU=8*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; grades=[]; forage='balanced'; activePatch=null; mix=[0,0,0,0]; roster=[]; corpses=[];
       queenAge=1; hornet=null; hornetCD=18+Math.random()*22; parts.length=0; shake=0;
       rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=null; lastSI=0; scoutShown=false; seenTips={}; lessonSeen={}; nudged={}; starveT=0; bankAtFrost=0; raidLoss=0;
       brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=true; yearHist.length=0; histT=2.7; popMilo={};
