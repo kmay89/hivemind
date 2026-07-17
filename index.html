@@ -1114,7 +1114,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.20.5';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.20.6';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1233,17 +1233,33 @@
     ];
     function yearName(y){ return y<YEARNAMES.length?YEARNAMES[y]:['Endurance '+(y-5),'the seasons only sharpen']; }
 
-    // meadow flower patches (waggle-dance targets) — bloom at different times of year
-    const PATCHES=[ {fx:0.13,base:0.95,phase:0.2}, {fx:0.31,base:0.85,phase:1.9}, {fx:0.50,base:1.0,phase:3.3}, {fx:0.67,base:0.82,phase:4.9} ];
+    // the meadow is a field, not a menu: every patch is a real spot at a real
+    // distance from the hive, and forage economics run the way bees run them —
+    // net gain is bloom richness minus the cost of the flight. The waggle dance
+    // encodes exactly those two numbers: direction and distance. Each flower has
+    // a near-but-modest patch and a far-but-lush one, so purity has a price.
+    const PATCHES=[
+      {f:1, fx:0.62, fy:0.30, base:0.85, phase:1.9,  dist:0.25},
+      {f:1, fx:0.25, fy:0.75, base:1.05, phase:2.15, dist:0.72},
+      {f:0, fx:0.45, fy:0.62, base:0.88, phase:0.2,  dist:0.45},
+      {f:0, fx:0.08, fy:0.42, base:1.12, phase:0.45, dist:0.92},
+      {f:3, fx:0.55, fy:0.82, base:0.72, phase:4.7,  dist:0.33},
+      {f:3, fx:0.13, fy:0.66, base:1.05, phase:4.9,  dist:0.85},
+      {f:2, fx:0.70, fy:0.68, base:0.8,  phase:3.5,  dist:0.17},
+      {f:2, fx:0.33, fy:0.34, base:1.02, phase:3.3,  dist:0.62},
+    ];
     function patchQuality(i,d){ const p=PATCHES[i]; const bloom=0.5+0.5*Math.sin(2*Math.PI*d/360 + p.phase);
       return Math.max(0, Math.min(1, p.base*bloom*Math.max(0,lerpM(nectarM,d)) )); }
-    function bestPatch(d){ let b=0,bq=-1; for(let i=0;i<PATCHES.length;i++){const q=patchQuality(i,d); if(q>bq){bq=q;b=i;}} return {i:b,q:bq}; }
-    function forageMult(){ if(activePatch==null) return 1.0; return Math.max(0.9, Math.min(1.3, 0.9+0.45*patchQuality(activePatch,day))); }
+    // what a patch is truly worth once the flying is paid for
+    function patchEff(i,d){ return patchQuality(i,d)*(1.15-0.45*PATCHES[i].dist); }
+    function bestPatch(d){ let b=0,bq=-1; for(let i=0;i<PATCHES.length;i++){const q=patchEff(i,d); if(q>bq){bq=q;b=i;}} return {i:b,q:bq}; }
+    function forageMult(){ if(activePatch==null) return 1.0;
+      return Math.max(0.85, Math.min(1.35, 0.88+0.5*patchEff(activePatch,day))); }
 
     // ===================== flowers & the honey cellar =====================
-    // each patch is a real flower with a real bloom season — and nectar remembers where it grew.
-    // (indices match PATCHES: clover peaks ~day 79, orchard in earliest spring,
-    //  goldenrod ~day 260 in autumn, lavender at midsummer ~day 168)
+    // the flowers of the meadow — nectar remembers where it grew. PATCHES carry a
+    // flower index f into this table; blooms: orchard in earliest spring, clover
+    // ~day 79, lavender at midsummer ~day 168, goldenrod ~day 260 in autumn.
     const FLOWERS=[
       {n:'White Clover',    ic:'🍀', col:'#f2f7ea', core:'#cfe0a8', honey:'Clover Honey',
        note:'the classic \u2014 pale gold, soft as butter on warm toast'},
@@ -1690,11 +1706,11 @@
       clouds=[]; for(let i=0;i<5;i++) clouds.push({x:Math.random()*W, y:Hh*(0.08+Math.random()*0.26), s:mSize*(3+Math.random()*4), v:6+Math.random()*10});
       flits=[]; for(let i=0;i<6;i++) flits.push({x:Math.random()*W, y:groundY-mSize*(1+Math.random()*4), ph:Math.random()*6.28, vx:(Math.random()-0.5)*20});
     }
-    function patchPos(i){ return {x:PATCHES[i].fx*W, y:Hh*0.72-mSize*0.4}; }
-    // the dance is a map: its axis points where the flowers are. A patch far to
-    // the meadow's left tilts the figure-eight left; foragers leave on the same bearing.
+    function patchPos(i){ const p=PATCHES[i], gy=Hh*0.72; return {x:p.fx*W, y:gy+(Hh-gy)*(0.03+0.25*p.fy)}; }
+    // the dance is a map: its axis is the true bearing from the hive to the
+    // flowers, and the length of the waggle run is the distance. Real bees, real math.
     function danceAngle(){ const i=activePatch!=null?activePatch:bestPatch(day).i;
-      return -Math.PI/2 + (PATCHES[i].fx-0.5)*Math.PI*0.95; }
+      const pp=patchPos(i), hx=W*0.85, hy=Hh*0.72; return Math.atan2(pp.y-hy, pp.x-hx); }
 
     // ===================== input =====================
     function cellAtPx(px,py){ let best=null,bd=(size*1.05)**2; const rr=Math.round((py-oy)/(size*1.5));
@@ -1735,13 +1751,32 @@
       else if(nb>=7 && pop>=10 && nestRing()<=2 && nestWarmth()>0.8)
         nudge('goodNest','Hazel: That\u2019s exactly the shape — one round patch, held snug. The warmth keeps itself. Well done.','happy');
     }
-    function watchHands(){ coachCheck(); }
-    function watchIdle(){ coachCheck(); }
+    // Hazel knows the line she's talking to — her advice bends to the crown.
+    const QTIPS=[
+      {q:'meadow',  k:'q0m', when:()=>day>6, mood:'happy', msg:'Hazel: Queen Meadow, the Evenwing. No tricks in her line \u2014 just good bees, kept well. My favourite kind of boring.'},
+      {q:'aster',   k:'q0a', when:()=>day>6, mood:'happy', msg:'Hazel: A Wanderer on the throne. Her foragers out-fly every line I\u2019ve kept \u2014 and one morning they\u2019ll all want the horizon. Keep them roomy.'},
+      {q:'aster',   k:'qa1', when:()=>swarmP>0.5, mood:'worry', msg:'Hazel: Feel that hum? Aster\u2019s blood is packing its bags. <b>Expand</b> now, or watch half the hive take the sky.'},
+      {q:'juniper', k:'q0j', when:()=>day>6, mood:'happy', msg:'Hazel: Juniper\u2019s line \u2014 quiet springs, iron winters. Don\u2019t panic at a slow April; she\u2019s saving it.'},
+      {q:'juniper', k:'qj1', when:()=>day>285, mood:'happy', msg:'Hazel: A Frostborn winter. Listen at the wall \u2014 the cluster sips where other lines gulp.'},
+      {q:'marigold',k:'q0g', when:()=>day>6, mood:'think', msg:'Hazel: An Emberline queen \u2014 gorgeous, greedy. She\u2019ll fill every cradle you paint, and empty every shelf. Keep the pantry a step ahead of the nursery.'},
+      {q:'marigold',k:'qg1', when:()=>honeyU<6*HC&&day>30&&day<250, mood:'worry', msg:'Hazel: Marigold\u2019s daughters eat like a bonfire. Lean <b>Nectar</b> and build shelves before she out-lays the larder.'},
+      {q:'bramble', k:'q0b', when:()=>day>6, mood:'happy', msg:'Hazel: Stoneguard blood. The porch is a fortress and the field a little thinner for it \u2014 send them only to the best bloom.'},
+      {q:'bramble', k:'qb1', when:()=>hornet!=null, mood:'happy', msg:'Hazel: A hornet, against Bramble\u2019s door? I almost feel sorry for it. Tap it anyway.'},
+      {q:'iris',    k:'q0i', when:()=>day>6, mood:'happy', msg:'Hazel: The Painter\u2019s line. Watch them land \u2014 every colour of the meadow on their legs. The nursery will never want for bee bread.'},
+      {q:'rosalind',k:'q0r', when:()=>day>6, mood:'happy', msg:'Hazel: An Alchemist on the throne \u2014 her house turns nectar to gold faster than any line I\u2019ve kept. Build shelves worthy of her.'},
+      {q:'rosalind',k:'qr1', when:()=>nectarU>5*HC, mood:'happy', msg:'Hazel: See the comb glisten? Rosalind\u2019s ripening it as fast as they haul it. More <b>Honey</b> cells \u2014 don\u2019t make her wait.'},
+    ];
+    function queenCheck(){ for(const t of QTIPS){ if(t.q===queenLine && !nudged[t.k] && t.when()){ nudge(t.k,t.msg,t.mood); return; } } }
+    function watchHands(){ coachCheck(); queenCheck(); }
+    function watchIdle(){ coachCheck(); queenCheck(); }
     function rel(e){ const r=canvas.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; }
     function selectPatch(p){ let best=null,bd=(W*0.14)**2;
       for(let i=0;i<PATCHES.length;i++){ const q=patchQuality(i,day); if(q<=0.02)continue; const pp=patchPos(i); const d=(pp.x-p.x)**2+(pp.y-p.y)**2; if(d<bd){bd=d;best=i;} }
       if(best!=null){ activePatch=best; grantBadge('waggler'); forecastCache=forecastToSpring();
-        toast('Foragers recruited to the <b>'+FLOWERS[best].n.toLowerCase()+'</b> — '+(patchQuality(best,day)>0.6?'it\u2019s pouring':'a modest flow')+'. Watch the waggle dance in the hive.'); } }
+        const q=patchQuality(best,day), D=PATCHES[best].dist;
+        const bl=q>0.6?'a rich bloom':q>0.25?'a modest bloom':'a thin bloom';
+        const fl=D<0.35?'a short flight':D<0.65?'a fair flight':'a long flight \u2014 it had better be worth it';
+        toast('Foragers recruited to the <b>'+FLOWERS[PATCHES[best].f].n.toLowerCase()+'</b> \u2014 '+bl+', '+fl+'. Watch the waggle dance.'); } }
     let brush='brood', painting=false, paintErase=false;
     canvas.addEventListener('pointerdown',e=>{ if(!started||over)return; const p=rel(e);
       if(view==='hive' && hitHornet(p)) return;
@@ -1803,7 +1838,7 @@
     press($('reportX'),()=>toggleReport(false));
     function toggleReport(v){ reportOpen=(v===undefined)?!reportOpen:v; $('reportBtn').classList.toggle('on',reportOpen); $('report').classList.toggle('hide',!reportOpen); }
     function applyViewCls(){ $('tabHive').classList.toggle('on',view==='hive'); $('tabMeadow').classList.toggle('on',view==='meadow'); $('brushGrp').classList.toggle('dim',view!=='hive'); hoveredCell=null; }
-    function setView(v){ if(v==='meadow') tip('meadow','Hazel: When a forager finds good flowers, she comes home and <em>dances</em> \u2014 the waggle dance \u2014 to send the others there. Tapping a patch is you pointing the way.');
+    function setView(v){ if(v==='meadow') tip('meadow','Hazel: When a forager finds flowers she comes home and <em>dances</em> \u2014 the angle points the way, the waggle counts the distance. Tap a patch to send the others. Mind the flight: <b>near patches fly cheap</b>, far ones must bloom hard to pay for the trip. And one secret more \u2014 stay true to <b>one flower</b> all season, and the honey remembers it.');
       if(v===view){ applyViewCls(); return; }
       if(RM){ view=v; applyViewCls(); return; }
       const w=$('wipe'); w.style.opacity=1; setTimeout(()=>{ view=v; applyViewCls(); w.style.opacity=0; },300); }
@@ -1943,7 +1978,7 @@
       else if(!winter && fc && fc.starve!==null && day>135 && day<252){ ic='📉'; warn=true; tx='At this pace the pantry won\u2019t last the winter — favour <b>Nectar</b> for a while.'; }
       else if(!winter && fc && fc.minW<8 && day>150 && day<252){ ic='🍂'; tx='The pantry looks a little light for winter — lean <b>Nectar</b> when you can.'; }
       else if(hs.ok){ ic='🫙'; tx='Surplus honey is banked — you can <b>Harvest</b> a jar for your shelf. The window closes at first frost.'; }
-      else if(!winter && bp.q>0.5 && (activePatch==null || patchQuality(activePatch,day)<bp.q-0.18)){ ic='💃'; tx='A <b>rich patch</b> is blooming. Open the <b>☀ Meadow</b> and tap it to send your foragers there.'; }
+      else if(!winter && bp.q>0.5 && (activePatch==null || patchEff(activePatch,day)<bp.q-0.15)){ ic='💃'; tx='A <b>rich patch</b> is blooming within easy reach. Open the <b>☀ Meadow</b> and tap it to send your foragers there.'; }
       else if(winter && hc<need*0.5){ ic='❄️'; tx='Deep winter and the shelves are thin — but spring is coming.'; }
       else if(day<55){ ic='🌱'; tx='Early spring \u2014 feed the babies first. <b>Pollen</b> or Balanced stocks the nursery kitchen.'; }
       else if(day>=85&&day<175){ ic='🌻'; tx='The meadow is pouring. Lean <b>Nectar</b>, <b>Expand</b> the shelves, and chase the best <b>patch</b>.'; }
@@ -2016,12 +2051,12 @@
       const Na=lerpM(nectarM,day)*dif.flow, Pa=lerpM(pollenM,day)*dif.flow, lv=lerpM(layM,day);
       const winter=T<WIN_TEMP; const fN=FN[forage]; const mult=forageMult()*M.forage();
       const foragers=P*FOR_FRAC, nurses=P*NURSE_FRAC;
-      const srcP=activePatch!=null?activePatch:bestPatch(day).i;
+      const srcP=activePatch!=null?activePatch:bestPatch(day).i, srcF=PATCHES[srcP].f;
       const dNec=foragers*NEC_PF*Na*fN*mult*dd, dPol=foragers*POL_PF*Pa*(1-fN)*mult*M.pol()*dd;
-      nectarU+=dNec; pollenU+=dPol; if(dNec>0) mix[srcP]+=dNec;
-      if(dPol>0 && Pa>0.08 && patchQuality(srcP,day)>0.2 && !polSeen[srcP]){ polSeen[srcP]=1; polSave();
+      nectarU+=dNec; pollenU+=dPol; if(dNec>0) mix[srcF]+=dNec;
+      if(dPol>0 && Pa>0.08 && patchQuality(srcP,day)>0.2 && !polSeen[srcF]){ polSeen[srcF]=1; polSave();
         const nCol=Object.keys(polSeen).length;
-        if(!offline){ toast('🎨 First <b>'+FLOWERS[srcP].n.toLowerCase()+'</b> pollen in the pantry \u2014 colour '+nCol+' of 4. Every flower paints its own.'); chime(620,840); }
+        if(!offline){ toast('🎨 First <b>'+FLOWERS[srcF].n.toLowerCase()+'</b> pollen in the pantry \u2014 colour '+nCol+' of 4. Every flower paints its own.'); chime(620,840); }
         if(nCol>=4) grantBadge('palette'); }
       clampStores(dd); const rip=Math.min(nectarU,nectarU*RIPE*M.ripe()*dd); nectarU-=rip; honeyU+=rip; clampStores(dd);
       if(!offline) buildFromFlags(dd);
@@ -2324,15 +2359,23 @@
       // gameplay PATCHES — tappable; richness pips + glow; arrow marks the best
       const best=bestPatch(day).i;
       for(let i=0;i<PATCHES.length;i++){ const q=patchQuality(i,day); const pp=patchPos(i); if(q<=0.02 && activePatch!==i) continue;
-        const n=2+Math.round(q*7), spread=size*3.2;
+        const F=FLOWERS[PATCHES[i].f], ds=0.72+0.5*PATCHES[i].fy;   // nearer rows draw bigger — cheap depth
+        const n=2+Math.round(q*7), spread=size*3.2*ds;
         if(q>0.04){ let gg=ctx.createRadialGradient(pp.x,pp.y-size,0,pp.x,pp.y-size,spread*1.6); gg.addColorStop(0,'rgba(255,220,120,'+(0.06+0.18*q)+')'); gg.addColorStop(1,'rgba(255,220,120,0)'); ctx.fillStyle=gg; ctx.beginPath(); ctx.arc(pp.x,pp.y-size,spread*1.6,0,6.28); ctx.fill(); }
         for(let k=0;k<n;k++){ const a=k*2.39+i, rx=pp.x+Math.cos(a)*spread*(0.3+(k%3)*0.3), ry=pp.y-size*0.5+Math.sin(a)*spread*0.4*(0.4+(k%2)*0.3)+Math.sin(mt*1.5+k)*size*0.1;
-          const ps=size*(0.5+0.4*q); ctx.strokeStyle='rgba(80,140,70,0.8)'; ctx.lineWidth=Math.max(1,size*0.07); ctx.beginPath(); ctx.moveTo(rx,ry+ps*1.6); ctx.lineTo(rx,ry); ctx.stroke();
-          ctx.fillStyle=FLOWERS[i].col; for(let j=0;j<5;j++){ const aa=j/5*6.28; ctx.beginPath(); ctx.ellipse(rx+Math.cos(aa)*ps*0.4,ry+Math.sin(aa)*ps*0.4,ps*0.3,ps*0.16,aa,0,6.28); ctx.fill(); } ctx.fillStyle=FLOWERS[i].core; ctx.beginPath(); ctx.arc(rx,ry,ps*0.22,0,6.28); ctx.fill(); }
-        if(q>0.04||activePatch===i){ ctx.fillStyle='rgba(255,255,255,0.72)'; ctx.font='600 '+Math.round(size*0.85)+'px Bricolage Grotesque'; ctx.textAlign='center'; ctx.fillText(FLOWERS[i].n, pp.x, pp.y+size*1.7); ctx.textAlign='left'; }
+          const ps=size*(0.5+0.4*q)*ds; ctx.strokeStyle='rgba(80,140,70,0.8)'; ctx.lineWidth=Math.max(1,size*0.07); ctx.beginPath(); ctx.moveTo(rx,ry+ps*1.6); ctx.lineTo(rx,ry); ctx.stroke();
+          ctx.fillStyle=F.col; for(let j=0;j<5;j++){ const aa=j/5*6.28; ctx.beginPath(); ctx.ellipse(rx+Math.cos(aa)*ps*0.4,ry+Math.sin(aa)*ps*0.4,ps*0.3,ps*0.16,aa,0,6.28); ctx.fill(); } ctx.fillStyle=F.core; ctx.beginPath(); ctx.arc(rx,ry,ps*0.22,0,6.28); ctx.fill(); }
+        const lx=Math.max(size*4.5, Math.min(W-size*4.5, pp.x));
+        if(q>0.04||activePatch===i){ ctx.fillStyle='rgba(255,255,255,0.72)'; ctx.font='600 '+Math.round(size*0.85*ds)+'px Bricolage Grotesque'; ctx.textAlign='center'; ctx.fillText(F.n, lx, pp.y+size*1.7*ds); ctx.textAlign='left'; }
         for(let p2=0;p2<5;p2++){ ctx.fillStyle = p2 < Math.round(q*5) ? '#ffd76b' : 'rgba(255,255,255,0.18)'; ctx.fillRect(pp.x-12+p2*5, pp.y-spread*1.7, 3, 6); }
         if(activePatch===i){ ctx.strokeStyle='rgba(255,210,120,0.95)'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(pp.x,pp.y-size,spread*1.5,0,6.28); ctx.stroke();
-          ctx.fillStyle='rgba(255,210,120,0.95)'; ctx.font='600 '+Math.round(size*0.9)+'px Bricolage Grotesque'; ctx.textAlign='center'; ctx.fillText('foraging here', pp.x, pp.y-spread*1.95); ctx.textAlign='left'; }
+          const lx2=Math.max(size*7.5, Math.min(W-size*7.5, pp.x));
+          const fl=PATCHES[i].dist<0.35?'a short flight':PATCHES[i].dist<0.65?'a fair flight':'a long flight';
+          const bl=q>0.6?'rich bloom':q>0.25?'modest bloom':'thin bloom';
+          ctx.fillStyle='rgba(255,210,120,0.95)'; ctx.font='600 '+Math.round(size*0.9)+'px Bricolage Grotesque'; ctx.textAlign='center';
+          ctx.fillText('foraging here', lx2, pp.y-spread*1.95);
+          ctx.font='500 '+Math.round(size*0.78)+'px Bricolage Grotesque'; ctx.fillStyle='rgba(255,235,180,0.85)';
+          ctx.fillText(bl+' \u00b7 '+fl, lx2, pp.y-spread*1.95+size*1.0); ctx.textAlign='left'; }
         else if(i===best && q>0.5 && !winter){ const bob=Math.sin(mt*3)*size*0.3; ctx.fillStyle='rgba(255,235,150,0.9)'; ctx.beginPath(); ctx.moveTo(pp.x,pp.y-spread*2.1+bob); ctx.lineTo(pp.x-size*0.5,pp.y-spread*2.1-size*0.7+bob); ctx.lineTo(pp.x+size*0.5,pp.y-spread*2.1-size*0.7+bob); ctx.closePath(); ctx.fill(); }
       }
       if(day>=170&&day<250){ ctx.fillStyle='rgba(210,130,50,0.8)'; for(let i=0;i<22;i++){ const t=(mt*30+i*60)%Hh, x=(i*W/22+Math.sin(t*0.05+i)*40)%W; ctx.beginPath(); ctx.ellipse(x,t%Hh,size*0.18,size*0.1,t*0.1,0,6.28); ctx.fill(); } }
@@ -2343,6 +2386,9 @@
       ctx.fillStyle='#8a6a36'; rr2(bx-bw/2-2,by-boxes*size*1.8-size*0.5,bw+4,size*0.6,3); ctx.fill();
       ctx.fillStyle='#9a7438'; ctx.fillRect(bx-bw/2,by-size*0.2,bw,size*0.5); ctx.fillStyle='#1c1206'; ctx.fillRect(bx-bw*0.3,by-size*0.2,bw*0.6,size*0.18);
       if(winter){ ctx.fillStyle='rgba(255,255,255,0.92)'; rr2(bx-bw/2-3,by-boxes*size*1.8-size*0.9,bw+6,size*0.5,3); ctx.fill(); }
+      if(activePatch!=null && !winter){ const ap=patchPos(activePatch);
+        ctx.strokeStyle='rgba(255,220,140,0.35)'; ctx.lineWidth=1.5; ctx.setLineDash([5,6]);
+        ctx.beginPath(); ctx.moveTo(bx,by-size*2.2); ctx.quadraticCurveTo((bx+ap.x)/2, Math.min(by,ap.y)-size*5, ap.x, ap.y-size); ctx.stroke(); ctx.setLineDash([]); }
       const tgt=activePatch!=null?activePatch:best; const tp=patchPos(tgt);
       const want=winter?0:Math.min(34,Math.round(P*FOR_FRAC*0.18*(0.4+Na)*(patchQuality(tgt,day)>0.05?1:0.3)));
       while(flyers.length<want) flyers.push({x:bx,y:by-size,st:'out',ph:Math.random()*6.28});
@@ -2351,7 +2397,9 @@
         const dx=tx-fb.x,dy=ty-fb.y,L=Math.hypot(dx,dy)||1,sp=size*4.5*dt; fb.x+=dx/L*Math.min(L,sp); fb.y+=dy/L*Math.min(L,sp)+Math.sin(fb.ph)*0.4;
         if(L<size*0.8){ fb.st=fb.st==='out'?'back':'out'; } drawBee(fb.x,fb.y,Math.atan2(dy,dx),fb.st==='back'?'nectar':null,false,fb.ph); }
       ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.font='800 '+Math.round(size*3.2)+'px Bricolage Grotesque'; ctx.textAlign='center'; ctx.fillText(seasonName(day).toUpperCase(),W/2,Hh*0.5); ctx.textAlign='left';
-      if(activePatch==null && !winter){ ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.font='500 '+Math.round(size*1.1)+'px Bricolage Grotesque'; ctx.textAlign='center'; ctx.fillText('tap a flower patch to send your foragers', W/2, groundY+(Hh-groundY)*0.5); ctx.textAlign='left'; }
+      if(activePatch==null && !winter){ ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.font='500 '+Math.round(size*0.95)+'px Bricolage Grotesque'; ctx.textAlign='center';
+        ctx.fillText('tap a patch to send the foragers', W/2, groundY+(Hh-groundY)*0.46);
+        ctx.fillText('near flies cheap \u00b7 far must bloom hard to pay for the trip', W/2, groundY+(Hh-groundY)*0.46+size*1.25); ctx.textAlign='left'; }
     }
     function rr2(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
 
