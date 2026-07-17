@@ -270,6 +270,15 @@
     background:linear-gradient(95deg,var(--gold),#fff 55%,var(--honey)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
   #unlockChip .uc3{ font:700 11px 'JetBrains Mono',monospace; color:var(--gold); }
 
+  /* ---------- one-tap tooltips: what a number means, live, in one breath ---------- */
+  #tipPop{ position:fixed; z-index:10; width:min(300px, calc(100vw - 24px)); padding:12px 14px; }
+  #tipPop.hide{ display:none; }
+  #tipPop .tpT{ font:700 12px 'Bricolage Grotesque',sans-serif; color:var(--gold); margin-bottom:4px; }
+  #tipPop .tpB{ font-size:11.5px; line-height:1.55; color:var(--text); }
+  #tipPop .tpB b{ color:var(--gold); font-weight:700; } #tipPop .tpB em{ color:var(--cyan); font-style:normal; }
+  #tipPop .tpMore{ display:inline-block; margin-top:8px; font:700 10.5px 'Bricolage Grotesque',sans-serif; color:var(--cyan); cursor:pointer; }
+  #tipPop .tpMore.hide{ display:none; }
+
   /* ---------- cell info sheet (mobile-friendly comb detail) ---------- */
   #cellSheet{ position:fixed; left:50%; transform:translateX(-50%); bottom:14px; z-index:8; width:min(420px, calc(100% - 24px));
     padding:14px 16px; }
@@ -837,6 +846,7 @@
     <div id="chatRows"></div>
   </div>
   <div id="unlockChip" class="panel hide"><span class="uc1">✦ keeper’s page unlocked</span><span class="uc2" id="unlockName">BROOD</span><span class="uc3">+1 ✧ royal jelly</span></div>
+  <div id="tipPop" class="panel hide"><div class="tpT"></div><div class="tpB"></div><span class="tpMore hide">Read more ›</span></div>
   <div id="cellSheet" class="panel hide"><div id="csBody"></div><button class="cbtn" id="csClose">Got it</button></div>
   <div id="inspect" class="panel"></div>
   <div id="toast" class="panel"></div>
@@ -1427,6 +1437,7 @@
     // ===================== layout =====================
     const ptr={x:innerWidth/2,y:innerHeight/2};
     addEventListener('pointermove',e=>{ ptr.x=e.clientX; ptr.y=e.clientY; });
+    let lastFrostDay=270;
     let DPR=1,W=0,Hh=0,topH=120,botH=120;
     function layout(){
       DPR=Math.min(devicePixelRatio||1,2); W=innerWidth; Hh=innerHeight;
@@ -1461,9 +1472,9 @@
     function syncHiveCentre(){ hiveCx=ox+size*SQ3*(CCC+0.5*(CCR&1)); hiveCy=oy+size*1.5*CCR; }
     // frost tick + harvest band on the timeline — anticipation made visible
     function syncAlmanacTicks(){
-      let fd=270; const dt=difficulty().temp+M.temp();
+      let fd=270; const dt=difficulty().temp+M.temp(); 
       for(let d=180;d<=360;d++){ if(lerpM(tempM,d)+dt<WIN_TEMP){ fd=d; break; } }
-      $('tlFrost').style.left=(fd/YEAR*100)+'%'; $('tlFrost').title='first frost ≈ day '+fd;
+      lastFrostDay=fd; $('tlFrost').style.left=(fd/YEAR*100)+'%'; $('tlFrost').title='first frost ≈ day '+fd;
       $('tlHarv').style.left=(HARV0/YEAR*100)+'%'; $('tlHarv').style.width=((HARV1-HARV0)/YEAR*100)+'%';
       $('tlBloom').style.left=(85/YEAR*100)+'%'; $('tlBloom').style.width=(90/YEAR*100)+'%'; $('tlBloom').title='main nectar flow';
     }
@@ -2763,13 +2774,41 @@
       clearSave(); location.reload(); });
     addEventListener('keydown',e=>{ if(e.key==='Escape'&&started&&!storyMode){ e.preventDefault();
       if($('menu').classList.contains('hide')) menuOpen(); else menuClose(); } });
-    // everything explains itself: numbers and the almanac open their own lessons
-    press($('clockWrap'),()=>{ if(!$('clockWrap').classList.contains('hidden')) showLesson('year',null,true); });
-    press($('stHoney'),()=>showLesson('honey',null,true));
-    press($('stPollen'),()=>showLesson('forage',null,true));
-    press($('stPop'),()=>showLesson('brood',null,true));
-    press($('stBrood'),()=>showLesson('brood',null,true));
-    press($('stKeeper'),()=>{ $('guide').classList.remove('hide'); paused=true; });
+    // everything explains itself — in one tap and one breath, with live numbers.
+    // "Read more" opens the full keeper's page for whoever wants the depth.
+    let tipOpenedAt=0, tipLesson=null;
+    function showTip(anchor, title, body, lessonKey){
+      const el=$('tipPop'); $('tipPop').querySelector('.tpT').innerHTML=title;
+      el.querySelector('.tpB').innerHTML=body;
+      const more=el.querySelector('.tpMore'); tipLesson=lessonKey||null;
+      more.classList.toggle('hide', !tipLesson);
+      el.classList.remove('hide'); tipOpenedAt=performance.now();
+      const r=anchor.getBoundingClientRect(), tw=el.offsetWidth;
+      let x=Math.max(12, Math.min(innerWidth-tw-12, r.left+r.width/2-tw/2));
+      let y=r.bottom+8; if(y+el.offsetHeight>innerHeight-12) y=Math.max(12, r.top-el.offsetHeight-8);
+      el.style.left=x+'px'; el.style.top=y+'px'; }
+    function hideTip(){ $('tipPop').classList.add('hide'); }
+    addEventListener('pointerdown',e=>{ const el=$('tipPop');
+      if(el.classList.contains('hide')) return;
+      if(performance.now()-tipOpenedAt<120) return;
+      if(e.target&&e.target.closest&&e.target.closest('#tipPop')) return;
+      hideTip(); });
+    press($('tipPop').querySelector('.tpMore'),()=>{ hideTip();
+      if(tipLesson==='notes'){ $('guide').classList.remove('hide'); paused=true; }
+      else if(tipLesson) showLesson(tipLesson,null,true); });
+    press($('stHoney'),()=>showTip($('stHoney'),'Honey — the winter fuel',
+      '<b>'+honeyCellsStored()+'</b> cells stored · winter will want ~<b>'+winterNeed()+'</b>. Foragers ripen <em>nectar</em> into it; all winter the cluster burns it to stay warm.','honey'));
+    press($('stPollen'),()=>showTip($('stPollen'),'Pollen — food for the young',
+      '<b>'+Math.round(pollenU/HC)+'</b> cells of protein. Nurses knead it into food for the larvae — <em>no pollen, no new bees</em>.','forage'));
+    press($('stPop'),()=>showTip($('stPop'),'Your workforce',
+      '<b>'+Math.round(P)+'</b> bees alive. What makes more? <em>Warm brood cells + pollen</em>. More bees bring more of everything else.','brood'));
+    press($('stBrood'),()=>showTip($('stBrood'),'The next generation',
+      'Eggs → larvae → capped pupae, about <b>twenty days</b> from laying to a bee that flies. This number is next month\u2019s workforce.','brood'));
+    press($('stKeeper'),()=>showTip($('stKeeper'),'Your keeper\u2019s shelf',
+      '<b>✧'+rj+'</b> royal jelly — spend it on <em>Queen\u2019s Gifts</em> between years · <b>'+jars+'</b> jar'+(jars===1?'':'s')+' harvested. Your legacy in glass.','notes'));
+    press($('clockWrap'),()=>{ if($('clockWrap').classList.contains('hidden')) return;
+      showTip($('clockWrap'),'The almanac — one race with the calendar',
+      'Four seasons in one strip: the <em>bloom</em> feeds you, the amber band is the <em>harvest window</em>, and the white tick is <em>first frost</em> (~day <b>'+lastFrostDay+'</b>). Everything in this game runs against that tick.','year'); });
     // ⓘ then any cell: a themed info sheet, touch-friendly
     press($('inspectBtn'),()=>{ inspectMode=!inspectMode; $('inspectBtn').classList.toggle('on',inspectMode);
       if(inspectMode) toast('Now tap any cell of the comb to read it.'); });
