@@ -111,6 +111,7 @@
   .gl u{ text-decoration:none; font-family:'JetBrains Mono',monospace; font-size:8px; opacity:.75; letter-spacing:0; }
   .tb .yld s{ color:var(--good); text-decoration:none; font-weight:700; }
   .tb:not(.on) .yld{ opacity:.62; }
+  .tb.on .yld, .tb.on .yld b, .tb.on .yld em, .tb.on .yld i, .tb.on .yld s{ color:inherit; opacity:.78; }
   /* full-screen lessons: show the thing, then say when to pick it and why */
   .gcard{ max-width:440px; }
   #guideRow{ display:flex; flex-direction:column; gap:7px; margin:18px 0; }
@@ -221,6 +222,26 @@
   .tb.gold.off{ opacity:.42; }
   #fastW{ font-size:10px; color:var(--frost); padding:0 6px; letter-spacing:.05em; font-family:'JetBrains Mono',monospace; align-self:center; }
 
+  /* ---------- pause menu ---------- */
+  .mcard{ max-width:380px; }
+  .mcard h1{ font-size:25px; }
+  .mcard>.btn{ display:block; width:100%; margin-bottom:18px; }
+  .mset{ text-align:left; display:flex; flex-direction:column; gap:7px; margin-bottom:16px; }
+  .mrow{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:9px 12px;
+    border-radius:12px; background:rgba(255,255,255,0.035); border:1px solid var(--border); }
+  .mrow.mcol{ flex-direction:column; align-items:stretch; gap:8px; }
+  .ml{ font:600 12px 'Bricolage Grotesque',sans-serif; color:var(--text); }
+  .mtog{ font-family:'Bricolage Grotesque',sans-serif; font-weight:700; font-size:11.5px; padding:7px 16px; border-radius:9px;
+    cursor:pointer; border:1px solid var(--border); background:rgba(255,255,255,0.04); color:var(--dim); transition:all .18s; min-width:74px; }
+  .mtog.on{ color:#241503; background:linear-gradient(180deg,var(--gold),var(--honey)); border-color:transparent; }
+  .mtog.danger{ color:var(--bad); border-color:rgba(255,112,82,0.35); }
+  .mtog.danger.confirm{ color:#2c0d06; background:linear-gradient(180deg,#ff9a7a,#e2593a); border-color:transparent; }
+  .paceMini{ display:flex; gap:6px; }
+  .paceMini .pseg{ padding:7px 4px 6px; font-size:11px; }
+  .paceMini .pseg i{ font-size:7.5px; }
+  .mfoot{ display:flex; gap:14px; justify-content:center; align-items:baseline; font-size:10px; color:var(--dim); flex-wrap:wrap; }
+  .mfoot a{ color:var(--dim); }
+
   /* ---------- chat log (everything Hazel has said, kept) ---------- */
   #chatlog{ position:fixed; top:78px; right:max(13px, calc((100% - var(--stage))/2 + 13px)); width:294px;
     max-height:calc(100vh - 176px); overflow:auto; padding:12px 14px; z-index:6; }
@@ -242,6 +263,7 @@
   #toast{ position:fixed; left:50%; top:50%; transform:translate(-50%,-50%); z-index:8; padding:9px 17px; border-radius:12px;
     font-size:12.5px; opacity:0; transition:opacity .7s; pointer-events:none; text-align:center; max-width:84vw; line-height:1.45; }
   #toast.show{ opacity:1; }
+  #toast b{ color:var(--gold); font-weight:600; } #toast em{ color:var(--cyan); font-style:normal; }
 
   /* ---------- season interstitial ---------- */
   #sb{ position:fixed; inset:0; z-index:6; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; opacity:0; }
@@ -254,6 +276,32 @@
   #sb.s0 #sbT{ background:linear-gradient(95deg,#b6f0a0,#fff 55%,var(--gold)); -webkit-background-clip:text; background-clip:text; }
   #sbS{ margin-top:8px; font-size:12px; letter-spacing:.34em; text-transform:uppercase; color:var(--text); opacity:.85;
     text-shadow:0 2px 12px rgba(0,0,0,.6); font-weight:500; }
+
+  /* ---------- rotate prompt: phone landscape gets a gentle ask ---------- */
+  #rotate{ display:none; }
+  @media (orientation:landscape) and (pointer:coarse) and (max-height:540px){
+    #rotate{ display:flex; position:fixed; inset:0; z-index:13; background:var(--comb);
+      align-items:center; justify-content:center; text-align:center; }
+  }
+  #rotate .rHex{ font-size:44px; color:var(--gold); animation:rotHint 2.4s ease-in-out infinite; display:inline-block; }
+  @keyframes rotHint{ 0%,100%{ transform:rotate(0deg); } 50%{ transform:rotate(90deg); } }
+  #rotate .rT{ font:700 18px 'Bricolage Grotesque',sans-serif; color:var(--text); margin-top:14px; }
+  #rotate .rS{ font:600 9.5px 'JetBrains Mono',monospace; letter-spacing:.3em; text-transform:uppercase; color:var(--dim); margin-top:6px; }
+
+  /* ---------- frost — cold creeps in from the edges ---------- */
+  #frost{ position:fixed; inset:0; z-index:4; pointer-events:none; opacity:0; transition:opacity 2.5s ease;
+    background:
+      radial-gradient(90% 60% at 0% 0%, rgba(207,226,245,0.16), transparent 55%),
+      radial-gradient(90% 60% at 100% 0%, rgba(207,226,245,0.14), transparent 55%),
+      radial-gradient(110% 60% at 50% 100%, rgba(190,215,240,0.18), transparent 60%),
+      linear-gradient(180deg, rgba(207,226,245,0.05), transparent 30%, transparent 70%, rgba(207,226,245,0.07)); }
+  /* cold-tinted panels: icy rim and a breath of frost in the corners */
+  #advisor{ position:relative; }
+  #advisor.cold{ border-color:rgba(207,226,245,0.5); }
+  #advisor.cold::after{ content:''; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+    background:radial-gradient(55% 45% at 0% 0%, rgba(207,226,245,0.16), transparent 70%),
+               radial-gradient(45% 40% at 100% 100%, rgba(207,226,245,0.12), transparent 70%); }
+  #advisor.cold .ic{ filter:drop-shadow(0 0 6px rgba(207,226,245,.55)); }
 
   /* ---------- view wipe ---------- */
   #wipe{ position:fixed; inset:0; z-index:4; pointer-events:none; opacity:0; transition:opacity .3s;
@@ -567,6 +615,7 @@
       <div class="tab preveal" id="reportBtn" tabindex="0" title="Hive report — trends, honey ledger & winter forecast"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="4" y="12" width="4" height="8" rx="1.2"/><rect x="10" y="6.5" width="4" height="13.5" rx="1.2"/><rect x="16" y="9.5" width="4" height="10.5" rx="1.2"/></svg></div>
       <div class="tab" id="helpBtn" tabindex="0" title="What does what — read any lesson again">?</div>
       <div class="tab" id="sndBtn" tabindex="0" title="Hive sound on/off"></div>
+      <div class="tab" id="menuBtn" tabindex="0" title="Pause &amp; settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h0a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55h0a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v0a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg></div>
     </div>
 
     <div id="res" class="panel preveal">
@@ -615,6 +664,31 @@
     </div>
   </div>
 
+  <div class="ov hide" id="menu">
+    <div class="card mcard">
+      <h1>PAUSED</h1><div class="sub">the bees hold their breath</div>
+      <button class="btn pulse" id="menuResume">Back to the hive ▶</button>
+      <div class="mset">
+        <div class="mrow"><span class="ml">Sound</span><button class="mtog" id="menuSnd">Off</button></div>
+        <div class="mrow mcol"><span class="ml" id="paceLabel2">Pace</span>
+          <div class="paceMini" role="radiogroup" aria-labelledby="paceLabel2">
+            <div class="pseg" data-pace="easy" tabindex="0" role="radio" aria-checked="false">Easy<i>gentle</i></div>
+            <div class="pseg" data-pace="medium" tabindex="0" role="radio" aria-checked="false">Medium<i>steady</i></div>
+            <div class="pseg" data-pace="hard" tabindex="0" role="radio" aria-checked="false">Hard<i>swift</i></div>
+          </div>
+        </div>
+        <div class="mrow"><span class="ml">Keeper’s notes</span><button class="mtog" id="menuGuide">Open</button></div>
+        <div class="mrow"><span class="ml">Hazel’s log</span><button class="mtog" id="menuLog">Open</button></div>
+        <div class="mrow"><span class="ml">Restart colony</span><button class="mtog danger" id="menuRestart">Restart</button></div>
+      </div>
+      <div class="mfoot">
+        <span>HIVEMIND · ErrerLabs</span>
+        <a href="about.html" target="_blank" rel="noopener">About</a>
+        <a href="privacy.html" target="_blank" rel="noopener">Privacy</a>
+        <a href="terms.html" target="_blank" rel="noopener">Terms</a>
+      </div>
+    </div>
+  </div>
   <div class="ov hide" id="guide">
     <div class="card gcard">
       <h1>THE KEEPER'S NOTES</h1><div class="sub">nothing here is a secret — read any of it, any time</div>
@@ -641,6 +715,8 @@
   <div id="inspect" class="panel"></div>
   <div id="toast" class="panel"></div>
   <div id="sb"><div id="sbT"></div><div id="sbS"></div></div>
+  <div id="frost" aria-hidden="true"></div>
+  <div id="rotate"><div class="rIn"><div class="rHex">⬡</div><div class="rT">Turn your phone upright</div><div class="rS">the hive stands tall</div></div></div>
   <div id="wipe"></div>
 
   <div id="coach" class="panel">
@@ -722,11 +798,11 @@
       <div id="sndInvite" class="on" tabindex="0" role="checkbox" aria-checked="true">
         <span class="box"><i>✓</i></span><span>🎧 Play with sound<span class="sub2"> — music &amp; the hive</span></span>
       </div>
-      <div class="paceCap">how fast should the seasons turn?</div>
-      <div id="paceRow">
-        <div class="pseg" data-pace="easy" tabindex="0">Easy<i>gentle days</i></div>
-        <div class="pseg" data-pace="medium" tabindex="0">Medium<i>keeper’s pace</i></div>
-        <div class="pseg" data-pace="hard" tabindex="0">Hard<i>seasons rush</i></div>
+      <div class="paceCap" id="paceLabel">how fast should the seasons turn?</div>
+      <div id="paceRow" role="radiogroup" aria-labelledby="paceLabel">
+        <div class="pseg" data-pace="easy" tabindex="0" role="radio" aria-checked="false">Easy<i>gentle days</i></div>
+        <div class="pseg" data-pace="medium" tabindex="0" role="radio" aria-checked="false">Medium<i>keeper’s pace</i></div>
+        <div class="pseg" data-pace="hard" tabindex="0" role="radio" aria-checked="false">Hard<i>seasons rush</i></div>
       </div>
       <div>
         <button class="btn pulse" id="startNew">Found a new colony</button>
@@ -799,10 +875,10 @@
     // are swallowed whole so colours appear with their words. One channel —
     // lessons and coach speech never type at the same time. ----
     let twActive=null;
-    function finishType(){ if(!twActive) return; clearInterval(twActive.t);
+    function finishType(runDone){ if(!twActive) return; clearInterval(twActive.t);
       twActive.el.innerHTML=twActive.html; twActive.el.classList.remove('typing');
-      const d=twActive.done; twActive=null; if(d) d(); }
-    function typeInto(el, html, done){ finishType(); if(!el) return;
+      const d=twActive.done; twActive=null; if(runDone!==false && d) d(); }
+    function typeInto(el, html, done){ finishType(false); if(!el) return;
       el.classList.add('typing'); el.innerHTML=''; let i=0;
       const t=setInterval(()=>{
         do{ if(html[i]==='<'){ const j=html.indexOf('>',i); i=(j<0?html.length:j+1); }
@@ -835,7 +911,8 @@
     const PACES={ easy:2.5, medium:1.0, hard:0.6 };
     let pace='easy', DAY_LEN=PACES.easy;
     function setPace(p){ if(!PACES[p]) p='easy'; pace=p; DAY_LEN=PACES[p];
-      document.querySelectorAll('.pseg').forEach(x=>x.classList.toggle('on',x.dataset.pace===p));
+      document.querySelectorAll('.pseg').forEach(x=>{ const on=x.dataset.pace===p;
+        x.classList.toggle('on',on); x.setAttribute('aria-checked',on?'true':'false'); });
       try{ localStorage.setItem('hm_pace',p); }catch(e){} }
     document.querySelectorAll('.pseg').forEach(b=>press(b,()=>setPace(b.dataset.pace)));
     (function(){ let p='easy'; try{ p=localStorage.getItem('hm_pace')||'easy'; }catch(e){} setPace(p); })();
@@ -1192,6 +1269,10 @@
       flits=[]; for(let i=0;i<6;i++) flits.push({x:Math.random()*W, y:groundY-mSize*(1+Math.random()*4), ph:Math.random()*6.28, vx:(Math.random()-0.5)*20});
     }
     function patchPos(i){ return {x:PATCHES[i].fx*W, y:Hh*0.72-mSize*0.4}; }
+    // the dance is a map: its axis points where the flowers are. A patch far to
+    // the meadow's left tilts the figure-eight left; foragers leave on the same bearing.
+    function danceAngle(){ const i=activePatch!=null?activePatch:bestPatch(day).i;
+      return -Math.PI/2 + (PATCHES[i].fx-0.5)*Math.PI*0.95; }
 
     // ===================== input =====================
     function cellAtPx(px,py){ let best=null,bd=(size*1.05)**2; const rr=Math.round((py-oy)/(size*1.5));
@@ -1378,16 +1459,17 @@
       MSGLOG.push({ic, html, day:Math.max(0,Math.floor(day)), year});
       if(MSGLOG.length>90) MSGLOG.shift();
       if(!$('chatlog').classList.contains('hide')) renderChat(); }
-    function renderChat(){ const r=$('chatRows');
+    function renderChat(force){ const r=$('chatRows'), el=$('chatlog');
+      const atBottom = force || (el.scrollHeight-el.clientHeight-el.scrollTop < 24);
       r.innerHTML = MSGLOG.length ? MSGLOG.map(m=>'<div class="crow"><span class="ci2">'+m.ic+'</span><div class="cb2"><div class="cwhen">Y'+m.year+' · '+seasonName(m.day)+' · d'+(m.day+1)+'</div><div class="ctx2">'+m.html+'</div></div></div>').join('')
         : '<div class="ctx2" style="color:var(--dim)">Nothing yet — Hazel will speak as the seasons turn.</div>';
-      const el=$('chatlog'); el.scrollTop=el.scrollHeight; }
+      if(atBottom) el.scrollTop=el.scrollHeight; }
     function toggleChat(show){ const el=$('chatlog');
       const want = show===undefined ? el.classList.contains('hide') : show;
-      el.classList.toggle('hide', !want); if(want) renderChat(); }
+      el.classList.toggle('hide', !want); if(want) renderChat(true); }
     let toastT=null, said={};
     function tip(key,msg){ if(seenTips[key]||onboard||!started) return; seenTips[key]=1; toast(msg); }
-    function toast(s,once){ if(once){if(said[once])return; said[once]=1;} logMsg('🐝', s); const el=$('toast'); el.textContent=s; el.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),6500); }
+    function toast(s,once){ if(once){if(said[once])return; said[once]=1;} logMsg('🐝', s); const el=$('toast'); el.innerHTML=s; el.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),6500); }
     let advCur='', advSince=0;
     function advise(){
       const T=lerpM(tempM,day)+difficulty().temp+M.temp(), Na=lerpM(nectarM,day), winter=T<WIN_TEMP;
@@ -1425,6 +1507,7 @@
         if(urgent || !advCur || (performance.now()-advSince)>12000){
           advCur=tx; advSince=performance.now(); $('advTx').innerHTML=tx; logMsg(ic,tx); } }
       $('advisor').classList.toggle('warn',warn);
+      $('advisor').classList.toggle('cold', ic==='❄️'||coldSnap>0);
     }
 
     // ===================== sim core =====================
@@ -1534,10 +1617,17 @@
       const T=lerpM(tempM,day)+difficulty().temp+M.temp(), Na=lerpM(nectarM,day), winter=T<WIN_TEMP, dancing=forageMult()>1.05;
       const move=(b,tx,ty,sp)=>{const dx=tx-b.x,dy=ty-b.y,L=Math.hypot(dx,dy)||1,st=Math.min(L,sp*size*dt); b.x+=dx/L*st;b.y+=dy/L*st; if(st>0.05){b.vx=dx/L;b.vy=dy/L;} return L<size*0.5;};
       for(const b of bees){ b.wob+=dt*8;
-        if(winter){ const a=b.wob*0.25+(b.x+b.y), rr=size*(1.4+1.3*Math.sin(b.x+b.y)); move(b,hiveCx+Math.cos(a)*rr,hiveCy+Math.sin(a)*rr*0.8,0.5); continue; }
-        if(b.state==='waggle'){ b.danceT+=dt*5; const s=size*2.2; b.x=hiveCx+Math.sin(b.danceT)*s; b.y=hiveCy-size*4+Math.sin(b.danceT*2)*s*0.5; b.vx=Math.cos(b.danceT); b.vy=Math.sin(b.danceT*2); if(b.danceT>10){b.state='idle';} continue; }
+        if(winter){ // the cluster breathes — a slow collective pulse — while each bee shivers
+          const a=b.wob*0.25+(b.x+b.y), breathe=1+0.12*Math.sin(gt*0.7);
+          const rr=size*(1.15+1.1*Math.sin(b.x+b.y))*breathe;
+          move(b,hiveCx+Math.cos(a)*rr,hiveCy+Math.sin(a)*rr*0.8,0.5); continue; }
+        if(b.state==='waggle'){ b.danceT+=dt*5; const s=size*2.2, th=danceAngle(), co=Math.cos(th), sn=Math.sin(th);
+          const u=Math.sin(b.danceT)*s, v=Math.sin(b.danceT*2)*s*0.5;
+          b.x=hiveCx+u*co-v*sn; b.y=hiveCy-size*4+u*sn+v*co;
+          b.vx=Math.cos(b.danceT)*co-Math.sin(b.danceT*2)*sn; b.vy=Math.cos(b.danceT)*sn+Math.sin(b.danceT*2)*co;
+          if(b.danceT>10){b.state='idle';} continue; }
         if(b.role==='forage'){
-          if(b.state==='idle'){ if(Na>0.05){ b.state='out'; const px=activePatch!=null?activePatch:bestPatch(day).i; const a=(px/PATCHES.length)*1.6-0.8; b.fieldp={x:hiveCx+Math.cos(a-1.2)*size*16, y:hiveCy-size*10+Math.sin(a)*size*4}; b.carry=null; } else move(b,hiveCx+(Math.random()-0.5)*size*8,hiveCy+(Math.random()-0.5)*size*6,0.4); }
+          if(b.state==='idle'){ if(Na>0.05){ b.state='out'; const a=danceAngle()+(Math.random()-0.5)*0.25; b.fieldp={x:hiveCx+Math.cos(a)*size*17, y:hiveCy+Math.sin(a)*size*13}; b.carry=null; } else move(b,hiveCx+(Math.random()-0.5)*size*8,hiveCy+(Math.random()-0.5)*size*6,0.4); }
           else if(b.state==='out'){ if(move(b,b.fieldp.x,b.fieldp.y,2.4)){ b.carry=Math.random()<FN[forage]?'nectar':'pollen'; b.state='return'; } }
           else { if(move(b,hiveCx+(Math.random()-0.5)*size*5,hiveCy+(Math.random()-0.5)*size*4,2.4)){ if(dancing&&Math.random()<0.18){ b.state='waggle'; b.danceT=0; } else b.state='idle'; b.carry=null; } } }
         else if(b.role==='build'){ const site=b.tcell;
@@ -1594,7 +1684,11 @@
         ctx.save(); hexPath(x,y,s2*0.92); ctx.clip(); ctx.fillStyle=col; const fh=s2*1.7*frac; ctx.fillRect(x-s2,y+s2*0.85-fh,s2*2,fh+0.5);
         if(kind==='honey'){ ctx.fillStyle='rgba(255,255,255,'+(0.14+0.08*Math.sin(gt*1.6+x*0.05+y*0.07)).toFixed(3)+')'; ctx.fillRect(x-s2,y+s2*0.85-fh,s2*2,Math.min(fh,s2*0.3)); } ctx.restore();
         hexPath(x,y,s2); ctx.strokeStyle=COL.wallRim; ctx.lineWidth=1; ctx.stroke(); }
-      for(const b of bees){ if(b.state==='waggle'){ ctx.strokeStyle='rgba(255,210,120,0.35)'; ctx.lineWidth=1.5; ctx.beginPath(); let first=true; for(let t=0;t<6.3;t+=0.3){ const xx=hiveCx+Math.sin(t)*size*2.2, yy=hiveCy-size*4+Math.sin(t*2)*size*1.1; if(first){ctx.moveTo(xx,yy);first=false;} else ctx.lineTo(xx,yy);} ctx.stroke(); } drawBee(b.x,b.y,Math.atan2(b.vy||0,b.vx||0),b.carry,false,b.wob); }
+      const dA=danceAngle(), dcx=hiveCx, dcy=hiveCy-size*4, dco=Math.cos(dA), dsn=Math.sin(dA);
+      for(const b of bees){ if(b.state==='waggle'){ ctx.strokeStyle='rgba(255,210,120,0.35)'; ctx.lineWidth=1.5; ctx.beginPath(); let first=true; for(let t=0;t<6.3;t+=0.3){ const u=Math.sin(t)*size*2.2, v=Math.sin(t*2)*size*1.1; const xx=dcx+u*dco-v*dsn, yy=dcy+u*dsn+v*dco; if(first){ctx.moveTo(xx,yy);first=false;} else ctx.lineTo(xx,yy);} ctx.stroke(); }
+        let bx=b.x, by=b.y;
+        if(winter){ bx+=Math.sin(gt*26+b.wob*3)*size*0.06; by+=Math.cos(gt*31+b.wob*2)*size*0.05; } // shiver
+        drawBee(bx,by,Math.atan2(b.vy||0,b.vx||0),b.carry,false,b.wob); }
       drawBee(queen.x,queen.y,0,null,true,queen.wob);
       drawScout(); drawHornet(); drawParts(lastDt);
       if(view==='hive'&&started&&!over&&hoveredCell){ const {x,y}=cellCenter(hoveredCell.c,hoveredCell.r); let okc;
@@ -1942,7 +2036,7 @@
     function coachContinue(){ if(!coachWait) return; coachWait=false;
       $('coach').classList.remove('show'); if(!onboard) return;
       if(coachStep>=COACH.length){ endCoach(); } else showCoach(); }
-    function endCoach(){ onboard=false; finishType(); clearSpots(); $('coach').classList.remove('show'); setReveal(false); forecastCache=forecastToSpring();
+    function endCoach(){ onboard=false; finishType(false); clearSpots(); $('coach').classList.remove('show'); setReveal(false); forecastCache=forecastToSpring();
       goals=makeGoals(); lastSI=seasonIdx(day); setSpeed(1); saveGame();
       setTimeout(()=>showLesson('forage', ()=>{ tip('notes','Hazel: Nothing here is a secret — the <b>?</b> up top keeps all of it. Read any of it again whenever you like, and take your time. The bees aren\u2019t going anywhere.'); }), 1500); }
     press($('coachBtn'),()=>{ if(coachWait){ if(twActive){ finishType(); } else coachContinue(); return; } const s=COACH[coachStep]; if(s&&!s.until) advanceCoach(); });
@@ -2242,6 +2336,25 @@
         d.innerHTML='<span class="gi2">'+GICON[k]+'</span><div><b>'+L.t+'</b><br><span>'+L.s+'</span></div>';
         d.addEventListener('click',()=>{ $('guide').classList.add('hide'); showLesson(k,()=>{ $('guide').classList.remove('hide'); }, true); });
         row.appendChild(d); }); })();
+    // ---- pause menu ----
+    let menuWasPaused=false, restartArm=0, menuOpenedAt=0;
+    function menuOpen(){ menuWasPaused=paused; paused=true; syncMenuSnd(); menuOpenedAt=performance.now(); $('menu').classList.remove('hide'); }
+    function menuClose(){ $('menu').classList.add('hide'); paused=menuWasPaused;
+      const r=$('menuRestart'); r.classList.remove('confirm'); r.textContent='Restart'; restartArm=0; }
+    function syncMenuSnd(){ const b=$('menuSnd'); if(!b) return; const on=!!(AU&&AU.ctx&&AU.on);
+      b.textContent=on?'On':'Off'; b.classList.toggle('on',on); }
+    press($('menuBtn'),()=>{ if($('menu').classList.contains('hide')) menuOpen(); else menuClose(); });
+    press($('menuResume'),menuClose);
+    // ignore the synthesized click that retargets onto the backdrop right after opening
+    press($('menu'),e=>{ if(performance.now()-menuOpenedAt<650) return; if(e.target===$('menu')) menuClose(); });
+    press($('menuSnd'),()=>{ sndToggle(); setTimeout(syncMenuSnd,50); });
+    press($('menuGuide'),()=>{ menuClose(); $('guide').classList.remove('hide'); paused=true; });
+    press($('menuLog'),()=>{ menuClose(); toggleChat(true); });
+    press($('menuRestart'),()=>{ const r=$('menuRestart');
+      if(!restartArm){ restartArm=1; r.classList.add('confirm'); r.textContent='Sure?'; setTimeout(()=>{ if(restartArm){ restartArm=0; r.classList.remove('confirm'); r.textContent='Restart'; } },4000); return; }
+      clearSave(); location.reload(); });
+    addEventListener('keydown',e=>{ if(e.key==='Escape'&&started&&!storyMode){ e.preventDefault();
+      if($('menu').classList.contains('hide')) menuOpen(); else menuClose(); } });
     press($('advisor'),e=>{ if($('advisor').classList.contains('hidden')) return; if(e.target&&e.target.closest&&e.target.closest('#feedBtn')) return; toggleChat(); });
     press($('chatX'),()=>toggleChat(false));
     press($('helpBtn'),()=>{ $('guide').classList.remove('hide'); paused=true; });
@@ -2325,6 +2438,10 @@
       if(AU.ctx&&AU.on&&AU.humG){ const T=lerpM(tempM,day)+difficulty().temp+M.temp(), winter=T<WIN_TEMP;
         const tgt=(started&&!over)?(0.08+0.5*Math.min(1,P/CAP))*(winter?0.45:1)*(speed===0?0.3:1)*(hornet&&hornet.state==='raid'?1.4:1):0;
         AU.humG.gain.value+= (tgt-AU.humG.gain.value)*Math.min(1,dt*2.5); }
+      // frost overlay follows the true temperature — deep winter frosts the glass
+      { const Tf=lerpM(tempM,day)+difficulty().temp+M.temp()+(coldSnap>0?M.snap():0);
+        const coldFx=(started&&!over)?Math.max(coldSnap>0?0.5:0, Math.min(1,(WIN_TEMP-Tf)/9)):0;
+        const fEl=$('frost'); if(fEl) fEl.style.opacity=(Math.max(0,coldFx)*0.85).toFixed(2); }
       const shx=shake>0.005?(Math.random()-0.5)*shake*size*0.8:0, shy=shake>0.005?(Math.random()-0.5)*shake*size*0.8:0;
       ctx.setTransform(DPR,0,0,DPR,shx*DPR,shy*DPR);
       drawLessonArt(dt);
