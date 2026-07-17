@@ -1129,6 +1129,8 @@
         <button class="btn pulse" id="startNew">Found a new colony</button>
         <button class="btn ghost hide" id="startCont">Continue</button>
       </div>
+      <button class="btn ghost" id="startDaily" style="margin-top:8px">☀ Daily Challenge</button>
+      <div id="dailyCap" style="font:500 11px 'JetBrains Mono',monospace; color:var(--dim); margin-top:5px"></div>
       <div class="cardLinks">
         <a href="about.html" target="_blank" rel="noopener">About</a><a href="privacy.html" target="_blank" rel="noopener">Privacy</a><a href="terms.html" target="_blank" rel="noopener">Terms</a>
       </div>
@@ -1190,7 +1192,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.25.0';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.25.1';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1568,6 +1570,33 @@
     try{ const l=JSON.parse(localStorage.getItem('hm_life')||'{}'); for(const k of ['y','j','g','p']) if(typeof l[k]==='number') LIFE[k]=l[k]; }catch(e){}
     function lifeSave(){ try{ localStorage.setItem('hm_life',JSON.stringify(LIFE)); }catch(e){} }
     function apiaryScore(){ return LIFE.y*250 + LIFE.j*100 + LIFE.g*50 + LIFE.p + badgeCount()*150; }
+    // ===================== daily challenge: today's scenario, one score, a streak =====================
+    let dailyMode=false; const DAILY_LEN=90;
+    let DAILY={}; try{ DAILY=JSON.parse(localStorage.getItem('hm_daily')||'{}')||{}; }catch(e){}
+    function dailySave(){ try{ localStorage.setItem('hm_daily',JSON.stringify(DAILY)); }catch(e){} }
+    function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+    function yesterKey(){ const d=new Date(); d.setDate(d.getDate()-1); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); }
+    function dateSeedNum(){ const d=new Date(); return d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate(); }
+    function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+    function syncDailyCap(){ const el=$('dailyCap'); if(!el) return; const done=DAILY.date===todayKey();
+      el.innerHTML = 'today’s scenario · ' + (DAILY.streak?('streak '+DAILY.streak+'d'):'no streak yet') + (done?(' · best '+ (DAILY.best||0).toLocaleString()):''); }
+    function seedDaily(){ dailyMode=true; const rnd=mulberry32(dateSeedNum());
+      const pool=WEATHERS.filter(x=>x.id!=='calm'&&x.id!=='wander'&&x.id!=='bear'); // a pure test of keeping — no scripted raids
+      curSeason=pool[Math.floor(rnd()*pool.length)]||WEATHERS[0]; seasonEventDone=true; seasonEventFired=null; lastSeasonId=curSeason.id;
+      setPace('medium'); tinyComb(); honeyU=8*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; grades=[]; forage='balanced'; activePatch=null; mix=[0,0,0,0]; roster=[]; corpses=[];
+      queenAge=1; hornet=null; hornetCD=18+rnd()*22; parts.length=0; shake=0; rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=makeGoals(); lastSI=0; scoutShown=false; seenTips={}; lessonSeen={}; nudged={}; starveT=0; bankAtFrost=0; raidLoss=0;
+      brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=false; yearHist.length=0; histT=2.7; popMilo={};
+      brush='brood'; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x.dataset.brush==='brood')); setReveal(false); clearUndo(); }
+    function startDaily(){ $('intro').classList.add('hide'); seedDaily(); beginCommon(); setSpeed(1); paused=false; said={};
+      toast('\u2600 Daily Challenge \u2014 <b>'+curSeason.name+'</b>. Ninety days to raise the strongest colony you can.'+(DAILY.streak?(' Streak: '+DAILY.streak+' \ud83d\udd25'):'')); }
+    function finishDaily(){ const score=Math.round(honeyCellsStored()*4 + peakPop*3 + jars*25);
+      const tk=todayKey(), firstToday=(DAILY.date!==tk);
+      const best=firstToday?score:Math.max(DAILY.best||0, score);
+      let streak=DAILY.streak||0;
+      if(firstToday){ streak=(DAILY.date===yesterKey())?streak+1:1; }
+      DAILY={date:tk, best, streak}; dailySave(); syncDailyCap();
+      dailyMode=false; setSpeed(0); paused=true; over=true;
+      openShare({ label:'Day in the Apiary · '+tk, score:best, pop:Math.max(peakPop,Math.round(P)), honey:Math.round(honeyCellsStored()), streak }); }
     // ===================== the share card: a keepsake of your apiary =====================
     function shareStats(){
       let best=null; try{ for(const j of CELLAR){ if(!best||j.p>best.p) best=j; } }catch(e){}
@@ -1628,7 +1657,7 @@
       try{ await (document.fonts&&document.fonts.ready); }catch(e){}
       drawShareCard($('shareCanvas'), st);
       $('sharePop').classList.remove('hide'); paused=true; }
-    function closeShare(){ $('sharePop').classList.add('hide'); if($('menu').classList.contains('hide')&&(!$('yearEnd')||$('yearEnd').classList.contains('hide'))) paused=false; }
+    function closeShare(){ $('sharePop').classList.add('hide'); if(shareDaily){ shareDaily=null; location.reload(); return; } if($('menu').classList.contains('hide')&&(!$('yearEnd')||$('yearEnd').classList.contains('hide'))) paused=false; }
     function doShare(){ const cv=$('shareCanvas'); if(!cv.toBlob){ toast('Sharing isn\u2019t available on this device.'); return; }
       cv.toBlob(async(blob)=>{ if(!blob){ toast('Could not build the card \u2014 try again.'); return; }
         const file=new File([blob],'hivemind-apiary.png',{type:'image/png'});
@@ -1641,7 +1670,7 @@
     try{ (JSON.parse(localStorage.getItem('hm_badges')||'[]')).forEach(k=>earned[k]=1); }catch(e){}
     function badgeCount(){ return Object.keys(earned).length; }
     function syncBadgeN(){ const el=$('badgeN'); if(el) el.textContent=badgeCount(); const t=$('badgeTot'); if(t) t.textContent=BADGES.length; }
-    function grantBadge(id){ if(earned[id]) return; const b=BADGES.find(x=>x.id===id); if(!b) return;
+    function grantBadge(id){ if(dailyMode||earned[id]) return; const b=BADGES.find(x=>x.id===id); if(!b) return;
       earned[id]=1; try{ localStorage.setItem('hm_badges',JSON.stringify(Object.keys(earned))); }catch(e){}
       toast('✦ Badge earned — '+b.n+'!'); logMsg('✦','Badge earned — <b>'+b.n+'</b>: '+b.d); fanfare(); syncBadgeN();
       QUEENS.filter(q=>q.lock&&q.lock.badge===id).forEach(q=>{ logMsg('👑','New queen line unlocked — <b>'+q.name+'</b>, '+q.ep+'.');
@@ -2372,11 +2401,11 @@
         for(let i=0;i<n&&empties.length;i++){ const k=(Math.random()*empties.length)|0; empties[k].brood={stage:'egg',t:0}; empties.splice(k,1); } }
       honeyU -= P*C_BEE*coldMult(T)*M.eat()*dd;
       if(offline||onboard){ if(honeyU<2*HC)honeyU=2*HC; starveT=0; }
-      else if(honeyU<=0){ honeyU=0; starveT+=dd; if(starveT>2.5) return gameOver('starve'); }
+      else if(honeyU<=0){ honeyU=0; starveT+=dd; if(starveT>2.5 && !dailyMode) return gameOver('starve'); }
       else { starveT=0; if(honeyU<0)honeyU=0; }
       const drate=winter?1/LIFE_W:1/LIFE_S; P-=P*drate*dd*1.2;
       if(!offline) rosterTick(dd, winter);
-      if(!offline && !onboard && P<1) return gameOver('dwindle'); if(P<1)P=1;
+      if(!offline && !onboard && !dailyMode && P<1) return gameOver('dwindle'); if(P<1)P=1;
       if(!onboard && !winter && day<215){ const crowd=(P/CAP)*(1-Math.min(1,space/14)); swarmP=Math.max(0,Math.min(1.2, swarmP+(crowd-0.18)*dd*0.5*(QL().swarm||1)));
         if(swarmP>0.85 && Math.random()<dd*0.22){ const lost=Math.round(P*0.42); P-=lost; swarmP=0.1; puff(hiveCx,hiveCy,'#ffd76b',40,2); shake=Math.max(shake,0.6); buzzAlert(); toast('A swarm has left to found a new colony! '+lost+' bees gone — give them space next time.'); } }
       else swarmP=Math.max(0,swarmP-dd*0.4);
@@ -2865,7 +2894,7 @@
       const bt=cells.map(c=>c.brood?Math.round(c.brood.t*10):0);
       return {v:4,t:Date.now(),day,year,P,honeyU,pollenU,nectarU,peakPop,bornTotal,swarmP,forage,activePatch,grades,queenAge,cb,bt,
         rj,jars,jy:jarsThisYear,ql:queenLine,rs:roster,se:curSeason?curSeason.id:'calm',sq:seasonEventDone?1:0,sx:seasonEventFired,mx:mix.map(v=>Math.round(v)),ow:Object.keys(owned),fw:fedWinter?1:0,bf:Math.round(bankAtFrost),tp:Object.keys(seenTips),ls:Object.keys(lessonSeen),gd:goals?goals.map(g=>g.done?1:0):[0,0,0,0]}; }
-    function saveGame(){ try{ localStorage.setItem(SAVE_KEY,JSON.stringify(serialize())); }catch(e){} }
+    function saveGame(){ if(dailyMode) return; try{ localStorage.setItem(SAVE_KEY,JSON.stringify(serialize())); }catch(e){} }
     function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
     function loadSave(){ try{ const s=localStorage.getItem(SAVE_KEY); return s?JSON.parse(s):null; }catch(e){ return null; } }
     function deserialize(s){ const ZN=['none','brood','honey'], STN=['egg','larva','pupa'];
@@ -3617,6 +3646,8 @@
         el.innerHTML=h; el.classList.remove('hide');
       } else el.classList.add('hide'); }
     $('startNew').addEventListener('click',()=>{ showLegacyNote(); renderQueens(); $('intro').classList.add('hide'); $('queenPick').classList.remove('hide'); });
+    $('startDaily').addEventListener('click', startDaily);
+    syncDailyCap();
     $('queenBack').addEventListener('click',()=>{ $('queenPick').classList.add('hide'); $('intro').classList.remove('hide'); });
     $('queenGo').addEventListener('click',()=>{ $('queenPick').classList.add('hide');
       const q=QUEENS.find(x=>x.id===queenLine);
@@ -3659,7 +3690,8 @@
       $('fastW').classList.toggle('hide',!autoFast);
       if(started && !over && speed>0 && !paused && !frozen){
         const dd=(dt/DAY_LEN)*eff; day+=dd;
-        if(day>=YEAR){ day=YEAR; stepDay(0.0001,false); if(!over){ syncHUD(); endOfYear(); } }
+        if(dailyMode){ if(day>=DAILY_LEN && !over){ day=DAILY_LEN; syncHUD(); finishDaily(); } }
+        else if(day>=YEAR){ day=YEAR; stepDay(0.0001,false); if(!over){ syncHUD(); endOfYear(); } }
         else stepDay(dd,false);
         if(!over){
           stepHornet(dt);
