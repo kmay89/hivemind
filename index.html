@@ -1938,6 +1938,13 @@
         let bx=b.x, by=b.y;
         if(winter){ bx+=Math.sin(gt*26+b.wob*3)*size*0.06; by+=Math.cos(gt*31+b.wob*2)*size*0.05; } // shiver
         drawBee(bx,by,Math.atan2(b.vy||0,b.vx||0),b.carry,false,b.wob,b.fanning?'fan':(b.fly?'fly':'walk')); }
+      // tutorial touch-ripple on the exact cell the current step wants
+      if(onboard){ const tc=coachTarget(); if(tc){ const p0=cellCenter(tc.c,tc.r);
+        for(const off of [0,0.7]){ const ph=((gt+off)%1.4)/1.4, rr=size*(0.55+ph*1.15);
+          ctx.strokeStyle=(off?'rgba(255,217,122,':'rgba(255,255,255,')+(0.55*(1-ph)).toFixed(2)+')';
+          ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(p0.x,p0.y,rr,0,6.28); ctx.stroke(); }
+        ctx.fillStyle='rgba(255,255,255,'+(0.32+0.22*Math.sin(gt*3)).toFixed(2)+')';
+        ctx.beginPath(); ctx.arc(p0.x,p0.y,size*0.14,0,6.28); ctx.fill(); } }
       // when storage is full and nectar still flows, honey visibly drips away
       { const cp=caps(), full=cp.total>0&&(honeyU+pollenU+nectarU)>=cp.total-2, Na2=lerpM(nectarM,day);
         if(started&&!over&&full&&Na2>0.1&&!winter&&Math.random()<lastDt*2.2){
@@ -2307,25 +2314,25 @@
     function clearSpots(){ ['forageGrp','brushGrp','timeGrp','tabMeadow','reportBtn'].forEach(id=>spot(id,false)); document.querySelectorAll('[data-brush],[data-sp],[data-f]').forEach(e=>e.classList.remove('tapHere')); }
     const COACH=[
       { ic:'🖌️', spot:'brushGrp', brushHint:'brood', pause:true, prog:'1 · the brushes',
-        tx:'These below are your <b>brushes</b>. Pick up <span class="kb">Brood</span> \u2014 tap it.',
+        tx:'Pick up <span class="kb">Brood</span>.',
         until:()=>brush==='brood' },
       { ic:'👑', prog:'2 · her first cradle',
-        tx:'Now <em>tap one wax cell</em> near the middle. The soft glow shows where it\u2019s wise.',
+        tx:'Tap the rippling cell.',
         until:()=>brushedBrood>=1, unlock:'brood' },
       { ic:'🍯', spot:'brushGrp', brushHint:'honey', prog:'3 · the pantry',
-        tx:'Next craft. Pick up the <span class="kh">Honey</span> brush.',
+        tx:'Now <span class="kh">Honey</span>.',
         until:()=>brush==='honey' },
       { ic:'🍯', prog:'4 · first shelf',
-        tx:'Paint <em>one outer cell</em> \u2014 a shelf for the harvest to sleep on.',
+        tx:'One outer cell.',
         until:()=>paintedHoney>=1, unlock:'honey' },
       { ic:'🔨', spot:'brushGrp', brushHint:'expand', prog:'5 · fresh wax',
-        tx:'Last brush: <span class="kg">Expand</span>. Pick it up.',
+        tx:'And <span class="kg">Expand</span>.',
         until:()=>brush==='expand' },
       { ic:'🔨', prog:'6 · make room',
-        tx:'Tap the glowing ground <em>just outside the comb</em>. The builders will draw new wax over it.',
+        tx:'Just outside the comb.',
         until:()=>flaggedExpand>=1, unlock:'expand' },
       { ic:'🌼', spot:'forageGrp', show:['forageGrp'], prog:'7 · the dials',
-        tx:'One more thing \u2014 the <span class="kc">dials</span> aim your foragers. Tap any one of them.',
+        tx:'Aim your foragers \u2014 tap a dial.',
         until:()=>forageTouched, unlock:'forage' },
     ];
     function showCoach(){ const s=COACH[coachStep]; if(!s){ endCoach(); return; }
@@ -2367,6 +2374,18 @@
         showUnlockChip(s.unlock, ()=>showLesson(s.unlock, tease, true)); }
       else setTimeout(tease, 350); }
     // the interlude waits for the player — nothing Hazel says vanishes on a timer
+    // show, don't tell: while a tutorial step waits, the exact target cell
+    // carries a touch-ripple — the finger knows where to go before the words do
+    function coachTarget(){ if(!onboard||coachWait) return null;
+      const s=COACH[coachStep]; if(!s||!s.until||s.until()) return null;
+      const find=p=>cells.find(p)||null;
+      if(s.unlock==='brood')  return find(c=>c.built&&c.zone!=='brood'&&!c.brood&&hexDist(c.c,c.r,CCC,CCR)<=1)
+                                  || find(c=>c.built&&c.zone!=='brood'&&!c.brood);
+      if(s.unlock==='honey')  return find(c=>c.built&&c.zone!=='honey'&&hexDist(c.c,c.r,CCC,CCR)>=2)
+                                  || find(c=>c.built&&c.zone!=='honey');
+      if(s.unlock==='expand') return find(c=>{ if(c.built||c.flagExpand) return false;
+        let n=0; for(const [cc,rr] of neighbors(c.c,c.r)) if(cells[idx(cc,rr)].built) n++; return n>=2; });
+      return null; }
     function coachContinue(){ if(!coachWait) return; coachWait=false;
       $('coach').classList.remove('show'); if(!onboard) return;
       if(coachStep>=COACH.length){ endCoach(); } else showCoach(); }
