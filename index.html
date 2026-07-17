@@ -278,7 +278,7 @@
     width:min(380px, calc(100vw - 24px)); }
   #heatLegend .hl2{ flex:1; min-width:0; }
   #heatLegend .hgrad{ width:64px; height:8px; border-radius:4px; flex:none;
-    background:linear-gradient(90deg,#2b4a74,#8a5a2a,#ff9236); }
+    background:linear-gradient(90deg,#1d3a5f,#2e6f6b,#b0762c,#ffb42b); }
   #heatLegend .hl2{ color:var(--text); text-transform:none; letter-spacing:0; font:500 10px 'Bricolage Grotesque',sans-serif; }
 
   /* ---------- one-tap tooltips: what a number means, live, in one breath ---------- */
@@ -464,6 +464,28 @@
   #updateGo:active{ transform:scale(.95); }
   #updateLater{ font-size:10px; color:var(--dim); cursor:pointer; text-decoration:underline; flex:none; }
   @media(max-width:520px){ #updateBar .ut{ white-space:normal; font-size:11.5px; } }
+
+  /* ---------- game boot splash ---------- */
+  #gsplash{ position:fixed; inset:0; z-index:11; cursor:pointer;
+    background:radial-gradient(120% 100% at 50% 42%, #14100a 0%, #0d0905 55%, #060402 100%);
+    display:flex; align-items:center; justify-content:center; opacity:1; transition:opacity .55s ease; }
+  #gsplash.hide{ display:none; }
+  #gsplash.out{ opacity:0; pointer-events:none; }
+  #gsIn{ text-align:center; position:relative; overflow:hidden; padding:10px 26px; }
+  .gsT{ font:800 clamp(44px,10vw,84px) 'Bricolage Grotesque',sans-serif; letter-spacing:.06em; line-height:1;
+    background:linear-gradient(95deg,var(--gold),#fff 55%,var(--honey)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    opacity:0; transform:scale(1.12); transition:opacity .7s cubic-bezier(.2,.8,.3,1), transform .9s cubic-bezier(.2,.8,.3,1); }
+  #gsplash.go .gsT{ opacity:1; transform:scale(1); }
+  #gsIn::after{ content:''; position:absolute; top:0; bottom:0; width:34%; left:-52%;
+    background:linear-gradient(78deg, transparent, rgba(255,255,255,.26), transparent); transform:skewX(-16deg); pointer-events:none; }
+  #gsplash.go #gsIn::after{ animation:spSweep .8s ease-in-out .55s forwards; }
+  .gsV{ margin-top:12px; font:700 12px 'JetBrains Mono',monospace; letter-spacing:.3em; color:var(--cyan);
+    opacity:0; transition:opacity .6s ease .45s; }
+  .gsC{ margin-top:14px; font:600 10.5px 'JetBrains Mono',monospace; letter-spacing:.14em; color:var(--dim);
+    opacity:0; transition:opacity .6s ease .65s; }
+  .gsC2{ margin-top:4px; font:500 9px 'JetBrains Mono',monospace; letter-spacing:.14em; color:rgba(194,169,126,.55);
+    opacity:0; transition:opacity .6s ease .8s; }
+  #gsplash.go .gsV, #gsplash.go .gsC, #gsplash.go .gsC2{ opacity:1; }
 
   /* ---------- ErrerLabs studio splash (Echo Resonance Research) ---------- */
   #splash{ position:fixed; inset:0; z-index:12; cursor:pointer;
@@ -812,7 +834,7 @@
         <div class="mrow"><span class="ml">Restart colony</span><button class="mtog danger" id="menuRestart">Restart</button></div>
       </div>
       <div class="mfoot">
-        <span>HIVEMIND · ErrerLabs</span>
+        <span>HIVEMIND v<span id="menuVer"></span> · © ErrerLabs · Karl Meves</span>
         <a href="about.html" target="_blank" rel="noopener">About</a>
         <a href="privacy.html" target="_blank" rel="noopener">Privacy</a>
         <a href="terms.html" target="_blank" rel="noopener">Terms</a>
@@ -859,7 +881,7 @@
     <div id="chatRows"></div>
   </div>
   <div id="unlockChip" class="panel hide"><span class="uc1">✦ keeper’s page unlocked</span><span class="uc2" id="unlockName">BROOD</span><span class="uc3">+1 ✧ royal jelly</span></div>
-  <div id="heatLegend" class="panel hide"><i class="hgrad"></i><span>cold</span><span class="hl2">the nest holds ~35° at its heart — brood wants the warm middle</span><span>warm</span></div>
+  <div id="heatLegend" class="panel hide"><i class="hgrad"></i><span>cold</span><span class="hl2">each ring is one step cooler — hold a single glowing heart</span><span>warm</span></div>
   <div id="tipPop" class="panel hide"><div class="tpT"></div><div class="tpB"></div><span class="tpMore hide">Read more ›</span></div>
   <div id="cellSheet" class="panel hide"><div id="csBody"></div><button class="cbtn" id="csClose">Got it</button></div>
   <div id="inspect" class="panel"></div>
@@ -924,6 +946,16 @@
     <span class="ut">🍯 A <b>fresh version</b> of the hive is ready.</span>
     <button id="updateGo">Update</button>
     <span id="updateLater">later</span>
+  </div>
+
+  <!-- game title splash: the build card, console-style -->
+  <div id="gsplash" class="hide" aria-hidden="true">
+    <div id="gsIn">
+      <div class="gsT">HIVEMIND</div>
+      <div class="gsV">v<span id="gsVer"></span></div>
+      <div class="gsC">© 2026 ErrerLabs · Karl Meves</div>
+      <div class="gsC2">MIT License · hive-mind-game.com</div>
+    </div>
   </div>
 
   <!-- ErrerLabs studio splash -->
@@ -1016,6 +1048,7 @@
 
   <script>
   (function(){
+    const GAME_VER='2026.7.20.2';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1036,6 +1069,7 @@
     const ICON_SND_OFF='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.2v5.6h3.6L13 19V5L7.6 9.2H4z" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="16" y1="9.5" x2="21" y2="14.5"/><line x1="21" y1="9.5" x2="16" y2="14.5"/></g></svg>';
 
     $('sndBtn').innerHTML=ICON_SND_OFF;
+    { const mv=$('menuVer'); if(mv) mv.textContent=GAME_VER; }
     (function(){ let seen=false; try{ seen=localStorage.getItem('hm_welcomed')==='1'; }catch(e){}
       if(!seen && !loadSave()) $('welcome').classList.remove('hide'); })();
     press($('welcomeBtn'),()=>{ try{ localStorage.setItem('hm_welcomed','1'); }catch(e){} $('welcome').classList.add('hide'); });
@@ -1059,7 +1093,11 @@
 
     // ---- ErrerLabs studio splash: play once on load, tap or key to skip ----
     (function(){ const sp=$('splash'); if(!sp) return; let gone=false;
-      function end(){ if(gone) return; gone=true; sp.classList.add('out'); setTimeout(()=>sp.remove(),700); }
+      function end(){ if(gone) return; gone=true; sp.classList.add('out'); setTimeout(()=>sp.remove(),700); bootTitle(); }
+      function bootTitle(){ const g=$('gsplash'); if(!g) return; $('gsVer').textContent=GAME_VER;
+        g.classList.remove('hide'); requestAnimationFrame(()=>g.classList.add('go'));
+        let byeDone=false; const bye=()=>{ if(byeDone) return; byeDone=true; g.classList.add('out'); setTimeout(()=>g.remove(),600); };
+        g.addEventListener('pointerdown',bye); setTimeout(bye, RM?1300:2600); }
       if(RM){ sp.classList.add('go','still'); setTimeout(end,1400); }
       else{ requestAnimationFrame(()=>sp.classList.add('go')); setTimeout(end,3300); }
       sp.addEventListener('click',end);
@@ -1932,8 +1970,20 @@
     const COL={ wallEmpty:'#3a2c16', wallRim:'#5a4624', egg:'#f3ead6', larva:'#f0dcae', pupa:'#caa86a', nectar:'#e9c64f', honey:'#f7b733', pollen:'#ef8c2c',
       broodZone:'rgba(120,170,235,0.16)', honeyZone:'rgba(247,183,51,0.10)', unbuilt:'rgba(150,120,70,0.16)', frontier:'rgba(150,200,120,0.28)' };
     function hexPath(x,y,s){ ctx.beginPath(); for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-30), px=x+s*Math.cos(a), py=y+s*Math.sin(a); i?ctx.lineTo(px,py):ctx.moveTo(px,py);} ctx.closePath(); }
+    // heat palette: deep night-blue through teal and umber to honey-gold —
+    // a smooth 4-stop lerp over the simulated 0..1 warmth
+    const HEAT_STOPS=[[0,29,58,95],[0.38,46,111,107],[0.68,176,118,44],[1,255,180,43]];
+    function heatColor(h,a){ h=Math.max(0,Math.min(1,h));
+      let i=0; while(i<HEAT_STOPS.length-2&&h>HEAT_STOPS[i+1][0]) i++;
+      const A=HEAT_STOPS[i], B=HEAT_STOPS[i+1], t=(h-A[0])/((B[0]-A[0])||1);
+      const r=Math.round(A[1]+(B[1]-A[1])*t), g=Math.round(A[2]+(B[2]-A[2])*t), b=Math.round(A[3]+(B[3]-A[3])*t);
+      return 'rgba('+r+','+g+','+b+','+a.toFixed(3)+')'; }
+    let heatBands=null;
     function drawInside(){
       const T=lerpM(tempM,day)+difficulty().temp+M.temp(), winter=T<WIN_TEMP;
+      if(heatView){ if(!heatBands||heatBands.length!==cells.length) heatBands=new Int8Array(cells.length);
+        for(let i=0;i<cells.length;i++){ const c0=cells[i];
+          heatBands[i]=c0.built?Math.max(0,Math.min(4,Math.floor(c0.heat*5))):-1; } }
       let g=ctx.createLinearGradient(0,0,0,Hh); g.addColorStop(0,winter?'#10131c':'#1a1305'); g.addColorStop(1,winter?'#0b0d14':'#0f0b05'); ctx.fillStyle=g; ctx.fillRect(0,0,W,Hh);
       // on a large display the surround falls away, so the comb reads as the subject
       if(W>1100||Hh>860){ const vr=Math.max(W,Hh)*0.8;
@@ -1955,15 +2005,23 @@
         if(cell.zone==='brood'){ ctx.fillStyle=COL.broodZone; ctx.fill(); } else if(cell.zone==='honey'){ ctx.fillStyle=COL.honeyZone; ctx.fill(); }
         const hw=cell.heat-AMB(T);
         if(heatView){ const h=Math.max(0,Math.min(1,cell.heat));
-          const r=Math.round(43+(255-43)*h), g2=Math.round(74+(146-74)*h), b=Math.round(116+(54-116)*h);
-          ctx.fillStyle='rgba('+r+','+g2+','+b+',0.55)'; ctx.fill(); }
+          ctx.fillStyle=heatColor(h,0.82*(0.92+0.06*Math.sin(gt*0.8))); ctx.fill();
+          // isolines: stroke every hex standing on the edge of a warmer band —
+          // the comb reads as a contour map of the nest's own physics
+          const bi=idx(cell.c,cell.r), band=heatBands?heatBands[bi]:-1;
+          if(band>0){ let edge=false;
+            for(const [cc,rr] of neighbors(cell.c,cell.r)){ const nb=heatBands[idx(cc,rr)]; if(nb>-1&&nb<band){ edge=true; break; } }
+            if(edge){ ctx.strokeStyle=heatColor(Math.min(1,(band+0.6)/5),0.95); ctx.lineWidth=2; ctx.stroke(); } } }
         else if(hw>0.06){ ctx.fillStyle='rgba(255,146,54,'+Math.min(0.34,hw*0.42).toFixed(3)+')'; ctx.fill(); }
         ctx.strokeStyle=COL.wallRim; ctx.lineWidth=1; ctx.stroke();
-        if(cell.brood){ const st=cell.brood.stage;
+        if(cell.brood){ if(heatView) ctx.globalAlpha=0.25; const st=cell.brood.stage;
           if(st==='egg'){ ctx.fillStyle=COL.egg; ctx.beginPath(); ctx.ellipse(x,y,s2*0.10,s2*0.22,0.5,0,6.28); ctx.fill(); }
           else if(st==='larva'){ const gr=0.2+0.7*(cell.brood.t/LAR_D); ctx.fillStyle=COL.larva; ctx.beginPath(); ctx.arc(x,y,s2*0.34*gr+s2*0.12,0,6.28); ctx.fill(); ctx.strokeStyle='rgba(180,140,80,0.5)'; ctx.lineWidth=1; ctx.stroke(); }
-          else { hexPath(x,y,s2*0.86); ctx.fillStyle=COL.pupa; ctx.fill(); ctx.fillStyle='rgba(120,90,50,0.35)'; ctx.beginPath(); ctx.arc(x,y,s2*0.4,0,6.28); ctx.fill(); } } }
+          else { hexPath(x,y,s2*0.86); ctx.fillStyle=COL.pupa; ctx.fill(); ctx.fillStyle='rgba(120,90,50,0.35)'; ctx.beginPath(); ctx.arc(x,y,s2*0.4,0,6.28); ctx.fill(); }
+          ctx.globalAlpha=1; } }
       const sorted=cells.filter(c=>c.built&&c.zone==='honey').sort((a,b)=>cellDist(a.c,a.r)-cellDist(b.c,b.r));
+      // under the heat lens the stores ghost out — temperature owns the color
+      if(heatView) ctx.globalAlpha=0.16;
       let pol=pollenU,nec=nectarU,hon=honeyU;
       for(const cell of sorted){ let kind=null,frac=0;
         if(pol>0){kind='pollen';frac=Math.min(1,pol/HC);pol-=HC;} else if(nec>0){kind='nectar';frac=Math.min(1,nec/HC);nec-=HC;} else if(hon>0){kind='honey';frac=Math.min(1,hon/HC);hon-=HC;} else break;
@@ -1971,6 +2029,7 @@
         ctx.save(); hexPath(x,y,s2*0.92); ctx.clip(); ctx.fillStyle=col; const fh=s2*1.7*frac; ctx.fillRect(x-s2,y+s2*0.85-fh,s2*2,fh+0.5);
         if(kind==='honey'){ ctx.fillStyle='rgba(255,255,255,'+(0.14+0.08*Math.sin(gt*1.6+x*0.05+y*0.07)).toFixed(3)+')'; ctx.fillRect(x-s2,y+s2*0.85-fh,s2*2,Math.min(fh,s2*0.3)); } ctx.restore();
         hexPath(x,y,s2); ctx.strokeStyle=COL.wallRim; ctx.lineWidth=1; ctx.stroke(); }
+      ctx.globalAlpha=1;
       const dA=danceAngle(), dcx=hiveCx, dcy=hiveCy-size*4, dco=Math.cos(dA), dsn=Math.sin(dA);
       for(const b of bees){ if(b.state==='waggle'){ ctx.strokeStyle='rgba(255,210,120,0.35)'; ctx.lineWidth=1.5; ctx.beginPath(); let first=true; for(let t=0;t<6.3;t+=0.3){ const u=Math.sin(t)*size*2.2, v=Math.sin(t*2)*size*1.1; const xx=dcx+u*dco-v*dsn, yy=dcy+u*dsn+v*dco; if(first){ctx.moveTo(xx,yy);first=false;} else ctx.lineTo(xx,yy);} ctx.stroke(); }
         let bx=b.x, by=b.y;
