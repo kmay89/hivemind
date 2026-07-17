@@ -320,6 +320,7 @@
   .jar{ display:flex; gap:11px; align-items:center; background:rgba(255,255,255,0.045); border:1px solid rgba(255,217,122,0.16); border-radius:12px; padding:10px 12px; }
   .jar.locked{ opacity:0.5; filter:saturate(0.35); }
   .jar .ji{ font-size:25px; line-height:1; }
+  .jar .jarC{ width:38px; height:52px; flex:none; align-self:center; filter:drop-shadow(0 4px 7px rgba(0,0,0,0.45)); }
   .jar .jn{ font-weight:700; font-size:14.5px; color:#f7eed9; }
   .jar .jd{ font-size:12px; color:#c2a97e; line-height:1.45; }
   .rchip{ font:700 9.5px 'JetBrains Mono',monospace; letter-spacing:0.07em; padding:2px 7px; border-radius:20px; border:1px solid currentColor; margin-left:7px; vertical-align:2px; white-space:nowrap; }
@@ -1192,7 +1193,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.25.1';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.26.0';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2154,16 +2155,69 @@
       if(p>=0.55){ f=di; n=FLOWERS[di].honey; r=p>=0.92?4:p>=0.8?3:2; }
       return {n, f, p:Math.round(p*100), r, y:year, mix:sh.map(x=>Math.round(x*100))}; }
     function mixBar(m){ let b='<div class="rbar">'; for(let i=0;i<4;i++){ if(m[i]>1) b+='<i style="width:'+m[i]+'%;background:'+FLOWERS[i].core+'"></i>'; } return b+'</div>'; }
+    // ===================== a jar worth looking at — Apple-glass optics, Ball-jar soul =====================
+    function _jhx(h){ h=(h||'#ffce54').replace('#',''); if(h.length===3)h=h.split('').map(c=>c+c).join(''); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
+    function _jcl(v){ return Math.max(0,Math.min(255,v|0)); }
+    function _jto(c){ return '#'+c.map(x=>_jcl(x).toString(16).padStart(2,'0')).join(''); }
+    function jLt(h,a){ const c=_jhx(h); return _jto([c[0]+a,c[1]+a,c[2]+a]); }
+    function jDk(h,a){ const c=_jhx(h); return _jto([c[0]-a,c[1]-a,c[2]-a]); }
+    function jRR(g,x,y,w,h,r){ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
+    function drawJar(g,W,H,o){ o=o||{}; const cx=W/2; g.clearRect(0,0,W,H);
+      const fill=o.fill||'#ffce54', cap=o.cap||'#e9b949', glow=o.rarity, level=o.empty?0:(o.level!=null?o.level:0.74);
+      const bw=W*0.64, bx=cx-bw/2, topY=H*0.22, botY=H*0.955, bodyH=botY-topY;
+      const r=bw*0.26, neckW=bw*0.62, neckY=topY, shoulderY=topY+bodyH*0.15;
+      function body(){ g.beginPath();
+        g.moveTo(bx, shoulderY); g.lineTo(bx, botY-r); g.quadraticCurveTo(bx,botY, bx+r,botY);
+        g.lineTo(bx+bw-r, botY); g.quadraticCurveTo(bx+bw,botY, bx+bw,botY-r); g.lineTo(bx+bw, shoulderY);
+        g.quadraticCurveTo(bx+bw, neckY+(shoulderY-neckY)*0.25, cx+neckW/2, neckY);
+        g.lineTo(cx-neckW/2, neckY); g.quadraticCurveTo(bx, neckY+(shoulderY-neckY)*0.25, bx, shoulderY); g.closePath(); }
+      // rarity glow behind
+      if(glow){ const rg=g.createRadialGradient(cx,H*0.56,2,cx,H*0.56,W*0.6); rg.addColorStop(0,glow+'4d'); rg.addColorStop(1,glow+'00'); g.fillStyle=rg; g.fillRect(0,0,W,H); }
+      // cool back-glass tint
+      body(); let bgg=g.createLinearGradient(bx,0,bx+bw,0); bgg.addColorStop(0,'rgba(206,232,244,0.12)'); bgg.addColorStop(0.5,'rgba(238,250,255,0.05)'); bgg.addColorStop(1,'rgba(176,202,218,0.16)'); g.fillStyle=bgg; g.fill();
+      // honey fill
+      if(!o.empty){ g.save(); body(); g.clip();
+        const fy=botY-(botY-shoulderY)*level;
+        let hg=g.createLinearGradient(0,fy,0,botY); hg.addColorStop(0,jLt(fill,26)); hg.addColorStop(0.42,fill); hg.addColorStop(1,jDk(fill,30)); g.fillStyle=hg; g.fillRect(bx,fy,bw,botY-fy);
+        // warm base glow
+        let ig=g.createRadialGradient(cx,botY-bodyH*0.16,2,cx,botY-bodyH*0.16,bw*0.75); ig.addColorStop(0,jLt(fill,22)); ig.addColorStop(1,fill); g.globalAlpha=0.5; g.fillStyle=ig; g.fillRect(bx,fy,bw,botY-fy); g.globalAlpha=1;
+        // meniscus
+        g.fillStyle=jLt(fill,32); g.beginPath(); g.ellipse(cx,fy,bw/2,bw*0.11,0,0,6.2832); g.fill();
+        g.strokeStyle='rgba(255,255,255,0.3)'; g.lineWidth=Math.max(1,W*0.012); g.beginPath(); g.ellipse(cx,fy,bw/2*0.92,bw*0.085,0,Math.PI,6.2832); g.stroke();
+        // specular band gliding down the honey
+        g.fillStyle='rgba(255,255,255,0.15)'; g.fillRect(bx+bw*0.12, fy+(botY-fy)*0.28, bw*0.13, (botY-fy)*0.6);
+        g.restore(); }
+      // glass front optics
+      g.save(); body(); g.clip();
+      let sh=g.createLinearGradient(bx,0,bx+bw*0.55,0); sh.addColorStop(0,'rgba(255,255,255,0.4)'); sh.addColorStop(0.5,'rgba(255,255,255,0.07)'); sh.addColorStop(1,'rgba(255,255,255,0)'); g.fillStyle=sh; g.fillRect(bx,topY,bw*0.55,bodyH);
+      g.fillStyle='rgba(255,255,255,0.6)'; g.fillRect(bx+bw*0.15, shoulderY+bodyH*0.05, Math.max(1,bw*0.05), bodyH*0.74);   // bright streak
+      g.fillStyle='rgba(58,80,92,0.16)'; g.fillRect(bx+bw*0.85, shoulderY, bw*0.15, bodyH*0.86);                            // right refraction shadow
+      g.fillStyle='rgba(255,255,255,0.32)'; g.fillRect(bx+bw*0.92, shoulderY+bodyH*0.05, Math.max(1,bw*0.03), bodyH*0.72);  // right bright edge
+      g.restore();
+      // outline
+      body(); g.strokeStyle='rgba(255,255,255,0.45)'; g.lineWidth=Math.max(1,W*0.014); g.stroke();
+      // gold screw band + lid
+      const lidH=H*0.12, lidY=topY-lidH*0.72, lidW=neckW*1.18, lx=cx-lidW/2;
+      jRR(g,lx,lidY,lidW,lidH,lidH*0.34); let lg=g.createLinearGradient(0,lidY,0,lidY+lidH); lg.addColorStop(0,jLt(cap,34)); lg.addColorStop(0.5,cap); lg.addColorStop(1,jDk(cap,30)); g.fillStyle=lg; g.fill();
+      g.strokeStyle='rgba(90,60,15,0.45)'; g.lineWidth=1; jRR(g,lx,lidY,lidW,lidH,lidH*0.34); g.stroke();
+      g.strokeStyle='rgba(255,255,255,0.3)'; for(let k=1;k<3;k++){ g.beginPath(); g.moveTo(lx+2,lidY+lidH*k/3); g.lineTo(lx+lidW-2,lidY+lidH*k/3); g.stroke(); }
+      g.fillStyle='rgba(255,255,255,0.45)'; g.fillRect(lx+lidW*0.12, lidY+2, lidW*0.09, lidH-4);
+      // top-left sparkle
+      g.fillStyle='rgba(255,255,255,0.92)'; g.beginPath(); g.ellipse(bx+bw*0.26, shoulderY+bodyH*0.12, W*0.028, W*0.052, -0.5, 0, 6.2832); g.fill();
+    }
+    const JARFILL=['#ffd066','#ffc16b','#e28a1b','#ecb84e'];   // clover, orchard, goldenrod, lavender
+    function paintJars(root){ if(!root) return; root.querySelectorAll('canvas.jarC').forEach(cv=>{ const g=cv.getContext('2d');
+      drawJar(g,cv.width,cv.height,{ empty:cv.dataset.empty==='1', fill:cv.dataset.fill||'#ffce54', rarity:cv.dataset.rar||null, cap:cv.dataset.cap||'#e9b949', level:cv.dataset.empty==='1'?0:0.76 }); }); }
     function renderCellar(){ let h='';
       for(let i=0;i<4;i++){ const js=CELLAR.filter(j=>j.f===i);
-        if(!js.length){ h+='<div class="jar locked"><span class="ji">🫙</span><div><div class="jn">'+FLOWERS[i].honey+'</div><div class="jd">not yet tasted \u2014 follow the '+FLOWERS[i].n.toLowerCase()+' '+FLOWERS[i].ic+' when it blooms, then harvest in autumn</div></div></div>'; continue; }
+        if(!js.length){ h+='<div class="jar locked"><canvas class="jarC" width="76" height="104" data-empty="1"></canvas><div><div class="jn">'+FLOWERS[i].honey+'</div><div class="jd">not yet tasted \u2014 follow the '+FLOWERS[i].n.toLowerCase()+' '+FLOWERS[i].ic+' when it blooms, then harvest in autumn</div></div></div>'; continue; }
         const best=js.reduce((a,b)=>b.p>a.p?b:a), rr=RARITY[best.r];
-        h+='<div class="jar"><span class="ji">'+FLOWERS[i].ic+'</span><div style="flex:1;min-width:0"><div class="jn">'+FLOWERS[i].honey+'<span class="rchip" style="color:'+rr.c+'">'+rr.n+'</span></div><div class="jd">'+FLOWERS[i].note+'</div>'+mixBar(best.mix)+'<div class="jd">best jar: '+best.p+'% '+FLOWERS[i].n.toLowerCase()+' \u00b7 year '+best.y+' \u00b7 '+js.length+' jar'+(js.length>1?'s':'')+'</div></div></div>'; }
+        h+='<div class="jar"><canvas class="jarC" width="76" height="104" data-fill="'+JARFILL[i]+'" data-rar="'+rr.c+'"></canvas><div style="flex:1;min-width:0"><div class="jn">'+FLOWERS[i].honey+'<span class="rchip" style="color:'+rr.c+'">'+rr.n+'</span></div><div class="jd">'+FLOWERS[i].note+'</div>'+mixBar(best.mix)+'<div class="jd">best jar: '+best.p+'% '+FLOWERS[i].n.toLowerCase()+' \u00b7 year '+best.y+' \u00b7 '+js.length+' jar'+(js.length>1?'s':'')+'</div></div></div>'; }
       const wf=CELLAR.filter(j=>j.f===-1);
       if(wf.length){ const last=wf[wf.length-1];
-        h+='<div class="jar"><span class="ji">🌼</span><div style="flex:1;min-width:0"><div class="jn">Wildflower Honey<span class="rchip" style="color:'+RARITY[1].c+'">'+RARITY[1].n+'</span></div><div class="jd">every meadow in one spoon \u2014 no two jars alike</div>'+mixBar(last.mix)+'<div class="jd">'+wf.length+' jar'+(wf.length>1?'s':'')+' on the shelf</div></div></div>'; }
+        h+='<div class="jar"><canvas class="jarC" width="76" height="104" data-fill="#f2a836" data-rar="'+RARITY[1].c+'"></canvas><div style="flex:1;min-width:0"><div class="jn">Wildflower Honey<span class="rchip" style="color:'+RARITY[1].c+'">'+RARITY[1].n+'</span></div><div class="jd">every meadow in one spoon \u2014 no two jars alike</div>'+mixBar(last.mix)+'<div class="jd">'+wf.length+' jar'+(wf.length>1?'s':'')+' on the shelf</div></div></div>'; }
       if(!CELLAR.length) h+='<div class="jd" style="text-align:center;opacity:0.85;padding:10px">The shelf is bare. Come autumn, bank the winter pantry first \u2014 then take a jar, and it lands here with its recipe.</div>';
-      $('cellarGrid').innerHTML=h; }
+      $('cellarGrid').innerHTML=h; paintJars($('cellarGrid')); }
     function harvestState(){ const T=lerpM(tempM,day)+difficulty().temp+M.temp();
       const inWin=day>=HARV0 && day<=HARV1 && T>=WIN_TEMP && !onboard && started && !over;
       const need=winterNeed(); const sur=honeyCellsStored()-need*1.1;
@@ -3744,11 +3798,14 @@
       // when a controller existed at load time (i.e. a genuine version swap)
       const hadController=!!navigator.serviceWorker.controller;
       navigator.serviceWorker.addEventListener('controllerchange',()=>{ if(!hadController||refreshing) return; refreshing=true; location.reload(); });
-      function offerUpdate(reg){ const bar=$('updateBar'); if(!bar||bar.classList.contains('show')) return;
+      let snoozeUntil=0;
+      function offerUpdate(reg){ const bar=$('updateBar'); if(!bar||bar.classList.contains('show')||performance.now()<snoozeUntil) return;
         bar.classList.add('show');
         $('updateGo').onclick=()=>{ try{ if(started&&!over) saveGame(); }catch(e){}
           const w=reg.waiting; if(w) w.postMessage({type:'SKIP_WAITING'}); else location.reload(); };
-        $('updateLater').onclick=()=>bar.classList.remove('show'); }
+        // "later" tucks it away for half an hour; the pending update re-offers itself
+        // when the player next returns to the game, so a Home Screen app never gets stuck on an old build
+        $('updateLater').onclick=()=>{ bar.classList.remove('show'); snoozeUntil=performance.now()+30*60*1000; }; }
       function watchWorker(reg,w){ if(!w) return;
         w.addEventListener('statechange',()=>{ if(w.state==='installed'&&navigator.serviceWorker.controller) offerUpdate(reg); }); }
       navigator.serviceWorker.register('sw.js').then(reg=>{
@@ -3756,7 +3813,8 @@
         watchWorker(reg,reg.installing);
         reg.addEventListener('updatefound',()=>watchWorker(reg,reg.installing));
         // look for new versions when the player returns to the tab, and hourly while it stays open
-        document.addEventListener('visibilitychange',()=>{ if(!document.hidden) reg.update().catch(()=>{}); });
+        document.addEventListener('visibilitychange',()=>{ if(document.hidden) return; reg.update().catch(()=>{});
+          if(reg.waiting && navigator.serviceWorker.controller) offerUpdate(reg); });
         setInterval(()=>reg.update().catch(()=>{}),60*60*1000);
       }).catch(()=>{});
     }
