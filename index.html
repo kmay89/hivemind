@@ -2318,7 +2318,7 @@
       if(coachStep>=COACH.length){ endCoach(); } else showCoach(); }
     function endCoach(){ onboard=false; finishType(false); clearSpots(); $('coach').classList.remove('show'); setReveal(false); forecastCache=forecastToSpring();
       goals=makeGoals(); lastSI=seasonIdx(day); setSpeed(1); saveGame();
-      setTimeout(()=>(()=>{ tip('notes','Hazel: Nothing here is a secret — the <b>?</b> up top keeps all of it. Read any of it again whenever you like, and take your time. The bees aren\u2019t going anywhere.'); })(), 1500); }
+      setTimeout(()=>{ tip('notes','Hazel: Nothing here is a secret — the <b>?</b> up top keeps all of it. Read any of it again whenever you like, and take your time. The bees aren\u2019t going anywhere.'); }, 1500); }
     press($('coachBtn'),()=>{ if(coachWait){ if(twActive){ finishType(); } else coachContinue(); return; } const s=COACH[coachStep]; if(s&&!s.until) advanceCoach(); });
     press($('coachSkip'),()=>{ coachWait=false; seedStarterZones(); endCoach(); });
     press($('coach'),e=>{ if(e.target&&e.target.closest&&(e.target.closest('#coachBtn')||e.target.closest('#coachSkip'))) return; if(twActive) finishType(); });
