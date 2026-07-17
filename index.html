@@ -42,6 +42,7 @@
     --hex: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
   }
   *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ -webkit-text-size-adjust:100%; text-size-adjust:100%; }
   html,body{ height:100%; width:100%; overflow:hidden; background:var(--comb); overscroll-behavior:none; touch-action:none;
     font-family:'Bricolage Grotesque',sans-serif; color:var(--text); -webkit-font-smoothing:antialiased; }
   #c{ position:fixed; inset:0; width:100%; height:100%; display:block; touch-action:none; }
@@ -62,9 +63,9 @@
   /* ---------- HUD frame ---------- */
   /* the stage: play field + controls share one centred column; wider screens become ambient surround */
   #hud-top{ position:fixed; top:0; left:50%; right:auto; bottom:auto; transform:translateX(-50%); width:min(100%, var(--stage));
-    padding:13px; display:flex; align-items:flex-start; justify-content:space-between; gap:10px; z-index:3; pointer-events:none; }
+    padding:13px; display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:10px; z-index:3; pointer-events:none; }
   #hud-bottom{ position:fixed; bottom:0; left:50%; right:auto; top:auto; transform:translateX(-50%); width:min(100%, var(--stage));
-    padding:12px; display:flex; align-items:flex-end; justify-content:space-between; gap:10px; z-index:3; pointer-events:none; }
+    padding:12px; display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:10px; z-index:3; pointer-events:none; }
   #hud-top>*, #hud-bottom>*{ pointer-events:auto; }
 
   /* view tabs */
@@ -128,7 +129,7 @@
   .lcard h1.cExpand{ background:linear-gradient(95deg,#a7e07c,#fff 55%,#77b25c); -webkit-background-clip:text; background-clip:text; }
   .lcard h1.cCyan{ background:linear-gradient(95deg,var(--cyan),#fff 55%,#2bb9ad); -webkit-background-clip:text; background-clip:text; }
   .lcard .sub{ text-align:center; }
-  .lcard p{ font-size:12.5px; line-height:1.7; color:var(--text); margin:18px 0 0; }
+  .lcard p{ font-size:clamp(12.5px, 1.05vw, 14.5px); line-height:1.7; color:var(--text); margin:18px 0 0; }
   /* semantic ink: every key term wears its in-game colour, everywhere it appears */
   .kb{ color:#8fc4ff; font-weight:700; } .kh{ color:var(--gold); font-weight:700; } .kg{ color:#a7e07c; font-weight:700; }
   .kc{ color:var(--cyan); font-weight:700; } .kp{ color:#ef8c2c; font-weight:700; } .kw{ color:var(--frost); font-weight:700; }
@@ -340,7 +341,7 @@
 
   /* ---------- rotate prompt: phone landscape gets a gentle ask ---------- */
   #rotate{ display:none; }
-  @media (orientation:landscape) and (pointer:coarse) and (max-height:540px){
+  @media (orientation:landscape) and (pointer:coarse) and (max-height:540px) and (max-width:960px){
     #rotate{ display:flex; position:fixed; inset:0; z-index:13; background:var(--comb);
       align-items:center; justify-content:center; text-align:center; }
   }
@@ -396,7 +397,7 @@
   #coach.show{ opacity:1; pointer-events:auto; }
   #coach .ci{ font-size:21px; line-height:1.1; }
   #coach .cb{ flex:1; }
-  #coach .ct{ font-size:13px; line-height:1.6; color:var(--text); }
+  #coach .ct{ font-size:clamp(13px, 1.1vw, 15px); line-height:1.6; color:var(--text); }
   #coach .ct b{ color:var(--gold); font-weight:600; } #coach .ct em{ color:var(--cyan); font-style:normal; }
   #coach .cgo{ margin-top:13px; display:flex; gap:10px; align-items:center; }
   #coach .cbtn{ font-family:'Bricolage Grotesque'; font-weight:700; font-size:12px; padding:7px 14px; border-radius:9px; cursor:pointer; border:none;
@@ -567,7 +568,7 @@
   .card h1.bad{ background:linear-gradient(95deg,#ff9a7a,#ffd0c4); -webkit-background-clip:text; background-clip:text; }
   .card h1.good{ background:linear-gradient(95deg,#b6f0a0,#eaffe0 55%,#7fe3d6); -webkit-background-clip:text; background-clip:text; }
   .card .sub{ font-size:10px; letter-spacing:.28em; text-transform:uppercase; color:var(--dim); margin-bottom:20px; font-weight:600; }
-  .card p{ font-size:12.5px; color:var(--text); line-height:1.7; margin-bottom:16px; text-align:left; }
+  .card p{ font-size:clamp(12.5px, 1.05vw, 14.5px); color:var(--text); line-height:1.7; margin-bottom:16px; text-align:left; }
   .card p b{ color:var(--gold); font-weight:600; } .card p em{ color:var(--cyan); font-style:normal; }
   .legend{ display:flex; flex-wrap:wrap; gap:5px 13px; justify-content:center; font-size:10.5px; color:var(--dim); margin-bottom:15px; }
   .legend span{ display:inline-flex; align-items:center; gap:5px; }
@@ -618,8 +619,8 @@
   .gift.owned:hover{ transform:none; }
   .gift.owned .gc{ color:var(--good); }
 
-  /* ---- phones: a dense, quiet HUD so the comb gets the screen ---- */
-  @media (max-width:760px){
+  /* ---- phones & portrait tablets/tiles: a dense, quiet HUD so the comb gets the screen ---- */
+  @media (max-width:760px), (max-width:1080px) and (orientation:portrait){
     #chatlog{ top:auto; left:5vw; right:5vw; bottom:50%; transform:translateY(50%); width:auto; max-height:74vh; }
     #hud-top{ flex-direction:column; align-items:stretch; gap:4px; padding:6px; }
     #hud-bottom{ flex-direction:column; align-items:stretch; gap:4px; padding:6px; }
@@ -662,8 +663,25 @@
     /* not-yet-revealed panels shouldn't hold empty space on a small screen */
     #hud-top .preveal.hidden, #hud-bottom .preveal.hidden, #tabs .preveal.hidden{ display:none; }
   }
-  @media (max-width:760px) and (pointer:coarse){
+  @media (max-width:760px) and (pointer:coarse), (max-width:1080px) and (orientation:portrait) and (pointer:coarse){
     .tab, .tb{ min-height:44px; padding-top:4px; padding-bottom:4px; }
+  }
+  /* ---- short windows (tiled iPad, half-height splits): compact rows ---- */
+  @media (max-height:640px) and (min-width:761px) and (orientation:landscape){
+    #hud-top{ padding:7px 10px; gap:7px; } #hud-bottom{ padding:7px 10px; gap:7px; }
+    .tab{ font-size:11px; padding:5px 8px; min-height:32px; }
+    #res{ padding:4px; gap:4px; } .stat{ min-width:46px; padding:3px 6px; }
+    .stat .lab{ font-size:7px; } .stat .val{ font-size:12.5px; } .stat .sub{ display:none; }
+    #clockWrap{ min-width:180px; padding:6px 9px; } #wx{ display:none; }
+    #yearLab{ font-size:12px; } #seasonLab{ font-size:9.5px; }
+    #tl{ margin-top:4px; height:6px; }
+    #goal{ margin-top:4px; padding:3px 7px; } #goalTx{ font-size:9px; } #goalIc{ font-size:11px; }
+    #wr{ margin-top:4px; } #wrBar{ height:4px; } #wrLab{ font-size:8px; }
+    #advisor{ max-width:230px; padding:6px 9px; } #advisor .ic{ width:26px; height:26px; }
+    #advisor .tx{ font-size:10px; line-height:1.35; }
+    #ctl{ padding:4px; gap:4px; } .grp{ padding:2px; gap:2px; } .gl{ display:none; }
+    .tb{ font-size:10.5px; padding:4px 7px; min-height:32px; } .tb .yld{ font-size:7px; }
+    #coach{ bottom:auto; top:64px; max-width:360px; }
   }
   @media (prefers-reduced-motion: reduce){
     *,*::before,*::after{ animation-duration:.001s !important; transition-duration:.05s !important; }
@@ -1384,7 +1402,8 @@
       const t=$('hud-top'), b=$('hud-bottom');
       topH=(t?t.offsetHeight:110)+8; botH=(b?b.offsetHeight:110)+8;
       // on phones the bottom HUD is tall — keep the coach clear of the controls it points at
-      const co=$('coach'); if(co) co.style.bottom = W<=760 ? (botH+2)+'px' : '';
+      const compact = W<=760 || (W<=1080 && Hh>W);   // same shape as the CSS column breakpoint
+      const co=$('coach'); if(co) co.style.bottom = compact ? (botH+2)+'px' : '';
       const availW=W*0.94, availH=Math.max(120,Hh-topH-botH);
       const needW=(COLS+0.5)*SQ3, needH=(ROWS-1)*1.5+2;
       mSize=Math.max(6, Math.min(availW/needW, availH/needH));
