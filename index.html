@@ -129,7 +129,7 @@
   .lcard h1.cExpand{ background:linear-gradient(95deg,#a7e07c,#fff 55%,#77b25c); -webkit-background-clip:text; background-clip:text; }
   .lcard h1.cCyan{ background:linear-gradient(95deg,var(--cyan),#fff 55%,#2bb9ad); -webkit-background-clip:text; background-clip:text; }
   .lcard .sub{ text-align:center; }
-  .lcard p{ font-size:clamp(12.5px, 1.05vw, 14.5px); line-height:1.7; color:var(--text); margin:18px 0 0; }
+  .lcard p{ font-size:clamp(12.5px, 11.5px + 0.25vw, 14.5px); line-height:1.7; color:var(--text); margin:18px 0 0; }
   /* semantic ink: every key term wears its in-game colour, everywhere it appears */
   .kb{ color:#8fc4ff; font-weight:700; } .kh{ color:var(--gold); font-weight:700; } .kg{ color:#a7e07c; font-weight:700; }
   .kc{ color:var(--cyan); font-weight:700; } .kp{ color:#ef8c2c; font-weight:700; } .kw{ color:var(--frost); font-weight:700; }
@@ -255,6 +255,8 @@
   .dBees span:nth-child(4){ animation-delay:.36s; } .dBees span:nth-child(5){ animation-delay:.48s; }
   @keyframes beeBop{ 0%,100%{ transform:translateY(0) rotate(-9deg) scale(1); } 50%{ transform:translateY(-22px) rotate(9deg) scale(1.12); } }
   .dCount{ font:700 30px 'JetBrains Mono',monospace; color:var(--gold); margin-bottom:18px; }
+  #welcome{ z-index:10; }
+
   /* ---------- unlock chip: the prize moment ---------- */
   #unlockChip{ position:fixed; left:50%; top:38%; transform:translate(-50%,-50%); z-index:10;
     display:flex; flex-direction:column; align-items:center; gap:4px; padding:18px 30px; text-align:center; }
@@ -318,6 +320,21 @@
   #advisor{ cursor:pointer; }
   #advisor .hist{ flex:none; align-self:center; margin-left:auto; color:var(--dim); opacity:.65; }
   #advisor .hist svg{ width:15px; height:15px; display:block; }
+  #advisor .fold{ flex:none; align-self:center; color:var(--dim); opacity:.65; font-size:15px; padding:0 3px; cursor:pointer; line-height:1; }
+  #advisor .fold:hover{ color:var(--text); }
+  /* tucked away, Hazel waits as a small chip — and glows when she has news */
+  #advisor.collapsed{ max-width:54px; width:54px; height:54px; padding:5px; border-radius:50%;
+    align-items:center; justify-content:center; align-self:flex-start; }
+  #advisor.collapsed .tx, #advisor.collapsed .hist, #advisor.collapsed .fold, #advisor.collapsed #feedBtn{ display:none; }
+  #advisor.collapsed .ic{ margin:0; }
+  #advisor.collapsed.unread::after{ content:''; position:absolute; top:1px; right:1px; width:11px; height:11px;
+    border-radius:50%; background:var(--gold); box-shadow:0 0 9px rgba(255,180,43,.85);
+    animation:unreadPulse 1.6s ease-in-out infinite; }
+  @keyframes unreadPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.25); } }
+  #chatClear{ cursor:pointer; color:var(--dim); font:600 9px 'JetBrains Mono',monospace; letter-spacing:.16em;
+    text-transform:uppercase; margin-left:auto; padding:0 10px 0 4px; } #chatClear:hover{ color:var(--text); }
+  .crow .cdel{ flex:none; align-self:flex-start; color:var(--dim); opacity:.45; cursor:pointer; font-size:11px; padding:1px 4px; }
+  .crow .cdel:hover{ opacity:1; color:var(--text); }
   .tab svg, .tb svg{ width:15px; height:15px; display:block; flex:none; }
   #tabMeadow svg{ margin-right:5px; }
 
@@ -372,7 +389,8 @@
   /* ---------- report ---------- */
   #report{ position:fixed; top:78px; right:max(13px, calc((100% - var(--stage))/2 + 13px)); width:254px; max-height:calc(100vh - 176px); overflow:auto; padding:12px 14px; z-index:6; }
   #reportX{ cursor:pointer; color:var(--dim); font-size:15px; padding:0 4px; } #reportX:hover{ color:var(--text); }
-  .rHead{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .rHead{ display:flex; align-items:center; margin-bottom:10px; }
+  .rHead>span:first-child{ margin-right:auto; }
   .rHead span:first-child{ font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--gold); font-weight:700; }
   #report h3{ font-size:9px; letter-spacing:.18em; text-transform:uppercase; color:var(--dim); margin:0 0 7px; font-weight:600; }
   #report .sec{ margin-bottom:15px; } #report .sec:last-child{ margin-bottom:2px; }
@@ -397,7 +415,7 @@
   #coach.show{ opacity:1; pointer-events:auto; }
   #coach .ci{ font-size:21px; line-height:1.1; }
   #coach .cb{ flex:1; }
-  #coach .ct{ font-size:clamp(13px, 1.1vw, 15px); line-height:1.6; color:var(--text); }
+  #coach .ct{ font-size:clamp(13px, 12px + 0.25vw, 15px); line-height:1.6; color:var(--text); }
   #coach .ct b{ color:var(--gold); font-weight:600; } #coach .ct em{ color:var(--cyan); font-style:normal; }
   #coach .cgo{ margin-top:13px; display:flex; gap:10px; align-items:center; }
   #coach .cbtn{ font-family:'Bricolage Grotesque'; font-weight:700; font-size:12px; padding:7px 14px; border-radius:9px; cursor:pointer; border:none;
@@ -568,7 +586,7 @@
   .card h1.bad{ background:linear-gradient(95deg,#ff9a7a,#ffd0c4); -webkit-background-clip:text; background-clip:text; }
   .card h1.good{ background:linear-gradient(95deg,#b6f0a0,#eaffe0 55%,#7fe3d6); -webkit-background-clip:text; background-clip:text; }
   .card .sub{ font-size:10px; letter-spacing:.28em; text-transform:uppercase; color:var(--dim); margin-bottom:20px; font-weight:600; }
-  .card p{ font-size:clamp(12.5px, 1.05vw, 14.5px); color:var(--text); line-height:1.7; margin-bottom:16px; text-align:left; }
+  .card p{ font-size:clamp(12.5px, 11.5px + 0.25vw, 14.5px); color:var(--text); line-height:1.7; margin-bottom:16px; text-align:left; }
   .card p b{ color:var(--gold); font-weight:600; } .card p em{ color:var(--cyan); font-style:normal; }
   .legend{ display:flex; flex-wrap:wrap; gap:5px 13px; justify-content:center; font-size:10.5px; color:var(--dim); margin-bottom:15px; }
   .legend span{ display:inline-flex; align-items:center; gap:5px; }
@@ -719,7 +737,7 @@
   </div>
 
   <div id="hud-bottom">
-    <div id="advisor" class="panel preveal" title="Hazel’s log — every word she’s said"><canvas class="ic" id="hazelC" width="46" height="46" aria-label="Hazel"></canvas><div class="tx"><span id="advTx">Welcome home, keeper.</span><button id="feedBtn" class="hide">Feed syrup — once</button></div><span class="hist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.3c-1.3 0-2.6-.3-3.7-.8L3 20l1.2-4.4a8.1 8.1 0 0 1-1.2-4.1A8.4 8.4 0 0 1 11.5 3.2 8.4 8.4 0 0 1 21 11.5z"/></svg></span></div>
+    <div id="advisor" class="panel preveal" title="Hazel’s log — every word she’s said"><canvas class="ic" id="hazelC" width="46" height="46" aria-label="Hazel"></canvas><div class="tx"><span id="advTx">Welcome home, keeper.</span><button id="feedBtn" class="hide">Feed syrup — once</button></div><span class="hist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.3c-1.3 0-2.6-.3-3.7-.8L3 20l1.2-4.4a8.1 8.1 0 0 1-1.2-4.1A8.4 8.4 0 0 1 11.5 3.2 8.4 8.4 0 0 1 21 11.5z"/></svg></span><span class="fold" title="Tuck Hazel away">⌄</span></div>
     <div id="ctl" class="panel">
       <div class="grp preveal" id="forageGrp">
         <span class="gl">Forage <u>🍯·🌼 wk</u></span>
@@ -815,7 +833,7 @@
     </div>
   </div>
   <div id="chatlog" class="panel hide">
-    <div class="rHead"><span>HAZEL’S LOG</span><span id="chatX">✕</span></div>
+    <div class="rHead"><span>HAZEL’S LOG</span><span id="chatClear">clear</span><span id="chatX">✕</span></div>
     <div id="chatRows"></div>
   </div>
   <div id="unlockChip" class="panel hide"><span class="uc1">✦ keeper’s page unlocked</span><span class="uc2" id="unlockName">BROOD</span><span class="uc3">+1 ✧ royal jelly</span></div>
@@ -894,6 +912,18 @@
       </div>
       <div id="splashSub">ECHO · RESONANCE · RESEARCH</div>
       <div id="splashPresents">presents</div>
+    </div>
+  </div>
+
+  <!-- warm welcome: why bees, why this game — shown once -->
+  <div class="ov hide" id="welcome">
+    <div class="card panel">
+      <h1>WELCOME</h1>
+      <div class="sub">before we begin, a word about bees</div>
+      <p>Every <b>third bite</b> of food on your plate exists because a bee visited a flower first. Apples, almonds, berries, pumpkins — pollinated, quietly, for free, forever.</p>
+      <p>A honeybee colony is one of nature’s gentlest miracles: <b>forty thousand tiny lives thinking together as one mind</b>. This game puts that mind in your hands for a few seasons.</p>
+      <p>Everything Hazel teaches here is <em>real beekeeping</em> — the same craft, the same calendar, the same stakes. Play it with your kids. Play it with your grandparents. The bees don’t mind who keeps them — they only ask that you pay attention.</p>
+      <button class="btn pulse" id="welcomeBtn">Meet the bees ▶</button>
     </div>
   </div>
 
@@ -982,6 +1012,9 @@
     const ICON_SND_OFF='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.2v5.6h3.6L13 19V5L7.6 9.2H4z" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="16" y1="9.5" x2="21" y2="14.5"/><line x1="21" y1="9.5" x2="16" y2="14.5"/></g></svg>';
 
     $('sndBtn').innerHTML=ICON_SND_OFF;
+    (function(){ let seen=false; try{ seen=localStorage.getItem('hm_welcomed')==='1'; }catch(e){}
+      if(!seen && !loadSave()) $('welcome').classList.remove('hide'); })();
+    press($('welcomeBtn'),()=>{ try{ localStorage.setItem('hm_welcomed','1'); }catch(e){} $('welcome').classList.add('hide'); });
 
     // ---- typewriter: text arrives at reading pace, Zelda-style; markup tags
     // are swallowed whole so colours appear with their words. One channel —
@@ -1402,7 +1435,7 @@
       const t=$('hud-top'), b=$('hud-bottom');
       topH=(t?t.offsetHeight:110)+8; botH=(b?b.offsetHeight:110)+8;
       // on phones the bottom HUD is tall — keep the coach clear of the controls it points at
-      const compact = W<=760 || (W<=1080 && Hh>W);   // same shape as the CSS column breakpoint
+      const compact = W<=760 || (W<=1080 && Hh>=W);   // matches CSS: square counts as portrait
       const co=$('coach'); if(co) co.style.bottom = compact ? (botH+2)+'px' : '';
       const availW=W*0.94, availH=Math.max(120,Hh-topH-botH);
       const needW=(COLS+0.5)*SQ3, needH=(ROWS-1)*1.5+2;
@@ -1640,10 +1673,11 @@
       if(last && last.html===html) return;
       MSGLOG.push({ic, html, day:Math.max(0,Math.floor(day)), year});
       if(MSGLOG.length>90) MSGLOG.shift();
+      if(advFold) $('advisor').classList.add('unread');
       if(!$('chatlog').classList.contains('hide')) renderChat(); }
     function renderChat(force){ const r=$('chatRows'), el=$('chatlog');
       const atBottom = force || (el.scrollHeight-el.clientHeight-el.scrollTop < 24);
-      r.innerHTML = MSGLOG.length ? MSGLOG.map(m=>'<div class="crow"><span class="ci2">'+m.ic+'</span><div class="cb2"><div class="cwhen">Y'+m.year+' · '+seasonName(m.day)+' · d'+(m.day+1)+'</div><div class="ctx2">'+m.html+'</div></div></div>').join('')
+      r.innerHTML = MSGLOG.length ? MSGLOG.map((m,i)=>'<div class="crow"><span class="ci2">'+m.ic+'</span><div class="cb2"><div class="cwhen">Y'+m.year+' · '+seasonName(m.day)+' · d'+(m.day+1)+'</div><div class="ctx2">'+m.html+'</div></div><span class="cdel" data-i="'+i+'" title="Dismiss">✕</span></div>').join('')
         : '<div class="ctx2" style="color:var(--dim)">Nothing yet — Hazel will speak as the seasons turn.</div>';
       if(atBottom) el.scrollTop=el.scrollHeight; }
     function toggleChat(show){ const el=$('chatlog');
@@ -1687,7 +1721,8 @@
       // after a proper dwell, unless something is genuinely urgent
       if(tx!==advCur){ const urgent=warn||raiding;
         if(urgent || !advCur || (performance.now()-advSince)>12000){
-          advCur=tx; advSince=performance.now(); $('advTx').innerHTML=tx; logMsg(ic,tx); } }
+          advCur=tx; advSince=performance.now(); $('advTx').innerHTML=tx; logMsg(ic,tx);
+          if(urgent&&advFold){ advFold=false; try{ localStorage.setItem('hm_advfold','0'); }catch(err){} syncFold(); } } }
       $('advisor').classList.toggle('warn',warn);
       $('advisor').classList.toggle('cold', ic==='❄️'||coldSnap>0);
     }
@@ -2720,8 +2755,20 @@
     press($('inspectBtn'),()=>{ inspectMode=!inspectMode; $('inspectBtn').classList.toggle('on',inspectMode);
       if(inspectMode) toast('Now tap any cell of the comb to read it.'); });
     press($('csClose'),()=>$('cellSheet').classList.add('hide'));
-    press($('advisor'),e=>{ if($('advisor').classList.contains('hidden')) return; if(e.target&&e.target.closest&&e.target.closest('#feedBtn')) return; toggleChat(); });
+    // Hazel tucks away to a chip and comes back with one tap
+    let advFold=false; try{ advFold=localStorage.getItem('hm_advfold')==='1'; }catch(e){}
+    function syncFold(){ $('advisor').classList.toggle('collapsed',advFold);
+      if(!advFold) $('advisor').classList.remove('unread'); }
+    press($('advisor'),e=>{ if($('advisor').classList.contains('hidden')) return;
+      if(e.target&&e.target.closest&&e.target.closest('#feedBtn')) return;
+      if(advFold){ advFold=false; try{ localStorage.setItem('hm_advfold','0'); }catch(err){} syncFold(); return; }
+      if(e.target&&e.target.closest&&e.target.closest('.fold')){ advFold=true; try{ localStorage.setItem('hm_advfold','1'); }catch(err){} syncFold(); return; }
+      toggleChat(); });
+    syncFold();
     press($('chatX'),()=>toggleChat(false));
+    press($('chatClear'),()=>{ MSGLOG.length=0; renderChat(true); });
+    press($('chatRows'),e=>{ const d=e.target&&e.target.closest&&e.target.closest('.cdel'); if(!d) return;
+      const i=+d.dataset.i; if(i>=0&&i<MSGLOG.length){ MSGLOG.splice(i,1); renderChat(); } });
     press($('helpBtn'),()=>{ $('guide').classList.remove('hide'); paused=true; });
     press($('guideClose'),()=>{ $('guide').classList.add('hide'); paused=false; });
 
