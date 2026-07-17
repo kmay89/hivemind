@@ -42,6 +42,7 @@
     --hex: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
   }
   *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ -webkit-text-size-adjust:100%; text-size-adjust:100%; }
   html,body{ height:100%; width:100%; overflow:hidden; background:var(--comb); overscroll-behavior:none; touch-action:none;
     font-family:'Bricolage Grotesque',sans-serif; color:var(--text); -webkit-font-smoothing:antialiased; }
   #c{ position:fixed; inset:0; width:100%; height:100%; display:block; touch-action:none; }
@@ -62,9 +63,9 @@
   /* ---------- HUD frame ---------- */
   /* the stage: play field + controls share one centred column; wider screens become ambient surround */
   #hud-top{ position:fixed; top:0; left:50%; right:auto; bottom:auto; transform:translateX(-50%); width:min(100%, var(--stage));
-    padding:13px; display:flex; align-items:flex-start; justify-content:space-between; gap:10px; z-index:3; pointer-events:none; }
+    padding:13px; display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:10px; z-index:3; pointer-events:none; }
   #hud-bottom{ position:fixed; bottom:0; left:50%; right:auto; top:auto; transform:translateX(-50%); width:min(100%, var(--stage));
-    padding:12px; display:flex; align-items:flex-end; justify-content:space-between; gap:10px; z-index:3; pointer-events:none; }
+    padding:12px; display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:10px; z-index:3; pointer-events:none; }
   #hud-top>*, #hud-bottom>*{ pointer-events:auto; }
 
   /* view tabs */
@@ -128,7 +129,7 @@
   .lcard h1.cExpand{ background:linear-gradient(95deg,#a7e07c,#fff 55%,#77b25c); -webkit-background-clip:text; background-clip:text; }
   .lcard h1.cCyan{ background:linear-gradient(95deg,var(--cyan),#fff 55%,#2bb9ad); -webkit-background-clip:text; background-clip:text; }
   .lcard .sub{ text-align:center; }
-  .lcard p{ font-size:12.5px; line-height:1.7; color:var(--text); margin:18px 0 0; }
+  .lcard p{ font-size:clamp(12.5px, 11.5px + 0.25vw, 14.5px); line-height:1.7; color:var(--text); margin:18px 0 0; }
   /* semantic ink: every key term wears its in-game colour, everywhere it appears */
   .kb{ color:#8fc4ff; font-weight:700; } .kh{ color:var(--gold); font-weight:700; } .kg{ color:#a7e07c; font-weight:700; }
   .kc{ color:var(--cyan); font-weight:700; } .kp{ color:#ef8c2c; font-weight:700; } .kw{ color:var(--frost); font-weight:700; }
@@ -254,6 +255,8 @@
   .dBees span:nth-child(4){ animation-delay:.36s; } .dBees span:nth-child(5){ animation-delay:.48s; }
   @keyframes beeBop{ 0%,100%{ transform:translateY(0) rotate(-9deg) scale(1); } 50%{ transform:translateY(-22px) rotate(9deg) scale(1.12); } }
   .dCount{ font:700 30px 'JetBrains Mono',monospace; color:var(--gold); margin-bottom:18px; }
+  #welcome{ z-index:10; }
+
   /* ---------- unlock chip: the prize moment ---------- */
   #unlockChip{ position:fixed; left:50%; top:38%; transform:translate(-50%,-50%); z-index:10;
     display:flex; flex-direction:column; align-items:center; gap:4px; padding:18px 30px; text-align:center; }
@@ -266,6 +269,26 @@
   #unlockChip .uc2{ font:800 30px 'Bricolage Grotesque',sans-serif; letter-spacing:.06em;
     background:linear-gradient(95deg,var(--gold),#fff 55%,var(--honey)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
   #unlockChip .uc3{ font:700 11px 'JetBrains Mono',monospace; color:var(--gold); }
+
+  /* ---------- heat lens ---------- */
+  #heatBtn.on{ color:#2c1206; background:linear-gradient(180deg,#ffb37a,#e2703a); }
+  #heatLegend{ position:fixed; left:50%; transform:translateX(-50%); bottom:auto; z-index:6;
+    display:flex; align-items:center; gap:8px; padding:8px 12px; font:600 9px 'JetBrains Mono',monospace;
+    color:var(--dim); letter-spacing:.08em; text-transform:uppercase;
+    width:min(380px, calc(100vw - 24px)); }
+  #heatLegend .hl2{ flex:1; min-width:0; }
+  #heatLegend .hgrad{ width:64px; height:8px; border-radius:4px; flex:none;
+    background:linear-gradient(90deg,#2b4a74,#8a5a2a,#ff9236); }
+  #heatLegend .hl2{ color:var(--text); text-transform:none; letter-spacing:0; font:500 10px 'Bricolage Grotesque',sans-serif; }
+
+  /* ---------- one-tap tooltips: what a number means, live, in one breath ---------- */
+  #tipPop{ position:fixed; z-index:10; width:min(300px, calc(100vw - 24px)); padding:12px 14px; }
+  #tipPop.hide{ display:none; }
+  #tipPop .tpT{ font:700 12px 'Bricolage Grotesque',sans-serif; color:var(--gold); margin-bottom:4px; }
+  #tipPop .tpB{ font-size:11.5px; line-height:1.55; color:var(--text); }
+  #tipPop .tpB b{ color:var(--gold); font-weight:700; } #tipPop .tpB em{ color:var(--cyan); font-style:normal; }
+  #tipPop .tpMore{ display:inline-block; margin-top:8px; font:700 10.5px 'Bricolage Grotesque',sans-serif; color:var(--cyan); cursor:pointer; }
+  #tipPop .tpMore.hide{ display:none; }
 
   /* ---------- cell info sheet (mobile-friendly comb detail) ---------- */
   #cellSheet{ position:fixed; left:50%; transform:translateX(-50%); bottom:14px; z-index:8; width:min(420px, calc(100% - 24px));
@@ -317,6 +340,21 @@
   #advisor{ cursor:pointer; }
   #advisor .hist{ flex:none; align-self:center; margin-left:auto; color:var(--dim); opacity:.65; }
   #advisor .hist svg{ width:15px; height:15px; display:block; }
+  #advisor .fold{ flex:none; align-self:center; color:var(--dim); opacity:.65; font-size:15px; padding:0 3px; cursor:pointer; line-height:1; }
+  #advisor .fold:hover{ color:var(--text); }
+  /* tucked away, Hazel waits as a small chip — and glows when she has news */
+  #advisor.collapsed{ max-width:54px; width:54px; height:54px; padding:5px; border-radius:50%;
+    align-items:center; justify-content:center; align-self:flex-start; }
+  #advisor.collapsed .tx, #advisor.collapsed .hist, #advisor.collapsed .fold, #advisor.collapsed #feedBtn{ display:none; }
+  #advisor.collapsed .ic{ margin:0; }
+  #advisor.collapsed.unread::after{ content:''; position:absolute; top:1px; right:1px; width:11px; height:11px;
+    border-radius:50%; background:var(--gold); box-shadow:0 0 9px rgba(255,180,43,.85);
+    animation:unreadPulse 1.6s ease-in-out infinite; }
+  @keyframes unreadPulse{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.25); } }
+  #chatClear{ cursor:pointer; color:var(--dim); font:600 9px 'JetBrains Mono',monospace; letter-spacing:.16em;
+    text-transform:uppercase; margin-left:auto; padding:0 10px 0 4px; } #chatClear:hover{ color:var(--text); }
+  .crow .cdel{ flex:none; align-self:flex-start; color:var(--dim); opacity:.45; cursor:pointer; font-size:11px; padding:1px 4px; }
+  .crow .cdel:hover{ opacity:1; color:var(--text); }
   .tab svg, .tb svg{ width:15px; height:15px; display:block; flex:none; }
   #tabMeadow svg{ margin-right:5px; }
 
@@ -340,7 +378,7 @@
 
   /* ---------- rotate prompt: phone landscape gets a gentle ask ---------- */
   #rotate{ display:none; }
-  @media (orientation:landscape) and (pointer:coarse) and (max-height:540px){
+  @media (orientation:landscape) and (pointer:coarse) and (max-height:540px) and (max-width:960px){
     #rotate{ display:flex; position:fixed; inset:0; z-index:13; background:var(--comb);
       align-items:center; justify-content:center; text-align:center; }
   }
@@ -371,7 +409,8 @@
   /* ---------- report ---------- */
   #report{ position:fixed; top:78px; right:max(13px, calc((100% - var(--stage))/2 + 13px)); width:254px; max-height:calc(100vh - 176px); overflow:auto; padding:12px 14px; z-index:6; }
   #reportX{ cursor:pointer; color:var(--dim); font-size:15px; padding:0 4px; } #reportX:hover{ color:var(--text); }
-  .rHead{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .rHead{ display:flex; align-items:center; margin-bottom:10px; }
+  .rHead>span:first-child{ margin-right:auto; }
   .rHead span:first-child{ font-size:10px; letter-spacing:.22em; text-transform:uppercase; color:var(--gold); font-weight:700; }
   #report h3{ font-size:9px; letter-spacing:.18em; text-transform:uppercase; color:var(--dim); margin:0 0 7px; font-weight:600; }
   #report .sec{ margin-bottom:15px; } #report .sec:last-child{ margin-bottom:2px; }
@@ -396,7 +435,7 @@
   #coach.show{ opacity:1; pointer-events:auto; }
   #coach .ci{ font-size:21px; line-height:1.1; }
   #coach .cb{ flex:1; }
-  #coach .ct{ font-size:13px; line-height:1.6; color:var(--text); }
+  #coach .ct{ font-size:clamp(13px, 12px + 0.25vw, 15px); line-height:1.6; color:var(--text); }
   #coach .ct b{ color:var(--gold); font-weight:600; } #coach .ct em{ color:var(--cyan); font-style:normal; }
   #coach .cgo{ margin-top:13px; display:flex; gap:10px; align-items:center; }
   #coach .cbtn{ font-family:'Bricolage Grotesque'; font-weight:700; font-size:12px; padding:7px 14px; border-radius:9px; cursor:pointer; border:none;
@@ -567,7 +606,7 @@
   .card h1.bad{ background:linear-gradient(95deg,#ff9a7a,#ffd0c4); -webkit-background-clip:text; background-clip:text; }
   .card h1.good{ background:linear-gradient(95deg,#b6f0a0,#eaffe0 55%,#7fe3d6); -webkit-background-clip:text; background-clip:text; }
   .card .sub{ font-size:10px; letter-spacing:.28em; text-transform:uppercase; color:var(--dim); margin-bottom:20px; font-weight:600; }
-  .card p{ font-size:12.5px; color:var(--text); line-height:1.7; margin-bottom:16px; text-align:left; }
+  .card p{ font-size:clamp(12.5px, 11.5px + 0.25vw, 14.5px); color:var(--text); line-height:1.7; margin-bottom:16px; text-align:left; }
   .card p b{ color:var(--gold); font-weight:600; } .card p em{ color:var(--cyan); font-style:normal; }
   .legend{ display:flex; flex-wrap:wrap; gap:5px 13px; justify-content:center; font-size:10.5px; color:var(--dim); margin-bottom:15px; }
   .legend span{ display:inline-flex; align-items:center; gap:5px; }
@@ -618,8 +657,8 @@
   .gift.owned:hover{ transform:none; }
   .gift.owned .gc{ color:var(--good); }
 
-  /* ---- phones: a dense, quiet HUD so the comb gets the screen ---- */
-  @media (max-width:760px){
+  /* ---- phones & portrait tablets/tiles: a dense, quiet HUD so the comb gets the screen ---- */
+  @media (max-width:760px), (max-width:1080px) and (orientation:portrait){
     #chatlog{ top:auto; left:5vw; right:5vw; bottom:50%; transform:translateY(50%); width:auto; max-height:74vh; }
     #hud-top{ flex-direction:column; align-items:stretch; gap:4px; padding:6px; }
     #hud-bottom{ flex-direction:column; align-items:stretch; gap:4px; padding:6px; }
@@ -662,8 +701,25 @@
     /* not-yet-revealed panels shouldn't hold empty space on a small screen */
     #hud-top .preveal.hidden, #hud-bottom .preveal.hidden, #tabs .preveal.hidden{ display:none; }
   }
-  @media (max-width:760px) and (pointer:coarse){
+  @media (max-width:760px) and (pointer:coarse), (max-width:1080px) and (orientation:portrait) and (pointer:coarse){
     .tab, .tb{ min-height:44px; padding-top:4px; padding-bottom:4px; }
+  }
+  /* ---- short windows (tiled iPad, half-height splits): compact rows ---- */
+  @media (max-height:640px) and (min-width:761px) and (orientation:landscape){
+    #hud-top{ padding:7px 10px; gap:7px; } #hud-bottom{ padding:7px 10px; gap:7px; }
+    .tab{ font-size:11px; padding:5px 8px; min-height:32px; }
+    #res{ padding:4px; gap:4px; } .stat{ min-width:46px; padding:3px 6px; }
+    .stat .lab{ font-size:7px; } .stat .val{ font-size:12.5px; } .stat .sub{ display:none; }
+    #clockWrap{ min-width:180px; padding:6px 9px; } #wx{ display:none; }
+    #yearLab{ font-size:12px; } #seasonLab{ font-size:9.5px; }
+    #tl{ margin-top:4px; height:6px; }
+    #goal{ margin-top:4px; padding:3px 7px; } #goalTx{ font-size:9px; } #goalIc{ font-size:11px; }
+    #wr{ margin-top:4px; } #wrBar{ height:4px; } #wrLab{ font-size:8px; }
+    #advisor{ max-width:230px; padding:6px 9px; } #advisor .ic{ width:26px; height:26px; }
+    #advisor .tx{ font-size:10px; line-height:1.35; }
+    #ctl{ padding:4px; gap:4px; } .grp{ padding:2px; gap:2px; } .gl{ display:none; }
+    .tb{ font-size:10.5px; padding:4px 7px; min-height:32px; } .tb .yld{ font-size:7px; }
+    #coach{ bottom:auto; top:64px; max-width:360px; }
   }
   @media (prefers-reduced-motion: reduce){
     *,*::before,*::after{ animation-duration:.001s !important; transition-duration:.05s !important; }
@@ -701,7 +757,7 @@
   </div>
 
   <div id="hud-bottom">
-    <div id="advisor" class="panel preveal" title="Hazel’s log — every word she’s said"><canvas class="ic" id="hazelC" width="46" height="46" aria-label="Hazel"></canvas><div class="tx"><span id="advTx">Welcome home, keeper.</span><button id="feedBtn" class="hide">Feed syrup — once</button></div><span class="hist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.3c-1.3 0-2.6-.3-3.7-.8L3 20l1.2-4.4a8.1 8.1 0 0 1-1.2-4.1A8.4 8.4 0 0 1 11.5 3.2 8.4 8.4 0 0 1 21 11.5z"/></svg></span></div>
+    <div id="advisor" class="panel preveal" title="Hazel’s log — every word she’s said"><canvas class="ic" id="hazelC" width="46" height="46" aria-label="Hazel"></canvas><div class="tx"><span id="advTx">Welcome home, keeper.</span><button id="feedBtn" class="hide">Feed syrup — once</button></div><span class="hist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.3c-1.3 0-2.6-.3-3.7-.8L3 20l1.2-4.4a8.1 8.1 0 0 1-1.2-4.1A8.4 8.4 0 0 1 11.5 3.2 8.4 8.4 0 0 1 21 11.5z"/></svg></span><span class="fold" title="Tuck Hazel away">⌄</span></div>
     <div id="ctl" class="panel">
       <div class="grp preveal" id="forageGrp">
         <span class="gl">Forage <u>🍯·🌼 wk</u></span>
@@ -715,6 +771,7 @@
         <div class="tb honeyb y" data-brush="honey" tabindex="0" title="Paint storage cells"><span>Honey</span><i class="yld" id="yHon">—</i></div>
         <div class="tb expand y" data-brush="expand" tabindex="0" title="Flag fresh wax to build"><span>Expand</span><i class="yld" id="yExp">—</i></div>
         <div class="tb" id="inspectBtn" tabindex="0" title="What is this cell? Tap this, then tap any cell">ⓘ</div>
+        <div class="tb" id="heatBtn" tabindex="0" title="Heat lens — see the warmth the nest is holding"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 13.5V5a2 2 0 1 1 4 0v8.5a4.5 4.5 0 1 1-4 0z"/><circle cx="12" cy="17.5" r="1.6" fill="currentColor" stroke="none"/></svg></div>
       </div>
       <div class="grp preveal hidden" id="apiaryGrp">
         <span class="gl">Apiary</span>
@@ -747,6 +804,7 @@
         <div class="mrow"><span class="ml">Hive hum</span><input type="range" class="vslide" id="volHum" min="0" max="100"></div>
         <div class="mrow"><span class="ml">Effects</span><input type="range" class="vslide" id="volFx" min="0" max="100"></div>
         <div class="mrow"><span class="ml">Placement hints</span><button class="mtog on" id="menuHints">On</button></div>
+        <div class="mrow"><span class="ml">Apiary score</span><span class="ml" id="menuScore" style="color:var(--gold)">0</span></div>
         <div class="mrow"><span class="ml">Badges</span><button class="mtog" id="menuBadges">✦ <span id="badgeN">0</span>/10</button></div>
         <div class="mrow"><span class="ml">Dance break</span><button class="mtog" id="menuDance">Let’s go!</button></div>
         <div class="mrow"><span class="ml">Keeper’s notes</span><button class="mtog" id="menuGuide">Open</button></div>
@@ -797,10 +855,12 @@
     </div>
   </div>
   <div id="chatlog" class="panel hide">
-    <div class="rHead"><span>HAZEL’S LOG</span><span id="chatX">✕</span></div>
+    <div class="rHead"><span>HAZEL’S LOG</span><span id="chatClear">clear</span><span id="chatX">✕</span></div>
     <div id="chatRows"></div>
   </div>
   <div id="unlockChip" class="panel hide"><span class="uc1">✦ keeper’s page unlocked</span><span class="uc2" id="unlockName">BROOD</span><span class="uc3">+1 ✧ royal jelly</span></div>
+  <div id="heatLegend" class="panel hide"><i class="hgrad"></i><span>cold</span><span class="hl2">the nest holds ~35° at its heart — brood wants the warm middle</span><span>warm</span></div>
+  <div id="tipPop" class="panel hide"><div class="tpT"></div><div class="tpB"></div><span class="tpMore hide">Read more ›</span></div>
   <div id="cellSheet" class="panel hide"><div id="csBody"></div><button class="cbtn" id="csClose">Got it</button></div>
   <div id="inspect" class="panel"></div>
   <div id="toast" class="panel"></div>
@@ -876,6 +936,18 @@
       </div>
       <div id="splashSub">ECHO · RESONANCE · RESEARCH</div>
       <div id="splashPresents">presents</div>
+    </div>
+  </div>
+
+  <!-- warm welcome: why bees, why this game — shown once -->
+  <div class="ov hide" id="welcome">
+    <div class="card panel">
+      <h1>WELCOME</h1>
+      <div class="sub">before we begin, a word about bees</div>
+      <p>Every <b>third bite</b> of food on your plate exists because a bee visited a flower first. Apples, almonds, berries, pumpkins — pollinated, quietly, for free, forever.</p>
+      <p>A honeybee colony is one of nature’s gentlest miracles: <b>forty thousand tiny lives thinking together as one mind</b>. This game puts that mind in your hands for a few seasons.</p>
+      <p>Everything Hazel teaches here is <em>real beekeeping</em> — the same craft, the same calendar, the same stakes. Play it with your kids. Play it with your grandparents. The bees don’t mind who keeps them — they only ask that you pay attention.</p>
+      <button class="btn pulse" id="welcomeBtn">Meet the bees ▶</button>
     </div>
   </div>
 
@@ -964,6 +1036,9 @@
     const ICON_SND_OFF='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.2v5.6h3.6L13 19V5L7.6 9.2H4z" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="16" y1="9.5" x2="21" y2="14.5"/><line x1="21" y1="9.5" x2="16" y2="14.5"/></g></svg>';
 
     $('sndBtn').innerHTML=ICON_SND_OFF;
+    (function(){ let seen=false; try{ seen=localStorage.getItem('hm_welcomed')==='1'; }catch(e){}
+      if(!seen && !loadSave()) $('welcome').classList.remove('hide'); })();
+    press($('welcomeBtn'),()=>{ try{ localStorage.setItem('hm_welcomed','1'); }catch(e){} $('welcome').classList.add('hide'); });
 
     // ---- typewriter: text arrives at reading pace, Zelda-style; markup tags
     // are swallowed whole so colours appear with their words. One channel —
@@ -1133,7 +1208,7 @@
     let rate={h:0,p:0,b:0,br:0}, prevv={h:0,p:0,b:0,br:0}, forecastCache=null, fcTimer=0, sparkCtx=null;
     let onboard=false, coachStep=0, brushedBrood=0, flaggedExpand=0, paintedHoney=0, forageTouched=false;
     let queenAge=1, hornet=null, hornetCD=18+Math.random()*22, shake=0, gt=0, hitstop=0;
-    let yearHist=[], histT=2.7, drips=[], danceMode=false, hints=true, inspectMode=false;
+    let yearHist=[], histT=2.7, drips=[], danceMode=false, hints=true, inspectMode=false, heatView=false;
     // every colony size sounds different — say so when they get there
     const POPM=[
       [25,'Twenty-five bees. The comb is starting to sound like something.'],
@@ -1161,6 +1236,12 @@
       {id:'dancer',   ic:'🕺', n:'Dance Break',      d:'take a dance break with the bees'},
       {id:'master',   ic:'👑', n:'Master Keeper',    d:'finish a year with all four season goals'},
     ];
+    // the apiary score: a lifetime number that only ever grows — your whole
+    // keeping career in one figure, comparable but never punishing
+    let LIFE={y:0,j:0,g:0,p:0};
+    try{ const l=JSON.parse(localStorage.getItem('hm_life')||'{}'); for(const k of ['y','j','g','p']) if(typeof l[k]==='number') LIFE[k]=l[k]; }catch(e){}
+    function lifeSave(){ try{ localStorage.setItem('hm_life',JSON.stringify(LIFE)); }catch(e){} }
+    function apiaryScore(){ return LIFE.y*250 + LIFE.j*100 + LIFE.g*50 + LIFE.p + badgeCount()*150; }
     let earned={};
     try{ (JSON.parse(localStorage.getItem('hm_badges')||'[]')).forEach(k=>earned[k]=1); }catch(e){}
     function badgeCount(){ return Object.keys(earned).length; }
@@ -1276,12 +1357,16 @@
       o.start(t); o.stop(t+dur+0.12); o2.start(t); o2.stop(t+dur+0.12); }
     function musicTick(){ if(!AU.ctx||!AU.on||!AU.musDry) return; const c=AU.ctx, t=c.currentTime;
       if(t<musNext) return;
-      const M=MOODS[musMood]||MOODS.spring, ch=M.prog[musBar%M.prog.length];
+      const M=MOODS[musMood]||MOODS.spring, ch0=M.prog[musBar%M.prog.length];
+      // the score lives: each year transposes the key a step; a fuller colony
+      // adds voices — no new data, just arithmetic on what already plays
+      const tr=[0,2,-3,5,-1][(year-1)%5]||0, ch=ch0.map(x=>x+tr);
+      const liveDens=M.dens*(0.75+Math.min(0.6,P/160));
       const barLen=M.bar[0]+Math.random()*(M.bar[1]-M.bar[0]);
       const t0=Math.max(t, musNext)+0.03;
       mNote(ch[0]-12, t0, barLen*1.5, M.vel*0.5, 0);                       // root, low and long
       mNote(ch[1], t0+0.07, barLen*1.15, M.vel*0.38, -0.18);               // fifth beneath
-      const n=1+Math.round(Math.random()*2.4*M.dens);                      // sprinkled upper voices
+      const n=1+Math.round(Math.random()*2.4*liveDens);                     // sprinkled upper voices
       for(let i=0;i<n;i++){ const m=ch[2+((Math.random()*(ch.length-2))|0)]+(Math.random()<0.2?12:0);
         mNote(m, t0+0.15+Math.random()*barLen*0.7, 2.4+Math.random()*2.8, M.vel*(0.5+Math.random()*0.55), (Math.random()-0.5)*0.7); }
       musNext=t0+barLen; musBar++; }
@@ -1376,6 +1461,7 @@
     // ===================== layout =====================
     const ptr={x:innerWidth/2,y:innerHeight/2};
     addEventListener('pointermove',e=>{ ptr.x=e.clientX; ptr.y=e.clientY; });
+    let lastFrostDay=270;
     let DPR=1,W=0,Hh=0,topH=120,botH=120;
     function layout(){
       DPR=Math.min(devicePixelRatio||1,2); W=innerWidth; Hh=innerHeight;
@@ -1384,7 +1470,8 @@
       const t=$('hud-top'), b=$('hud-bottom');
       topH=(t?t.offsetHeight:110)+8; botH=(b?b.offsetHeight:110)+8;
       // on phones the bottom HUD is tall — keep the coach clear of the controls it points at
-      const co=$('coach'); if(co) co.style.bottom = W<=760 ? (botH+2)+'px' : '';
+      const compact = W<=760 || (W<=1080 && Hh>=W);   // matches CSS: square counts as portrait
+      const co=$('coach'); if(co) co.style.bottom = compact ? (botH+2)+'px' : '';
       const availW=W*0.94, availH=Math.max(120,Hh-topH-botH);
       const needW=(COLS+0.5)*SQ3, needH=(ROWS-1)*1.5+2;
       mSize=Math.max(6, Math.min(availW/needW, availH/needH));
@@ -1409,9 +1496,9 @@
     function syncHiveCentre(){ hiveCx=ox+size*SQ3*(CCC+0.5*(CCR&1)); hiveCy=oy+size*1.5*CCR; }
     // frost tick + harvest band on the timeline — anticipation made visible
     function syncAlmanacTicks(){
-      let fd=270; const dt=difficulty().temp+M.temp();
+      let fd=270; const dt=difficulty().temp+M.temp(); 
       for(let d=180;d<=360;d++){ if(lerpM(tempM,d)+dt<WIN_TEMP){ fd=d; break; } }
-      $('tlFrost').style.left=(fd/YEAR*100)+'%'; $('tlFrost').title='first frost ≈ day '+fd;
+      lastFrostDay=fd; $('tlFrost').style.left=(fd/YEAR*100)+'%'; $('tlFrost').title='first frost ≈ day '+fd;
       $('tlHarv').style.left=(HARV0/YEAR*100)+'%'; $('tlHarv').style.width=((HARV1-HARV0)/YEAR*100)+'%';
       $('tlBloom').style.left=(85/YEAR*100)+'%'; $('tlBloom').style.width=(90/YEAR*100)+'%'; $('tlBloom').title='main nectar flow';
     }
@@ -1556,7 +1643,7 @@
     function harvestSurplus(){ const hs=harvestState();
       if(!hs.inWin){ if(started&&!over&&!onboard) toast('Not yet \u2014 harvest is an autumn job. The amber window on the timeline knows when.'); return; }
       if(!hs.ok){ toast('The bees need this honey more than the shelf does. Bank '+Math.ceil(hs.need*1.25+8)+' cells, then take your jar.'); return; }
-      honeyU-=8*HC; jars++; jarsThisYear++; grantBadge('firstjar'); clink(); burst(hiveCx,hiveCy,16);
+      honeyU-=8*HC; jars++; jarsThisYear++; LIFE.j++; lifeSave(); grantBadge('firstjar'); clink(); burst(hiveCx,hiveCy,16);
       forecastCache=forecastToSpring(); setN('vRJ','✧'+rj); $('sJars').textContent=jars+(jars===1?' jar':' jars');
       toast('🫙 Jar sealed — '+jars+' on the shelf. The bees keep the rest.'); checkGoals(); syncHUD(); saveGame(); }
     press($('harvestBtn'),harvestSurplus);
@@ -1621,10 +1708,11 @@
       if(last && last.html===html) return;
       MSGLOG.push({ic, html, day:Math.max(0,Math.floor(day)), year});
       if(MSGLOG.length>90) MSGLOG.shift();
+      if(advFold) $('advisor').classList.add('unread');
       if(!$('chatlog').classList.contains('hide')) renderChat(); }
     function renderChat(force){ const r=$('chatRows'), el=$('chatlog');
       const atBottom = force || (el.scrollHeight-el.clientHeight-el.scrollTop < 24);
-      r.innerHTML = MSGLOG.length ? MSGLOG.map(m=>'<div class="crow"><span class="ci2">'+m.ic+'</span><div class="cb2"><div class="cwhen">Y'+m.year+' · '+seasonName(m.day)+' · d'+(m.day+1)+'</div><div class="ctx2">'+m.html+'</div></div></div>').join('')
+      r.innerHTML = MSGLOG.length ? MSGLOG.map((m,i)=>'<div class="crow"><span class="ci2">'+m.ic+'</span><div class="cb2"><div class="cwhen">Y'+m.year+' · '+seasonName(m.day)+' · d'+(m.day+1)+'</div><div class="ctx2">'+m.html+'</div></div><span class="cdel" data-i="'+i+'" title="Dismiss">✕</span></div>').join('')
         : '<div class="ctx2" style="color:var(--dim)">Nothing yet — Hazel will speak as the seasons turn.</div>';
       if(atBottom) el.scrollTop=el.scrollHeight; }
     function toggleChat(show){ const el=$('chatlog');
@@ -1668,7 +1756,8 @@
       // after a proper dwell, unless something is genuinely urgent
       if(tx!==advCur){ const urgent=warn||raiding;
         if(urgent || !advCur || (performance.now()-advSince)>12000){
-          advCur=tx; advSince=performance.now(); $('advTx').innerHTML=tx; logMsg(ic,tx); } }
+          advCur=tx; advSince=performance.now(); $('advTx').innerHTML=tx; logMsg(ic,tx);
+          if(urgent&&advFold){ advFold=false; try{ localStorage.setItem('hm_advfold','0'); }catch(err){} syncFold(); } } }
       $('advisor').classList.toggle('warn',warn);
       $('advisor').classList.toggle('cold', ic==='❄️'||coldSnap>0);
     }
@@ -1865,7 +1954,10 @@
         hexPath(x,y,s2); ctx.fillStyle=COL.wallEmpty; ctx.fill();
         if(cell.zone==='brood'){ ctx.fillStyle=COL.broodZone; ctx.fill(); } else if(cell.zone==='honey'){ ctx.fillStyle=COL.honeyZone; ctx.fill(); }
         const hw=cell.heat-AMB(T);
-        if(hw>0.06){ ctx.fillStyle='rgba(255,146,54,'+Math.min(0.34,hw*0.42).toFixed(3)+')'; ctx.fill(); }
+        if(heatView){ const h=Math.max(0,Math.min(1,cell.heat));
+          const r=Math.round(43+(255-43)*h), g2=Math.round(74+(146-74)*h), b=Math.round(116+(54-116)*h);
+          ctx.fillStyle='rgba('+r+','+g2+','+b+',0.55)'; ctx.fill(); }
+        else if(hw>0.06){ ctx.fillStyle='rgba(255,146,54,'+Math.min(0.34,hw*0.42).toFixed(3)+')'; ctx.fill(); }
         ctx.strokeStyle=COL.wallRim; ctx.lineWidth=1; ctx.stroke();
         if(cell.brood){ const st=cell.brood.stage;
           if(st==='egg'){ ctx.fillStyle=COL.egg; ctx.beginPath(); ctx.ellipse(x,y,s2*0.10,s2*0.22,0.5,0,6.28); ctx.fill(); }
@@ -1884,6 +1976,13 @@
         let bx=b.x, by=b.y;
         if(winter){ bx+=Math.sin(gt*26+b.wob*3)*size*0.06; by+=Math.cos(gt*31+b.wob*2)*size*0.05; } // shiver
         drawBee(bx,by,Math.atan2(b.vy||0,b.vx||0),b.carry,false,b.wob,b.fanning?'fan':(b.fly?'fly':'walk')); }
+      // tutorial touch-ripple on the exact cell the current step wants
+      if(onboard){ const tc=coachTarget(); if(tc){ const p0=cellCenter(tc.c,tc.r);
+        for(const off of [0,0.7]){ const ph=((gt+off)%1.4)/1.4, rr=size*(0.55+ph*1.15);
+          ctx.strokeStyle=(off?'rgba(255,217,122,':'rgba(255,255,255,')+(0.55*(1-ph)).toFixed(2)+')';
+          ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(p0.x,p0.y,rr,0,6.28); ctx.stroke(); }
+        ctx.fillStyle='rgba(255,255,255,'+(0.32+0.22*Math.sin(gt*3)).toFixed(2)+')';
+        ctx.beginPath(); ctx.arc(p0.x,p0.y,size*0.14,0,6.28); ctx.fill(); } }
       // when storage is full and nectar still flows, honey visibly drips away
       { const cp=caps(), full=cp.total>0&&(honeyU+pollenU+nectarU)>=cp.total-2, Na2=lerpM(nectarM,day);
         if(started&&!over&&full&&Na2>0.1&&!winter&&Math.random()<lastDt*2.2){
@@ -2253,25 +2352,25 @@
     function clearSpots(){ ['forageGrp','brushGrp','timeGrp','tabMeadow','reportBtn'].forEach(id=>spot(id,false)); document.querySelectorAll('[data-brush],[data-sp],[data-f]').forEach(e=>e.classList.remove('tapHere')); }
     const COACH=[
       { ic:'🖌️', spot:'brushGrp', brushHint:'brood', pause:true, prog:'1 · the brushes',
-        tx:'These below are your <b>brushes</b>. Pick up <span class="kb">Brood</span> \u2014 tap it.',
+        tx:'Pick up <span class="kb">Brood</span>.',
         until:()=>brush==='brood' },
       { ic:'👑', prog:'2 · her first cradle',
-        tx:'Now <em>tap one wax cell</em> near the middle. The soft glow shows where it\u2019s wise.',
+        tx:'Tap the rippling cell.',
         until:()=>brushedBrood>=1, unlock:'brood' },
       { ic:'🍯', spot:'brushGrp', brushHint:'honey', prog:'3 · the pantry',
-        tx:'Next craft. Pick up the <span class="kh">Honey</span> brush.',
+        tx:'Now <span class="kh">Honey</span>.',
         until:()=>brush==='honey' },
       { ic:'🍯', prog:'4 · first shelf',
-        tx:'Paint <em>one outer cell</em> \u2014 a shelf for the harvest to sleep on.',
+        tx:'One outer cell.',
         until:()=>paintedHoney>=1, unlock:'honey' },
       { ic:'🔨', spot:'brushGrp', brushHint:'expand', prog:'5 · fresh wax',
-        tx:'Last brush: <span class="kg">Expand</span>. Pick it up.',
+        tx:'And <span class="kg">Expand</span>.',
         until:()=>brush==='expand' },
       { ic:'🔨', prog:'6 · make room',
-        tx:'Tap the glowing ground <em>just outside the comb</em>. The builders will draw new wax over it.',
+        tx:'Just outside the comb.',
         until:()=>flaggedExpand>=1, unlock:'expand' },
       { ic:'🌼', spot:'forageGrp', show:['forageGrp'], prog:'7 · the dials',
-        tx:'One more thing \u2014 the <span class="kc">dials</span> aim your foragers. Tap any one of them.',
+        tx:'Aim your foragers \u2014 tap a dial.',
         until:()=>forageTouched, unlock:'forage' },
     ];
     function showCoach(){ const s=COACH[coachStep]; if(!s){ endCoach(); return; }
@@ -2313,6 +2412,18 @@
         showUnlockChip(s.unlock, ()=>showLesson(s.unlock, tease, true)); }
       else setTimeout(tease, 350); }
     // the interlude waits for the player — nothing Hazel says vanishes on a timer
+    // show, don't tell: while a tutorial step waits, the exact target cell
+    // carries a touch-ripple — the finger knows where to go before the words do
+    function coachTarget(){ if(!onboard||coachWait) return null;
+      const s=COACH[coachStep]; if(!s||!s.until||s.until()) return null;
+      const find=p=>cells.find(p)||null;
+      if(s.unlock==='brood')  return find(c=>c.built&&c.zone!=='brood'&&!c.brood&&hexDist(c.c,c.r,CCC,CCR)<=1)
+                                  || find(c=>c.built&&c.zone!=='brood'&&!c.brood);
+      if(s.unlock==='honey')  return find(c=>c.built&&c.zone!=='honey'&&hexDist(c.c,c.r,CCC,CCR)>=2)
+                                  || find(c=>c.built&&c.zone!=='honey');
+      if(s.unlock==='expand') return find(c=>{ if(c.built||c.flagExpand) return false;
+        let n=0; for(const [cc,rr] of neighbors(c.c,c.r)) if(cells[idx(cc,rr)].built) n++; return n>=2; });
+      return null; }
     function coachContinue(){ if(!coachWait) return; coachWait=false;
       $('coach').classList.remove('show'); if(!onboard) return;
       if(coachStep>=COACH.length){ endCoach(); } else showCoach(); }
@@ -2576,8 +2687,9 @@
       well.splice(3); next.splice(2);
       if(gdone>=4) grantBadge('master');
       if(need>0&&bankAtFrost>=need) grantBadge('pantry');
+      if(prefix==='ye'){ LIFE.y++; LIFE.g+=gdone; LIFE.p=Math.max(LIFE.p,peakPop); lifeSave(); }
       const el=$(prefix+'Review'); if(!el) return;
-      el.innerHTML='<div class="rvh">What went well</div>'+well.map(w=>'<div class="rvi good2">✔ '+w+'</div>').join('')
+      el.innerHTML='<div class="rvh">Apiary score</div><div class="rvi"><b>'+apiaryScore().toLocaleString()+'</b> — every year, jar, goal, and badge you\u2019ve ever earned</div><div class="rvh">What went well</div>'+well.map(w=>'<div class="rvi good2">✔ '+w+'</div>').join('')
         +(next.length?'<div class="rvh">For next year</div>'+next.map(w=>'<div class="rvi">→ '+w+'</div>').join(''):'')
         +'<div class="rvleg"><i style="background:#ffd97a"></i>bees <i style="background:#7fe3d6"></i>honey cells</div>';
       drawYearChart($(prefix+'Chart')); }
@@ -2664,7 +2776,7 @@
 
     // ---- pause menu ----
     let menuWasPaused=false, restartArm=0, menuOpenedAt=0;
-    function menuOpen(){ menuWasPaused=paused; paused=true; syncMenuSnd(); syncPaceLocks(); menuOpenedAt=performance.now(); $('menu').classList.remove('hide'); }
+    function menuOpen(){ menuWasPaused=paused; paused=true; syncMenuSnd(); syncPaceLocks(); const ms=$('menuScore'); if(ms) ms.textContent=apiaryScore().toLocaleString(); menuOpenedAt=performance.now(); $('menu').classList.remove('hide'); }
     function menuClose(){ $('menu').classList.add('hide'); paused=menuWasPaused;
       const r=$('menuRestart'); r.classList.remove('confirm'); r.textContent='Restart'; restartArm=0; }
     function syncMenuSnd(){ const b=$('menuSnd'); if(!b) return; const on=!!(AU&&AU.ctx&&AU.on);
@@ -2690,19 +2802,62 @@
       clearSave(); location.reload(); });
     addEventListener('keydown',e=>{ if(e.key==='Escape'&&started&&!storyMode){ e.preventDefault();
       if($('menu').classList.contains('hide')) menuOpen(); else menuClose(); } });
-    // everything explains itself: numbers and the almanac open their own lessons
-    press($('clockWrap'),()=>{ if(!$('clockWrap').classList.contains('hidden')) showLesson('year',null,true); });
-    press($('stHoney'),()=>showLesson('honey',null,true));
-    press($('stPollen'),()=>showLesson('forage',null,true));
-    press($('stPop'),()=>showLesson('brood',null,true));
-    press($('stBrood'),()=>showLesson('brood',null,true));
-    press($('stKeeper'),()=>{ $('guide').classList.remove('hide'); paused=true; });
+    // everything explains itself — in one tap and one breath, with live numbers.
+    // "Read more" opens the full keeper's page for whoever wants the depth.
+    let tipOpenedAt=0, tipLesson=null;
+    function showTip(anchor, title, body, lessonKey){
+      const el=$('tipPop'); $('tipPop').querySelector('.tpT').innerHTML=title;
+      el.querySelector('.tpB').innerHTML=body;
+      const more=el.querySelector('.tpMore'); tipLesson=lessonKey||null;
+      more.classList.toggle('hide', !tipLesson);
+      el.classList.remove('hide'); tipOpenedAt=performance.now();
+      const r=anchor.getBoundingClientRect(), tw=el.offsetWidth;
+      let x=Math.max(12, Math.min(innerWidth-tw-12, r.left+r.width/2-tw/2));
+      let y=r.bottom+8; if(y+el.offsetHeight>innerHeight-12) y=Math.max(12, r.top-el.offsetHeight-8);
+      el.style.left=x+'px'; el.style.top=y+'px'; }
+    function hideTip(){ $('tipPop').classList.add('hide'); }
+    addEventListener('pointerdown',e=>{ const el=$('tipPop');
+      if(el.classList.contains('hide')) return;
+      if(performance.now()-tipOpenedAt<120) return;
+      if(e.target&&e.target.closest&&e.target.closest('#tipPop')) return;
+      hideTip(); });
+    press($('tipPop').querySelector('.tpMore'),()=>{ hideTip();
+      if(tipLesson==='notes'){ $('guide').classList.remove('hide'); paused=true; }
+      else if(tipLesson) showLesson(tipLesson,null,true); });
+    press($('stHoney'),()=>showTip($('stHoney'),'Honey — the winter fuel',
+      '<b>'+honeyCellsStored()+'</b> cells stored · winter will want ~<b>'+winterNeed()+'</b>. Foragers ripen <em>nectar</em> into it; all winter the cluster burns it to stay warm.','honey'));
+    press($('stPollen'),()=>showTip($('stPollen'),'Pollen — food for the young',
+      '<b>'+Math.round(pollenU/HC)+'</b> cells of protein. Nurses knead it into food for the larvae — <em>no pollen, no new bees</em>.','forage'));
+    press($('stPop'),()=>showTip($('stPop'),'Your workforce',
+      '<b>'+Math.round(P)+'</b> bees alive. What makes more? <em>Warm brood cells + pollen</em>. More bees bring more of everything else.','brood'));
+    press($('stBrood'),()=>showTip($('stBrood'),'The next generation',
+      'Eggs → larvae → capped pupae, about <b>twenty days</b> from laying to a bee that flies. This number is next month\u2019s workforce.','brood'));
+    press($('stKeeper'),()=>showTip($('stKeeper'),'Your keeper\u2019s shelf',
+      '<b>✧'+rj+'</b> royal jelly — spend it on <em>Queen\u2019s Gifts</em> between years · <b>'+jars+'</b> jar'+(jars===1?'':'s')+' harvested. Your legacy in glass.','notes'));
+    press($('clockWrap'),()=>{ if($('clockWrap').classList.contains('hidden')) return;
+      showTip($('clockWrap'),'The almanac — one race with the calendar',
+      'Four seasons in one strip: the <em>bloom</em> feeds you, the amber band is the <em>harvest window</em>, and the white tick is <em>first frost</em> (~day <b>'+lastFrostDay+'</b>). Everything in this game runs against that tick.','year'); });
     // ⓘ then any cell: a themed info sheet, touch-friendly
+    press($('heatBtn'),()=>{ heatView=!heatView; $('heatBtn').classList.toggle('on',heatView);
+      const lg=$('heatLegend'); lg.classList.toggle('hide',!heatView);
+      if(heatView){ lg.style.top=(topH+6)+'px'; tip('heat','Hazel: The <b>heat lens</b>. A tight nest holds its warmth in one glowing heart — scatter the brood and watch the edges go cold blue.'); } });
     press($('inspectBtn'),()=>{ inspectMode=!inspectMode; $('inspectBtn').classList.toggle('on',inspectMode);
       if(inspectMode) toast('Now tap any cell of the comb to read it.'); });
     press($('csClose'),()=>$('cellSheet').classList.add('hide'));
-    press($('advisor'),e=>{ if($('advisor').classList.contains('hidden')) return; if(e.target&&e.target.closest&&e.target.closest('#feedBtn')) return; toggleChat(); });
+    // Hazel tucks away to a chip and comes back with one tap
+    let advFold=false; try{ advFold=localStorage.getItem('hm_advfold')==='1'; }catch(e){}
+    function syncFold(){ $('advisor').classList.toggle('collapsed',advFold);
+      if(!advFold) $('advisor').classList.remove('unread'); }
+    press($('advisor'),e=>{ if($('advisor').classList.contains('hidden')) return;
+      if(e.target&&e.target.closest&&e.target.closest('#feedBtn')) return;
+      if(advFold){ advFold=false; try{ localStorage.setItem('hm_advfold','0'); }catch(err){} syncFold(); return; }
+      if(e.target&&e.target.closest&&e.target.closest('.fold')){ advFold=true; try{ localStorage.setItem('hm_advfold','1'); }catch(err){} syncFold(); return; }
+      toggleChat(); });
+    syncFold();
     press($('chatX'),()=>toggleChat(false));
+    press($('chatClear'),()=>{ MSGLOG.length=0; renderChat(true); });
+    press($('chatRows'),e=>{ const d=e.target&&e.target.closest&&e.target.closest('.cdel'); if(!d) return;
+      const i=+d.dataset.i; if(i>=0&&i<MSGLOG.length){ MSGLOG.splice(i,1); renderChat(); } });
     press($('helpBtn'),()=>{ $('guide').classList.remove('hide'); paused=true; });
     press($('guideClose'),()=>{ $('guide').classList.add('hide'); paused=false; });
 
