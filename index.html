@@ -684,7 +684,7 @@
   </div>
 
   <div id="hud-bottom">
-    <div id="advisor" class="panel preveal" title="Hazel’s log — every word she’s said"><canvas class="ic" id="hazelC" width="46" height="46" aria-label="Hazel"></canvas><div class="tx"><span id="advTx">Welcome to your colony.</span><button id="feedBtn" class="hide">Feed syrup — once</button></div><span class="hist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.3c-1.3 0-2.6-.3-3.7-.8L3 20l1.2-4.4a8.1 8.1 0 0 1-1.2-4.1A8.4 8.4 0 0 1 11.5 3.2 8.4 8.4 0 0 1 21 11.5z"/></svg></span></div>
+    <div id="advisor" class="panel preveal" title="Hazel’s log — every word she’s said"><canvas class="ic" id="hazelC" width="46" height="46" aria-label="Hazel"></canvas><div class="tx"><span id="advTx">Welcome home, keeper.</span><button id="feedBtn" class="hide">Feed syrup — once</button></div><span class="hist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.3c-1.3 0-2.6-.3-3.7-.8L3 20l1.2-4.4a8.1 8.1 0 0 1-1.2-4.1A8.4 8.4 0 0 1 11.5 3.2 8.4 8.4 0 0 1 21 11.5z"/></svg></span></div>
     <div id="ctl" class="panel">
       <div class="grp preveal" id="forageGrp">
         <span class="gl">Forage <u>🍯·🌼 wk</u></span>
@@ -715,7 +715,7 @@
 
   <div class="ov hide" id="menu">
     <div class="card mcard">
-      <h1>PAUSED</h1><div class="sub">the bees hold their breath</div>
+      <h1>PAUSED</h1>
       <button class="btn pulse" id="menuResume">Back to the hive ▶</button>
       <div class="mset">
         <div class="mrow"><span class="ml">Sound</span><button class="mtog" id="menuSnd">Off</button></div>
@@ -1097,6 +1097,15 @@
     let onboard=false, coachStep=0, brushedBrood=0, flaggedExpand=0, paintedHoney=0, forageTouched=false;
     let queenAge=1, hornet=null, hornetCD=18+Math.random()*22, shake=0, gt=0, hitstop=0;
     let yearHist=[], histT=2.7, drips=[], danceMode=false, hints=true, inspectMode=false;
+    // every colony size sounds different — say so when they get there
+    const POPM=[
+      [25,'Twenty-five bees. The comb is starting to sound like something.'],
+      [50,'Fifty bees strong \u2014 you can hear the hum from the porch now.'],
+      [80,'Eighty bees! The queen is being very casual about how proud she is.'],
+      [120,'A hundred and twenty. The neighbours have started asking about honey.'],
+      [180,'A hundred and eighty bees. Less a hive, more a small golden weather system.'],
+    ];
+    let popMilo={};
     try{ hints = localStorage.getItem('hm_hints')!=='0'; }catch(e){}
     let rj=0, jars=0, jarsThisYear=0, fedWinter=false, goals=null, lastSI=0, scoutShown=false, raidLoss=0, starveT=0, bankAtFrost=0, seenTips={};
     const queenVigour=()=>Math.max(0.7, 1-(queenAge-1)*0.12);
@@ -1125,6 +1134,7 @@
     function renderBadges(){ $('badgeGrid').innerHTML=BADGES.map(b=>'<div class="badge '+(earned[b.id]?'earned':'locked')+'"><span class="bi">'+b.ic+'</span><div><div class="bn">'+b.n+'</div><div class="bd">'+b.d+'</div></div></div>').join(''); }
     function checkBadges(){ if(!started||over) return;
       if(peakPop>=100) grantBadge('century');
+      for(const [n,msg] of POPM){ if(P>=n && !popMilo[n]){ popMilo[n]=1; toast('\ud83d\udc1d '+msg); chime(660,880); } }
       if(Object.keys(lessonSeen).length>=5) grantBadge('scholar'); }
     function makeGoals(){
       const y=year;
@@ -1141,7 +1151,7 @@
       g.label='Midwinter check · '+g.tgt+' cells on day 316';
       if(!silent) toast('Winter goal set: reach day 316 with '+g.tgt+' cells still capped.'); }
     function completeGoal(g){ if(g.done) return; g.done=true; rj++;
-      fanfare(); burst(W/2,topH+40,26); toast('Season goal complete — +1 ✧ royal jelly');
+      fanfare(); burst(W/2,topH+40,26); toast('Season goal met \u2014 +1 ✧ royal jelly. The queen pretends not to be pleased.');
       const el=$('goal'); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
       saveGame(); }
     function checkGoals(){ if(onboard||!goals||over) return;
@@ -1507,8 +1517,8 @@
       const need=winterNeed(); const sur=honeyCellsStored()-need*1.1;
       return {inWin, ok:inWin&&sur>=8, sur, need}; }
     function harvestSurplus(){ const hs=harvestState();
-      if(!hs.inWin){ if(started&&!over&&!onboard) toast('Harvest is an autumn job — the window is marked on the timeline.'); return; }
-      if(!hs.ok){ toast('No safe surplus yet. Bank '+Math.ceil(hs.need*1.25+8)+' cells before you take a jar.'); return; }
+      if(!hs.inWin){ if(started&&!over&&!onboard) toast('Not yet \u2014 harvest is an autumn job. The amber window on the timeline knows when.'); return; }
+      if(!hs.ok){ toast('The bees need this honey more than the shelf does. Bank '+Math.ceil(hs.need*1.25+8)+' cells, then take your jar.'); return; }
       honeyU-=8*HC; jars++; jarsThisYear++; grantBadge('firstjar'); clink(); burst(hiveCx,hiveCy,16);
       forecastCache=forecastToSpring(); setN('vRJ','✧'+rj); $('sJars').textContent=jars+(jars===1?' jar':' jars');
       toast('🫙 Jar sealed — '+jars+' on the shelf. The bees keep the rest.'); checkGoals(); syncHUD(); saveGame(); }
@@ -1517,7 +1527,7 @@
     // ===================== emergency feed (one comeback per winter) =====================
     function feedSyrup(){ if(fedWinter||over) return; fedWinter=true; grantBadge('softheart'); honeyU+=10*HC; starveT=0;
       chime(320,540); puff(hiveCx,hiveCy,'#ffd97a',18,1.2);
-      toast('You slide a syrup feeder into the hive — the cluster stirs. +10 cells. (This year grades no higher than B.)');
+      toast('You slide in a syrup feeder \u2014 the whole cluster leans toward it. +10 cells. (Kindness caps the year at a B. Worth it.)');
       $('feedBtn').classList.add('hide'); forecastCache=forecastToSpring(); saveGame(); }
     press($('feedBtn'),feedSyrup);
 
@@ -1591,7 +1601,7 @@
       const T=lerpM(tempM,day)+difficulty().temp+M.temp(), Na=lerpM(nectarM,day), winter=T<WIN_TEMP;
       const hc=honeyCellsStored(), need=winterNeed(), br=countBrood(), fc=forecastCache;
       const bp=bestPatch(day); const hs=harvestState();
-      let ic='🐝', tx='The colony hums along.', warn=false;
+      let ic='🐝', tx='All\u2019s well. You can tell by the hum.', warn=false;
       const raiding=!!hornet && hornet.state!=='flee';
       $('advisor').classList.toggle('raid', raiding);
       const feedable=(winter || day<75 || day>235) && hc<5 && !fedWinter && started && !over && !onboard;
@@ -1610,11 +1620,11 @@
       else if(hs.ok){ ic='🫙'; tx='Surplus honey is banked — you can <b>Harvest</b> a jar for your shelf. The window closes at first frost.'; }
       else if(!winter && bp.q>0.5 && (activePatch==null || patchQuality(activePatch,day)<bp.q-0.18)){ ic='💃'; tx='A <b>rich patch</b> is blooming. Open the <b>☀ Meadow</b> and tap it to send your foragers there.'; }
       else if(winter && hc<need*0.5){ ic='❄️'; tx='Deep winter and the shelves are thin — but spring is coming.'; }
-      else if(day<55){ ic='🌱'; tx='Early spring. Favour <b>Pollen</b> or Balanced so the queen has protein to grow the colony.'; }
-      else if(day>=85&&day<175){ ic='🌻'; tx='Peak <b>nectar flow</b>. Lean <b>Nectar</b>, <b>Expand</b> storage, and chase the best <b>patch</b>.'; }
-      else if(day>=175&&day<250){ ic='🍂'; tx='Autumn — flow is fading. Top off honey with <b>Nectar</b> and stop expanding.'; }
+      else if(day<55){ ic='🌱'; tx='Early spring \u2014 feed the babies first. <b>Pollen</b> or Balanced stocks the nursery kitchen.'; }
+      else if(day>=85&&day<175){ ic='🌻'; tx='The meadow is pouring. Lean <b>Nectar</b>, <b>Expand</b> the shelves, and chase the best <b>patch</b>.'; }
+      else if(day>=175&&day<250){ ic='🍂'; tx='Autumn \u2014 the meadow is closing up shop. Top off with <b>Nectar</b>; build nothing you can\u2019t fill.'; }
       else if(day>=250&&!winter){ ic='🍂'; tx='Brood eats your honey. Shrink the <b>brood zone</b> so fewer mouths face winter.'; }
-      else if(winter){ ic='❄️'; tx='Winter. No forage now — the cluster lives on stored honey. Hold on for spring.'; }
+      else if(winter){ ic='❄️'; tx='Winter. The meadow sleeps, and the cluster dreams on stored honey. Hold on for spring.'; }
       else if(br.total<6 && Na>0.2){ ic='👑'; tx='Brood is sparse. Ensure there\u2019s <b>pollen</b> and empty <b>brood</b> cells for the queen.'; }
       if(hzHold<=0) hzMood=MOODOF[ic]||'calm';
       // Hazel keeps a thought for a while: a new line only replaces the old one
@@ -1694,7 +1704,7 @@
         if(c.brood.t>=dur){ c.brood.t=0;
           if(c.brood.stage==='egg')c.brood.stage='larva';
           else if(c.brood.stage==='larva')c.brood.stage='pupa';
-          else { c.brood=null; if(P<CAP){ P+=1; bornTotal++; if(!offline&&bees.length<RENDER_BEES){ const pp=cellCenter(c.c,c.r); bees.push(makeBee(pp.x,pp.y)); puff(pp.x,pp.y,'#ffe9b0',5,0.9); } if(!offline&&!said['firstborn']) chime(660,980); toast('A new worker emerges.','firstborn'); } } } }
+          else { c.brood=null; if(P<CAP){ P+=1; bornTotal++; if(!offline&&bees.length<RENDER_BEES){ const pp=cellCenter(c.c,c.r); bees.push(makeBee(pp.x,pp.y)); puff(pp.x,pp.y,'#ffe9b0',5,0.9); } if(!offline&&!said['firstborn']) chime(660,980); toast('A new bee unfolds her wings \u2014 and gets straight to work.','firstborn'); } } } }
       const space=cells.filter(c=>c.built&&c.zone==='brood'&&!c.brood).length;
       const pollenF=Math.max(0,Math.min(1,pollenU/400));
       const layRate=Math.min(LAYMAX*lv*M.lay(),nurses*0.8,space)*pollenF*(P<CAP?1:0.15)*queenVigour();
@@ -1715,7 +1725,7 @@
       if(!offline && broodCells()>=7) tip('rings','Hazel: Watch how a nest grows \u2014 a ring at a time. One cell, then six around it, then twelve, then eighteen: 1, 7, 19, 37. Round is the shape with the least edge for the space inside, so it\u2019s both the cheapest to build and the warmest to hold. The cold always bites at the corners.');
       if(!offline && day>10 && day<80) tip('forage','Hazel: Pollen is protein \u2014 it\u2019s what nurse bees eat to make food for the young. Nectar is sugar, for honey. The dials just tell your foragers which to favour.');
       histT+=dd; if(histT>=3){ histT=0; yearHist.push({d:day, p:Math.round(P), h:honeyCellsStored()}); if(yearHist.length>140) yearHist.shift(); }
-      if(coldSnap>0) coldSnap-=dd; else if(year>1 && !winter && day>150 && Math.random()<dd*0.006){ coldSnap=3; toast('A cold snap — the bees burn extra honey to stay warm.'); }
+      if(coldSnap>0) coldSnap-=dd; else if(year>1 && !winter && day>150 && Math.random()<dd*0.006){ coldSnap=3; toast('A cold snap. Inside, forty thousand tiny furnaces turn up the heat \u2014 and the honey pays for it.'); }
       if(!offline && !onboard && !over){
         const w=hornetWindow();
         if(!hornet){ hornetCD-=dd;
@@ -2589,7 +2599,7 @@
     function seedAndPlay(){ clearSave(); tinyComb(); honeyU=8*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; grades=[]; forage='balanced'; activePatch=null;
       queenAge=1; hornet=null; hornetCD=18+Math.random()*22; parts.length=0; shake=0;
       rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=null; lastSI=0; scoutShown=false; seenTips={}; lessonSeen={}; nudged={}; starveT=0; bankAtFrost=0; raidLoss=0;
-      brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=true; yearHist.length=0; histT=2.7; setReveal(true);
+      brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=true; yearHist.length=0; histT=2.7; popMilo={}; setReveal(true);
       document.querySelectorAll('[data-f]').forEach(x=>x.classList.toggle('on',x.dataset.f==='balanced')); beginCommon();
       setTimeout(()=>{ if(onboard) showCoach(); }, 1800); saveGame(); }
     $('startNew').addEventListener('click',()=>{ startStory(); });
