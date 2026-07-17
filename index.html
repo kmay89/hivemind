@@ -1153,7 +1153,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.22.1';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.22.2';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1373,7 +1373,7 @@
     let LEGACY={}; try{ LEGACY=JSON.parse(localStorage.getItem('hm_legacy')||'{}')||{}; }catch(e){}
     function legacySave(){ try{ localStorage.setItem('hm_legacy',JSON.stringify(LEGACY)); }catch(e){} }
     function updateLegacy(){ LEGACY.queen=queenLine; LEGACY.apex=Math.max(LEGACY.apex||0, year);
-      let best=LEGACY.heirloom||null; for(const j of CELLAR){ if(!best||j.p>best.p) best={n:j.n,r:j.r,p:j.p,y:j.y}; }
+      let best=(LEGACY.heirloom&&typeof LEGACY.heirloom.p==='number')?LEGACY.heirloom:null; for(const j of CELLAR){ if(!best||j.p>best.p) best={n:j.n,r:j.r,p:j.p,y:j.y}; }
       LEGACY.heirloom=best; legacySave(); }
     // the cellar is career-deep: jars outlive any one colony
     let CELLAR=[];
@@ -2240,7 +2240,7 @@
           const take=Math.max(0, Math.round(banked*(0.30 - guarded*0.12)));
           if(take>2){ honeyU=Math.max(0, honeyU-take*HC); shake=Math.max(shake,0.85); buzzAlert(); puff(hiveCx,hiveCy,'#a06a3a',44,2.1);
             toast('\ud83d\udc3b A <b>bear</b> raided the hive and tore out '+take+' cells of honey! '+(guarded?'Your guards drove him off before worse.':'Next year \u2014 bank deeper, and a guard would help.')); logMsg('\ud83d\udc3b','A bear raided the hive \u2014 '+take+' cells of honey lost.'); seasonEventFired='bear-hit'; }
-          else { chime(520,760); toast('\ud83d\udc3b A bear came down the hill \u2014 but found your hive too deep and too well guarded to bother. He moved on.'); logMsg('\ud83d\udc3b','A bear came, but the hive was too well kept \u2014 he left empty-pawed.'); seasonEventFired='bear-held'; } }
+          else { chime(520,760); toast('\ud83d\udc3b A bear came down the hill \u2014 but found your hive '+(guarded?'too deep and too well guarded':'too deep')+' to bother. He moved on.'); logMsg('\ud83d\udc3b', guarded?'A bear came, but the hive was too well kept \u2014 he left empty-pawed.':'A bear came, but found too little honey to bother.'); seasonEventFired='bear-held'; } }
       }
       if(day>=262 && bankAtFrost===0) bankAtFrost=honeyCellsStored();
       if(!offline && cells.some(c=>c.built&&c.flagExpand)) tip('hex','Hazel: Why six sides? It\u2019s the cheapest wall there is \u2014 a hexagon fences off its space with less wax than any other tile. People suspected that for two thousand years; a mathematician named Hales only proved it in 1999. And the bees didn\u2019t work it out \u2014 they build round cells, and the warm wax settles into hexagons by itself.');
@@ -3390,7 +3390,7 @@
 
     function beginCommon(){ $('intro').classList.add('hide'); started=true; queen.x=hiveCx; queen.y=hiveCy; queen.tx=hiveCx; queen.ty=hiveCy; syncBeePool();
       prevv={h:honeyU,p:pollenU,b:P,br:countBrood().total}; rate={h:0,p:0,b:0,br:0}; waxRateEMA=0; forecastCache=forecastToSpring(); layout(); setSpeed(1); }
-    function seedAndPlay(){ colonyNum=CHRON.length?CHRON[CHRON.length-1].col+1:1; colonySave(); clearSave(); tinyComb(); honeyU=(CHRON.length&&LEGACY&&LEGACY.heirloom?12:8)*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; grades=[]; forage='balanced'; activePatch=null; mix=[0,0,0,0]; roster=[]; corpses=[]; drawSeason();
+    function seedAndPlay(){ colonyNum=CHRON.length?CHRON[CHRON.length-1].col+1:1; colonySave(); clearSave(); tinyComb(); honeyU=(CHRON.length&&LEGACY&&LEGACY.heirloom&&LEGACY.heirloom.n?12:8)*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; grades=[]; forage='balanced'; activePatch=null; mix=[0,0,0,0]; roster=[]; corpses=[]; drawSeason();
       queenAge=1; hornet=null; hornetCD=18+Math.random()*22; parts.length=0; shake=0;
       rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=null; lastSI=0; scoutShown=false; seenTips={}; lessonSeen={}; nudged={}; starveT=0; bankAtFrost=0; raidLoss=0;
       brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=true; yearHist.length=0; histT=2.7; popMilo={};
@@ -3413,7 +3413,7 @@
         const q=LEGACY.queen?QUEENS.find(x=>x.id===LEGACY.queen):null;
         let h='<b>Your line continues.</b> ';
         if(q){ h+='The granddaughter of <b>'+q.name+'</b> answers your call — already crowned below. '; queenLine=LEGACY.queen; }
-        if(LEGACY.heirloom){ h+='You carry the heirloom <b>'+LEGACY.heirloom.n+'</b> from your old cellar, a gift of honey to start the new comb.'; }
+        if(LEGACY.heirloom&&LEGACY.heirloom.n){ h+='You carry the heirloom <b>'+LEGACY.heirloom.n+'</b> from your old cellar, a gift of honey to start the new comb.'; }
         el.innerHTML=h; el.classList.remove('hide');
       } else el.classList.add('hide'); }
     $('startNew').addEventListener('click',()=>{ showLegacyNote(); renderQueens(); $('intro').classList.add('hide'); $('queenPick').classList.remove('hide'); });
