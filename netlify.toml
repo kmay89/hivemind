@@ -24,3 +24,21 @@
 
 # HTML caching is left to Netlify's default (public, max-age=0, must-revalidate),
 # which already guarantees players get the newest version right after a deploy.
+
+# The service worker must never be cached long, or players would stop
+# receiving update notifications.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# Icons and the social card change rarely; let them sit in caches for a week.
+[[headers]]
+  for = "/icons/*"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"
+
+[[headers]]
+  for = "/social-card.png"
+  [headers.values]
+    Cache-Control = "public, max-age=604800"

@@ -7,13 +7,23 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0d0905">
+<meta name="apple-mobile-web-app-title" content="HIVEMIND">
 <meta name="description" content="HIVEMIND — a beekeeping survival sim in your browser. Paint the comb, steer the foragers, fight off hornets, and stock enough honey to survive the winter. Free & open source.">
 <link rel="canonical" href="https://hive-mind-game.com/">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="64x64" href="icons/favicon-64.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://hive-mind-game.com/">
+<meta property="og:site_name" content="HIVEMIND">
 <meta property="og:title" content="HIVEMIND — keep a honeybee colony alive, year after year">
 <meta property="og:description" content="A beekeeping survival sim in your browser. Paint the comb, steer the foragers, and stock enough honey to survive the winter. Free & open source.">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://hive-mind-game.com/social-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="HIVEMIND — a honeycomb with glowing cells and a bee. Keep a honeybee colony alive, year after year.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://hive-mind-game.com/social-card.png">
 <title>HIVEMIND — keep a honeybee colony alive, year after year</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -254,6 +264,19 @@
   @keyframes spot{ 0%,100%{ box-shadow:0 0 0 0 rgba(255,217,122,0); } 50%{ box-shadow:0 0 0 4px rgba(255,217,122,0.55); } }
   .tapHere{ animation:spot 1.3s ease-in-out infinite, btnPulse 1.3s ease-in-out infinite; }
   @keyframes btnPulse{ 0%,100%{ filter:brightness(1); } 50%{ filter:brightness(1.25); } }
+
+  /* ---------- update bar (new version deployed) ---------- */
+  #updateBar{ position:fixed; top:0; left:50%; z-index:11; display:flex; gap:12px; align-items:center;
+    max-width:calc(100% - 24px); padding:11px 13px 11px 16px;
+    transform:translateX(-50%) translateY(-130%); transition:transform .5s cubic-bezier(.2,.9,.3,1); }
+  #updateBar.show{ transform:translateX(-50%) translateY(max(14px, env(safe-area-inset-top))); }
+  #updateBar .ut{ font-size:12.5px; color:var(--text); white-space:nowrap; }
+  #updateBar .ut b{ color:var(--gold); font-weight:600; }
+  #updateGo{ font-family:'Bricolage Grotesque'; font-weight:700; font-size:12px; padding:8px 15px; border-radius:9px; cursor:pointer; border:none;
+    color:#241503; background:linear-gradient(180deg,var(--gold),var(--honey)); flex:none; }
+  #updateGo:active{ transform:scale(.95); }
+  #updateLater{ font-size:10px; color:var(--dim); cursor:pointer; text-decoration:underline; flex:none; }
+  @media(max-width:520px){ #updateBar .ut{ white-space:normal; font-size:11.5px; } }
 
   /* ---------- ErrerLabs studio splash (Echo Resonance Research) ---------- */
   #splash{ position:fixed; inset:0; z-index:12; cursor:pointer;
@@ -573,6 +596,13 @@
       </div>
       <div class="cap" id="hexNote">A hexagon holds a given area with the shortest wall of any tile — the least wax. Bees have built this since long before it was a theorem.</div>
     </div>
+  </div>
+
+  <!-- update bar -->
+  <div id="updateBar" class="panel">
+    <span class="ut">🍯 A <b>fresh version</b> of the hive is ready.</span>
+    <button id="updateGo">Update</button>
+    <span id="updateLater">later</span>
   </div>
 
   <!-- ErrerLabs studio splash -->
@@ -2103,6 +2133,30 @@
       ctx.setTransform(DPR,0,0,DPR,0,0);
     }
     requestAnimationFrame(frame);
+
+    // ===================== PWA: offline play + update reminder =====================
+    if('serviceWorker' in navigator && (location.protocol==='https:'||['localhost','127.0.0.1'].includes(location.hostname))){
+      let refreshing=false;
+      // on a first visit clients.claim() also fires controllerchange — only reload
+      // when a controller existed at load time (i.e. a genuine version swap)
+      const hadController=!!navigator.serviceWorker.controller;
+      navigator.serviceWorker.addEventListener('controllerchange',()=>{ if(!hadController||refreshing) return; refreshing=true; location.reload(); });
+      function offerUpdate(reg){ const bar=$('updateBar'); if(!bar||bar.classList.contains('show')) return;
+        bar.classList.add('show');
+        $('updateGo').onclick=()=>{ try{ if(started&&!over) saveGame(); }catch(e){}
+          const w=reg.waiting; if(w) w.postMessage({type:'SKIP_WAITING'}); else location.reload(); };
+        $('updateLater').onclick=()=>bar.classList.remove('show'); }
+      function watchWorker(reg,w){ if(!w) return;
+        w.addEventListener('statechange',()=>{ if(w.state==='installed'&&navigator.serviceWorker.controller) offerUpdate(reg); }); }
+      navigator.serviceWorker.register('sw.js').then(reg=>{
+        if(reg.waiting&&navigator.serviceWorker.controller) offerUpdate(reg);
+        watchWorker(reg,reg.installing);
+        reg.addEventListener('updatefound',()=>watchWorker(reg,reg.installing));
+        // look for new versions when the player returns to the tab, and hourly while it stays open
+        document.addEventListener('visibilitychange',()=>{ if(!document.hidden) reg.update().catch(()=>{}); });
+        setInterval(()=>reg.update().catch(()=>{}),60*60*1000);
+      }).catch(()=>{});
+    }
   })();
   </script>
 </body>

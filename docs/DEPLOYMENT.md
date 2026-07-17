@@ -78,6 +78,27 @@ If you add an external script/analytics/API someday, extend the CSP in
 | `/404.html` | not-found page (Netlify serves it automatically) |
 | `/robots.txt`, `/sitemap.xml` | search engine hints, canonical domain `hive-mind-game.com` |
 
+## PWA, icons & link previews
+
+- `manifest.webmanifest` + `/icons/*` make the game installable ("Add to
+  Home Screen") with a fullscreen, app-like launch. `icon-maskable-512.png`
+  keeps the artwork inside Android's adaptive-icon safe zone.
+- `sw.js` is the service worker: it precaches the shell so the game plays
+  offline, serves navigations network-first (deploys reach players
+  immediately), and caches Google Fonts for offline use.
+- **Releasing an update:** bump the `VERSION` string at the top of `sw.js`
+  whenever `index.html` changes. The changed byte makes browsers install the
+  new worker, which triggers the in-game "a fresh version of the hive is
+  ready" bar — the player taps Update, the save is written, and the page
+  reloads on the new version. `netlify.toml` serves `sw.js` with
+  `max-age=0` so the update check always sees the newest worker.
+- `social-card.png` (1200×630) is the link-preview image for iMessage,
+  Slack, X, Discord, etc., wired up via `og:image`/`twitter:image` in
+  `index.html`. iMessage reads Open Graph tags, so pasting
+  hive-mind-game.com into a chat shows the card. Icons and the card are
+  generated art — regenerate by redrawing at the same paths if the brand
+  changes.
+
 ## Deploying changes
 
 Push to `main` (usually by merging a PR) and Netlify builds and publishes
