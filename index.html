@@ -270,6 +270,17 @@
     background:linear-gradient(95deg,var(--gold),#fff 55%,var(--honey)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
   #unlockChip .uc3{ font:700 11px 'JetBrains Mono',monospace; color:var(--gold); }
 
+  /* ---------- heat lens ---------- */
+  #heatBtn.on{ color:#2c1206; background:linear-gradient(180deg,#ffb37a,#e2703a); }
+  #heatLegend{ position:fixed; left:50%; transform:translateX(-50%); bottom:auto; z-index:6;
+    display:flex; align-items:center; gap:8px; padding:8px 12px; font:600 9px 'JetBrains Mono',monospace;
+    color:var(--dim); letter-spacing:.08em; text-transform:uppercase;
+    width:min(380px, calc(100vw - 24px)); }
+  #heatLegend .hl2{ flex:1; min-width:0; }
+  #heatLegend .hgrad{ width:64px; height:8px; border-radius:4px; flex:none;
+    background:linear-gradient(90deg,#2b4a74,#8a5a2a,#ff9236); }
+  #heatLegend .hl2{ color:var(--text); text-transform:none; letter-spacing:0; font:500 10px 'Bricolage Grotesque',sans-serif; }
+
   /* ---------- one-tap tooltips: what a number means, live, in one breath ---------- */
   #tipPop{ position:fixed; z-index:10; width:min(300px, calc(100vw - 24px)); padding:12px 14px; }
   #tipPop.hide{ display:none; }
@@ -760,6 +771,7 @@
         <div class="tb honeyb y" data-brush="honey" tabindex="0" title="Paint storage cells"><span>Honey</span><i class="yld" id="yHon">—</i></div>
         <div class="tb expand y" data-brush="expand" tabindex="0" title="Flag fresh wax to build"><span>Expand</span><i class="yld" id="yExp">—</i></div>
         <div class="tb" id="inspectBtn" tabindex="0" title="What is this cell? Tap this, then tap any cell">ⓘ</div>
+        <div class="tb" id="heatBtn" tabindex="0" title="Heat lens — see the warmth the nest is holding"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 13.5V5a2 2 0 1 1 4 0v8.5a4.5 4.5 0 1 1-4 0z"/><circle cx="12" cy="17.5" r="1.6" fill="currentColor" stroke="none"/></svg></div>
       </div>
       <div class="grp preveal hidden" id="apiaryGrp">
         <span class="gl">Apiary</span>
@@ -792,6 +804,7 @@
         <div class="mrow"><span class="ml">Hive hum</span><input type="range" class="vslide" id="volHum" min="0" max="100"></div>
         <div class="mrow"><span class="ml">Effects</span><input type="range" class="vslide" id="volFx" min="0" max="100"></div>
         <div class="mrow"><span class="ml">Placement hints</span><button class="mtog on" id="menuHints">On</button></div>
+        <div class="mrow"><span class="ml">Apiary score</span><span class="ml" id="menuScore" style="color:var(--gold)">0</span></div>
         <div class="mrow"><span class="ml">Badges</span><button class="mtog" id="menuBadges">✦ <span id="badgeN">0</span>/10</button></div>
         <div class="mrow"><span class="ml">Dance break</span><button class="mtog" id="menuDance">Let’s go!</button></div>
         <div class="mrow"><span class="ml">Keeper’s notes</span><button class="mtog" id="menuGuide">Open</button></div>
@@ -846,6 +859,7 @@
     <div id="chatRows"></div>
   </div>
   <div id="unlockChip" class="panel hide"><span class="uc1">✦ keeper’s page unlocked</span><span class="uc2" id="unlockName">BROOD</span><span class="uc3">+1 ✧ royal jelly</span></div>
+  <div id="heatLegend" class="panel hide"><i class="hgrad"></i><span>cold</span><span class="hl2">the nest holds ~35° at its heart — brood wants the warm middle</span><span>warm</span></div>
   <div id="tipPop" class="panel hide"><div class="tpT"></div><div class="tpB"></div><span class="tpMore hide">Read more ›</span></div>
   <div id="cellSheet" class="panel hide"><div id="csBody"></div><button class="cbtn" id="csClose">Got it</button></div>
   <div id="inspect" class="panel"></div>
@@ -1194,7 +1208,7 @@
     let rate={h:0,p:0,b:0,br:0}, prevv={h:0,p:0,b:0,br:0}, forecastCache=null, fcTimer=0, sparkCtx=null;
     let onboard=false, coachStep=0, brushedBrood=0, flaggedExpand=0, paintedHoney=0, forageTouched=false;
     let queenAge=1, hornet=null, hornetCD=18+Math.random()*22, shake=0, gt=0, hitstop=0;
-    let yearHist=[], histT=2.7, drips=[], danceMode=false, hints=true, inspectMode=false;
+    let yearHist=[], histT=2.7, drips=[], danceMode=false, hints=true, inspectMode=false, heatView=false;
     // every colony size sounds different — say so when they get there
     const POPM=[
       [25,'Twenty-five bees. The comb is starting to sound like something.'],
@@ -1222,6 +1236,12 @@
       {id:'dancer',   ic:'🕺', n:'Dance Break',      d:'take a dance break with the bees'},
       {id:'master',   ic:'👑', n:'Master Keeper',    d:'finish a year with all four season goals'},
     ];
+    // the apiary score: a lifetime number that only ever grows — your whole
+    // keeping career in one figure, comparable but never punishing
+    let LIFE={y:0,j:0,g:0,p:0};
+    try{ const l=JSON.parse(localStorage.getItem('hm_life')||'{}'); for(const k of ['y','j','g','p']) if(typeof l[k]==='number') LIFE[k]=l[k]; }catch(e){}
+    function lifeSave(){ try{ localStorage.setItem('hm_life',JSON.stringify(LIFE)); }catch(e){} }
+    function apiaryScore(){ return LIFE.y*250 + LIFE.j*100 + LIFE.g*50 + LIFE.p + badgeCount()*150; }
     let earned={};
     try{ (JSON.parse(localStorage.getItem('hm_badges')||'[]')).forEach(k=>earned[k]=1); }catch(e){}
     function badgeCount(){ return Object.keys(earned).length; }
@@ -1337,12 +1357,16 @@
       o.start(t); o.stop(t+dur+0.12); o2.start(t); o2.stop(t+dur+0.12); }
     function musicTick(){ if(!AU.ctx||!AU.on||!AU.musDry) return; const c=AU.ctx, t=c.currentTime;
       if(t<musNext) return;
-      const M=MOODS[musMood]||MOODS.spring, ch=M.prog[musBar%M.prog.length];
+      const M=MOODS[musMood]||MOODS.spring, ch0=M.prog[musBar%M.prog.length];
+      // the score lives: each year transposes the key a step; a fuller colony
+      // adds voices — no new data, just arithmetic on what already plays
+      const tr=[0,2,-3,5,-1][(year-1)%5]||0, ch=ch0.map(x=>x+tr);
+      const liveDens=M.dens*(0.75+Math.min(0.6,P/160));
       const barLen=M.bar[0]+Math.random()*(M.bar[1]-M.bar[0]);
       const t0=Math.max(t, musNext)+0.03;
       mNote(ch[0]-12, t0, barLen*1.5, M.vel*0.5, 0);                       // root, low and long
       mNote(ch[1], t0+0.07, barLen*1.15, M.vel*0.38, -0.18);               // fifth beneath
-      const n=1+Math.round(Math.random()*2.4*M.dens);                      // sprinkled upper voices
+      const n=1+Math.round(Math.random()*2.4*liveDens);                     // sprinkled upper voices
       for(let i=0;i<n;i++){ const m=ch[2+((Math.random()*(ch.length-2))|0)]+(Math.random()<0.2?12:0);
         mNote(m, t0+0.15+Math.random()*barLen*0.7, 2.4+Math.random()*2.8, M.vel*(0.5+Math.random()*0.55), (Math.random()-0.5)*0.7); }
       musNext=t0+barLen; musBar++; }
@@ -1619,7 +1643,7 @@
     function harvestSurplus(){ const hs=harvestState();
       if(!hs.inWin){ if(started&&!over&&!onboard) toast('Not yet \u2014 harvest is an autumn job. The amber window on the timeline knows when.'); return; }
       if(!hs.ok){ toast('The bees need this honey more than the shelf does. Bank '+Math.ceil(hs.need*1.25+8)+' cells, then take your jar.'); return; }
-      honeyU-=8*HC; jars++; jarsThisYear++; grantBadge('firstjar'); clink(); burst(hiveCx,hiveCy,16);
+      honeyU-=8*HC; jars++; jarsThisYear++; LIFE.j++; lifeSave(); grantBadge('firstjar'); clink(); burst(hiveCx,hiveCy,16);
       forecastCache=forecastToSpring(); setN('vRJ','✧'+rj); $('sJars').textContent=jars+(jars===1?' jar':' jars');
       toast('🫙 Jar sealed — '+jars+' on the shelf. The bees keep the rest.'); checkGoals(); syncHUD(); saveGame(); }
     press($('harvestBtn'),harvestSurplus);
@@ -1930,7 +1954,10 @@
         hexPath(x,y,s2); ctx.fillStyle=COL.wallEmpty; ctx.fill();
         if(cell.zone==='brood'){ ctx.fillStyle=COL.broodZone; ctx.fill(); } else if(cell.zone==='honey'){ ctx.fillStyle=COL.honeyZone; ctx.fill(); }
         const hw=cell.heat-AMB(T);
-        if(hw>0.06){ ctx.fillStyle='rgba(255,146,54,'+Math.min(0.34,hw*0.42).toFixed(3)+')'; ctx.fill(); }
+        if(heatView){ const h=Math.max(0,Math.min(1,cell.heat));
+          const r=Math.round(43+(255-43)*h), g2=Math.round(74+(146-74)*h), b=Math.round(116+(54-116)*h);
+          ctx.fillStyle='rgba('+r+','+g2+','+b+',0.55)'; ctx.fill(); }
+        else if(hw>0.06){ ctx.fillStyle='rgba(255,146,54,'+Math.min(0.34,hw*0.42).toFixed(3)+')'; ctx.fill(); }
         ctx.strokeStyle=COL.wallRim; ctx.lineWidth=1; ctx.stroke();
         if(cell.brood){ const st=cell.brood.stage;
           if(st==='egg'){ ctx.fillStyle=COL.egg; ctx.beginPath(); ctx.ellipse(x,y,s2*0.10,s2*0.22,0.5,0,6.28); ctx.fill(); }
@@ -2660,8 +2687,9 @@
       well.splice(3); next.splice(2);
       if(gdone>=4) grantBadge('master');
       if(need>0&&bankAtFrost>=need) grantBadge('pantry');
+      if(prefix==='ye'){ LIFE.y++; LIFE.g+=gdone; LIFE.p=Math.max(LIFE.p,peakPop); lifeSave(); }
       const el=$(prefix+'Review'); if(!el) return;
-      el.innerHTML='<div class="rvh">What went well</div>'+well.map(w=>'<div class="rvi good2">✔ '+w+'</div>').join('')
+      el.innerHTML='<div class="rvh">Apiary score</div><div class="rvi"><b>'+apiaryScore().toLocaleString()+'</b> — every year, jar, goal, and badge you\u2019ve ever earned</div><div class="rvh">What went well</div>'+well.map(w=>'<div class="rvi good2">✔ '+w+'</div>').join('')
         +(next.length?'<div class="rvh">For next year</div>'+next.map(w=>'<div class="rvi">→ '+w+'</div>').join(''):'')
         +'<div class="rvleg"><i style="background:#ffd97a"></i>bees <i style="background:#7fe3d6"></i>honey cells</div>';
       drawYearChart($(prefix+'Chart')); }
@@ -2748,7 +2776,7 @@
 
     // ---- pause menu ----
     let menuWasPaused=false, restartArm=0, menuOpenedAt=0;
-    function menuOpen(){ menuWasPaused=paused; paused=true; syncMenuSnd(); syncPaceLocks(); menuOpenedAt=performance.now(); $('menu').classList.remove('hide'); }
+    function menuOpen(){ menuWasPaused=paused; paused=true; syncMenuSnd(); syncPaceLocks(); const ms=$('menuScore'); if(ms) ms.textContent=apiaryScore().toLocaleString(); menuOpenedAt=performance.now(); $('menu').classList.remove('hide'); }
     function menuClose(){ $('menu').classList.add('hide'); paused=menuWasPaused;
       const r=$('menuRestart'); r.classList.remove('confirm'); r.textContent='Restart'; restartArm=0; }
     function syncMenuSnd(){ const b=$('menuSnd'); if(!b) return; const on=!!(AU&&AU.ctx&&AU.on);
@@ -2810,6 +2838,9 @@
       showTip($('clockWrap'),'The almanac — one race with the calendar',
       'Four seasons in one strip: the <em>bloom</em> feeds you, the amber band is the <em>harvest window</em>, and the white tick is <em>first frost</em> (~day <b>'+lastFrostDay+'</b>). Everything in this game runs against that tick.','year'); });
     // ⓘ then any cell: a themed info sheet, touch-friendly
+    press($('heatBtn'),()=>{ heatView=!heatView; $('heatBtn').classList.toggle('on',heatView);
+      const lg=$('heatLegend'); lg.classList.toggle('hide',!heatView);
+      if(heatView){ lg.style.top=(topH+6)+'px'; tip('heat','Hazel: The <b>heat lens</b>. A tight nest holds its warmth in one glowing heart — scatter the brood and watch the edges go cold blue.'); } });
     press($('inspectBtn'),()=>{ inspectMode=!inspectMode; $('inspectBtn').classList.toggle('on',inspectMode);
       if(inspectMode) toast('Now tap any cell of the comb to read it.'); });
     press($('csClose'),()=>$('cellSheet').classList.add('hide'));
