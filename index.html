@@ -1171,7 +1171,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.23.0';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.24.0';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2748,9 +2748,12 @@
       queenAge++; hornet=null; hornetCD=(year>=4?14+Math.random()*20:18+Math.random()*22); scoutShown=false;
       jarsThisYear=0; fedWinter=false; starveT=0; bankAtFrost=0; yearHist.length=0; histT=2.7; goals=makeGoals(); lastSI=0; syncAlmanacTicks();
       delete nudged.bigNest; delete nudged.bigStore; delete nudged.bigBuild; delete nudged.noGrow;
+      const prevEntry=CHRON.length?CHRON[CHRON.length-1]:null;
       drawSeason();
-      const yn=yearName(year); toast('Year '+year+' — '+yn[0]+': '+yn[1]+'.'+(queenAge>=3?' Your queen is aging.':'')); announceSeason();
-      forecastCache=forecastToSpring(); saveGame(); setSpeed(1); paused=false; said={}; });
+      const yn=yearName(year); forecastCache=forecastToSpring(); saveGame(); said={};
+      startInterlude(buildInterlude(prevEntry), ()=>{
+        toast('Year '+year+' — '+yn[0]+': '+yn[1]+'.'+(queenAge>=3?' Your queen is aging.':'')); announceSeason();
+        setSpeed(1); paused=false; }); });
     function gameOver(kind){ if(over)return; over=true; setSpeed(0); chime(330,165); hornet=null;
       $('ovTitle').textContent=kind==='starve'?'THE COLONY FAILS':'THE COLONY DWINDLES'; $('ovSub').textContent=(kind==='starve'?'the pantry ran dry in '+seasonName(day).toLowerCase():'too few bees remained')+' — but the comb, the shelf, and the queen\u2019s line are yours to keep';
       const {g}=gradeYear(); grades.push({year,g,honey:Math.round(honeyCellsStored()),peak:peakPop});
@@ -3005,6 +3008,7 @@
 
     // ===================== cinematic intro (Hazel's story) =====================
     let storyMode=false, storyIx=0, storyT=0, storySun=0, storyBees=[], camX=0.5, camS=0.9;
+    let curBeats=null, onCineEnd=null;   // the cinematic serves the intro AND the between-year interludes
     // where the camera rests per beat — the hive never leaves the frame
     const SCN={ dawn:{hx:0.5,hs:0.8,far:true}, hive:{hx:0.5,hs:1.0}, swarm:{hx:0.5,hs:1.0}, queen:{hx:0.84,hs:0.6},
                 comb:{hx:0.85,hs:0.54}, year:{hx:0.86,hs:0.5}, flowers:{hx:0.85,hs:0.56}, ready:{hx:0.5,hs:1.12} };
@@ -3022,17 +3026,59 @@
     ];
     function seedStoryBees(){ storyBees=[]; for(let i=0;i<44;i++) storyBees.push({x:Math.random()*W,y:Math.random()*Hh,ph:Math.random()*6.28,sp:0.4+Math.random()*0.9,r:size*(0.09+Math.random()*0.12),dx:(Math.random()-0.5),dy:(Math.random()-0.5)}); }
     function ramp(keys,t){ const n=keys.length-1, x=Math.max(0,Math.min(1,t))*n, i=Math.min(n-1,Math.floor(x)); return lc(keys[i],keys[i+1],x-i); }
-    function storyDots(){ let h=''; for(let i=0;i<STORY.length;i++) h+='<i class="'+(i===storyIx?'on':'')+'"></i>'; $('storyDots').innerHTML=h; }
-    function showStoryBeat(){ const b=STORY[storyIx]; if(!b){ endStory(); return; }
+    function storyDots(){ const beats=curBeats||STORY; let h=''; for(let i=0;i<beats.length;i++) h+='<i class="'+(i===storyIx?'on':'')+'"></i>'; $('storyDots').innerHTML=h; }
+    function showStoryBeat(){ const beats=curBeats||STORY; const b=beats[storyIx]; if(!b){ endStory(); return; }
       const el=$('story'); el.classList.remove('show'); void $('storyLine').offsetWidth;
       $('storyLine').innerHTML=b.line; storyDots(); storyT=0;
-      $('storyNext').textContent = storyIx>=STORY.length-1 ? 'Begin ›' : 'Continue ›';
+      const last=storyIx>=beats.length-1;
+      $('storyNext').textContent = last ? (onCineEnd?'Begin the year ›':'Begin ›') : 'Continue ›';
       requestAnimationFrame(()=>el.classList.add('show'));
     }
-    function advanceStory(){ if(!storyMode) return; storyIx++; if(storyIx>=STORY.length){ endStory(); } else showStoryBeat(); }
-    function startStory(){ $('intro').classList.add('hide'); document.body.classList.add('cine'); storyMode=true; storyIx=0; storySun=0; camX=0.5; camS=0.8;
+    function advanceStory(){ if(!storyMode) return; const beats=curBeats||STORY; storyIx++; if(storyIx>=beats.length){ endStory(); } else showStoryBeat(); }
+    function startStory(){ curBeats=STORY; onCineEnd=null; { const sk=$('storySkip'); if(sk) sk.textContent='Skip intro \u203a'; } $('intro').classList.add('hide'); document.body.classList.add('cine'); storyMode=true; storyIx=0; storySun=0; camX=0.5; camS=0.8;
       if(wantSound){ setSound(true); } seedStoryBees(); layout(); $('story').classList.remove('hide'); showStoryBeat(); }
-    function endStory(){ storyMode=false; $('story').classList.add('hide'); document.body.classList.remove('cine'); seedAndPlay(); layout(); }
+    // between-year interlude — same beautiful backdrop, freshly-written beats, and a resume callback
+    function startInterlude(beats, onEnd){ if(!beats||!beats.length){ if(onEnd)onEnd(); return; }
+      curBeats=beats; onCineEnd=onEnd||null; { const sk=$('storySkip'); if(sk) sk.textContent='Skip \u203a'; } document.body.classList.add('cine'); storyMode=true; storyIx=0; storySun=0.35; camX=0.5; camS=0.85;
+      seedStoryBees(); layout(); $('story').classList.remove('hide'); showStoryBeat(); }
+    function endStory(){ storyMode=false; $('story').classList.add('hide'); document.body.classList.remove('cine');
+      const cb=onCineEnd; onCineEnd=null; curBeats=null; if(cb){ cb(); } else { seedAndPlay(); } layout(); }
+    // ---- the poetry engine: recap what happened, foreshadow what's coming, pose a question (never the answer) ----
+    function seasonComing(x){ return ({
+      bloom:'The whole hill means to flower at once. A rich year asks only one thing — somewhere to put it all.',
+      drought:'The flow will run shy this year. The bees cannot make what the flowers withhold.',
+      frost:'Spring will come late and cold, dragging its feet through the last of the frost.',
+      mild:'A soft, forgiving year — the kind that lets a keeper grow a little bold.',
+      gold:'The goldenrod means to burn late and long, deep into the autumn.',
+      wander:'There’s a swarm loose in the hedgerows this year, looking for a home.',
+      bear:'And there is a bear on the ridge. He remembers where the sweetness is kept.'
+    })[x.id] || 'The year turns as years do.'; }
+    function interludeTip(prev, s){
+      if(prev && prev.fed) return 'The pantry emptied early last year. A keeper wonders — too many mouths at the table, or too few jars set by? You’ll know come spring.';
+      if(s && s.id==='drought') return 'When the flow runs shy, every empty cell becomes a question: build it — and can you fill it?';
+      if(s && s.id==='bloom') return 'When the meadow floods, honey spills where there’s nowhere to land. Where will you put a year of plenty?';
+      if(s && s.id==='bear') return 'They say a bear takes only what lies easy and shallow. What a keeper makes of that, I’ll leave to you.';
+      if(s && s.id==='frost') return 'The cold always bites hardest at the corners. A nursery has a shape that keeps its own warmth — you’ve seen it hold.';
+      if(prev && prev.pop<25) return 'A small colony keeps a small hearth. What might a wider nursery, filled early, become by midsummer?';
+      return 'You need little from me this year. Trust your hands, and watch the bees — they always say what they need.';
+    }
+    function buildInterlude(prev){
+      const beats=[], yn=yearName(year), s=curSeason;
+      if(prev){ let r=''; const g=prev.g||'';
+        if(prev.sEvent==='bear-hit') r='The bear took his share last autumn — and still the hive held through the dark. ';
+        else if(prev.sEvent==='wander') r='A wild swarm threw in its lot with yours; the comb has never hummed so loud. ';
+        else if(prev.fed) r='You slid in a feeder when the shelves ran bare, and saw them through. No shame in a kindness. ';
+        if(!r){ r = /^A/.test(g)?'A fine year behind you — the bees kept the kind of house a keeper dreams of. '
+          : /^B/.test(g)?'A solid year behind you, stitched from small victories into a living hive. '
+          : 'A hard year behind you — but hard years teach what soft ones never can. '; }
+        beats.push({sc:'comb', line:r+'<b>'+prev.pop+'</b> bees at the height of it.'});
+      }
+      let c='Now <b>Year '+year+'</b> opens — <b>'+yn[0]+'</b>. ';
+      c += (s && s.id!=='calm') ? (s.ic+' '+seasonComing(s)) : 'The wind carries nothing unusual; a plain, honest year to keep.';
+      beats.push({sc:'year', line:c});
+      beats.push({sc:'flowers', line:interludeTip(prev, s)});
+      return beats;
+    }
     $('storySkip').addEventListener('click',(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); endStory(); });
     $('storyNext').addEventListener('click',(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); advanceStory(); });
     $('story').addEventListener('click',()=>advanceStory());
@@ -3103,8 +3149,8 @@
     function crown(cx,cy,r){ ctx.fillStyle='rgba(255,214,120,0.95)'; ctx.beginPath(); ctx.moveTo(cx-r,cy+r*0.5); ctx.lineTo(cx-r,cy-r*0.3); ctx.lineTo(cx-r*0.5,cy+r*0.05); ctx.lineTo(cx,cy-r*0.5); ctx.lineTo(cx+r*0.5,cy+r*0.05); ctx.lineTo(cx+r,cy-r*0.3); ctx.lineTo(cx+r,cy+r*0.5); ctx.closePath(); ctx.fill(); }
     function drawStory(dt){ const _s=size; size=mSize; try{ drawStoryBody(dt); } finally { size=_s; } }
     function drawStoryBody(dt){ storyT+=dt;
-      const beat=STORY[storyIx]||STORY[0];
-      const prog = STORY.length>1 ? storyIx/(STORY.length-1) : 1;
+      const beats=curBeats||STORY; const beat=beats[storyIx]||beats[0];
+      const prog = beats.length>1 ? storyIx/(beats.length-1) : 1;
       storySun += (prog-storySun)*Math.min(1,dt*0.42);   // she takes her time
       const s=storySun, horizon=meadowBase(s), sc=beat.sc;
       // camera drifts between beats; the apiary is always somewhere in frame
@@ -3491,7 +3537,7 @@
 
     // debug/testing handle
     window.__hm=()=>({day,year,P,honeyU,pollenU,nectarU,honeyCells:honeyCells(),broodCells:broodCells(),
-      story:{on:storyMode, ix:storyIx, sc:(STORY[storyIx]||{}).sc, camX, camS, hiveX:W*camX, W, horizon:storyHorizon(), Hh},
+      story:{on:storyMode, ix:storyIx, sc:((curBeats||STORY)[storyIx]||{}).sc, camX, camS, hiveX:W*camX, W, horizon:storyHorizon(), Hh},
       view:{W,Hh,size,mSize,tSize,ox,oy,hiveCx,hiveCy,topH,botH,stage:Math.min(W,STAGE_W),bounds:combBounds()},
       therm:{warmth:nestWarmth(), amb:AMB(lerpM(tempM,day)+difficulty().temp+M.temp()),
         broodHeats:cells.filter(c=>c.brood).map(c=>+c.heat.toFixed(3)),
