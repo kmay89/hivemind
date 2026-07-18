@@ -1302,7 +1302,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.28.9';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.28.10';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2221,11 +2221,15 @@
       for(let r=Math.max(0,rr-1);r<=Math.min(ROWS-1,rr+1);r++)for(let c=0;c<COLS;c++){ const ce=cellCenter(c,r);
         const d=(ce.x-px)*(ce.x-px)+(ce.y-py)*(ce.y-py); if(d<bd){bd=d;best={c,r};} }
       return best?cells[idx(best.c,best.r)]:null; }
+    // the deep "what does this do" card is held until the second pass — once the keeper is
+    // placing a few of a kind, not on the very first tap. Armed here, shown after the stroke.
+    let pendingLesson=null; const LESSON_AT=4;
+    function armLesson(key,count){ if(!onboard && !lessonSeen[key] && count>=LESSON_AT) pendingLesson=key; }
     function applyBrush(cell){ if(!cell)return;
-      if(brush==='expand'){ if(cell.built)return; if(neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built)){ if(!cell.flagExpand&&!paintErase)flaggedExpand++; cell.flagExpand=!paintErase; if(!cell.flagExpand)cell.bp=0; checkCoachProgress(); watchHands(); } return; }
+      if(brush==='expand'){ if(cell.built)return; if(neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built)){ if(!cell.flagExpand&&!paintErase){flaggedExpand++; armLesson('expand',flaggedExpand);} cell.flagExpand=!paintErase; if(!cell.flagExpand)cell.bp=0; checkCoachProgress(); watchHands(); } return; }
       if(!cell.built)return;
       if(paintErase){ if(cell.zone==='brood'&&cell.brood)return; cell.zone='none'; }
-      else { if(brush==='brood'){ if(cell.zone!=='brood')brushedBrood++; cell.zone='brood'; } else if(brush==='honey'){ if(cell.zone!=='honey')paintedHoney++; cell.zone='honey'; if(cell.brood) cell.brood=null; } checkCoachProgress(); watchHands(); }
+      else { if(brush==='brood'){ if(cell.zone!=='brood'){brushedBrood++; armLesson('brood',brushedBrood);} cell.zone='brood'; } else if(brush==='honey'){ if(cell.zone!=='honey'){paintedHoney++; armLesson('honey',paintedHoney);} cell.zone='honey'; if(cell.brood) cell.brood=null; } checkCoachProgress(); watchHands(); }
     }
     // ---- undo: take back the last comb change (over-expansion, a stray paint) ----
     let undoStack=[], strokeSnap=null;
@@ -2234,7 +2238,8 @@
     function syncUndoBtn(){ const b=$('undoBtn'); if(b) b.classList.toggle('hide', undoStack.length===0||onboard||!started||over); }
     function commitStroke(){ if(!strokeSnap) return; let ch=false;
       for(let i=0;i<cells.length;i++){ const c=cells[i],v=strokeSnap[i]; if(c.zone!==v.z||c.flagExpand!==v.f||c.brood!==v.b){ ch=true; break; } }
-      if(ch){ undoStack.push(strokeSnap); if(undoStack.length>24) undoStack.shift(); syncUndoBtn(); } strokeSnap=null; }
+      if(ch){ undoStack.push(strokeSnap); if(undoStack.length>24) undoStack.shift(); syncUndoBtn(); } strokeSnap=null;
+      if(pendingLesson && !onboard){ const k=pendingLesson; pendingLesson=null; showLesson(k); } } // second-pass card, after the stroke
     function doUndo(){ if(!undoStack.length||onboard) return; combRestore(undoStack.pop()); syncUndoBtn();
       forecastCache=forecastToSpring(); syncHUD(); toast('\u21a9 Last comb change undone.'); }
     function clearUndo(){ undoStack.length=0; strokeSnap=null; syncUndoBtn(); }
@@ -2562,9 +2567,12 @@
     let toastT=null, said={};
     // Hazel's teaching, paced so it never floods: one tip at a time with room to breathe
     // between them, and the delightful-but-inessential science held back for a second year.
-    let tipCool=0, tipQ=[]; const TIP_GAP=11;
+    let tipCool=0, tipQ=[]; const TIP_GAP=11, TIP_START=18;   // ~two weeks of quiet before Hazel's teaching begins
     const LATER_TIPS=new Set(['hexmath','hex','ages','undertaker','water','quorum','rings']); // fun facts, not needed to play — year two
     function tip(key,msg){ if(seenTips[key]||onboard||!started) return;
+      // a couple of quiet weeks after the coach — let a new keeper explore and click around
+      // before Hazel starts teaching. The send-off note ('take your time') is exempt.
+      if(day<TIP_START && key!=='notes') return;
       if(LATER_TIPS.has(key) && year<2) return; // let a first year breathe; every word still lives in the ? menu
       seenTips[key]=1;
       if(tipCool>0){ tipQ.push(msg); } else { toast(msg); tipCool=TIP_GAP; } }
@@ -3458,8 +3466,10 @@
         $('coachBtn').style.display='none'; $('coachSkip').style.display='none';
         $('coach').classList.add('show'); logMsg('👵', bridge);
         typeInto($('coachTx'), bridge, ()=>{ const b=$('coachBtn'); b.style.display=''; b.textContent='Continue ›'; }); };
+      // first pass stays simple: the unlock chip + Hazel's short bridge, no full lesson card.
+      // the deep card waits for the second pass (placing a few), fired from commitStroke.
       if(s&&s.unlock){ rj++; fanfare(); burst(W/2,Hh*0.42,26);
-        showUnlockChip(s.unlock, ()=>showLesson(s.unlock, tease, true)); }
+        showUnlockChip(s.unlock, tease); }
       else setTimeout(tease, 350); }
     // the interlude waits for the player — nothing Hazel says vanishes on a timer
     // show, don't tell: while a tutorial step waits, the exact target cell
