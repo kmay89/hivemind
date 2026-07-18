@@ -3038,7 +3038,7 @@
         : 'Mostly <b>pollen</b> \u2014 every cradle filled, little honey stored.';
       return t+' '+(full?'<span class="fxY">comb full</span>':('<span class="fxY">+'+(y.h*7).toFixed(1)+'\ud83c\udf6f \u00b7 +'+(y.p*7).toFixed(1)+'\ud83c\udf3c /wk</span>')); }
     function syncForageUI(){ const sl=$('forageSlider'); if(sl && +sl.value!==Math.round(forage*100)) sl.value=Math.round(forage*100);
-      const n=$('fxNote'); if(n) n.innerHTML=forageNote(); }
+      const n=$('fxNote'); if(n){ const note=forageNote(); if(n.innerHTML!==note) n.innerHTML=note; } }
     const BRUSHHELP={
       brood:'\ud83c\udf7c <b>Brood</b> cradle \u2014 <span class="gain">gain: more bees</span> <span class="cost">\u00b7 cost: nurses &amp; warmth</span>',
       honey:'\ud83c\udf6f <b>Honey</b> shelf \u2014 <span class="gain">gain: +1 pantry cell</span> <span class="cost">\u00b7 cost: wax, drawn from honey</span>',
