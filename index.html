@@ -238,7 +238,7 @@
   .grp.dim{ opacity:.4; pointer-events:none; }
   .tb{ font-family:'Bricolage Grotesque'; font-weight:600; font-size:11.5px; padding:7px 10px; border-radius:9px; cursor:pointer; color:var(--dim); min-height:36px;
     display:flex; align-items:center; gap:4px; border:1px solid transparent; background:rgba(255,255,255,0.03);
-    box-shadow:0 1.5px 0 rgba(0,0,0,.28), 0 2px 4px rgba(0,0,0,.18); transition:background .14s, color .14s, box-shadow .12s; white-space:nowrap; user-select:none; }
+    box-shadow:0 1.5px 0 rgba(0,0,0,.28), 0 2px 4px rgba(0,0,0,.18); white-space:nowrap; user-select:none; } /* transition consolidated below */
   .tb:hover{ color:var(--text); }
   /* the selected tool sits up on a coloured ledge — clicking one feels like throwing a switch */
   .tb.on{ color:#241503; background:linear-gradient(180deg,var(--gold),var(--honey)); box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 3px 0 #a86a1a, 0 5px 9px rgba(0,0,0,.32); }
@@ -300,7 +300,7 @@
 
   /* attention & timing: unhurried, satisfying transitions */
   .tab{ transition:background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease; }
-  .tb{ transition:transform .08s ease, background .18s ease, color .18s ease, box-shadow .18s ease, border-color .18s ease; }
+  .tb{ transition:background .16s ease, color .16s ease, box-shadow .12s ease, border-color .16s ease; }
 
   /* ---------- year review (Duolingo-hearted) ---------- */
   .review{ text-align:left; margin:4px 0 2px; }
@@ -1991,6 +1991,7 @@
 
     // ---- juicy buttons: every press pops, clicks, and gives a little haptic tick,
     //      so tapping the UI feels like flipping a real mechanical switch ----
+    let clickNoiseBuf=null;
     function clickSfx(kind){ if(!AU.on||!AU.ctx) return; const c=AU.ctx, t=c.currentTime;
       // pitched "pock" — the body of the click, tuned per button family so different
       // controls sound like different mechanical things
@@ -1999,16 +2000,19 @@
       o.frequency.setValueAtTime(body,t); o.frequency.exponentialRampToValueAtTime(body*0.42,t+0.05);
       g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(kind==='primary'?0.2:0.13,t+0.005); g.gain.exponentialRampToValueAtTime(0.0001,t+0.10);
       o.connect(g); g.connect(AU.sfxG||AU.master); o.start(t); o.stop(t+0.12);
-      // a short filtered-noise transient — the crisp mechanical "tick" on top
-      const n=(c.sampleRate*0.02)|0, buf=c.createBuffer(1,n,c.sampleRate), d=buf.getChannelData(0);
-      for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n);
-      const src=c.createBufferSource(); src.buffer=buf;
+      // a short filtered-noise transient — the crisp mechanical "tick" on top;
+      // the buffer is static, so build it once and reuse it every click
+      if(!clickNoiseBuf){ const n=(c.sampleRate*0.02)|0; clickNoiseBuf=c.createBuffer(1,n,c.sampleRate); const d=clickNoiseBuf.getChannelData(0);
+        for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n); }
+      const src=c.createBufferSource(); src.buffer=clickNoiseBuf;
       const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=kind==='primary'?2200:3000; bp.Q.value=0.9;
       const ng=c.createGain(); ng.gain.setValueAtTime(0.09,t); ng.gain.exponentialRampToValueAtTime(0.0001,t+0.04);
       src.connect(bp); bp.connect(ng); ng.connect(AU.sfxG||AU.master); src.start(t); }
     function popFx(el, kind){
-      // press-into-the-shadow then spring back — WAAPI so it never fights CSS pulses
-      if(el && el.animate && !RM){ try{ el.animate(
+      // press-into-the-shadow then spring back — WAAPI so it never fights CSS pulses;
+      // cancel any in-flight pop first so spammed taps don't stack and jitter
+      if(el && el.animate && !RM){ if(el._popAnim){ try{ el._popAnim.cancel(); }catch(e){} }
+        try{ el._popAnim=el.animate(
         [{transform:'translateY(0) scale(1)'},
          {transform:'translateY(3px) scale(.93)', offset:0.26, easing:'cubic-bezier(.3,.7,.4,1)'},
          {transform:'translateY(-1px) scale(1.055)', offset:0.6},
