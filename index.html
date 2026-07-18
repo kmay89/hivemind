@@ -61,8 +61,12 @@
   /* touch-action does NOT inherit from body, so every control defaults to `auto`,
      which makes mobile browsers stall ~300ms per touch for double-tap-zoom and can
      drop rapid taps. `manipulation` removes that delay while still allowing scroll. */
-  .tab,.tb,.btn,.cbtn,.gift,.stat,.qopt,.gtopic,.confChk,.mtile,button,input,select,label,
-  [data-brush],[data-sp],[data-tab],[role="button"],[id$="Btn"],#clockWrap,#advisor,#gsplash,#splash{ touch-action:manipulation; }
+  .tab,.tb,.btn,.cbtn,.gift,.stat,.qopt,.gtopic,.confChk,.mtile,.pseg,.cdel,button,select,label,
+  [data-brush],[data-sp],[data-tab],[role="button"],[role="radio"],[role="checkbox"],[id$="Btn"],
+  #clockWrap,#advisor,#gsplash,#splash,#sndInvite,#chatClear,#chatX,#updateLater{ touch-action:manipulation; }
+  /* range sliders own their drag outright — manipulation would let a drag scroll a
+     containing panel (e.g. the volume sliders in the scrollable pause menu) instead. */
+  input[type="range"]{ touch-action:none; }
   .tab:focus-visible,.tb:focus-visible,.btn:focus-visible,.cbtn:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
 
   /* ---------- HUD frame ---------- */
