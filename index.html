@@ -75,6 +75,13 @@
     background:linear-gradient(90deg, transparent, rgba(255,255,255,.5), transparent); animation:dailyShine 4.8s ease-in-out infinite; }
   @keyframes dailyShine{ 0%{ left:-60%; } 45%,100%{ left:150%; } }
   @media (prefers-reduced-motion: reduce){ #startDaily .dsun, #startDaily::after{ animation:none; } }
+  /* title screen: a returning keeper sees one clear action — Continue — first */
+  #startBtns{ display:flex; flex-direction:column; gap:9px; }
+  #startCont .contWhere{ display:block; font-family:'JetBrains Mono',monospace; font-weight:600; font-size:11px; letter-spacing:.02em; opacity:.72; margin-top:3px; text-transform:none; }
+  .card.hasSave #paceRow, .card.hasSave #paceLabel{ display:none; }   /* pace is a founding choice — hide it when continuing */
+  .card.hasSave #startNew{ font-size:13px; padding:9px 16px; }        /* new colony steps back to a quieter secondary */
+  #startNew.danger{ background:linear-gradient(180deg,#ff9a6a,#e0592f 60%,#b83c1c); color:#2a0f06;
+    box-shadow:0 1px 0 rgba(255,255,255,.4) inset, 0 4px 0 #7c2814, 0 8px 14px rgba(150,40,15,.45); }
   .tab,.tb,.btn,.cbtn,.gift{ -webkit-tap-highlight-color:transparent; }
   /* touch-action does NOT inherit from body, so every control defaults to `auto`,
      which makes mobile browsers stall ~300ms per touch for double-tap-zoom and can
@@ -230,6 +237,16 @@
   @keyframes raidPulse{ 0%,100%{ box-shadow:var(--shadow); } 50%{ box-shadow:0 0 22px rgba(255,90,60,0.55); } }
   #feedBtn{ margin-top:8px; font-family:'Bricolage Grotesque'; font-weight:700; font-size:11.5px; padding:7px 12px; border-radius:9px; border:none; cursor:pointer;
     color:#241503; background:linear-gradient(180deg,var(--gold),var(--amber2)); animation:btnPulse 1.6s infinite; }
+
+  /* syrup pack — a visible "health pack": charged & waiting, glowing when the colony needs it, or spent */
+  #syrupPack .syI{ font-size:14px; line-height:1; }
+  #syrupPack.ready{ color:#cdae74; border-color:rgba(255,217,122,0.22); background:rgba(255,217,122,0.06); }
+  #syrupPack.needed{ color:#3a1c04; background:linear-gradient(180deg,#ffe08c,#ff9e3d 62%,#ef7d2a);
+    box-shadow:0 1px 0 rgba(255,255,255,.55) inset, 0 3px 0 #b45e18, 0 5px 12px rgba(255,150,50,.55); animation:syrupPulse 1.35s ease-in-out infinite; }
+  #syrupPack.used{ opacity:.4; color:var(--dim); background:rgba(255,255,255,0.03); }
+  @keyframes syrupPulse{ 0%,100%{ transform:translateY(0); box-shadow:0 1px 0 rgba(255,255,255,.55) inset, 0 3px 0 #b45e18, 0 5px 12px rgba(255,150,50,.5); }
+    50%{ transform:translateY(-1px); box-shadow:0 1px 0 rgba(255,255,255,.65) inset, 0 3px 0 #b45e18, 0 7px 20px rgba(255,190,70,.85); } }
+  @media (prefers-reduced-motion: reduce){ #syrupPack.needed{ animation:none; } }
 
   /* ---------- controls ---------- */
   #ctl{ padding:7px; display:flex; gap:7px; align-items:center; flex-wrap:wrap; justify-content:center; }
@@ -986,6 +1003,10 @@
         <div class="tb" id="inspectBtn" tabindex="0" title="What is this cell? Tap this, then tap any cell">ⓘ</div>
         <div class="tb" id="heatBtn" tabindex="0" title="Heat lens — see the warmth the nest is holding"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 13.5V5a2 2 0 1 1 4 0v8.5a4.5 4.5 0 1 1-4 0z"/><circle cx="12" cy="17.5" r="1.6" fill="currentColor" stroke="none"/></svg></div>
       </div>
+      <div class="grp hide" id="careGrp">
+        <span class="gl">Safety</span>
+        <div class="tb syrup" id="syrupPack" tabindex="0" title="Emergency syrup feeder — your once-a-year safety valve. Slide it in when the pantry runs bare and it carries the cluster with +10 honey. Refills each spring."><span class="syI">🍼</span><span id="syrupState">ready</span></div>
+      </div>
       <div class="grp preveal hidden" id="apiaryGrp">
         <span class="gl">Apiary</span>
         <div class="tb gold" id="harvestBtn" tabindex="0" title="Seal a jar from surplus honey — autumn only">🫙 Harvest</div>
@@ -1235,9 +1256,9 @@
         <div class="pseg" data-pace="medium" tabindex="0" role="radio" aria-checked="false">Medium<i>keeper’s pace</i></div>
         <div class="pseg" data-pace="hard" tabindex="0" role="radio" aria-checked="false">Hard<i>seasons rush</i></div>
       </div>
-      <div>
-        <button class="btn pulse" id="startNew">Found a new colony</button>
+      <div id="startBtns">
         <button class="btn ghost hide" id="startCont">Continue</button>
+        <button class="btn pulse" id="startNew">Found a new colony</button>
       </div>
       <button class="btn" id="startDaily" style="margin-top:8px"><span class="dsun">☀</span> Daily Challenge</button>
       <div id="dailyCap" style="font:500 11px 'JetBrains Mono',monospace; color:var(--dim); margin-top:5px"></div>
@@ -1302,7 +1323,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.28.9';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.28.11';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2221,11 +2242,15 @@
       for(let r=Math.max(0,rr-1);r<=Math.min(ROWS-1,rr+1);r++)for(let c=0;c<COLS;c++){ const ce=cellCenter(c,r);
         const d=(ce.x-px)*(ce.x-px)+(ce.y-py)*(ce.y-py); if(d<bd){bd=d;best={c,r};} }
       return best?cells[idx(best.c,best.r)]:null; }
+    // the deep "what does this do" card is held until the second pass — once the keeper is
+    // placing a few of a kind, not on the very first tap. Armed here, shown after the stroke.
+    let pendingLesson=null; const LESSON_AT=4;
+    function armLesson(key,count){ if(!onboard && !lessonSeen[key] && count>=LESSON_AT) pendingLesson=key; }
     function applyBrush(cell){ if(!cell)return;
-      if(brush==='expand'){ if(cell.built)return; if(neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built)){ if(!cell.flagExpand&&!paintErase)flaggedExpand++; cell.flagExpand=!paintErase; if(!cell.flagExpand)cell.bp=0; checkCoachProgress(); watchHands(); } return; }
+      if(brush==='expand'){ if(cell.built)return; if(neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built)){ if(!cell.flagExpand&&!paintErase){flaggedExpand++; armLesson('expand',flaggedExpand);} cell.flagExpand=!paintErase; if(!cell.flagExpand)cell.bp=0; checkCoachProgress(); watchHands(); } return; }
       if(!cell.built)return;
       if(paintErase){ if(cell.zone==='brood'&&cell.brood)return; cell.zone='none'; }
-      else { if(brush==='brood'){ if(cell.zone!=='brood')brushedBrood++; cell.zone='brood'; } else if(brush==='honey'){ if(cell.zone!=='honey')paintedHoney++; cell.zone='honey'; if(cell.brood) cell.brood=null; } checkCoachProgress(); watchHands(); }
+      else { if(brush==='brood'){ if(cell.zone!=='brood'){brushedBrood++; armLesson('brood',brushedBrood);} cell.zone='brood'; } else if(brush==='honey'){ if(cell.zone!=='honey'){paintedHoney++; armLesson('honey',paintedHoney);} cell.zone='honey'; if(cell.brood) cell.brood=null; } checkCoachProgress(); watchHands(); }
     }
     // ---- undo: take back the last comb change (over-expansion, a stray paint) ----
     let undoStack=[], strokeSnap=null;
@@ -2234,7 +2259,8 @@
     function syncUndoBtn(){ const b=$('undoBtn'); if(b) b.classList.toggle('hide', undoStack.length===0||onboard||!started||over); }
     function commitStroke(){ if(!strokeSnap) return; let ch=false;
       for(let i=0;i<cells.length;i++){ const c=cells[i],v=strokeSnap[i]; if(c.zone!==v.z||c.flagExpand!==v.f||c.brood!==v.b){ ch=true; break; } }
-      if(ch){ undoStack.push(strokeSnap); if(undoStack.length>24) undoStack.shift(); syncUndoBtn(); } strokeSnap=null; }
+      if(ch){ undoStack.push(strokeSnap); if(undoStack.length>24) undoStack.shift(); syncUndoBtn(); } strokeSnap=null;
+      if(pendingLesson && !onboard){ const k=pendingLesson; pendingLesson=null; showLesson(k); } } // second-pass card, after the stroke
     function doUndo(){ if(!undoStack.length||onboard) return; combRestore(undoStack.pop()); syncUndoBtn();
       forecastCache=forecastToSpring(); syncHUD(); toast('\u21a9 Last comb change undone.'); }
     function clearUndo(){ undoStack.length=0; strokeSnap=null; syncUndoBtn(); }
@@ -2495,6 +2521,20 @@
       toast('You slide in a syrup feeder \u2014 the whole cluster leans toward it. +10 cells. (Kindness caps the year at a B. Worth it.)');
       $('feedBtn').classList.add('hide'); forecastCache=forecastToSpring(); saveGame(); }
     press($('feedBtn'),feedSyrup);
+    // the syrup pack: a persistent, always-visible safety valve. Charged & waiting, glowing
+    // when the pantry runs bare, or spent for the year — so it's never buried in a message.
+    function syrupWindow(){ return (seasonIdx(day)===3 || day<75 || day>235); }
+    function syncSyrup(feedable){ const el=$('syrupPack'), grp=$('careGrp'); if(!el||!grp) return;
+      const showable=started && !over && !onboard; grp.classList.toggle('hide', !showable);
+      if(!showable) return;
+      el.classList.remove('ready','needed','used'); const st=$('syrupState');
+      if(fedWinter){ el.classList.add('used'); if(st) st.textContent='spent'; }
+      else if(feedable){ el.classList.add('needed'); if(st) st.textContent='Feed now'; }
+      else { el.classList.add('ready'); if(st) st.textContent='1 ready'; } }
+    press($('syrupPack'),()=>{ if(onboard||!started||over) return;
+      if(fedWinter){ toast('🍼 Your syrup feeder is already in for this year — the pack refills next spring.'); return; }
+      if(syrupWindow() && honeyCellsStored()<5){ feedSyrup(); }
+      else toast('🍼 <b>Syrup pack — your safety valve.</b> Save it for a lean spell: when the pantry runs bare (under 5 cells), tap it and it carries the cluster with +10 honey. One per year, and it refills each spring.'); });
 
     // ===================== Hazel =====================
     // She sits with you the whole time. Her face carries the mood of the advice so a glance is
@@ -2562,9 +2602,12 @@
     let toastT=null, said={};
     // Hazel's teaching, paced so it never floods: one tip at a time with room to breathe
     // between them, and the delightful-but-inessential science held back for a second year.
-    let tipCool=0, tipQ=[]; const TIP_GAP=11;
+    let tipCool=0, tipQ=[]; const TIP_GAP=11, TIP_START=18;   // ~two weeks of quiet before Hazel's teaching begins
     const LATER_TIPS=new Set(['hexmath','hex','ages','undertaker','water','quorum','rings']); // fun facts, not needed to play — year two
     function tip(key,msg){ if(seenTips[key]||onboard||!started) return;
+      // a couple of quiet weeks after the coach — let a new keeper explore and click around
+      // before Hazel starts teaching. The send-off note ('take your time') is exempt.
+      if(day<TIP_START && key!=='notes') return;
       if(LATER_TIPS.has(key) && year<2) return; // let a first year breathe; every word still lives in the ? menu
       seenTips[key]=1;
       if(tipCool>0){ tipQ.push(msg); } else { toast(msg); tipCool=TIP_GAP; } }
@@ -2578,10 +2621,10 @@
       const raiding=!!hornet && hornet.state!=='flee';
       $('advisor').classList.toggle('raid', raiding);
       const feedable=(winter || day<75 || day>235) && hc<5 && !fedWinter && started && !over && !onboard;
-      $('feedBtn').classList.toggle('hide', !feedable);
+      $('feedBtn').classList.add('hide'); syncSyrup(feedable);   // the syrup pack in the tray is the access point now
       if(raiding){ ic='⚔️'; warn=true; tx='A <b>hornet</b> is raiding — <em>tap it</em> to help the guards, or let them handle it.'; }
-      else if(starveT>0){ ic='🍽'; warn=true; tx=feedable?'The pantry is empty and the cluster is hungry — a <b>syrup feeder</b> would see them through.':'The pantry is empty — every drop of <b>Nectar</b> counts now.'; }
-      else if(feedable){ ic='🍽'; tx='The pantry is nearly bare. You may slide in a <b>syrup feeder</b>, once a year.'; }
+      else if(starveT>0){ ic='🍽'; warn=true; tx=feedable?'The pantry is empty and the cluster is hungry — tap your glowing <b>🍼 syrup pack</b> to see them through.':'The pantry is empty — every drop of <b>Nectar</b> counts now.'; }
+      else if(feedable){ ic='🍽'; tx='The pantry is nearly bare. Your <b>🍼 syrup pack</b> is glowing — tap it to carry the cluster (once a year).'; }
       else if(scoutActive()){ ic='👁'; tx='A <b>hornet scout</b> circles the apiary — a raid will come within days.'; }
       else if(honeyCells()<6){ ic='🍯'; tx='The comb has almost no <b>Honey</b> cells yet — the pantry needs shelves.'; }
       else if(swarmP>0.6 && !winter){ ic='👑'; warn=true; tx='Swarm pressure is <b>high</b> — bees may leave. <b>Expand</b> the brood comb to give the queen room.'; }
@@ -3458,8 +3501,10 @@
         $('coachBtn').style.display='none'; $('coachSkip').style.display='none';
         $('coach').classList.add('show'); logMsg('👵', bridge);
         typeInto($('coachTx'), bridge, ()=>{ const b=$('coachBtn'); b.style.display=''; b.textContent='Continue ›'; }); };
+      // first pass stays simple: the unlock chip + Hazel's short bridge, no full lesson card.
+      // the deep card waits for the second pass (placing a few), fired from commitStroke.
       if(s&&s.unlock){ rj++; fanfare(); burst(W/2,Hh*0.42,26);
-        showUnlockChip(s.unlock, ()=>showLesson(s.unlock, tease, true)); }
+        showUnlockChip(s.unlock, tease); }
       else setTimeout(tease, 350); }
     // the interlude waits for the player — nothing Hazel says vanishes on a timer
     // show, don't tell: while a tutorial step waits, the exact target cell
@@ -4008,8 +4053,13 @@
     layout(); addEventListener('resize',()=>{ layout(); sparkCtx=null; });
 
     const existing=loadSave();
-    if(existing && existing.cb){ $('startCont').classList.remove('hide');
-      $('startCont').textContent='Continue — Year '+existing.year+', '+seasonName(existing.day)+' day '+(Math.floor(existing.day)+1); }
+    let titleHasSave=false;
+    if(existing && existing.cb){ titleHasSave=true;
+      // a returning keeper: Continue becomes the big, obvious action; founding anew steps back
+      const cont=$('startCont'); cont.classList.remove('hide','ghost'); cont.classList.add('pulse');
+      cont.innerHTML='▶ Continue<span class="contWhere">Year '+existing.year+' · '+seasonName(existing.day)+', day '+(Math.floor(existing.day)+1)+'</span>';
+      const nw=$('startNew'); nw.classList.remove('pulse'); nw.classList.add('ghost'); nw.textContent='Found a new colony';
+      const card=$('intro').querySelector('.card'); if(card) card.classList.add('hasSave'); }
 
     function beginCommon(){ $('intro').classList.add('hide'); started=true; clearUndo(); syncForageUI(); syncBrushHelp(); queen.x=hiveCx; queen.y=hiveCy; queen.tx=hiveCx; queen.ty=hiveCy; syncBeePool();
       prevv={h:honeyU,p:pollenU,b:P,br:countBrood().total}; rate={h:0,p:0,b:0,br:0}; waxRateEMA=0; forecastCache=forecastToSpring(); layout(); setSpeed(1); }
@@ -4042,7 +4092,13 @@
         if(LEGACY.heirloom&&LEGACY.heirloom.n){ h+='You carry the heirloom <b>'+LEGACY.heirloom.n+'</b> from your old cellar, a gift of honey to start the new comb.'; }
         el.innerHTML=h; el.classList.remove('hide');
       } else el.classList.add('hide'); }
-    $('startNew').addEventListener('click',()=>{ showLegacyNote(); renderQueens(); $('intro').classList.add('hide'); $('queenPick').classList.remove('hide'); });
+    // founding a new colony retires the one you're continuing — guard it with a two-tap confirm
+    let newArmed=false, newArmT=0;
+    function resetNewBtn(){ newArmed=false; const b=$('startNew'); b.classList.remove('danger'); b.textContent='Found a new colony'; }
+    $('startNew').addEventListener('click',()=>{
+      if(titleHasSave && !newArmed){ newArmed=true; const b=$('startNew'); b.classList.add('danger');
+        b.textContent='⚠ Retire your colony? Tap again'; clearTimeout(newArmT); newArmT=setTimeout(resetNewBtn,4000); return; }
+      resetNewBtn(); showLegacyNote(); renderQueens(); $('intro').classList.add('hide'); $('queenPick').classList.remove('hide'); });
     $('startDaily').addEventListener('click', startDaily);
     syncDailyCap();
     $('queenBack').addEventListener('click',()=>{ $('queenPick').classList.add('hide'); $('intro').classList.remove('hide'); });
