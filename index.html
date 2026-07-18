@@ -289,8 +289,14 @@
     background:radial-gradient(circle at 34% 28%, #ffffff, #f7eed9 42%, #cbb489); border:2px solid #6a4d1e; box-shadow:0 2px 7px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,.5) inset; cursor:grab; }
   #forageSlider:active::-webkit-slider-thumb{ cursor:grabbing; transform:scale(1.08); }
   #forageSlider::-moz-range-thumb{ width:23px; height:23px; border-radius:50%; background:radial-gradient(circle at 34% 28%,#ffffff,#f7eed9 42%,#cbb489); border:2px solid #6a4d1e; box-shadow:0 2px 7px rgba(0,0,0,0.6); }
+  /* five detents under the crossfader — the current one lights, Hazel's suggestion wears a ★ */
+  .fxTicks{ display:flex; justify-content:space-between; padding:5px 10px 0; margin-top:1px; }
+  .fxTicks i{ position:relative; width:2px; height:5px; border-radius:1px; background:rgba(255,255,255,0.16); transition:background .15s, height .15s; }
+  .fxTicks i.on{ background:var(--gold); height:8px; }
+  .fxTicks i.rec::after{ content:'★'; position:absolute; left:50%; top:-12px; transform:translateX(-50%); font-size:8px; color:#a7e07c; text-shadow:0 0 5px rgba(167,224,124,.7); animation:recBob 2s ease-in-out infinite; }
+  @keyframes recBob{ 0%,100%{ top:-12px; } 50%{ top:-14px; } }
   .fxNote{ font:500 9.5px 'JetBrains Mono',monospace; color:var(--dim); line-height:1.42; text-align:center; }
-  .fxNote b{ color:#f7eed9; font-weight:700; } .fxNote .fxY{ color:#ffd76b; }
+  .fxNote b{ color:#f7eed9; font-weight:700; } .fxNote .fxY{ color:#ffd76b; } .fxNote .fxRec{ color:#a7e07c; font-weight:700; }
   /* ---- brush cost/gain strip: what each placement spends and returns ---- */
   #brushHelp{ width:100%; order:-1; font:500 10px 'JetBrains Mono',monospace; color:var(--dim); text-align:center; padding:1px 6px 4px; line-height:1.4; }
   #brushHelp b{ color:#f7eed9; } #brushHelp .gain{ color:#a7e07c; } #brushHelp .cost{ color:#e6a86a; }
@@ -966,7 +972,8 @@
       <div class="grp preveal" id="forageGrp">
         <div id="forageMix">
           <div class="fxRow"><span class="fxP">🌸 Pollen<i>→ bees</i></span><span class="fxN"><i>honey ←</i>Nectar 🍯</span></div>
-          <input type="range" id="forageSlider" min="0" max="100" step="5" value="60" aria-label="Forager focus — pollen to nectar">
+          <input type="range" id="forageSlider" min="0" max="4" step="1" value="2" aria-label="Forager focus — five notches from all pollen to all nectar">
+          <div class="fxTicks" id="fxTicks"><i></i><i></i><i></i><i></i><i></i></div>
           <div class="fxNote" id="fxNote">—</div>
         </div>
       </div>
@@ -1294,7 +1301,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.28.6';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.28.7';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2368,7 +2375,7 @@
     canvas.addEventListener('pointerleave',()=>{hoveredCell=null; hideInspect();});
     canvas.addEventListener('contextmenu',e=>e.preventDefault());
 
-    { const sl=$('forageSlider'); if(sl) sl.addEventListener('input',()=>{ forage=(+sl.value)/100; forageTouched=true; forecastCache=forecastToSpring(); syncForageUI(); checkCoachProgress(); }); }
+    { const sl=$('forageSlider'); if(sl) sl.addEventListener('input',()=>{ forage=FORAGE_STEPS[Math.max(0,Math.min(4,+sl.value))]; forageTouched=true; forecastCache=forecastToSpring(); syncForageUI(); checkCoachProgress(); }); }
     document.querySelectorAll('[data-brush]').forEach(b=>press(b,()=>{brush=b.dataset.brush;document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x===b)); syncBrushHelp(); checkCoachProgress();}));
     press($('undoBtn'), doUndo);
     press($('confYes'), confirmYes);
@@ -3252,14 +3259,31 @@
       const foragers=P*FOR_FRAC, m=forageMult()*M.forage(), cp=caps();
       const full=(honeyU+pollenU+nectarU)>=cp.total-2;
       return { h:(full?0:foragers*NEC_PF*Na*fN*m)/HC, p:(full?0:foragers*POL_PF*Pa*(1-fN)*m)/HC }; }
+    // five notches, all pollen (brood) \u2192 all nectar (honey); the dial snaps to these
+    const FORAGE_STEPS=[0.15,0.38,0.6,0.78,0.92];
+    const FORAGE_NAMES=['All brood','Lean brood','Balanced','Lean honey','All honey'];
+    function forageIdx(){ let bi=0,bd=9; for(let i=0;i<FORAGE_STEPS.length;i++){ const d=Math.abs(FORAGE_STEPS[i]-forage); if(d<bd){bd=d;bi=i;} } return bi; }
+    // what Hazel would set, given where the year is \u2014 teaches the arc: grow \u2192 balance \u2192 bank
+    function recForageIdx(){ if(day<45) return 1; if(day<150) return 2; if(day<210) return 3; if(day<285) return 4; return 2; }
     function forageNote(){ const f=forage, y=forageYield(f), cp=caps(), full=(honeyU+pollenU+nectarU)>=cp.total-2;
       const t = f>=0.8?'Mostly <b>nectar</b> \u2014 the pantry fills fast, but few new bees.'
         : f>=0.62?'Leaning <b>nectar</b> \u2014 honey now, bees later.'
         : f>=0.42?'A steady <b>mix</b> \u2014 honey and brood together.'
         : f>=0.22?'Leaning <b>pollen</b> \u2014 more brood, a slower pantry.'
         : 'Mostly <b>pollen</b> \u2014 every cradle filled, little honey stored.';
-      return t+' '+(full?'<span class="fxY">comb full</span>':('<span class="fxY">+'+(y.h*7).toFixed(1)+'\ud83c\udf6f \u00b7 +'+(y.p*7).toFixed(1)+'\ud83c\udf3c /wk</span>')); }
-    function syncForageUI(){ const sl=$('forageSlider'); if(sl && +sl.value!==Math.round(forage*100)) sl.value=Math.round(forage*100);
+      let rec=''; if(started&&!onboard){ const ri=recForageIdx(), ci=forageIdx();
+        if(ri>ci) rec=' <span class="fxRec">\u2605 Hazel: lean to honey</span>'; else if(ri<ci) rec=' <span class="fxRec">\u2605 Hazel: raise more brood</span>'; }
+      return t+' '+(full?'<span class="fxY">comb full</span>':('<span class="fxY">+'+(y.h*7).toFixed(1)+'\ud83c\udf6f \u00b7 +'+(y.p*7).toFixed(1)+'\ud83c\udf3c /wk</span>'))+rec; }
+    // year one, once per season: Hazel says what the mixer wants now and why
+    function forageSeasonTip(si){ const M={
+        0:'Hazel: Spring is for growing. Slide the mixer toward <b>pollen</b> \u2014 pollen is bee bread, and it fills the cradles with new workers.',
+        1:'Hazel: The colony is strong now. Keep the mixer near <b>balanced</b> \u2014 brood still coming while the pantry starts to fill.',
+        2:'Hazel: Autumn, and the flowers are fading. Slide toward <b>nectar</b> now and bank every drop of honey for winter.',
+        3:'Hazel: Winter. Little left to gather \u2014 keep it <b>balanced</b> and let the cluster live on the honey you stored.'};
+      tip('forageS'+si, M[si]); }
+    function syncForageUI(){ const ci=forageIdx(), sl=$('forageSlider'); if(sl && +sl.value!==ci) sl.value=ci;
+      const ri=(started&&!onboard)?recForageIdx():-1, tk=$('fxTicks');
+      if(tk){ const ii=tk.children; for(let i=0;i<ii.length;i++){ ii[i].classList.toggle('on',i===ci); ii[i].classList.toggle('rec',i===ri); } }
       const n=$('fxNote'); if(n){ const note=forageNote(); if(n.innerHTML!==note) n.innerHTML=note; } }
     const BRUSHHELP={
       brood:'\ud83c\udf7c <b>Brood</b> cradle \u2014 <span class="gain">gain: more bees</span> <span class="cost">\u00b7 cost: nurses &amp; warmth</span>',
@@ -4041,7 +4065,8 @@
         if(!over){
           stepHornet(dt);
           const si=seasonIdx(day);
-          if(si!==lastSI && !onboard){ lastSI=si; showLesson('year'); if(si===3){ armMidwinter(false); tip('winter','Hazel: They don\u2019t sleep through winter. They cluster tight and shiver to keep the queen at blood heat \u2014 about 35\u00b0C \u2014 burning the honey you stored to do it.'); } if(si===1) tip('summer','Hazel: Fresh nectar is mostly water. House bees fan it dry with their wings until it\u2019s thick enough to keep, then cap it with wax. That\u2019s ripe honey.'); seasonBanner(si); }
+          if(si!==lastSI && !onboard){ lastSI=si; showLesson('year'); if(si===3){ armMidwinter(false); tip('winter','Hazel: They don\u2019t sleep through winter. They cluster tight and shiver to keep the queen at blood heat \u2014 about 35\u00b0C \u2014 burning the honey you stored to do it.'); } if(si===1) tip('summer','Hazel: Fresh nectar is mostly water. House bees fan it dry with their wings until it\u2019s thick enough to keep, then cap it with wax. That\u2019s ripe honey.'); if(year===1) forageSeasonTip(si); seasonBanner(si); }
+          if(year===1 && !onboard && si===0 && day>3) forageSeasonTip(0); // spring has no change-event; teach it at the start
           const brc=countBrood().total;
           rate.h+=(((honeyU-prevv.h)/HC/dd)-rate.h)*0.06; rate.p+=(((pollenU-prevv.p)/HC/dd)-rate.p)*0.06;
           rate.b+=(((P-prevv.b)/dd)-rate.b)*0.06; rate.br+=(((brc-prevv.br)/dd)-rate.br)*0.06;
