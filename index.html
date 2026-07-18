@@ -1255,7 +1255,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.28.1';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.28.2';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1573,10 +1573,10 @@
 
     // ===================== cells =====================
     const cells=[];
-    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++) cells.push({c,r,built:false,zone:'none',flagExpand:false,brood:null,heat:0});
+    for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++) cells.push({c,r,built:false,zone:'none',flagExpand:false,bp:0,brood:null,heat:0});
     // tiny founding colony: a small knot of empty wax + a little capped brood so the first workers emerge within seconds
     function tinyComb(){
-      for(const cell of cells){ cell.built=false; cell.zone='none'; cell.flagExpand=false; cell.brood=null;
+      for(const cell of cells){ cell.built=false; cell.zone='none'; cell.flagExpand=false; cell.bp=0; cell.brood=null;
         const d=cellDist(cell.c,cell.r); if(d<2.1){ cell.built=true; cell.zone='none'; } }
       const core=cells.filter(c=>c.built && cellDist(c.c,c.r)<1.2).sort((a,b)=>cellDist(a.c,a.r)-cellDist(b.c,b.r));
       const seed=[['pupa',PUP_D-1.2],['pupa',PUP_D-2.4],['pupa',PUP_D-3.6],['larva',LAR_D*0.5],['larva',LAR_D*0.3]];
@@ -1591,7 +1591,7 @@
     let day=0, year=1, started=false, over=false, paused=false, speed=1, forage=0.6;   // forage = fraction of effort on nectar (0 = all pollen, 1 = all nectar)
     let peakPop=0, bornTotal=0, swarmP=0, coldSnap=0, grades=[];
     let view='hive', activePatch=null;
-    let reportOpen=false, hoveredCell=null, waxAccum=0, waxRateEMA=0;
+    let reportOpen=false, hoveredCell=null, waxAccum=0, waxRateEMA=0, buildStall='';
     let rate={h:0,p:0,b:0,br:0}, prevv={h:0,p:0,b:0,br:0}, forecastCache=null, fcTimer=0, sparkCtx=null;
     let onboard=false, coachStep=0, brushedBrood=0, flaggedExpand=0, paintedHoney=0, forageTouched=false;
     let queenAge=1, hornet=null, hornetCD=18+Math.random()*22, shake=0, gt=0, hitstop=0;
@@ -2037,15 +2037,15 @@
         const d=(ce.x-px)*(ce.x-px)+(ce.y-py)*(ce.y-py); if(d<bd){bd=d;best={c,r};} }
       return best?cells[idx(best.c,best.r)]:null; }
     function applyBrush(cell){ if(!cell)return;
-      if(brush==='expand'){ if(cell.built)return; if(neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built)){ if(!cell.flagExpand&&!paintErase)flaggedExpand++; cell.flagExpand=!paintErase; checkCoachProgress(); watchHands(); } return; }
+      if(brush==='expand'){ if(cell.built)return; if(neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built)){ if(!cell.flagExpand&&!paintErase)flaggedExpand++; cell.flagExpand=!paintErase; if(!cell.flagExpand)cell.bp=0; checkCoachProgress(); watchHands(); } return; }
       if(!cell.built)return;
       if(paintErase){ if(cell.zone==='brood'&&cell.brood)return; cell.zone='none'; }
       else { if(brush==='brood'){ if(cell.zone!=='brood')brushedBrood++; cell.zone='brood'; } else if(brush==='honey'){ if(cell.zone!=='honey')paintedHoney++; cell.zone='honey'; if(cell.brood) cell.brood=null; } checkCoachProgress(); watchHands(); }
     }
     // ---- undo: take back the last comb change (over-expansion, a stray paint) ----
     let undoStack=[], strokeSnap=null;
-    function combSnap(){ return cells.map(c=>({z:c.zone,f:c.flagExpand,b:c.brood})); }
-    function combRestore(sn){ for(let i=0;i<cells.length;i++){ const c=cells[i],v=sn[i]; if(!v)continue; c.zone=v.z; c.flagExpand=v.f; c.brood=v.b; } }
+    function combSnap(){ return cells.map(c=>({z:c.zone,f:c.flagExpand,p:c.bp,b:c.brood})); }
+    function combRestore(sn){ for(let i=0;i<cells.length;i++){ const c=cells[i],v=sn[i]; if(!v)continue; c.zone=v.z; c.flagExpand=v.f; c.bp=v.p||0; c.brood=v.b; } }
     function syncUndoBtn(){ const b=$('undoBtn'); if(b) b.classList.toggle('hide', undoStack.length===0||onboard||!started||over); }
     function commitStroke(){ if(!strokeSnap) return; let ch=false;
       for(let i=0;i<cells.length;i++){ const c=cells[i],v=strokeSnap[i]; if(c.zone!==v.z||c.flagExpand!==v.f||c.brood!==v.b){ ch=true; break; } }
@@ -2152,7 +2152,13 @@
       let t,s,a='',cls='',d='';
       if(!cell.built){
         const adj=neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built);
-        if(cell.flagExpand){ t='Marked for wax'; s='builders will draw it when honey allows'; }
+        if(cell.flagExpand){ const pct=Math.round((cell.bp||0)*100);
+          // time isn't passing → say so first; buildStall is stale while paused
+          if(paused||speed===0){ t='Marked for wax'; s='press ▶ — builders draw it as the days pass'; }
+          else if(buildStall==='lean'){ t='Waiting for stores'; s=pct>0?('drawn '+pct+'% — builders pause until the pantry recovers'):'builders pause until the pantry recovers'; }
+          else if(buildStall==='small'){ t='Waiting on builders'; s='grow the colony — too few workers to tend more comb'; }
+          else if(pct>0){ t='Drawing wax…'; s=pct+'% built — the builders are on it'; }
+          else { t='Marked for wax'; s='builders will draw it when honey allows'; } }
         else if(adj){ t='Empty space'; s='your comb reaches here'; }
         else { t='Out of reach'; s='wax can only grow from wax'; }
         if(brush==='expand'){ if(cell.flagExpand){ a='Click to unmark'; cls='no'; }
@@ -2469,19 +2475,29 @@
       const soft=(cur,cap)=>cur<=cap?Math.max(0,cur):cap+(cur-cap)*k; // displaced stores drain, not vanish
       pollenU=soft(pollenU,pol); const hr=Math.max(0,tot-pollenU); honeyU=soft(honeyU,hr); const nr=Math.max(0,tot-pollenU-honeyU); nectarU=soft(nectarU,nr); }
     function buildFromFlags(dd){
-      let budget=Math.floor(P*BUILD_FRAC*dd*1.4 + Math.random()); if(budget<=0)return;
+      // builders draw wax gradually: each flagged cell fills over time (cell.bp 0..1)
+      // and radiates outward from the nest, so a painted tile visibly becomes comb
+      // instead of popping in, and stalls legibly when honey or hands run short.
+      const flagged=cells.filter(c=>!c.built&&c.flagExpand);
+      if(!flagged.length){ buildStall=''; return; }
+      let budget=(P*BUILD_FRAC*1.4 + Math.random()*0.15)*dd; // cells-worth of progress this step (dd-scaled → frame-rate independent)
       const cost=WAX_H*M.wax();
       const builtN=cells.reduce((a,c)=>a+(c.built?1:0),0);
-      if(builtN >= P*2.4+14){ toast('The colony is too small to tend more comb — grow the brood nest first.','buildscale'); return; }
+      if(builtN >= P*2.4+14){ buildStall='small'; toast('The colony is too small to tend more comb — grow the brood nest first.','buildscale'); return; }
       tip('wax','Hazel: Wax is dear. The old rule is eight ounces of honey burned for every ounce of wax drawn \u2014 that\u2019s why the builders hang back when the pantry runs thin.');
       const cpB=caps(); const reserve = cost + Math.min(cpB.total*0.3, rate.h < -0.05 ? 500 : 200); // scale the buffer to what the comb can even hold
-      for(const s of cells){ if(budget<=0)break; if(!s.built&&s.flagExpand){ if(honeyU<reserve){ toast('Builders wait — stores are too lean to draw wax.','buildwait'); break; }
-        honeyU-=cost; waxAccum+=cost; s.built=true; s.flagExpand=false;
+      if(honeyU<reserve){ buildStall='lean'; toast('Builders wait — stores are too lean to draw wax.','buildwait'); return; }
+      buildStall='';
+      flagged.sort((a,b)=>cellDist(a.c,a.r)-cellDist(b.c,b.r)); // finish the nearest cell first
+      for(const s of flagged){ if(budget<=0)break; if(honeyU<reserve){ buildStall='lean'; break; }
+        const step=Math.min(1-(s.bp||0), budget); s.bp=(s.bp||0)+step; budget-=step;
+        if(s.bp<1) continue; // still drawing — the rising fill shows the progress
+        honeyU-=cost; waxAccum+=cost; s.built=true; s.flagExpand=false; s.bp=0;
         let b=0,h=0; for(const[c,r]of neighbors(s.c,s.r)){const nb=cells[idx(c,r)]; if(nb.zone==='brood')b++; else if(nb.zone==='honey')h++;}
-        s.zone=(b>h && cellDist(s.c,s.r)<2.2)?'brood':'honey'; budget--;
+        s.zone=(b>h && cellDist(s.c,s.r)<2.2)?'brood':'honey';
         const bn=cells.reduce((a,cc)=>a+(cc.built?1:0),0);
         if(CHEX.has(bn)){ const rr=CHEXRING[bn]; toast('Ring '+rr+' complete \u2014 '+bn+' cells. The comb grows in the centred hexagonal numbers: 1, 7, 19, 37\u2026','ring'+bn); burst(hiveCx,hiveCy,10); }
-        else toast('Fresh comb drawn.','built1'); } }
+        else toast('Fresh comb drawn.','built1'); }
     }
     function stepDay(dd, offline){
       const dif=difficulty(); const T=lerpM(tempM,day)+dif.temp+M.temp()+(coldSnap>0?M.snap():0);
@@ -2652,7 +2668,17 @@
           ctx.beginPath(); ctx.arc(mx,my,1.1+((i*37)%3)*0.5,0,6.28); ctx.fill(); } }
       const s2=size*0.93;
       for(const cell of cells){ const {x,y}=cellCenter(cell.c,cell.r);
-        if(!cell.built){ if(cell.flagExpand){ hexPath(x,y,s2); ctx.fillStyle=COL.frontier; ctx.fill(); ctx.strokeStyle='rgba(180,230,150,0.5)'; ctx.lineWidth=1; ctx.stroke(); }
+        if(!cell.built){ if(cell.flagExpand){ hexPath(x,y,s2); ctx.fillStyle=COL.frontier; ctx.fill();
+            const bp=cell.bp||0, waiting=(buildStall==='lean'||buildStall==='small');
+            if(bp>0){ // wax rising into the cell — a painted tile you can watch become comb
+              ctx.save(); hexPath(x,y,s2); ctx.clip();
+              const top=y+s2-s2*2*bp, pulse=waiting?0.6:(0.66+0.12*Math.sin(gt*3+cell.c));
+              ctx.fillStyle=waiting?'rgba(212,170,92,'+pulse.toFixed(2)+')':'rgba(150,214,110,'+pulse.toFixed(2)+')';
+              ctx.fillRect(x-s2,top,s2*2,(y+s2)-top); ctx.restore(); }
+            // frontier ring: steady green while drawing, dashed amber while builders wait
+            ctx.strokeStyle=waiting?'rgba(232,168,86,0.9)':'rgba(150,214,110,0.7)'; ctx.lineWidth=1.2;
+            if(waiting&&ctx.setLineDash){ ctx.setLineDash([3,2.5]); hexPath(x,y,s2); ctx.stroke(); ctx.setLineDash([]); }
+            else { hexPath(x,y,s2); ctx.stroke(); } }
           else if(neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built)){ hexPath(x,y,s2*0.96); ctx.strokeStyle=COL.unbuilt; ctx.lineWidth=1; ctx.stroke(); } continue; }
         hexPath(x,y,s2); ctx.fillStyle=COL.wallEmpty; ctx.fill();
         if(cell.zone==='brood'){ ctx.fillStyle=COL.broodZone; ctx.fill(); } else if(cell.zone==='honey'){ ctx.fillStyle=COL.honeyZone; ctx.fill(); }
@@ -2999,7 +3025,7 @@
       year++; day=0; P=12; honeyU=6*HC; pollenU=3*HC; nectarU=0; peakPop=12; swarmP=0; coldSnap=0; activePatch=null;
       queenAge=1; hornet=null; hornetCD=18+Math.random()*22; scoutShown=false; raidLoss=0; starveT=0;
       jarsThisYear=0; fedWinter=false; bankAtFrost=0; yearHist.length=0; histT=2.7; goals=makeGoals(); lastSI=0; said={};
-      for(const c of cells){ c.brood=null; c.flagExpand=false; }
+      for(const c of cells){ c.brood=null; c.flagExpand=false; c.bp=0; }
       over=false; $('over').classList.add('hide'); syncAlmanacTicks(); drawSeason();
       const yn=yearName(year); toast('A wild swarm settles into your comb — the line continues. Year '+year+': '+yn[0]+'.'); announceSeason(); forecastCache=forecastToSpring();
       setSpeed(1); paused=false; saveGame(); });
@@ -3008,7 +3034,8 @@
     function serialize(){ const Z={none:0,brood:1,honey:2}, ST={egg:0,larva:1,pupa:2};
       const cb=cells.map(c=>(c.built?1:0)|(Z[c.zone]<<1)|((c.flagExpand?1:0)<<3)|((c.brood?1:0)<<4)|(c.brood?ST[c.brood.stage]<<5:0));
       const bt=cells.map(c=>c.brood?Math.round(c.brood.t*10):0);
-      return {v:4,t:Date.now(),day,year,P,honeyU,pollenU,nectarU,peakPop,bornTotal,swarmP,forage,activePatch,grades,queenAge,cb,bt,
+      const bx=cells.map(c=>(!c.built&&c.flagExpand&&c.bp>0)?Math.round(c.bp*100):0);
+      return {v:4,t:Date.now(),day,year,P,honeyU,pollenU,nectarU,peakPop,bornTotal,swarmP,forage,activePatch,grades,queenAge,cb,bt,bx,
         rj,jars,jy:jarsThisYear,ql:queenLine,rs:roster,se:curSeason?curSeason.id:'calm',sq:seasonEventDone?1:0,sx:seasonEventFired,mx:mix.map(v=>Math.round(v)),ow:Object.keys(owned),fw:fedWinter?1:0,bf:Math.round(bankAtFrost),tp:Object.keys(seenTips),ls:Object.keys(lessonSeen),gd:goals?goals.map(g=>g.done?1:0):[0,0,0,0]}; }
     function saveGame(){ if(dailyMode) return; try{ localStorage.setItem(SAVE_KEY,JSON.stringify(serialize())); }catch(e){} }
     function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
@@ -3020,7 +3047,7 @@
       goals=makeGoals(); (s.gd||[]).forEach((d,i)=>{ if(goals[i]) goals[i].done=!!d; });
       if(day>=270) armMidwinter(true);
       lastSI=seasonIdx(day);
-      for(let i=0;i<cells.length;i++){ const v=s.cb[i],c=cells[i]; c.built=!!(v&1); c.zone=ZN[(v>>1)&3]; c.flagExpand=!!(v>>3&1); c.brood=(v>>4&1)?{stage:STN[(v>>5)&3],t:(s.bt[i]||0)/10}:null; }
+      for(let i=0;i<cells.length;i++){ const v=s.cb[i],c=cells[i]; c.built=!!(v&1); c.zone=ZN[(v>>1)&3]; c.flagExpand=!!(v>>3&1); c.bp=(c.flagExpand&&s.bx)?(s.bx[i]||0)/100:0; c.brood=(v>>4&1)?{stage:STN[(v>>5)&3],t:(s.bt[i]||0)/10}:null; }
       syncForageUI(); }
     function offlineCatchup(s){ const away=(Date.now()-s.t)/1000; if(away<60)return null; let d=Math.min(OFFLINE_CAP,away/OFFLINE_SEC_PER_DAY); if(d<0.1)return null;
       const bp=Math.round(P), bh=Math.round(honeyCellsStored()); let rem=d; while(rem>0&&!over&&day<YEAR){ const dd=Math.min(0.25,rem); stepDay(dd,true); day+=dd; rem-=dd; }
