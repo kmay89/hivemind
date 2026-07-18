@@ -2153,10 +2153,11 @@
       if(!cell.built){
         const adj=neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built);
         if(cell.flagExpand){ const pct=Math.round((cell.bp||0)*100);
-          if(buildStall==='lean'){ t='Waiting for stores'; s=pct>0?('drawn '+pct+'% — builders pause until the pantry recovers'):'builders pause until the pantry recovers'; }
+          // time isn't passing → say so first; buildStall is stale while paused
+          if(paused||speed===0){ t='Marked for wax'; s='press ▶ — builders draw it as the days pass'; }
+          else if(buildStall==='lean'){ t='Waiting for stores'; s=pct>0?('drawn '+pct+'% — builders pause until the pantry recovers'):'builders pause until the pantry recovers'; }
           else if(buildStall==='small'){ t='Waiting on builders'; s='grow the colony — too few workers to tend more comb'; }
           else if(pct>0){ t='Drawing wax…'; s=pct+'% built — the builders are on it'; }
-          else if(paused||speed===0){ t='Marked for wax'; s='press ▶ — builders draw it as the days pass'; }
           else { t='Marked for wax'; s='builders will draw it when honey allows'; } }
         else if(adj){ t='Empty space'; s='your comb reaches here'; }
         else { t='Out of reach'; s='wax can only grow from wax'; }
@@ -2479,7 +2480,7 @@
       // instead of popping in, and stalls legibly when honey or hands run short.
       const flagged=cells.filter(c=>!c.built&&c.flagExpand);
       if(!flagged.length){ buildStall=''; return; }
-      let budget=P*BUILD_FRAC*dd*1.4 + Math.random()*0.15; // cells-worth of progress this step
+      let budget=(P*BUILD_FRAC*1.4 + Math.random()*0.15)*dd; // cells-worth of progress this step (dd-scaled → frame-rate independent)
       const cost=WAX_H*M.wax();
       const builtN=cells.reduce((a,c)=>a+(c.built?1:0),0);
       if(builtN >= P*2.4+14){ buildStall='small'; toast('The colony is too small to tend more comb — grow the brood nest first.','buildscale'); return; }
