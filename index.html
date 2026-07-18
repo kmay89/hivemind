@@ -3282,6 +3282,7 @@
         3:'Hazel: Winter. Little left to gather \u2014 keep it <b>balanced</b> and let the cluster live on the honey you stored.'};
       tip('forageS'+si, M[si]); }
     function syncForageUI(){ const ci=forageIdx(), sl=$('forageSlider'); if(sl && +sl.value!==ci) sl.value=ci;
+      if(forage!==FORAGE_STEPS[ci]) forage=FORAGE_STEPS[ci]; // snap a legacy continuous value onto the notch
       const ri=(started&&!onboard)?recForageIdx():-1, tk=$('fxTicks');
       if(tk){ const ii=tk.children; for(let i=0;i<ii.length;i++){ ii[i].classList.toggle('on',i===ci); ii[i].classList.toggle('rec',i===ri); } }
       const n=$('fxNote'); if(n){ const note=forageNote(); if(n.innerHTML!==note) n.innerHTML=note; } }
@@ -4066,7 +4067,7 @@
           stepHornet(dt);
           const si=seasonIdx(day);
           if(si!==lastSI && !onboard){ lastSI=si; showLesson('year'); if(si===3){ armMidwinter(false); tip('winter','Hazel: They don\u2019t sleep through winter. They cluster tight and shiver to keep the queen at blood heat \u2014 about 35\u00b0C \u2014 burning the honey you stored to do it.'); } if(si===1) tip('summer','Hazel: Fresh nectar is mostly water. House bees fan it dry with their wings until it\u2019s thick enough to keep, then cap it with wax. That\u2019s ripe honey.'); if(year===1) forageSeasonTip(si); seasonBanner(si); }
-          if(year===1 && !onboard && si===0 && day>3) forageSeasonTip(0); // spring has no change-event; teach it at the start
+          if(year===1 && !onboard && si===0 && day>3 && !seenTips['forageS0']) forageSeasonTip(0); // spring has no change-event; teach it at the start
           const brc=countBrood().total;
           rate.h+=(((honeyU-prevv.h)/HC/dd)-rate.h)*0.06; rate.p+=(((pollenU-prevv.p)/HC/dd)-rate.p)*0.06;
           rate.b+=(((P-prevv.b)/dd)-rate.b)*0.06; rate.br+=(((brc-prevv.br)/dd)-rate.br)*0.06;
