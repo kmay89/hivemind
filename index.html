@@ -51,12 +51,30 @@
   .hide{ display:none !important; }
 
   /* ---------- buttons ---------- */
-  .btn{ font-family:'Bricolage Grotesque'; font-weight:700; letter-spacing:.04em; color:#241503;
+  .btn{ font-family:'Bricolage Grotesque'; font-weight:700; letter-spacing:.04em; color:#241503; position:relative;
     background:linear-gradient(180deg,var(--gold),var(--honey) 60%,var(--amber2)); border:none; border-radius:13px; cursor:pointer;
-    box-shadow:0 1px 0 rgba(255,255,255,.35) inset, 0 8px 22px rgba(255,160,40,.28); transition:transform .09s, box-shadow .2s, filter .2s; }
+    /* raised on a solid gold ledge + top gloss + soft drop — a real button you can press */
+    box-shadow:0 1px 0 rgba(255,255,255,.55) inset, 0 -3px 7px rgba(150,78,12,.28) inset, 0 5px 0 #a8641a, 0 10px 18px rgba(150,78,12,.4);
+    transition:box-shadow .12s, filter .18s; }
   .btn:hover{ filter:brightness(1.06); }
-  .btn:active{ transform:scale(.96); }
-  .btn.ghost{ background:rgba(255,255,255,0.06); color:var(--text); box-shadow:none; border:1px solid var(--border); font-weight:500; }
+  /* the finger holds it down: the ledge shrinks so it reads as pressed into the base */
+  .btn:active{ box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 -2px 5px rgba(150,78,12,.25) inset, 0 2px 0 #a8641a, 0 4px 9px rgba(150,78,12,.4); }
+  .btn.ghost{ background:rgba(255,255,255,0.06); color:var(--text); border:1px solid var(--border); font-weight:500;
+    box-shadow:0 1px 0 rgba(255,255,255,.08) inset, 0 3px 0 rgba(0,0,0,.28), 0 6px 12px rgba(0,0,0,.3); }
+  .btn.ghost:active{ box-shadow:0 1px 0 rgba(255,255,255,.08) inset, 0 1px 0 rgba(0,0,0,.28), 0 3px 7px rgba(0,0,0,.3); }
+  /* Daily Challenge: its own sunrise identity, a warm pulsing sun and a shine sweep */
+  #startDaily{ overflow:hidden; color:#3a1c04; font-weight:800; border:none;
+    background:linear-gradient(180deg,#ffd982,#ff9e3d 58%,#ef7d2a);
+    box-shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 -3px 7px rgba(180,80,15,.3) inset, 0 5px 0 #b45e18, 0 10px 18px rgba(200,90,20,.42); }
+  #startDaily:hover{ filter:brightness(1.05); }
+  #startDaily:active{ box-shadow:0 1px 0 rgba(255,255,255,.55) inset, 0 2px 0 #b45e18, 0 4px 9px rgba(200,90,20,.42); }
+  #startDaily .dsun{ display:inline-block; animation:dsunPulse 2.4s ease-in-out infinite; }
+  @keyframes dsunPulse{ 0%,100%{ transform:scale(1) rotate(0); filter:drop-shadow(0 0 4px rgba(255,225,130,.8)); }
+    50%{ transform:scale(1.16) rotate(18deg); filter:drop-shadow(0 0 9px rgba(255,236,150,1)); } }
+  #startDaily::after{ content:''; position:absolute; top:0; bottom:0; width:38%; left:-60%; transform:skewX(-18deg); pointer-events:none;
+    background:linear-gradient(90deg, transparent, rgba(255,255,255,.5), transparent); animation:dailyShine 4.8s ease-in-out infinite; }
+  @keyframes dailyShine{ 0%{ left:-60%; } 45%,100%{ left:150%; } }
+  @media (prefers-reduced-motion: reduce){ #startDaily .dsun, #startDaily::after{ animation:none; } }
   .tab,.tb,.btn,.cbtn,.gift{ -webkit-tap-highlight-color:transparent; }
   /* touch-action does NOT inherit from body, so every control defaults to `auto`,
      which makes mobile browsers stall ~300ms per touch for double-tap-zoom and can
@@ -219,14 +237,15 @@
   .grp .gl{ font-size:7.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); padding:0 3px 0 5px; align-self:center; font-weight:600; }
   .grp.dim{ opacity:.4; pointer-events:none; }
   .tb{ font-family:'Bricolage Grotesque'; font-weight:600; font-size:11.5px; padding:7px 10px; border-radius:9px; cursor:pointer; color:var(--dim); min-height:36px;
-    display:flex; align-items:center; gap:4px; border:1px solid transparent; background:rgba(255,255,255,0.03); transition:transform .09s, background .14s, color .14s; white-space:nowrap; user-select:none; }
+    display:flex; align-items:center; gap:4px; border:1px solid transparent; background:rgba(255,255,255,0.03);
+    box-shadow:0 1.5px 0 rgba(0,0,0,.28), 0 2px 4px rgba(0,0,0,.18); white-space:nowrap; user-select:none; } /* transition consolidated below */
   .tb:hover{ color:var(--text); }
-  .tb:active{ transform:scale(.94); }
-  .tb.on{ color:#241503; background:linear-gradient(180deg,var(--gold),var(--honey)); box-shadow:0 1px 0 rgba(255,255,255,.4) inset; }
-  .tb.on.brood{ background:linear-gradient(180deg,#b9dcff,#6aa2e2); color:#0a1a2c; }
-  .tb.on.honeyb{ background:linear-gradient(180deg,var(--honey),#cf8a2e); color:#241503; }
-  .tb.on.expand{ background:linear-gradient(180deg,#c4f2ad,#77b25c); color:#12240a; }
-  .tb.on.cyan{ background:linear-gradient(180deg,var(--cyan),#2bb9ad); color:#06120f; }
+  /* the selected tool sits up on a coloured ledge — clicking one feels like throwing a switch */
+  .tb.on{ color:#241503; background:linear-gradient(180deg,var(--gold),var(--honey)); box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 3px 0 #a86a1a, 0 5px 9px rgba(0,0,0,.32); }
+  .tb.on.brood{ background:linear-gradient(180deg,#b9dcff,#6aa2e2); color:#0a1a2c; box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 3px 0 #3f6ea3, 0 5px 9px rgba(0,0,0,.32); }
+  .tb.on.honeyb{ background:linear-gradient(180deg,var(--honey),#cf8a2e); color:#241503; box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 3px 0 #9a5f16, 0 5px 9px rgba(0,0,0,.32); }
+  .tb.on.expand{ background:linear-gradient(180deg,#c4f2ad,#77b25c); color:#12240a; box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 3px 0 #4e7d38, 0 5px 9px rgba(0,0,0,.32); }
+  .tb.on.cyan{ background:linear-gradient(180deg,var(--cyan),#2bb9ad); color:#06120f; box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 3px 0 #1c8479, 0 5px 9px rgba(0,0,0,.32); }
   .tb.gold{ color:var(--gold); background:rgba(255,217,122,0.08); border-color:rgba(255,217,122,0.25); }
   .tb.gold:hover{ background:rgba(255,217,122,0.16); color:var(--gold); }
   .tb.gold.off{ opacity:.42; }
@@ -281,7 +300,7 @@
 
   /* attention & timing: unhurried, satisfying transitions */
   .tab{ transition:background .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease; }
-  .tb{ transition:transform .08s ease, background .18s ease, color .18s ease, box-shadow .18s ease, border-color .18s ease; }
+  .tb{ transition:background .16s ease, color .16s ease, box-shadow .12s ease, border-color .16s ease; }
 
   /* ---------- year review (Duolingo-hearted) ---------- */
   .review{ text-align:left; margin:4px 0 2px; }
@@ -1212,7 +1231,7 @@
         <button class="btn pulse" id="startNew">Found a new colony</button>
         <button class="btn ghost hide" id="startCont">Continue</button>
       </div>
-      <button class="btn ghost" id="startDaily" style="margin-top:8px">☀ Daily Challenge</button>
+      <button class="btn" id="startDaily" style="margin-top:8px"><span class="dsun">☀</span> Daily Challenge</button>
       <div id="dailyCap" style="font:500 11px 'JetBrains Mono',monospace; color:var(--dim); margin-top:5px"></div>
       <div class="cardLinks">
         <a href="about.html" target="_blank" rel="noopener">About</a><a href="privacy.html" target="_blank" rel="noopener">Privacy</a><a href="terms.html" target="_blank" rel="noopener">Terms</a>
@@ -1275,7 +1294,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.28.4';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.28.5';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1969,6 +1988,45 @@
       const g=c.createGain(); g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.22,t+0.25); g.gain.exponentialRampToValueAtTime(0.0001,t+1.35);
       src.connect(bp); bp.connect(g); g.connect(AU.master); src.start(t); }
     press($('sndBtn'),sndToggle);
+
+    // ---- juicy buttons: every press pops, clicks, and gives a little haptic tick,
+    //      so tapping the UI feels like flipping a real mechanical switch ----
+    let clickNoiseBuf=null;
+    function clickSfx(kind){ if(!AU.on||!AU.ctx) return; const c=AU.ctx, t=c.currentTime;
+      // pitched "pock" — the body of the click, tuned per button family so different
+      // controls sound like different mechanical things
+      const body=kind==='primary'?360:kind==='soft'?300:540;
+      const o=c.createOscillator(), g=c.createGain(); o.type='triangle';
+      o.frequency.setValueAtTime(body,t); o.frequency.exponentialRampToValueAtTime(body*0.42,t+0.05);
+      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(kind==='primary'?0.2:0.13,t+0.005); g.gain.exponentialRampToValueAtTime(0.0001,t+0.10);
+      o.connect(g); g.connect(AU.sfxG||AU.master); o.start(t); o.stop(t+0.12);
+      // a short filtered-noise transient — the crisp mechanical "tick" on top;
+      // the buffer is static, so build it once and reuse it every click
+      if(!clickNoiseBuf){ const n=(c.sampleRate*0.02)|0; clickNoiseBuf=c.createBuffer(1,n,c.sampleRate); const d=clickNoiseBuf.getChannelData(0);
+        for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*(1-i/n); }
+      const src=c.createBufferSource(); src.buffer=clickNoiseBuf;
+      const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=kind==='primary'?2200:3000; bp.Q.value=0.9;
+      const ng=c.createGain(); ng.gain.setValueAtTime(0.09,t); ng.gain.exponentialRampToValueAtTime(0.0001,t+0.04);
+      src.connect(bp); bp.connect(ng); ng.connect(AU.sfxG||AU.master); src.start(t); }
+    function popFx(el, kind){
+      // press-into-the-shadow then spring back — WAAPI so it never fights CSS pulses;
+      // cancel any in-flight pop first so spammed taps don't stack and jitter
+      if(el && el.animate && !RM){ if(el._popAnim){ try{ el._popAnim.cancel(); }catch(e){} }
+        try{ el._popAnim=el.animate(
+        [{transform:'translateY(0) scale(1)'},
+         {transform:'translateY(3px) scale(.93)', offset:0.26, easing:'cubic-bezier(.3,.7,.4,1)'},
+         {transform:'translateY(-1px) scale(1.055)', offset:0.6},
+         {transform:'translateY(0) scale(1)'}],
+        {duration:250, easing:'cubic-bezier(.3,1.3,.5,1)'}); }catch(e){} }
+      clickSfx(kind);
+      if(navigator.vibrate && !RM){ try{ navigator.vibrate(kind==='primary'?12:7); }catch(e){} } }
+    (function(){ const SEL='.btn,.tb,.tab,.cbtn,.qopt,.pseg,.gtopic,.mtile,[data-brush],[data-sp],[role="button"],[role="radio"],[id$="Btn"],#gsPlay,#sndInvite,#welcomeBtn,#startNew,#startCont,#startDaily,#queenGo,#queenBack';
+      // capture phase so it still fires when a handler stops propagation; closest() misses
+      // give the canvas and other non-buttons a free pass
+      addEventListener('pointerdown',e=>{ if(e.button>0) return; const el=e.target.closest&&e.target.closest(SEL); if(!el) return;
+        if(el.classList.contains('locked')||el.getAttribute('aria-disabled')==='true'||el.disabled) return;
+        const kind=el.matches('.btn:not(.ghost),#startNew,#queenGo,#startDaily,#gsPlay')?'primary':el.matches('.ghost,.pseg,.qopt,.gtopic,.cdel')?'soft':'tick';
+        popFx(el,kind); }, true); })();
 
     // ===================== hornet raids — telegraphed, juicy, defensible =====================
     function hornetWindow(){ const early=year>=4; return {a:early?120:140, b:early?268:258}; }
