@@ -1302,7 +1302,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.28.8';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.28.9';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1792,7 +1792,7 @@
       const pool=WEATHERS.filter(x=>x.id!=='calm'&&x.id!=='wander'&&x.id!=='bear'); // a pure test of keeping — no scripted raids
       curSeason=pool[Math.floor(rnd()*pool.length)]||WEATHERS[0]; seasonEventDone=true; seasonEventFired=null; lastSeasonId=curSeason.id;
       setPace('medium'); tinyComb(); honeyU=8*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; grades=[]; forage=0.6; activePatch=null; mix=[0,0,0,0]; roster=[]; corpses=[];
-      queenAge=1; hornet=null; hornetCD=18+rnd()*22; parts.length=0; shake=0; rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=makeGoals(); lastSI=0; scoutShown=false; seenTips={}; lessonSeen={}; nudged={}; starveT=0; bankAtFrost=0; raidLoss=0;
+      queenAge=1; hornet=null; hornetCD=18+rnd()*22; parts.length=0; shake=0; rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=makeGoals(); lastSI=0; scoutShown=false; seenTips={}; lessonSeen={}; nudged={}; tipQ.length=0; tipCool=0; starveT=0; bankAtFrost=0; raidLoss=0;
       brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=false; yearHist.length=0; histT=2.7; popMilo={};
       brush='brood'; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x.dataset.brush==='brood')); setReveal(false); clearUndo();
       dailyChallenge=pickTodayChallenge(); dailyBestMetric=0; dailyDone=(DAILY.lastDone===todayKey()); }
@@ -2560,7 +2560,14 @@
       const want = show===undefined ? el.classList.contains('hide') : show;
       el.classList.toggle('hide', !want); if(want) renderChat(true); }
     let toastT=null, said={};
-    function tip(key,msg){ if(seenTips[key]||onboard||!started) return; seenTips[key]=1; toast(msg); }
+    // Hazel's teaching, paced so it never floods: one tip at a time with room to breathe
+    // between them, and the delightful-but-inessential science held back for a second year.
+    let tipCool=0, tipQ=[]; const TIP_GAP=11;
+    const LATER_TIPS=new Set(['hexmath','hex','ages','undertaker','water','quorum','rings']); // fun facts, not needed to play — year two
+    function tip(key,msg){ if(seenTips[key]||onboard||!started) return;
+      if(LATER_TIPS.has(key) && year<2) return; // let a first year breathe; every word still lives in the ? menu
+      seenTips[key]=1;
+      if(tipCool>0){ tipQ.push(msg); } else { toast(msg); tipCool=TIP_GAP; } }
     function toast(s,once){ if(once){if(said[once])return; said[once]=1;} logMsg('🐝', s); const el=$('toast'); el.innerHTML=s; el.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),6500); }
     let advCur='', advSince=0;
     function advise(){
@@ -3239,7 +3246,7 @@
     function loadSave(){ try{ const s=localStorage.getItem(SAVE_KEY); return s?JSON.parse(s):null; }catch(e){ return null; } }
     function deserialize(s){ const ZN=['none','brood','honey'], STN=['egg','larva','pupa'];
       day=s.day; year=s.year; P=s.P; honeyU=s.honeyU; pollenU=s.pollenU; nectarU=s.nectarU; peakPop=s.peakPop||Math.round(P); bornTotal=s.bornTotal||0; swarmP=s.swarmP||0; forage=(typeof s.forage==='number')?s.forage:(s.forage==='nectar'?0.85:s.forage==='pollen'?0.25:0.6); activePatch=(s.activePatch===undefined?null:s.activePatch); grades=s.grades||[]; queenAge=s.queenAge||1;
-      rj=s.rj||0; jars=s.jars||0; jarsThisYear=s.jy||0; queenLine=(s.ql&&QUEENS.some(q=>q.id===s.ql))?s.ql:'meadow'; roster=Array.isArray(s.rs)?s.rs.filter(b=>b&&b.nm):[]; mix=(s.mx&&s.mx.length===4)?s.mx.slice():[0,0,0,0]; owned={}; (s.ow||[]).forEach(k=>owned[k]=true); fedWinter=!!s.fw; bankAtFrost=s.bf||0; seenTips={}; (s.tp||[]).forEach(k=>seenTips[k]=1); lessonSeen={}; (s.ls||[]).forEach(k=>lessonSeen[k]=1);
+      rj=s.rj||0; jars=s.jars||0; jarsThisYear=s.jy||0; queenLine=(s.ql&&QUEENS.some(q=>q.id===s.ql))?s.ql:'meadow'; roster=Array.isArray(s.rs)?s.rs.filter(b=>b&&b.nm):[]; mix=(s.mx&&s.mx.length===4)?s.mx.slice():[0,0,0,0]; owned={}; (s.ow||[]).forEach(k=>owned[k]=true); fedWinter=!!s.fw; bankAtFrost=s.bf||0; seenTips={}; (s.tp||[]).forEach(k=>seenTips[k]=1); lessonSeen={}; (s.ls||[]).forEach(k=>lessonSeen[k]=1); tipQ.length=0; tipCool=0;
       curSeason=WEATHERS.find(x=>x.id===s.se)||WEATHERS[0]; lastSeasonId=curSeason.id; seasonEventDone=!!s.sq; seasonEventFired=s.sx||null;
       goals=makeGoals(); (s.gd||[]).forEach((d,i)=>{ if(goals[i]) goals[i].done=!!d; });
       if(day>=270) armMidwinter(true);
@@ -4008,7 +4015,7 @@
       prevv={h:honeyU,p:pollenU,b:P,br:countBrood().total}; rate={h:0,p:0,b:0,br:0}; waxRateEMA=0; forecastCache=forecastToSpring(); layout(); setSpeed(1); }
     function seedAndPlay(){ colonyNum=CHRON.length?CHRON[CHRON.length-1].col+1:1; colonySave(); clearSave(); tinyComb(); honeyU=(CHRON.length&&LEGACY&&LEGACY.heirloom&&LEGACY.heirloom.n?12:8)*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; grades=[]; forage=0.6; activePatch=null; mix=[0,0,0,0]; roster=[]; corpses=[]; drawSeason();
       queenAge=1; hornet=null; hornetCD=18+Math.random()*22; parts.length=0; shake=0;
-      rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=null; lastSI=0; scoutShown=false; seenTips={}; lessonSeen={}; nudged={}; starveT=0; bankAtFrost=0; raidLoss=0;
+      rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=null; lastSI=0; scoutShown=false; seenTips={}; lessonSeen={}; nudged={}; tipQ.length=0; tipCool=0; starveT=0; bankAtFrost=0; raidLoss=0;
       brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=true; yearHist.length=0; histT=2.7; popMilo={};
       brush=null; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.remove('on')); setReveal(true);
       beginCommon();
@@ -4115,6 +4122,7 @@
       ctx.setTransform(DPR,0,0,DPR,shx*DPR,shy*DPR);
       drawLessonArt(dt);
       if(nudgeCool>0) nudgeCool-=dt;
+      if(tipCool>0){ tipCool-=dt; if(tipCool<=0 && tipQ.length){ toast(tipQ.shift()); tipCool=TIP_GAP; } }
       if(hzHold>0) hzHold-=dt;
       idleT+=dt; if(idleT>4){ idleT=0; watchIdle(); }
       drawHazel(dt);
