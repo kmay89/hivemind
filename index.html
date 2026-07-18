@@ -250,6 +250,22 @@
   .tb[data-sp="3"].on{ background:linear-gradient(180deg,#bcdcff,#6aa2e2); color:#0a1a2c; box-shadow:0 1px 0 rgba(255,255,255,.45) inset, 0 3px 15px rgba(110,160,230,.45); }
   .tb[data-sp="0"].on{ background:linear-gradient(180deg,#e8dcc4,#b7a684); color:#241503; }
   /* forage dials, each its own flavour (out-specify the shared .tb.on.cyan) */
+  /* ---- forager crossfader: a DJ mixer for nectar vs pollen ---- */
+  #forageMix{ display:flex; flex-direction:column; gap:3px; flex:1; min-width:170px; padding:3px 6px; }
+  .fxRow{ display:flex; justify-content:space-between; align-items:baseline; font:700 10.5px 'Bricolage Grotesque',sans-serif; }
+  .fxRow .fxP{ color:#f5a24a; } .fxRow .fxN{ color:#ffd36a; }
+  .fxRow i{ font-style:normal; font-weight:400; color:var(--dim); font-size:8.5px; margin:0 4px; }
+  #forageSlider{ -webkit-appearance:none; appearance:none; width:100%; height:11px; border-radius:6px; outline:none; cursor:pointer; margin:1px 0;
+    background:linear-gradient(90deg,#e0791f,#dda23a 50%,#ffd76b); box-shadow:inset 0 1px 3px rgba(0,0,0,0.55); }
+  #forageSlider::-webkit-slider-thumb{ -webkit-appearance:none; appearance:none; width:23px; height:23px; border-radius:50%;
+    background:radial-gradient(circle at 34% 28%, #ffffff, #f7eed9 42%, #cbb489); border:2px solid #6a4d1e; box-shadow:0 2px 7px rgba(0,0,0,0.6), 0 1px 0 rgba(255,255,255,.5) inset; cursor:grab; }
+  #forageSlider:active::-webkit-slider-thumb{ cursor:grabbing; transform:scale(1.08); }
+  #forageSlider::-moz-range-thumb{ width:23px; height:23px; border-radius:50%; background:radial-gradient(circle at 34% 28%,#ffffff,#f7eed9 42%,#cbb489); border:2px solid #6a4d1e; box-shadow:0 2px 7px rgba(0,0,0,0.6); }
+  .fxNote{ font:500 9.5px 'JetBrains Mono',monospace; color:var(--dim); line-height:1.42; text-align:center; }
+  .fxNote b{ color:#f7eed9; font-weight:700; } .fxNote .fxY{ color:#ffd76b; }
+  /* ---- brush cost/gain strip: what each placement spends and returns ---- */
+  #brushHelp{ width:100%; order:-1; font:500 10px 'JetBrains Mono',monospace; color:var(--dim); text-align:center; padding:1px 6px 4px; line-height:1.4; }
+  #brushHelp b{ color:#f7eed9; } #brushHelp .gain{ color:#a7e07c; } #brushHelp .cost{ color:#e6a86a; }
   .tb.on[data-f="nectar"]{ background:linear-gradient(180deg,#ffe08a,#f0a72a); color:#241503; }
   .tb.on[data-f="balanced"]{ background:linear-gradient(180deg,#a9ebe0,#3bbcae); color:#06120f; }
   .tb.on[data-f="pollen"]{ background:linear-gradient(180deg,#ffc078,#e0791f); color:#241503; }
@@ -901,11 +917,13 @@
   <div id="hud-bottom">
     <div id="advisor" class="panel preveal" title="Hazel’s log — every word she’s said"><canvas class="ic" id="hazelC" width="46" height="46" aria-label="Hazel"></canvas><div class="tx"><span id="advTx">Welcome home, keeper.</span><button id="feedBtn" class="hide">Feed syrup — once</button></div><span class="hist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.3c-1.3 0-2.6-.3-3.7-.8L3 20l1.2-4.4a8.1 8.1 0 0 1-1.2-4.1A8.4 8.4 0 0 1 11.5 3.2 8.4 8.4 0 0 1 21 11.5z"/></svg></span><span class="fold" title="Tuck Hazel away">⌄</span></div>
     <div id="ctl" class="panel">
+      <div id="brushHelp"></div>
       <div class="grp preveal" id="forageGrp">
-        <span class="gl">Forage <u>🍯·🌼 wk</u></span>
-        <div class="tb cyan y" data-f="nectar" tabindex="0" title="All effort to nectar → honey, the winter fuel. Numbers are cells of honey · pollen per week."><span>Nectar</span><i class="yld" id="yNec">—</i></div>
-        <div class="tb cyan y on" data-f="balanced" tabindex="0" title="Split the foragers between nectar and pollen. Numbers are cells of honey · pollen per week."><span>Balanced</span><i class="yld" id="yBal">—</i></div>
-        <div class="tb cyan y" data-f="pollen" tabindex="0" title="All effort to pollen → the protein nurses feed the young. Numbers are cells of honey · pollen per week."><span>Pollen</span><i class="yld" id="yPol">—</i></div>
+        <div id="forageMix">
+          <div class="fxRow"><span class="fxP">🌸 Pollen<i>→ bees</i></span><span class="fxN"><i>honey ←</i>Nectar 🍯</span></div>
+          <input type="range" id="forageSlider" min="0" max="100" step="5" value="60" aria-label="Forager focus — pollen to nectar">
+          <div class="fxNote" id="fxNote">—</div>
+        </div>
       </div>
       <div class="grp" id="brushGrp">
         <span class="gl">Comb</span>
@@ -1228,7 +1246,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.27.1';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.28.0';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1561,7 +1579,7 @@
 
     // ===================== state =====================
     let honeyU=0, pollenU=0, nectarU=0, P=0;
-    let day=0, year=1, started=false, over=false, paused=false, speed=1, forage='balanced';
+    let day=0, year=1, started=false, over=false, paused=false, speed=1, forage=0.6;   // forage = fraction of effort on nectar (0 = all pollen, 1 = all nectar)
     let peakPop=0, bornTotal=0, swarmP=0, coldSnap=0, grades=[];
     let view='hive', activePatch=null;
     let reportOpen=false, hoveredCell=null, waxAccum=0, waxRateEMA=0;
@@ -1619,7 +1637,7 @@
     function seedDaily(){ dailyMode=true; const rnd=mulberry32(dateSeedNum());
       const pool=WEATHERS.filter(x=>x.id!=='calm'&&x.id!=='wander'&&x.id!=='bear'); // a pure test of keeping — no scripted raids
       curSeason=pool[Math.floor(rnd()*pool.length)]||WEATHERS[0]; seasonEventDone=true; seasonEventFired=null; lastSeasonId=curSeason.id;
-      setPace('medium'); tinyComb(); honeyU=8*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; grades=[]; forage='balanced'; activePatch=null; mix=[0,0,0,0]; roster=[]; corpses=[];
+      setPace('medium'); tinyComb(); honeyU=8*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; grades=[]; forage=0.6; activePatch=null; mix=[0,0,0,0]; roster=[]; corpses=[];
       queenAge=1; hornet=null; hornetCD=18+rnd()*22; parts.length=0; shake=0; rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=makeGoals(); lastSI=0; scoutShown=false; seenTips={}; lessonSeen={}; nudged={}; starveT=0; bankAtFrost=0; raidLoss=0;
       brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=false; yearHist.length=0; histT=2.7; popMilo={};
       brush='brood'; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x.dataset.brush==='brood')); setReveal(false); clearUndo(); }
@@ -2049,7 +2067,7 @@
     function setAttn(sel){ const el=sel?document.querySelector(sel):null; if(attnEl===el) return; if(attnEl) attnEl.classList.remove('attn'); attnEl=el; if(el) el.classList.add('attn'); }
     function guideEasy(ic,tx){ if(pace!=='easy'||onboard||!started||over){ setAttn(null); return; }
       if(ic==='🐝'||ic==='❄️'){ setAttn(null); return; }
-      const sel=/Expand/.test(tx)?'[data-brush="expand"]':/rood|nursery/.test(tx)?'[data-brush="brood"]':/Honey|shelves/.test(tx)?'[data-brush="honey"]':/Meadow/.test(tx)?'#tabMeadow':/Harvest/.test(tx)?'#harvestBtn':/Nectar/.test(tx)?'[data-f="nectar"]':null;
+      const sel=/Expand/.test(tx)?'[data-brush="expand"]':/rood|nursery/.test(tx)?'[data-brush="brood"]':/Honey|shelves/.test(tx)?'[data-brush="honey"]':/Meadow/.test(tx)?'#tabMeadow':/Harvest/.test(tx)?'#harvestBtn':/Nectar|nectar|forag/.test(tx)?'#forageSlider':null;
       setAttn(sel); }
     // She'd rather catch it while your hand is still on it than tell you afterwards. One remark
     // per idea, never twice, and never a scolding — she has done this for forty years.
@@ -2158,8 +2176,8 @@
     canvas.addEventListener('pointerleave',()=>{hoveredCell=null; hideInspect();});
     canvas.addEventListener('contextmenu',e=>e.preventDefault());
 
-    document.querySelectorAll('[data-f]').forEach(b=>press(b,()=>{forage=b.dataset.f;forageTouched=true;document.querySelectorAll('[data-f]').forEach(x=>x.classList.toggle('on',x===b)); forecastCache=forecastToSpring(); checkCoachProgress();}));
-    document.querySelectorAll('[data-brush]').forEach(b=>press(b,()=>{brush=b.dataset.brush;document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x===b)); checkCoachProgress();}));
+    { const sl=$('forageSlider'); if(sl) sl.addEventListener('input',()=>{ forage=(+sl.value)/100; forageTouched=true; forecastCache=forecastToSpring(); syncForageUI(); checkCoachProgress(); }); }
+    document.querySelectorAll('[data-brush]').forEach(b=>press(b,()=>{brush=b.dataset.brush;document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x===b)); syncBrushHelp(); checkCoachProgress();}));
     press($('undoBtn'), doUndo);
     press($('confYes'), confirmYes);
     press($('confNo'), ()=>closeConfirm());
@@ -2178,7 +2196,7 @@
       if(RM){ view=v; applyViewCls(); return; }
       const w=$('wipe'); w.style.opacity=1; setTimeout(()=>{ view=v; applyViewCls(); w.style.opacity=0; },300); }
     addEventListener('keydown',e=>{ if(e.key===' '){e.preventDefault(); setSpeed(speed===0?1:0);} if(e.key==='1')pickBrush('brood'); if(e.key==='2')pickBrush('honey'); if(e.key==='3')pickBrush('expand'); if(e.key==='h'||e.key==='H')harvestSurplus(); if(e.key==='Tab'){e.preventDefault(); setView(view==='hive'?'meadow':'hive');} });
-    function pickBrush(b){ brush=b; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x.dataset.brush===b)); }
+    function pickBrush(b){ brush=b; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x.dataset.brush===b)); syncBrushHelp(); }
 
     // ===================== harvest (push-your-luck legacy score) =====================
     // a jar is a record: whichever flowers filled the comb, in exactly those shares.
@@ -2459,7 +2477,7 @@
     function stepDay(dd, offline){
       const dif=difficulty(); const T=lerpM(tempM,day)+dif.temp+M.temp()+(coldSnap>0?M.snap():0);
       const Na=lerpM(nectarM,day)*dif.flow, Pa=lerpM(pollenM,day)*dif.flow, lv=lerpM(layM,day);
-      const winter=T<WIN_TEMP; const fN=FN[forage]; const mult=forageMult()*M.forage();
+      const winter=T<WIN_TEMP; const fN=forage; const mult=forageMult()*M.forage();
       const foragers=P*FOR_FRAC, nurses=P*NURSE_FRAC;
       const srcP=activePatch!=null?activePatch:bestPatch(day).i, srcF=PATCHES[srcP].f;
       const dNec=foragers*NEC_PF*Na*fN*mult*dd, dPol=foragers*POL_PF*Pa*(1-fN)*mult*M.pol()*dd;
@@ -2573,7 +2591,7 @@
           if(b.state==='idle'){ if(Na>0.05){ b.state='out'; const a=danceAngle()+(Math.random()-0.5)*0.25; b.fieldp={x:hiveCx+Math.cos(a)*size*17, y:hiveCy+Math.sin(a)*size*13}; b.carry=null; } else move(b,hiveCx+(Math.random()-0.5)*size*8,hiveCy+(Math.random()-0.5)*size*6,0.4); }
           else if(b.state==='out'){ if(move(b,b.fieldp.x,b.fieldp.y,2.4)){
             const hot=T>=29;
-            b.carry = hot&&Math.random()<0.22 ? 'water' : (Math.random()<FN[forage]?'nectar':'pollen');
+            b.carry = hot&&Math.random()<0.22 ? 'water' : (Math.random()<forage?'nectar':'pollen');
             if(b.carry==='water') tip('water','Hazel: See the <em>silver drops</em>? On hot days some foragers haul <b>water</b> — spread thin and fanned, it cools the nest. A colony is its own air-conditioner.');
             b.state='return'; } }
           else { if(move(b,hiveCx+(Math.random()-0.5)*size*5,hiveCy+(Math.random()-0.5)*size*4,2.4)){ if(dancing&&Math.random()<0.18){ b.state='waggle'; b.danceT=0; } else b.state='idle'; b.carry=null; } } }
@@ -2987,14 +3005,14 @@
     function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
     function loadSave(){ try{ const s=localStorage.getItem(SAVE_KEY); return s?JSON.parse(s):null; }catch(e){ return null; } }
     function deserialize(s){ const ZN=['none','brood','honey'], STN=['egg','larva','pupa'];
-      day=s.day; year=s.year; P=s.P; honeyU=s.honeyU; pollenU=s.pollenU; nectarU=s.nectarU; peakPop=s.peakPop||Math.round(P); bornTotal=s.bornTotal||0; swarmP=s.swarmP||0; forage=s.forage||'balanced'; activePatch=(s.activePatch===undefined?null:s.activePatch); grades=s.grades||[]; queenAge=s.queenAge||1;
+      day=s.day; year=s.year; P=s.P; honeyU=s.honeyU; pollenU=s.pollenU; nectarU=s.nectarU; peakPop=s.peakPop||Math.round(P); bornTotal=s.bornTotal||0; swarmP=s.swarmP||0; forage=(typeof s.forage==='number')?s.forage:(s.forage==='nectar'?0.85:s.forage==='pollen'?0.25:0.6); activePatch=(s.activePatch===undefined?null:s.activePatch); grades=s.grades||[]; queenAge=s.queenAge||1;
       rj=s.rj||0; jars=s.jars||0; jarsThisYear=s.jy||0; queenLine=(s.ql&&QUEENS.some(q=>q.id===s.ql))?s.ql:'meadow'; roster=Array.isArray(s.rs)?s.rs.filter(b=>b&&b.nm):[]; mix=(s.mx&&s.mx.length===4)?s.mx.slice():[0,0,0,0]; owned={}; (s.ow||[]).forEach(k=>owned[k]=true); fedWinter=!!s.fw; bankAtFrost=s.bf||0; seenTips={}; (s.tp||[]).forEach(k=>seenTips[k]=1); lessonSeen={}; (s.ls||[]).forEach(k=>lessonSeen[k]=1);
       curSeason=WEATHERS.find(x=>x.id===s.se)||WEATHERS[0]; lastSeasonId=curSeason.id; seasonEventDone=!!s.sq; seasonEventFired=s.sx||null;
       goals=makeGoals(); (s.gd||[]).forEach((d,i)=>{ if(goals[i]) goals[i].done=!!d; });
       if(day>=270) armMidwinter(true);
       lastSI=seasonIdx(day);
       for(let i=0;i<cells.length;i++){ const v=s.cb[i],c=cells[i]; c.built=!!(v&1); c.zone=ZN[(v>>1)&3]; c.flagExpand=!!(v>>3&1); c.brood=(v>>4&1)?{stage:STN[(v>>5)&3],t:(s.bt[i]||0)/10}:null; }
-      document.querySelectorAll('[data-f]').forEach(x=>x.classList.toggle('on',x.dataset.f===forage)); }
+      syncForageUI(); }
     function offlineCatchup(s){ const away=(Date.now()-s.t)/1000; if(away<60)return null; let d=Math.min(OFFLINE_CAP,away/OFFLINE_SEC_PER_DAY); if(d<0.1)return null;
       const bp=Math.round(P), bh=Math.round(honeyCellsStored()); let rem=d; while(rem>0&&!over&&day<YEAR){ const dd=Math.min(0.25,rem); stepDay(dd,true); day+=dd; rem-=dd; }
       const hrs=Math.floor(away/3600), mins=Math.floor((away%3600)/60); return {time:(hrs?hrs+'h ':'')+mins+'m', days:d.toFixed(1), dP:Math.round(P)-bp, dH:Math.round(honeyCellsStored())-bh}; }
@@ -3003,20 +3021,33 @@
     addEventListener('pagehide',()=>{ if(started&&!over)saveGame(); });
 
     // ===================== trends, ledger & forecast =====================
-    function ledger(){ const dif=difficulty(); const T=lerpM(tempM,day)+dif.temp+M.temp()+(coldSnap>0?M.snap():0); const Na=lerpM(nectarM,day)*dif.flow; const fN=FN[forage]; const foragers=P*FOR_FRAC; const br=countBrood(); const cp=caps(); const full=(honeyU+pollenU+nectarU)>=cp.total-2; const m=forageMult()*M.forage();
+    function ledger(){ const dif=difficulty(); const T=lerpM(tempM,day)+dif.temp+M.temp()+(coldSnap>0?M.snap():0); const Na=lerpM(nectarM,day)*dif.flow; const fN=forage; const foragers=P*FOR_FRAC; const br=countBrood(); const cp=caps(); const full=(honeyU+pollenU+nectarU)>=cp.total-2; const m=forageMult()*M.forage();
       const income=(full?0:foragers*NEC_PF*Na*fN*m)/HC, eaten=P*C_BEE*coldMult(T)*M.eat()/HC, brood=br.l*BROOD_H/HC, wax=waxRateEMA/HC;
       return {income,eaten,brood,wax,mult:m,full,net:income-eaten-brood-wax}; }
     // the same maths the sim runs, asked hypothetically: "what would this dial pay today?"
     function forageYield(f){ const dif=difficulty();
-      const Na=lerpM(nectarM,day)*dif.flow, Pa=lerpM(pollenM,day)*dif.flow, fN=FN[f];
+      const Na=lerpM(nectarM,day)*dif.flow, Pa=lerpM(pollenM,day)*dif.flow, fN=f;
       const foragers=P*FOR_FRAC, m=forageMult()*M.forage(), cp=caps();
       const full=(honeyU+pollenU+nectarU)>=cp.total-2;
       return { h:(full?0:foragers*NEC_PF*Na*fN*m)/HC, p:(full?0:foragers*POL_PF*Pa*(1-fN)*m)/HC }; }
+    function forageNote(){ const f=forage, y=forageYield(f), cp=caps(), full=(honeyU+pollenU+nectarU)>=cp.total-2;
+      const t = f>=0.8?'Mostly <b>nectar</b> \u2014 the pantry fills fast, but few new bees.'
+        : f>=0.62?'Leaning <b>nectar</b> \u2014 honey now, bees later.'
+        : f>=0.42?'A steady <b>mix</b> \u2014 honey and brood together.'
+        : f>=0.22?'Leaning <b>pollen</b> \u2014 more brood, a slower pantry.'
+        : 'Mostly <b>pollen</b> \u2014 every cradle filled, little honey stored.';
+      return t+' '+(full?'<span class="fxY">comb full</span>':('<span class="fxY">+'+(y.h*7).toFixed(1)+'\ud83c\udf6f \u00b7 +'+(y.p*7).toFixed(1)+'\ud83c\udf3c /wk</span>')); }
+    function syncForageUI(){ const sl=$('forageSlider'); if(sl && +sl.value!==Math.round(forage*100)) sl.value=Math.round(forage*100);
+      const n=$('fxNote'); if(n){ const note=forageNote(); if(n.innerHTML!==note) n.innerHTML=note; } }
+    const BRUSHHELP={
+      brood:'\ud83c\udf7c <b>Brood</b> cradle \u2014 <span class="gain">gain: more bees</span> <span class="cost">\u00b7 cost: nurses &amp; warmth</span>',
+      honey:'\ud83c\udf6f <b>Honey</b> shelf \u2014 <span class="gain">gain: +1 pantry cell</span> <span class="cost">\u00b7 cost: wax, drawn from honey</span>',
+      expand:'\ud83d\udd28 <b>Expand</b> wax \u2014 <span class="gain">gain: room to grow</span> <span class="cost">\u00b7 cost: ~8 honey per cell</span>'
+    };
+    function syncBrushHelp(){ const el=$('brushHelp'); if(el) el.innerHTML=BRUSHHELP[brush]||''; }
     function syncYields(){
       const cpY=caps(), fullY=(honeyU+pollenU+nectarU)>=cpY.total-2;
-      const one=(id,f)=>{ const y=forageYield(f);
-        $(id).innerHTML = fullY ? '<i>comb full</i>' : ('<b>'+(y.h*7).toFixed(1)+'</b><i>·</i><em>'+(y.p*7).toFixed(1)+'</em>'); };
-      one('yNec','nectar'); one('yBal','balanced'); one('yPol','pollen');
+      syncForageUI();
       $('yBrood').innerHTML='<i>nest </i><b>'+broodCells()+'</b><i> r</i><b>'+nestRing()+'</b>';
       $('yHon').innerHTML='<i>store </i><b>'+honeyCells()+'</b>';
       const L=ledger();
@@ -3043,7 +3074,7 @@
         tip='Don\u2019t build, don\u2019t harvest. Keep the nursery small and warm, and ride it to spring.'; }
       return {season,focus,rows,tip};
     }
-    function forecastToSpring(){ const dif=difficulty(), fN=FN[forage], cp=caps(), m=forageMult()*M.forage();
+    function forecastToSpring(){ const dif=difficulty(), fN=forage, cp=caps(), m=forageMult()*M.forage();
       let p=P,Hn=honeyU,Po=pollenU,Ne=nectarU; const br=countBrood();
       let eggs=Array(EGG_D).fill(br.e/EGG_D), larv=Array(LAR_D).fill(br.l/LAR_D), pup=Array(PUP_D).fill(br.p/PUP_D);
       const broodSpace=broodCells(); let used=cells.filter(c=>c.built&&c.zone==='brood'&&c.brood).length; const series=[]; let minW=Infinity,starve=null,d0=Math.floor(day);
@@ -3130,8 +3161,8 @@
       { ic:'🔨', prog:'6 · make room',
         tx:'Just outside the comb.',
         until:()=>flaggedExpand>=1, unlock:'expand' },
-      { ic:'🌼', spot:'forageGrp', show:['forageGrp'], prog:'7 · the dials',
-        tx:'Aim your foragers \u2014 tap a dial.',
+      { ic:'🌼', spot:'forageGrp', show:['forageGrp'], prog:'7 · the mixer',
+        tx:'Aim your foragers \u2014 slide the <b>mixer</b> toward honey or bees.',
         until:()=>forageTouched, unlock:'forage' },
     ];
     function showCoach(){ const s=COACH[coachStep]; if(!s){ endCoach(); return; }
@@ -3706,14 +3737,14 @@
     if(existing && existing.cb){ $('startCont').classList.remove('hide');
       $('startCont').textContent='Continue — Year '+existing.year+', '+seasonName(existing.day)+' day '+(Math.floor(existing.day)+1); }
 
-    function beginCommon(){ $('intro').classList.add('hide'); started=true; clearUndo(); queen.x=hiveCx; queen.y=hiveCy; queen.tx=hiveCx; queen.ty=hiveCy; syncBeePool();
+    function beginCommon(){ $('intro').classList.add('hide'); started=true; clearUndo(); syncForageUI(); syncBrushHelp(); queen.x=hiveCx; queen.y=hiveCy; queen.tx=hiveCx; queen.ty=hiveCy; syncBeePool();
       prevv={h:honeyU,p:pollenU,b:P,br:countBrood().total}; rate={h:0,p:0,b:0,br:0}; waxRateEMA=0; forecastCache=forecastToSpring(); layout(); setSpeed(1); }
-    function seedAndPlay(){ colonyNum=CHRON.length?CHRON[CHRON.length-1].col+1:1; colonySave(); clearSave(); tinyComb(); honeyU=(CHRON.length&&LEGACY&&LEGACY.heirloom&&LEGACY.heirloom.n?12:8)*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; grades=[]; forage='balanced'; activePatch=null; mix=[0,0,0,0]; roster=[]; corpses=[]; drawSeason();
+    function seedAndPlay(){ colonyNum=CHRON.length?CHRON[CHRON.length-1].col+1:1; colonySave(); clearSave(); tinyComb(); honeyU=(CHRON.length&&LEGACY&&LEGACY.heirloom&&LEGACY.heirloom.n?12:8)*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; grades=[]; forage=0.6; activePatch=null; mix=[0,0,0,0]; roster=[]; corpses=[]; drawSeason();
       queenAge=1; hornet=null; hornetCD=18+Math.random()*22; parts.length=0; shake=0;
       rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=null; lastSI=0; scoutShown=false; seenTips={}; lessonSeen={}; nudged={}; starveT=0; bankAtFrost=0; raidLoss=0;
       brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=true; yearHist.length=0; histT=2.7; popMilo={};
       brush=null; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.remove('on')); setReveal(true);
-      document.querySelectorAll('[data-f]').forEach(x=>x.classList.toggle('on',x.dataset.f==='balanced')); beginCommon();
+      beginCommon();
       setTimeout(()=>{ if(onboard) showCoach(); }, 1800); saveGame(); }
     function renderQueens(){ const row=$('queenRow'); row.innerHTML=QUEENS.map(q=>{
         const locked=q.lock&&!earned[q.lock.badge];
@@ -3779,7 +3810,7 @@
       $('fastW').classList.toggle('hide',!autoFast);
       if(started && !over && speed>0 && !paused && !frozen){
         const dd=(dt/DAY_LEN)*eff; day+=dd;
-        if(dailyMode){ if(day>=DAILY_LEN && !over){ day=DAILY_LEN; syncHUD(); finishDaily(); } }
+        if(dailyMode){ if(day>=DAILY_LEN && !over){ day=DAILY_LEN; syncHUD(); finishDaily(); } else stepDay(dd,false); }
         else if(day>=YEAR){ day=YEAR; stepDay(0.0001,false); if(!over){ syncHUD(); endOfYear(); } }
         else stepDay(dd,false);
         if(!over){
