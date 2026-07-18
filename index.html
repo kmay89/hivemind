@@ -588,6 +588,9 @@
   #updateLater{ font-size:10px; color:var(--dim); cursor:pointer; text-decoration:underline; flex:none; }
   @media(max-width:520px){ #updateBar .ut{ white-space:normal; font-size:11.5px; } }
 
+  /* splash FX canvases — full-bleed, behind the wordmarks, never eat taps */
+  #gsFx, #splashFx{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:0; }
+  #gsIn{ z-index:2; }
   /* ---------- game boot splash ---------- */
   #gsplash{ position:fixed; inset:0; z-index:11; cursor:pointer;
     background:radial-gradient(120% 100% at 50% 42%, #14100a 0%, #0d0905 55%, #060402 100%);
@@ -629,7 +632,8 @@
   #splash.go #splashRings i:nth-child(4){ animation-delay:.78s; }
   @keyframes spPing{ 0%{ opacity:0; transform:scale(0); } 45%{ opacity:1; transform:scale(1.6); } 100%{ opacity:.5; transform:scale(.85); } }
   @keyframes spRing{ 0%{ opacity:0; transform:scale(.03); } 12%{ opacity:.8; } 100%{ opacity:0; transform:scale(1); } }
-  #splashCore{ position:relative; display:flex; flex-direction:column; align-items:center; padding:0 20px; }
+  #splashCore{ position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; padding:0 20px; }
+  #splashPing, #splashRings{ z-index:1; }
   #splashMark{ position:relative; overflow:hidden; padding:8px 18px; }
   #splashWord{ display:flex; align-items:baseline; font-family:'Bricolage Grotesque',sans-serif; font-weight:800;
     font-size:clamp(46px, 11vw, 92px); letter-spacing:.03em; line-height:1; }
@@ -1139,6 +1143,7 @@
 
   <!-- game title splash: the build card, console-style -->
   <div id="gsplash" class="hide" aria-hidden="true">
+    <canvas id="gsFx"></canvas>
     <div id="gsIn">
       <div class="gsT">HIVEMIND</div>
       <div class="gsV">v<span id="gsVer"></span></div>
@@ -1149,6 +1154,7 @@
 
   <!-- ErrerLabs studio splash -->
   <div id="splash" aria-hidden="true">
+    <canvas id="splashFx"></canvas>
     <div id="splashPing"></div>
     <div id="splashRings"><i></i><i></i><i></i><i></i></div>
     <div id="splashCore">
@@ -1255,7 +1261,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.28.2';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.28.3';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1298,11 +1304,74 @@
         if(i>=html.length){ finishType(); } },13);
       twActive={el,html,t,done}; }
 
+    // ---- splash FX: each wordmark gets a moving background that embodies its name ----
+    function splashFxSetup(cv){ const g=cv.getContext('2d'), dpr=Math.min(2, window.devicePixelRatio||1);
+      let W=(cv.clientWidth||innerWidth), H=(cv.clientHeight||innerHeight);
+      cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); g.setTransform(dpr,0,0,dpr,0,0);
+      return { g, W:()=>W, H:()=>H }; }
+
+    // HIVEMIND: a honeycomb ignites outward from the nest in the game's own
+    // centred-hexagon rings — the title's whole identity in one gesture.
+    function startHoneycomb(cv){ if(!cv) return; const S=splashFxSetup(cv), g=S.g, W=S.W(), H=S.H();
+      const R=Math.max(22, Math.min(46, W/15)), hw=R*Math.sqrt(3), vh=R*1.5, cx=W/2, cy=H*0.45;
+      const hexes=[]; let maxD=1;
+      for(let r=-2; r<H/vh+2; r++) for(let c=-2; c<W/hw+2; c++){ const x=c*hw+(r&1?hw/2:0), y=r*vh, d=Math.hypot(x-cx,y-cy); hexes.push({x,y,d}); if(d>maxD)maxD=d; }
+      function hex(x,y,s){ g.beginPath(); for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-30), px=x+s*Math.cos(a), py=y+s*Math.sin(a); i?g.lineTo(px,py):g.moveTo(px,py);} g.closePath(); }
+      const v=maxD/1450; let t0=0, raf;
+      function frame(ts){ if(!cv.isConnected) return; if(!t0)t0=ts; const e=ts-t0, front=e*v;
+        g.clearRect(0,0,W,H);
+        const bloom=g.createRadialGradient(cx,cy,0,cx,cy,maxD*0.95);
+        bloom.addColorStop(0,'rgba(78,50,15,0.6)'); bloom.addColorStop(0.5,'rgba(30,20,7,0.28)'); bloom.addColorStop(1,'rgba(0,0,0,0)');
+        g.fillStyle=bloom; g.fillRect(0,0,W,H);
+        for(const h of hexes){ const p=Math.max(0,Math.min(1,(front-h.d)/(R*3.4)));
+          if(p<=0){ hex(h.x,h.y,R*0.9); g.lineWidth=1; g.strokeStyle='rgba(255,196,104,0.05)'; g.stroke(); continue; }
+          const fall=1-Math.min(0.62,h.d/maxD*0.72), flick=0.92+0.08*Math.sin(e*0.006+h.d*0.05), lit=p*fall*flick;
+          hex(h.x,h.y,R*0.9); g.fillStyle='rgba(255,188,66,'+(0.04+0.34*lit).toFixed(3)+')'; g.fill();
+          g.lineWidth=1.2; g.strokeStyle='rgba(255,226,150,'+(0.10+0.5*lit).toFixed(3)+')'; g.stroke();
+          if(p>0.45){ hex(h.x,h.y,R*0.52*p); g.fillStyle='rgba(255,216,124,'+(0.12*lit).toFixed(3)+')'; g.fill(); }
+          // the wavefront itself glows brightest — you watch the ignition travel out
+          const edge=1-Math.min(1,Math.abs(front-h.d)/(R*1.4));
+          if(edge>0){ hex(h.x,h.y,R*0.9); g.fillStyle='rgba(255,244,196,'+(0.5*edge*edge).toFixed(3)+')'; g.fill(); } }
+        // a soft scrim behind the wordmark so the title + credits stay crisp over the comb
+        const scrim=g.createRadialGradient(cx,H*0.5,0,cx,H*0.5,W*0.72);
+        scrim.addColorStop(0,'rgba(8,5,2,0.62)'); scrim.addColorStop(0.55,'rgba(8,5,2,0.28)'); scrim.addColorStop(1,'rgba(8,5,2,0)');
+        g.fillStyle=scrim; g.fillRect(0,0,W,H);
+        const pul=0.55+0.45*Math.sin(e*0.005), spark=g.createRadialGradient(cx,cy,0,cx,cy,R*3.2);
+        spark.addColorStop(0,'rgba(255,246,214,'+(0.4*pul).toFixed(3)+')'); spark.addColorStop(1,'rgba(255,200,110,0)');
+        g.fillStyle=spark; g.beginPath(); g.arc(cx,cy,R*3.2,0,6.28); g.fill();
+        if(!RM) raf=requestAnimationFrame(frame); }
+      if(RM){ requestAnimationFrame(t=>{ t0=t-4000; frame(t); }); } else raf=requestAnimationFrame(frame); }
+
+    // ErrerLabs · Echo Resonance Research: a struck tone rings across an
+    // oscilloscope, its echoes trailing behind and sonar rings pulsing out.
+    function startResonance(cv){ if(!cv) return; const S=splashFxSetup(cv), g=S.g; let t0=0, raf;
+      function trace(e, off, amp, col){ const W=S.W(), mid=S.H()*0.46, steps=Math.ceil(W/6);
+        g.beginPath();
+        for(let i=0;i<=steps;i++){ const x=i/steps*W, nx=x/W-0.5, te=Math.max(0,e-off);
+          const env=0.12+0.88*Math.exp(-te/640);
+          const y=mid+amp*env*(Math.sin(nx*14+te*0.012)+0.5*Math.sin(nx*31-te*0.008))*Math.cos(nx*Math.PI);
+          i?g.lineTo(x,y):g.moveTo(x,y); }
+        g.strokeStyle=col; g.lineWidth=2; g.stroke(); }
+      function frame(ts){ if(!cv.isConnected) return; if(!t0)t0=ts; const e=ts-t0, W=S.W(), H=S.H(), mid=H*0.46;
+        g.clearRect(0,0,W,H);
+        g.strokeStyle='rgba(127,227,214,0.05)'; g.lineWidth=1;
+        for(let x=0;x<W;x+=Math.max(30,W/16)){ g.beginPath(); g.moveTo(x,0); g.lineTo(x,H); g.stroke(); }
+        g.beginPath(); g.moveTo(0,mid); g.lineTo(W,mid); g.strokeStyle='rgba(127,227,214,0.09)'; g.stroke();
+        for(let k=0;k<4;k++){ const rt=e-k*680; if(rt<0)continue; const rr=(rt%2040)/2040; if(rr<=0)continue;
+          g.beginPath(); g.arc(W/2,mid,rr*Math.max(W,H)*0.62,0,6.28);
+          g.strokeStyle='rgba('+(k&1?'255,200,110':'127,227,214')+','+(0.26*(1-rr)).toFixed(3)+')'; g.lineWidth=1.4; g.stroke(); }
+        g.globalCompositeOperation='lighter';
+        trace(e,260,44,'rgba(255,200,110,0.10)'); trace(e,130,52,'rgba(127,227,214,0.16)');
+        g.shadowColor='rgba(127,227,214,0.8)'; g.shadowBlur=12; trace(e,0,60,'rgba(190,255,245,0.6)'); g.shadowBlur=0;
+        g.globalCompositeOperation='source-over';
+        if(!RM) raf=requestAnimationFrame(frame); }
+      if(RM){ requestAnimationFrame(t=>{ t0=t-500; frame(t); }); } else raf=requestAnimationFrame(frame); }
+
     // ---- ErrerLabs studio splash: play once on load, tap or key to skip ----
-    (function(){ const sp=$('splash'); if(!sp) return; let gone=false;
+    (function(){ const sp=$('splash'); if(!sp) return; let gone=false; startResonance($('splashFx'));
       function end(){ if(gone) return; gone=true; sp.classList.add('out'); setTimeout(()=>sp.remove(),700); bootTitle(); }
       function bootTitle(){ const g=$('gsplash'); if(!g) return; $('gsVer').textContent=GAME_VER;
-        g.classList.remove('hide'); requestAnimationFrame(()=>g.classList.add('go'));
+        g.classList.remove('hide'); requestAnimationFrame(()=>{ g.classList.add('go'); startHoneycomb($('gsFx')); });
         let byeDone=false; const bye=()=>{ if(byeDone) return; byeDone=true; g.classList.add('out'); setTimeout(()=>g.remove(),600); };
         g.addEventListener('pointerdown',bye); setTimeout(bye, RM?1300:2600); }
       if(RM){ sp.classList.add('go','still'); setTimeout(end,1400); }
