@@ -51,23 +51,31 @@
   .hide{ display:none !important; }
 
   /* ---------- buttons ---------- */
-  .btn{ font-family:'Bricolage Grotesque'; font-weight:700; letter-spacing:.04em; color:#241503; position:relative;
-    background:linear-gradient(180deg,var(--gold),var(--honey) 60%,var(--amber2)); border:none; border-radius:13px; cursor:pointer;
-    /* raised on a solid gold ledge + top gloss + soft drop — a real button you can press */
-    box-shadow:0 1px 0 rgba(255,255,255,.55) inset, 0 -3px 7px rgba(150,78,12,.28) inset, 0 5px 0 #a8641a, 0 10px 18px rgba(150,78,12,.4);
-    transition:box-shadow .12s, filter .18s; }
-  .btn:hover{ filter:brightness(1.06); }
-  /* the finger holds it down: the ledge shrinks so it reads as pressed into the base */
-  .btn:active{ box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 -2px 5px rgba(150,78,12,.25) inset, 0 2px 0 #a8641a, 0 4px 9px rgba(150,78,12,.4); }
-  .btn.ghost{ background:rgba(255,255,255,0.06); color:var(--text); border:1px solid var(--border); font-weight:500;
-    box-shadow:0 1px 0 rgba(255,255,255,.08) inset, 0 3px 0 rgba(0,0,0,.28), 0 6px 12px rgba(0,0,0,.3); }
-  .btn.ghost:active{ box-shadow:0 1px 0 rgba(255,255,255,.08) inset, 0 1px 0 rgba(0,0,0,.28), 0 3px 7px rgba(0,0,0,.3); }
+  /* a real physical key: a glossy honey cap on a solid ledge. Hover lifts it,
+     a press slams it down into the base with a springy little overshoot. */
+  .btn{ font-family:'Bricolage Grotesque',sans-serif; font-weight:800; letter-spacing:.01em; font-size:15px; color:#3a2205; position:relative;
+    padding:13px 28px; background:linear-gradient(176deg,#ffe7ad 0%,#ffc655 42%,#f59e2c 100%); border:none; border-radius:16px; cursor:pointer;
+    box-shadow:0 2px 0 rgba(255,255,255,.6) inset, 0 -5px 9px rgba(150,78,12,.26) inset, 0 6px 0 #a35f16, 0 13px 22px rgba(140,70,10,.42);
+    transform:translateY(0); transition:transform .14s cubic-bezier(.34,1.56,.5,1), box-shadow .14s ease, filter .18s ease; -webkit-tap-highlight-color:transparent; }
+  .btn::before{ content:''; position:absolute; left:9%; right:9%; top:5px; height:36%; border-radius:11px 11px 44% 44%;
+    background:linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,0)); pointer-events:none; }
+  .btn:hover{ filter:brightness(1.05) saturate(1.04); transform:translateY(-2px);
+    box-shadow:0 2px 0 rgba(255,255,255,.6) inset, 0 -5px 9px rgba(150,78,12,.26) inset, 0 8px 0 #a35f16, 0 18px 30px rgba(140,70,10,.5); }
+  /* the finger holds it down: the ledge collapses and the cap travels down into the base */
+  .btn:active{ transform:translateY(6px);
+    box-shadow:0 2px 0 rgba(255,255,255,.5) inset, 0 -2px 5px rgba(150,78,12,.22) inset, 0 0 0 #a35f16, 0 3px 8px rgba(140,70,10,.4); }
+  .btn.ghost{ background:linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.03)); color:var(--text); border:1px solid var(--border); font-weight:600;
+    box-shadow:0 1px 0 rgba(255,255,255,.1) inset, 0 4px 0 rgba(0,0,0,.3), 0 9px 16px rgba(0,0,0,.32); }
+  .btn.ghost::before{ opacity:.25; }
+  .btn.ghost:hover{ filter:brightness(1.08); transform:translateY(-2px); box-shadow:0 1px 0 rgba(255,255,255,.1) inset, 0 6px 0 rgba(0,0,0,.3), 0 13px 22px rgba(0,0,0,.4); }
+  .btn.ghost:active{ transform:translateY(4px); box-shadow:0 1px 0 rgba(255,255,255,.1) inset, 0 0 0 rgba(0,0,0,.3), 0 2px 6px rgba(0,0,0,.35); }
   /* Daily Challenge: its own sunrise identity, a warm pulsing sun and a shine sweep */
   #startDaily{ overflow:hidden; color:#3a1c04; font-weight:800; border:none;
     background:linear-gradient(180deg,#ffd982,#ff9e3d 58%,#ef7d2a);
     box-shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 -3px 7px rgba(180,80,15,.3) inset, 0 5px 0 #b45e18, 0 10px 18px rgba(200,90,20,.42); }
-  #startDaily:hover{ filter:brightness(1.05); }
-  #startDaily:active{ box-shadow:0 1px 0 rgba(255,255,255,.55) inset, 0 2px 0 #b45e18, 0 4px 9px rgba(200,90,20,.42); }
+  #startDaily:hover{ filter:brightness(1.05); transform:translateY(-2px);
+    box-shadow:0 1px 0 rgba(255,255,255,.6) inset, 0 -3px 7px rgba(180,80,15,.3) inset, 0 8px 0 #b45e18, 0 18px 28px rgba(200,90,20,.5); }
+  #startDaily:active{ transform:translateY(6px); box-shadow:0 1px 0 rgba(255,255,255,.55) inset, 0 0 0 #b45e18, 0 3px 8px rgba(200,90,20,.42); }
   #startDaily .dsun{ display:inline-block; animation:dsunPulse 2.4s ease-in-out infinite; }
   @keyframes dsunPulse{ 0%,100%{ transform:scale(1) rotate(0); filter:drop-shadow(0 0 4px rgba(255,225,130,.8)); }
     50%{ transform:scale(1.16) rotate(18deg); filter:drop-shadow(0 0 9px rgba(255,236,150,1)); } }
@@ -81,7 +89,8 @@
   .card.hasSave #paceRow, .card.hasSave #paceLabel{ display:none; }   /* pace is a founding choice — hide it when continuing */
   .card.hasSave #startNew{ font-size:13px; padding:9px 16px; }        /* new colony steps back to a quieter secondary */
   #startNew.danger{ background:linear-gradient(180deg,#ff9a6a,#e0592f 60%,#b83c1c); color:#2a0f06;
-    box-shadow:0 1px 0 rgba(255,255,255,.4) inset, 0 4px 0 #7c2814, 0 8px 14px rgba(150,40,15,.45); }
+    box-shadow:0 2px 0 rgba(255,255,255,.4) inset, 0 6px 0 #7c2814, 0 12px 18px rgba(150,40,15,.45); }
+  #startNew.danger:active{ transform:translateY(6px); box-shadow:0 2px 0 rgba(255,255,255,.4) inset, 0 0 0 #7c2814, 0 3px 8px rgba(150,40,15,.45); }
   .tab,.tb,.btn,.cbtn,.gift{ -webkit-tap-highlight-color:transparent; }
   /* touch-action does NOT inherit from body, so every control defaults to `auto`,
      which makes mobile browsers stall ~300ms per touch for double-tap-zoom and can
@@ -383,7 +392,7 @@
     transition:opacity .6s ease, transform .6s ease; }
   #coldopen.hatched #coLine{ opacity:1; transform:none; }
   #coLine b{ color:var(--gold); }
-  #coBtn{ margin-top:4px; }
+  #coBtn{ margin-top:8px; font-size:16px; padding:15px 34px; }
   .colink{ background:none; border:0; color:var(--gold); font:600 12px 'JetBrains Mono',monospace; letter-spacing:.03em;
     cursor:pointer; padding:4px 2px; margin:-2px 0 4px; opacity:.85; text-decoration:none; }
   .colink:hover{ opacity:1; text-decoration:underline; }
@@ -1363,7 +1372,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.28.15';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.28.16';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
