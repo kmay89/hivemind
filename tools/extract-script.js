@@ -32,7 +32,7 @@ const DIRECT_BINDINGS = [
 
 function extractGameScript(indexHtmlPath) {
   const src = fs.readFileSync(indexHtmlPath, 'utf-8');
-  const matches = [...src.matchAll(/<script>([\s\S]*?)<\/script>/g)];
+  const matches = [...src.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/g)];
   if (!matches.length) throw new Error('no <script> block found in ' + indexHtmlPath);
   // the gameplay script is the largest inline <script> block (there are no others
   // of consequence in this file, but pick the biggest defensively)

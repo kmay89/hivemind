@@ -12,8 +12,8 @@ const path = require('path');
 const indexPath = path.join(__dirname, '..', 'index.html');
 const src = fs.readFileSync(indexPath, 'utf-8');
 
-const referenced = new Set([...src.matchAll(/\$\(\s*'([a-zA-Z0-9_-]+)'\s*\)/g)].map(m => m[1]));
-const declared = new Set([...src.matchAll(/\bid="([a-zA-Z0-9_-]+)"/g)].map(m => m[1]));
+const referenced = new Set([...src.matchAll(/\$\(\s*['"]([a-zA-Z0-9_-]+)['"]\s*\)/g)].map(m => m[1]));
+const declared = new Set([...src.matchAll(/\bid=['"]([a-zA-Z0-9_-]+)['"]/g)].map(m => m[1]));
 
 const missing = [...referenced].filter(id => !declared.has(id)).sort();
 

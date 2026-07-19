@@ -99,14 +99,17 @@ function simulateYears(G, years) {
     if (G.over) break;
     // stepDay reads/writes the closure's own `day` — advance it the same way
     // frame() does (before stepDay, not after) so season/temperature/day-length
-    // math sees the day this tick is actually simulating.
+    // math sees the day this tick is actually simulating. Crucially, the
+    // year-boundary reset happens AFTER stepDay, not before: resetting G.day to
+    // 0 first would simulate the year's last fractional step (e.g. 359.8->360.0)
+    // with day-0/spring parameters instead of day-360/deep-winter ones.
     G.day += STEP; day += STEP;
-    if (G.day >= G.YEAR) { G.day = 0; G.year += 1; G.drawSeason(); }
     autopilot(G, day);
     // offline=true would mask exactly the failure this harness exists to catch:
     // stepDay() skips the population-collapse gameOver() check when offline (it
     // silently clamps P to 1 instead, for the "you were away" catch-up path).
     G.stepDay(STEP, false);
+    if (G.day >= G.YEAR) { G.day = 0; G.year += 1; G.drawSeason(); }
     if (Math.floor(day) % 30 === 0) {
       series.push({ day: Math.round(day), P: Math.round(G.P), honey: Math.round(G.honeyCellsStored()) });
     }
