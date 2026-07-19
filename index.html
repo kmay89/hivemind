@@ -1323,7 +1323,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.28.12';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.28.13';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1735,6 +1735,7 @@
     let onboard=false, coachStep=0, brushedBrood=0, flaggedExpand=0, paintedHoney=0, forageTouched=false;
     let queenAge=1, hornet=null, hornetCD=18+Math.random()*22, shake=0, gt=0, hitstop=0;
     let yearHist=[], histT=2.7, drips=[], corpses=[], danceMode=false, hints=true, inspectMode=false, heatView=false;
+    let ringFx=null;   // ring-completion celebration: {t, ring} — an expanding golden sweep
     let danceVotes=null;   // per-patch consensus, eased toward each patch's true worth
     // every colony size sounds different — say so when they get there
     const POPM=[
@@ -2731,7 +2732,8 @@
         let b=0,h=0; for(const[c,r]of neighbors(s.c,s.r)){const nb=cells[idx(c,r)]; if(nb.zone==='brood')b++; else if(nb.zone==='honey')h++;}
         s.zone=(b>h && cellDist(s.c,s.r)<2.2)?'brood':'honey';
         const bn=cells.reduce((a,cc)=>a+(cc.built?1:0),0);
-        if(CHEX.has(bn)){ const rr=CHEXRING[bn]; toast('Ring '+rr+' complete \u2014 '+bn+' cells. The comb grows in the centred hexagonal numbers: 1, 7, 19, 37\u2026','ring'+bn); burst(hiveCx,hiveCy,10); }
+        if(CHEX.has(bn)){ const rr=CHEXRING[bn]; toast('Ring '+rr+' complete \u2014 '+bn+' cells. The comb grows in the centred hexagonal numbers: 1, 7, 19, 37\u2026','ring'+bn);
+          ringFx={t:0, ring:rr}; burst(hiveCx,hiveCy,22); fanfare(); shake=Math.max(shake,0.25); }
         else toast('Fresh comb drawn.','built1'); }
     }
     function stepDay(dd, offline){
@@ -3054,6 +3056,15 @@
         ctx.fillStyle=sg; ctx.fillRect(0,0,W,Hh); }
       drawBee(queen.x,queen.y,Math.atan2(queen.ty-queen.y||0.01,queen.tx-queen.x||0.01),null,true,queen.wob,'walk');
       drawScout(); drawHornet(); drawParts(lastDt);
+      // ring-completion "line clear": a golden sweep rides out over the new ring, the
+      // whole nest brightens for a beat, then it fades — the satisfying bang of progress
+      if(ringFx){ ringFx.t+=lastDt; const p=Math.min(1,ringFx.t/0.9), ease=1-(1-p)*(1-p);
+        ctx.save(); ctx.globalCompositeOperation='lighter';
+        const flash=(1-p)*0.5; if(flash>0.01 && !RM){ ctx.fillStyle='rgba(255,206,110,'+(flash*0.4).toFixed(3)+')'; ctx.fillRect(0,0,W,Hh); }
+        const rad=size*SQ3*(ringFx.ring+0.4)*(0.2+ease*1.15), th=size*(1.4-p);
+        ctx.strokeStyle='rgba(255,224,150,'+((1-p)*0.9).toFixed(3)+')'; ctx.lineWidth=Math.max(1,th);
+        ctx.beginPath(); for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-30), px=hiveCx+rad*Math.cos(a), py=hiveCy+rad*Math.sin(a); i?ctx.lineTo(px,py):ctx.moveTo(px,py);} ctx.closePath(); ctx.stroke();
+        ctx.restore(); if(ringFx.t>0.95) ringFx=null; }
       // guidance: with hints on, the comb shows where the active brush CAN go
       // (faint rim) and where it's WISE to go (breathing glow) — chess for bees
       if(hints && started && !over && view==='hive' && !inspectMode){
@@ -3073,6 +3084,21 @@
         else okc=hoveredCell.built?(brush==='brood'?'rgba(150,200,255,0.95)':'rgba(247,200,90,0.95)'):'rgba(255,120,90,0.5)';
         hexPath(x,y,s2*1.02); ctx.strokeStyle=okc; ctx.lineWidth=2; ctx.stroke(); }
       if(winter && honeyCellsStored()<28){ const a=(28-honeyCellsStored())/28; let v=ctx.createRadialGradient(W/2,Hh/2,Math.min(W,Hh)*0.2,W/2,Hh/2,Math.max(W,Hh)*0.6); v.addColorStop(0,'rgba(255,60,40,0)'); v.addColorStop(1,'rgba(255,50,35,'+(0.4*a).toFixed(3)+')'); ctx.fillStyle=v; ctx.fillRect(0,0,W,Hh); }
+      // ALIVENESS — hunger: as the pantry runs dry the warmth drains out of the comb,
+      // colour leaching toward grey and a cold blue creeping in from the edges
+      if(started&&!over&&!winter){ const hcs=honeyCellsStored();
+        let hunger=starveT>0?1:(hcs<6?(6-hcs)/6*0.7:0);
+        if(hunger>0.02){ ctx.save(); ctx.globalCompositeOperation='saturation'; ctx.globalAlpha=Math.min(0.85,hunger); ctx.fillStyle='#808080'; ctx.fillRect(0,0,W,Hh); ctx.restore();
+          let hv=ctx.createRadialGradient(W/2,Hh*0.5,Math.min(W,Hh)*0.24,W/2,Hh*0.5,Math.max(W,Hh)*0.62);
+          hv.addColorStop(0,'rgba(60,82,124,0)'); hv.addColorStop(1,'rgba(48,68,110,'+(0.34*hunger).toFixed(3)+')'); ctx.fillStyle=hv; ctx.fillRect(0,0,W,Hh); } }
+      // ALIVENESS — bearding: when swarm pressure climbs, idle bees spill out and hang
+      // in a living beard below the comb. You SEE the colony deciding to leave before it does.
+      if(started&&!over&&!winter&&swarmP>0.5){ const beard=Math.round((swarmP-0.5)*2*13);
+        let maxY=hiveCy; for(const c of cells){ if(c.built){ const cy=oy+size*1.5*c.r; if(cy>maxY)maxY=cy; } }
+        const by0=maxY+size*0.7;
+        for(let i=0;i<beard;i++){ const t=i/Math.max(1,beard-1), spread=size*3.0*(1-t*0.45);
+          const bxx=hiveCx+Math.sin(i*2.4)*spread*(1-t*0.35), byy=by0+t*size*4.2+Math.sin(gt*1.5+i)*size*0.14;
+          drawBee(bxx,byy,1.5708+Math.sin(gt*0.8+i)*0.22,null,false,i*1.7+gt,'walk'); } }
     }
     function drawBee(x,y,ang,carry,isQueen,wob,mode){ const s=size*(isQueen?0.5:0.32); mode=mode||'fly';
       const heavy=carry==='nectar', flying=mode==='fly'||mode==='fan';
