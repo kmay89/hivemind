@@ -1515,6 +1515,8 @@
       scrim.addColorStop(0,'rgba(8,5,2,0.60)'); scrim.addColorStop(0.55,'rgba(8,5,2,0.26)'); scrim.addColorStop(1,'rgba(8,5,2,0)');
       const vg=g.createRadialGradient(cx,cy,Math.min(W,H)*0.3,cx,cy,Math.max(W,H)*0.8);   // vignette
       vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.5)');
+      const spk=g.createRadialGradient(cx,cy,0,cx,cy,R*3.4);   // spark at the nest's heart — pulse carried by globalAlpha
+      spk.addColorStop(0,'rgba(255,246,214,1)'); spk.addColorStop(1,'rgba(255,200,110,0)');
       let glowG=null; function glow(){ if(!glowG){ glowG=g.createRadialGradient(0,0,0,0,0,1);   // unit glow, reused via scale + globalAlpha
           glowG.addColorStop(0,'rgba('+L.glow+',0.26)'); glowG.addColorStop(1,'rgba('+L.glow+',0)'); } return glowG; }
       const V=maxD/2600;   // the ignition sweeps out over ~2.6s — a slow, deliberate bloom
@@ -1537,11 +1539,10 @@
             g.save(); g.translate(cl.x,cl.y); const gr=R*1.5; g.scale(gr,gr); g.fillStyle=glow(); g.beginPath(); g.arc(0,0,1,0,6.283); g.fill(); g.restore(); }
           const edge=1-Math.min(1,Math.abs(front-cl.d)/(R*2.2));           // the travelling crest ring
           if(edge>0){ g.globalAlpha=0.62*edge*edge; g.fillStyle='rgba(255,247,206,1)'; hexP(cl.x,cl.y,R*0.94); g.fill(); } }
-        // a soft spark pulsing at the nest's heart
-        const pul=0.5+0.5*Math.sin(e*0.005); let spk=g.createRadialGradient(cx,cy,0,cx,cy,R*3.4);
-        spk.addColorStop(0,'rgba(255,246,214,'+(0.34*pul).toFixed(3)+')'); spk.addColorStop(1,'rgba(255,200,110,0)');
-        g.globalAlpha=1; g.fillStyle=spk; g.fillRect(cx-R*3.4,cy-R*3.4,R*6.8,R*6.8);
-        g.globalCompositeOperation='source-over';
+        // a soft spark pulsing at the nest's heart — cached gradient, pulse via globalAlpha
+        const pul=0.5+0.5*Math.sin(e*0.005);
+        g.globalAlpha=0.34*pul; g.fillStyle=spk; g.fillRect(cx-R*3.4,cy-R*3.4,R*6.8,R*6.8);
+        g.globalAlpha=1; g.globalCompositeOperation='source-over';
         g.fillStyle=scrim; g.fillRect(0,0,W,H);   // wordmark scrim, then vignette
         g.fillStyle=vg; g.fillRect(0,0,W,H);
         if(!RM) raf=requestAnimationFrame(frame); }
