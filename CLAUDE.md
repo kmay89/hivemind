@@ -94,8 +94,16 @@ numbers drift as the file changes; re-grep `// =====` banners if they look off)
   cache ("keeps 180 bees + a full pantry at 60fps on a phone"). Any canvas
   gradient built inside a per-frame draw call should go through this, not be
   constructed fresh every frame.
-- `resetRun(kind)` — the one place a run/colony resets its per-run state.
-  Don't hand-write a fifth reset block.
+- `resetColonyIdentity()` — resets the *identity* slice of per-run state
+  (`roster`/`corpses`/`mix`/`coldSnap`) and is called from all three places a
+  colony restarts (`seedAndPlay`, `seedDaily`, `ovRestart`). It is **not** a
+  general per-run reset — each of those three call sites still hand-resets
+  its own copy of `P`/`honeyU`/`day`/`year`/`mite`/etc. next to the call,
+  so a new scalar (e.g. `mite`, added by the varroa mechanic) must be added
+  to all three by hand or it silently carries over from the previous colony.
+  If a piece of state needs the guarantee "reset everywhere identity is,"
+  fold it into `resetColonyIdentity()` itself instead of relying on the
+  three call sites staying in sync.
 - `M{}` — the stat-modifier reducer over `GIFTS`(owned) + `QUEENS`(mods).
   A gift or queen mod that should affect gameplay must be wired through here
   (additive *or* multiplicative, see the function's own comment), not read
@@ -113,14 +121,17 @@ level is probably section-local):
   fields listed explicitly in `serialize()`/`deserialize()` (3385-3411) — that
   pair is the closest thing to a state schema, so when in doubt, check what
   they read/write.
-- Anything a run-reset touches (`resetRun(kind)`) is per-run state and must
-  be included there, in `serialize`/`deserialize`, and in any save-shape
-  version bump.
+- Anything touched by `resetColonyIdentity()` or hand-reset alongside its
+  three call sites (`seedAndPlay`, `seedDaily`, `ovRestart`) is per-run state
+  and must be included there, in `serialize`/`deserialize`, and in any
+  save-shape version bump.
 
-When adding a new piece of per-run state: add it to `resetRun()`, to
-`serialize()`/`deserialize()`, bump the save version, and confirm it's reset
-correctly on every reset path (new colony, new year, daily challenge, colony
-death) — don't assume one reset path implies the others.
+When adding a new piece of per-run state: reset it at all three colony-start
+call sites (or fold it into `resetColonyIdentity()` if it should always
+travel with roster/corpses/mix), add it to `serialize()`/`deserialize()`,
+bump the save version if the field isn't safely optional, and confirm it's
+reset correctly on every reset path (new colony, new year, daily challenge,
+colony death) — don't assume one reset path implies the others.
 
 ## Content tables — add a row, not a branch
 
@@ -163,7 +174,11 @@ row, that's a sign the table needs a field instead.
   A faithful generic reducer needs to encode that heterogeneity (a
   `{stat,mult|delta|base}` effect shape per gift, plus a stat→kind table) to
   avoid silently changing balance — real work, not a mechanical refactor.
-  What *is* fixed: the one outright bypass (`QL().swarm` used to skip `M{}`
-  entirely; it's now `M.swarm()`). If you take this on, do it as its own
+  What *is* fixed: the two outright bypasses found so far (`QL().swarm` used
+  to skip `M{}` entirely, now `M.swarm()`; the varroa mechanic's `hygienic`
+  gift read `owned.hygienic` directly in `stepDay`, now `M.mite()`). New
+  gifts/mods have kept landing with a direct `owned.*`/`QL()` read instead of
+  going through `M{}` — watch for it in review, it's an easy thing to miss.
+  If you take the full generic-reducer refactor on, do it as its own
   pass and diff `node tools/economy-sim.js --years=3 --verbose` before/after
   across every queen+gift combo, not just a syntax check.
