@@ -1520,7 +1520,7 @@
       // render each layer once into its own offscreen canvas (device-pixel sized, same
       // transform as the main context so we draw in CSS px and blit 1:1)
       function layer(paint){ const o=document.createElement('canvas'); o.width=cv.width; o.height=cv.height;
-        const og=o.getContext('2d'); og.setTransform(dpr,0,0,dpr,0,0); paint(og); return o; }
+        const og=o.getContext('2d'); if(og){ og.setTransform(dpr,0,0,dpr,0,0); paint(og); } return o; }   // null under memory pressure → blank layer, CSS bg still shows the title
       const EMPTY=layer(x=>paintComb(x,false)), FULL=layer(x=>paintComb(x,true));
       const OVERLAY=layer(x=>{ const scrim=x.createRadialGradient(cx,H*0.5,0,cx,H*0.5,W*0.66);   // keeps HIVEMIND crisp
         scrim.addColorStop(0,'rgba(8,5,2,0.60)'); scrim.addColorStop(0.55,'rgba(8,5,2,0.26)'); scrim.addColorStop(1,'rgba(8,5,2,0)');
