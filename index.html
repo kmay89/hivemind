@@ -1323,7 +1323,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.28.11';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.28.12';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2883,16 +2883,55 @@
       const r=Math.round(A[1]+(B[1]-A[1])*t), g=Math.round(A[2]+(B[2]-A[2])*t), b=Math.round(A[3]+(B[3]-A[3])*t);
       return 'rgba('+r+','+g+','+b+','+a.toFixed(3)+')'; }
     let heatBands=null;
+    // ---- liquid stores: honey/nectar/pollen rendered as backlit, glossy fills ----
+    // each cell gets a vertical body gradient (bright at the meniscus, deep at the
+    // floor), a left-lit subsurface sheen, a shimmering surface band, and — for the
+    // sugars — a wet specular catch. A later additive pass makes them actually glow.
+    const LIQ={
+      honey: { lo:'#8f5413', mid:'#f0a828', hi:'#ffd873', spec:'rgba(255,249,224,', glow:'255,178,58', gloss:1.0 },
+      nectar:{ lo:'#a1741d', mid:'#e6c04a', hi:'#f9e79c', spec:'rgba(255,253,228,', glow:'242,206,96', gloss:0.7 },
+      pollen:{ lo:'#a04a0c', mid:'#e77f26', hi:'#ffb457', spec:'rgba(255,236,196,', glow:'236,138,48', gloss:0.22 },
+    };
+    // gradient cache — canvas gradients are costly to build, so we make them once in
+    // LOCAL (cell-centred) space and reposition with translate. Cleared when the comb
+    // rescales. This keeps 180 bees + a full pantry at 60fps on a phone.
+    let _grad={}, _gradS=-1;
+    function gradFor(key, make){ if(_gradS!==size){ _grad={}; _gradS=size; } let g=_grad[key]; if(!g){ g=make(); _grad[key]=g; } return g; }
+    // liquid stores drawn without a clip: one hex fill whose vertical gradient is
+    // transparent above the meniscus, so honey visibly "rises" in the cell.
+    function fillCellLiquid(x,y,s2,kind,frac){
+      const L=LIQ[kind]; const fb=Math.round(frac*16);   // bucket the fill height so gradients cache
+      const surfLocal=s2*0.85-s2*1.7*(fb/16), surfT=Math.max(0,Math.min(0.98,(surfLocal+s2)/(2*s2)));
+      const g=gradFor(kind+fb,()=>{ const gr=ctx.createLinearGradient(0,-s2,0,s2);
+        if(surfT>0.03) gr.addColorStop(Math.max(0,surfT-0.03),'rgba(255,255,255,0)');
+        gr.addColorStop(surfT,L.hi); gr.addColorStop(Math.min(1,surfT+0.06),L.mid); gr.addColorStop(Math.min(1,surfT+0.34),L.mid); gr.addColorStop(1,L.lo); return gr; });
+      ctx.save(); ctx.translate(x,y);
+      hexPath(0,0,s2*0.94); ctx.fillStyle=g; ctx.fill();
+      if(frac>0.02){ const sh=0.5+0.5*Math.sin(gt*1.6+x*0.05+y*0.07);   // shimmering meniscus
+        ctx.fillStyle=L.spec+(0.20+0.18*sh*L.gloss).toFixed(3)+')';
+        ctx.beginPath(); ctx.ellipse(0,surfLocal,s2*0.8,Math.max(0.8,s2*0.11),0,0,6.28); ctx.fill();
+        if(L.gloss>0.4){ ctx.fillStyle=L.spec+(0.42*L.gloss).toFixed(3)+')';   // wet specular catch
+          ctx.beginPath(); ctx.ellipse(-s2*0.3,surfLocal+s2*0.2,s2*0.2,s2*0.08,-0.4,0,6.28); ctx.fill(); } }
+      if(kind==='pollen'){ ctx.fillStyle='rgba(120,58,8,0.16)';   // packed grains, matte not wet
+        for(let k=0;k<5;k++){ const px=-s2*0.5+((k*53)%100)/100*s2, py=surfLocal+s2*0.3+((k*37)%100)/100*s2*0.9;
+          ctx.beginPath(); ctx.arc(px,py,s2*0.055,0,6.28); ctx.fill(); } }
+      ctx.restore();
+    }
     function drawInside(){
       const T=lerpM(tempM,day)+difficulty().temp+M.temp(), winter=T<WIN_TEMP;
       if(heatView){ if(!heatBands||heatBands.length!==cells.length) heatBands=new Int8Array(cells.length);
         for(let i=0;i<cells.length;i++){ const c0=cells[i];
           heatBands[i]=c0.built?Math.max(0,Math.min(4,Math.floor(c0.heat*5))):-1; } }
-      let g=ctx.createLinearGradient(0,0,0,Hh); g.addColorStop(0,winter?'#10131c':'#1a1305'); g.addColorStop(1,winter?'#0b0d14':'#0f0b05'); ctx.fillStyle=g; ctx.fillRect(0,0,W,Hh);
+      let g=ctx.createLinearGradient(0,0,0,Hh); g.addColorStop(0,winter?'#10131c':'#1c1507'); g.addColorStop(1,winter?'#0b0d14':'#0c0803'); ctx.fillStyle=g; ctx.fillRect(0,0,W,Hh);
+      // a warm hearth-glow pools behind the comb — the hive is lit from within
+      if(!winter){ const wr=Math.max(W,Hh)*0.62;
+        let wg=ctx.createRadialGradient(hiveCx,hiveCy,size,hiveCx,hiveCy,wr);
+        wg.addColorStop(0,'rgba(120,72,20,0.34)'); wg.addColorStop(0.5,'rgba(80,48,14,0.14)'); wg.addColorStop(1,'rgba(40,24,6,0)');
+        ctx.fillStyle=wg; ctx.fillRect(0,0,W,Hh); }
       // on a large display the surround falls away, so the comb reads as the subject
-      if(W>1100||Hh>860){ const vr=Math.max(W,Hh)*0.8;
-        let vg=ctx.createRadialGradient(hiveCx,hiveCy,Math.min(W,Hh)*0.2,hiveCx,hiveCy,vr);
-        vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.5)');
+      if(W>1100||Hh>860){ const vr=Math.max(W,Hh)*0.85;
+        let vg=ctx.createRadialGradient(hiveCx,hiveCy,Math.min(W,Hh)*0.22,hiveCx,hiveCy,vr);
+        vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.58)');
         ctx.fillStyle=vg; ctx.fillRect(0,0,W,Hh); }
       if(!winter){ // a shaft of light from the hive entrance, with drifting dust motes
         const lx=Math.min(W-size*1.5, hiveCx+size*9); let lg=ctx.createRadialGradient(lx,0,0,lx,0,Hh*0.95);
@@ -2915,7 +2954,14 @@
             if(waiting&&ctx.setLineDash){ ctx.setLineDash([3,2.5]); hexPath(x,y,s2); ctx.stroke(); ctx.setLineDash([]); }
             else { hexPath(x,y,s2); ctx.stroke(); } }
           else if(neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built)){ hexPath(x,y,s2*0.96); ctx.strokeStyle=COL.unbuilt; ctx.lineWidth=1; ctx.stroke(); } continue; }
-        hexPath(x,y,s2); ctx.fillStyle=COL.wallEmpty; ctx.fill();
+        // an empty wax cell is a little cup: a shaded floor (from the cached radial),
+        // its warm rim and bevel added below — all repositioned with translate
+        hexPath(x,y,s2);
+        if(!heatView){ ctx.save(); ctx.translate(x,y);
+          ctx.fillStyle=gradFor('cup',()=>{ let cg=ctx.createRadialGradient(-s2*0.22,-s2*0.28,s2*0.1,0,0,s2*1.05);
+            cg.addColorStop(0,'#4a3719'); cg.addColorStop(0.6,COL.wallEmpty); cg.addColorStop(1,'#241906'); return cg; });
+          hexPath(0,0,s2); ctx.fill(); ctx.restore(); hexPath(x,y,s2); }
+        else { ctx.fillStyle=COL.wallEmpty; ctx.fill(); }
         if(cell.zone==='brood'){ ctx.fillStyle=COL.broodZone; ctx.fill(); } else if(cell.zone==='honey'){ ctx.fillStyle=COL.honeyZone; ctx.fill(); }
         const hw=cell.heat-AMB(T);
         if(heatView){ const h=Math.max(0,Math.min(1,cell.heat));
@@ -2929,30 +2975,49 @@
         else if(hw>0.06){ ctx.fillStyle='rgba(255,146,54,'+Math.min(0.34,hw*0.42).toFixed(3)+')'; ctx.fill(); }
         ctx.strokeStyle=COL.wallRim; ctx.lineWidth=1; ctx.stroke();
         if(!heatView){
-          // hand-built wax: a stable per-cell tone and a soft emboss so the comb
-          // reads as sculpted rather than printed — light falls from the upper-left
+          // hand-built wax: a stable per-cell tone and a raised emboss so the comb
+          // reads as sculpted relief rather than printed — light falls from upper-left
           const tn=((cell.c*29+cell.r*53)%7)/7;
-          ctx.fillStyle='rgba(255,208,138,'+(0.010+tn*0.03).toFixed(3)+')'; ctx.fill();
-          const bv=s2*0.055;
-          ctx.lineWidth=1; ctx.strokeStyle='rgba(255,236,178,0.13)'; hexPath(x-bv,y-bv,s2*0.9); ctx.stroke();
-          ctx.strokeStyle='rgba(38,24,7,0.24)'; hexPath(x+bv,y+bv,s2*0.9); ctx.stroke();
+          ctx.fillStyle='rgba(255,210,140,'+(0.012+tn*0.03).toFixed(3)+')'; ctx.fill();
+          const bv=s2*0.075;
+          ctx.lineWidth=1.4; ctx.strokeStyle='rgba(255,240,190,0.28)'; hexPath(x-bv,y-bv,s2*0.9); ctx.stroke();
+          ctx.lineWidth=1.4; ctx.strokeStyle='rgba(28,17,3,0.42)'; hexPath(x+bv,y+bv,s2*0.9); ctx.stroke();
         }
         if(cell.brood){ if(heatView) ctx.globalAlpha=0.25; const st=cell.brood.stage;
-          if(st==='egg'){ ctx.fillStyle=COL.egg; ctx.beginPath(); ctx.ellipse(x,y,s2*0.10,s2*0.22,0.5,0,6.28); ctx.fill(); }
-          else if(st==='larva'){ const gr=0.2+0.7*(cell.brood.t/LAR_D); ctx.fillStyle=COL.larva; ctx.beginPath(); ctx.arc(x,y,s2*0.34*gr+s2*0.12,0,6.28); ctx.fill(); ctx.strokeStyle='rgba(180,140,80,0.5)'; ctx.lineWidth=1; ctx.stroke(); }
-          else { hexPath(x,y,s2*0.86); ctx.fillStyle=COL.pupa; ctx.fill(); ctx.fillStyle='rgba(120,90,50,0.35)'; ctx.beginPath(); ctx.arc(x,y,s2*0.4,0,6.28); ctx.fill(); }
+          if(st==='egg'){ ctx.fillStyle=COL.egg; ctx.beginPath(); ctx.ellipse(x,y,s2*0.10,s2*0.22,0.5,0,6.28); ctx.fill();
+            ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.beginPath(); ctx.ellipse(x-s2*0.03,y-s2*0.06,s2*0.04,s2*0.09,0.5,0,6.28); ctx.fill(); }
+          else if(st==='larva'){ const gr=0.2+0.7*(cell.brood.t/LAR_D), rr=s2*0.34*gr+s2*0.12;
+            let lg=ctx.createRadialGradient(x-rr*0.35,y-rr*0.4,rr*0.1,x,y,rr); lg.addColorStop(0,'#fdf3d8'); lg.addColorStop(0.7,COL.larva); lg.addColorStop(1,'#d8bd86');
+            ctx.fillStyle=lg; ctx.beginPath(); ctx.arc(x,y,rr,0,6.28); ctx.fill();
+            ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.beginPath(); ctx.ellipse(x-rr*0.3,y-rr*0.36,rr*0.28,rr*0.18,-0.5,0,6.28); ctx.fill(); }
+          else { // capped brood: a warm domed wax cap with a soft top-light
+            let pg=ctx.createRadialGradient(x-s2*0.22,y-s2*0.26,s2*0.1,x,y,s2*0.82); pg.addColorStop(0,'#e3c58c'); pg.addColorStop(0.65,COL.pupa); pg.addColorStop(1,'#9c8049');
+            hexPath(x,y,s2*0.86); ctx.fillStyle=pg; ctx.fill();
+            ctx.fillStyle='rgba(255,246,222,0.30)'; ctx.beginPath(); ctx.ellipse(x-s2*0.16,y-s2*0.2,s2*0.3,s2*0.2,-0.5,0,6.28); ctx.fill(); }
           ctx.globalAlpha=1; } }
       const sorted=cells.filter(c=>c.built&&c.zone==='honey').sort((a,b)=>cellDist(a.c,a.r)-cellDist(b.c,b.r));
       // under the heat lens the stores ghost out — temperature owns the color
       if(heatView) ctx.globalAlpha=0.16;
-      let pol=pollenU,nec=nectarU,hon=honeyU;
+      let pol=pollenU,nec=nectarU,hon=honeyU; const glowPts=[];
       for(const cell of sorted){ let kind=null,frac=0;
         if(pol>0){kind='pollen';frac=Math.min(1,pol/HC);pol-=HC;} else if(nec>0){kind='nectar';frac=Math.min(1,nec/HC);nec-=HC;} else if(hon>0){kind='honey';frac=Math.min(1,hon/HC);hon-=HC;} else break;
-        const {x,y}=cellCenter(cell.c,cell.r), col=kind==='pollen'?COL.pollen:kind==='nectar'?COL.nectar:COL.honey;
-        ctx.save(); hexPath(x,y,s2*0.92); ctx.clip(); ctx.fillStyle=col; const fh=s2*1.7*frac; ctx.fillRect(x-s2,y+s2*0.85-fh,s2*2,fh+0.5);
-        if(kind==='honey'){ ctx.fillStyle='rgba(255,255,255,'+(0.14+0.08*Math.sin(gt*1.6+x*0.05+y*0.07)).toFixed(3)+')'; ctx.fillRect(x-s2,y+s2*0.85-fh,s2*2,Math.min(fh,s2*0.3)); } ctx.restore();
-        hexPath(x,y,s2); ctx.strokeStyle=COL.wallRim; ctx.lineWidth=1; ctx.stroke(); }
+        const {x,y}=cellCenter(cell.c,cell.r);
+        fillCellLiquid(x,y,s2,kind,frac);
+        // capped stores catch the light: a thin wax cap glint over a near-full cell
+        if(frac>0.6 && kind!=='pollen'){ ctx.save(); hexPath(x,y,s2*0.94); ctx.clip();
+          ctx.fillStyle='rgba(255,240,205,0.10)'; ctx.beginPath(); ctx.ellipse(x,y-s2*0.1,s2*0.7,s2*0.5,0,0,6.28); ctx.fill(); ctx.restore(); }
+        hexPath(x,y,s2); ctx.strokeStyle=COL.wallRim; ctx.lineWidth=1; ctx.stroke();
+        if(!heatView && frac>0.12) glowPts.push({x,y,k:kind,a:Math.min(1,frac)*(kind==='pollen'?0.5:1)});
+      }
       ctx.globalAlpha=1;
+      // additive bloom: the filled comb quietly emits light, so honey reads as lit from
+      // within. One white unit-glow per store colour, tinted + faded via globalAlpha.
+      if(glowPts.length && !heatView){ ctx.save(); ctx.globalCompositeOperation='lighter';
+        const uG=k=>gradFor('glow'+k,()=>{ let g=ctx.createRadialGradient(0,0,0,0,0,s2*1.5);
+          g.addColorStop(0,'rgba('+LIQ[k].glow+',0.13)'); g.addColorStop(1,'rgba('+LIQ[k].glow+',0)'); return g; });
+        for(const p of glowPts){ ctx.globalAlpha=p.a; ctx.fillStyle=uG(p.k);
+          ctx.save(); ctx.translate(p.x,p.y); ctx.fillRect(-s2*1.5,-s2*1.5,s2*3,s2*3); ctx.restore(); }
+        ctx.globalAlpha=1; ctx.restore(); }
       const dA=danceAngle(), dcx=hiveCx, dcy=hiveCy-size*4, dco=Math.cos(dA), dsn=Math.sin(dA);
       for(const b of bees){ if(b.state==='waggle'){ ctx.strokeStyle='rgba(255,210,120,0.35)'; ctx.lineWidth=1.5; ctx.beginPath(); let first=true; for(let t=0;t<6.3;t+=0.3){ const u=Math.sin(t)*size*2.2, v=Math.sin(t*2)*size*1.1; const xx=dcx+u*dco-v*dsn, yy=dcy+u*dsn+v*dco; if(first){ctx.moveTo(xx,yy);first=false;} else ctx.lineTo(xx,yy);} ctx.stroke(); }
         let bx=b.x, by=b.y;
@@ -3010,45 +3075,62 @@
       if(winter && honeyCellsStored()<28){ const a=(28-honeyCellsStored())/28; let v=ctx.createRadialGradient(W/2,Hh/2,Math.min(W,Hh)*0.2,W/2,Hh/2,Math.max(W,Hh)*0.6); v.addColorStop(0,'rgba(255,60,40,0)'); v.addColorStop(1,'rgba(255,50,35,'+(0.4*a).toFixed(3)+')'); ctx.fillStyle=v; ctx.fillRect(0,0,W,Hh); }
     }
     function drawBee(x,y,ang,carry,isQueen,wob,mode){ const s=size*(isQueen?0.5:0.32); mode=mode||'fly';
-      ctx.save(); ctx.translate(x,y); ctx.rotate(ang+Math.sin(wob||0)*(mode==='walk'?0.05:0.12));
       const heavy=carry==='nectar', flying=mode==='fly'||mode==='fan';
+      ctx.save(); ctx.translate(x,y);
+      // a soft contact shadow grounds her — crisp and close when walking, low and
+      // diffuse when airborne — so bees sit in the world instead of floating on it
+      if(!isQueen){ const sy=flying?s*1.6:s*0.7, sx=flying?s*0.9:s*1.1, sa=flying?0.14:0.26;
+        ctx.fillStyle='rgba(15,8,0,'+sa+')'; ctx.beginPath(); ctx.ellipse(s*0.1,sy,sx,sx*0.34,0,0,6.28); ctx.fill(); }
+      ctx.rotate(ang+Math.sin(wob||0)*(mode==='walk'?0.05:0.12));
       if(!flying){ // wings folded neatly along the back
         ctx.fillStyle='rgba(215,230,245,0.30)';
         ctx.beginPath(); ctx.ellipse(-s*0.5,-s*0.13,s*0.75,s*0.16,0.06,0,6.28); ctx.fill();
         ctx.beginPath(); ctx.ellipse(-s*0.5, s*0.13,s*0.75,s*0.16,-0.06,0,6.28); ctx.fill(); }
-      // abdomen — the striped engine room, tapered, heavier when the honey stomach is full
+      // abdomen — the striped engine room, rounded by a top-lit gradient, heavier when full
       const ab=heavy?s*1.02:s*0.92, ay=(isQueen?s*0.42:s*0.55)*(heavy?1.12:1);
-      ctx.fillStyle=isQueen?'#c98f26':(heavy?'#e8b23a':'#e2a52e');
+      ctx.fillStyle=gradFor('bAbd'+(isQueen?'q':'')+(heavy?'h':''),()=>{ const g=ctx.createLinearGradient(0,-ay,0,ay);
+        g.addColorStop(0,isQueen?'#e6bd54':(heavy?'#ffcb5f':'#f6bd46')); g.addColorStop(0.52,isQueen?'#c98f26':(heavy?'#e6b038':'#dd9f2b')); g.addColorStop(1,isQueen?'#9a6d1b':'#a9781d'); return g; });
       ctx.beginPath(); ctx.ellipse(-s*0.55,0,ab,ay,0,0,6.28); ctx.fill();
       if(isQueen){ // her abdomen runs long and elegant, stripes worn faint
         ctx.fillStyle='#c98f26'; ctx.beginPath(); ctx.ellipse(-s*1.45,0,s*0.6,s*0.3,0,0,6.28); ctx.fill(); }
-      ctx.fillStyle=isQueen?'rgba(30,20,8,0.35)':'rgba(30,20,8,0.85)';
+      ctx.fillStyle=isQueen?'rgba(30,20,8,0.35)':'rgba(28,18,6,0.82)';
       ctx.save(); ctx.beginPath(); ctx.ellipse(-s*0.55,0,ab,ay+0.5,0,0,6.28); ctx.clip();
       for(let i=0;i<(isQueen?3:4);i++){ const sx=-s*(0.16+i*0.36); ctx.fillRect(sx-s*0.08,-s,s*0.14,s*2); }
+      // a bright rim runs along her top edge, catching the hive glow
+      ctx.strokeStyle='rgba(255,242,205,0.45)'; ctx.lineWidth=Math.max(0.5,s*0.1);
+      ctx.beginPath(); ctx.ellipse(-s*0.55,-s*0.05,ab*0.92,ay*0.92,0,3.34,6.08); ctx.stroke();
       ctx.restore();
-      if(heavy){ ctx.fillStyle='rgba(247,183,51,0.4)'; ctx.beginPath(); ctx.ellipse(-s*0.95,0,s*0.4,s*0.3,0,0,6.28); ctx.fill(); }
-      // thorax — the fuzzy motor between the wings
-      ctx.fillStyle=isQueen?'#e0ab3c':'#d9a944'; ctx.beginPath(); ctx.arc(s*0.28,0,s*0.44,0,6.28); ctx.fill();
-      ctx.fillStyle='rgba(255,230,170,0.32)'; ctx.beginPath(); ctx.arc(s*0.28,-s*0.14,s*0.26,0,6.28); ctx.fill();
+      if(heavy){ ctx.fillStyle='rgba(255,201,74,0.45)'; ctx.beginPath(); ctx.ellipse(-s*0.95,0,s*0.42,s*0.32,0,0,6.28); ctx.fill(); }
+      // thorax — the fuzzy motor; a soft fur fringe, then a radial-lit dome
+      ctx.fillStyle='rgba(236,206,150,0.22)'; ctx.beginPath(); ctx.arc(s*0.28,0,s*0.56,0,6.28); ctx.fill();
+      ctx.fillStyle=gradFor('bTho'+(isQueen?'q':''),()=>{ const g=ctx.createRadialGradient(s*0.16,-s*0.16,s*0.04,s*0.28,0,s*0.5);
+        g.addColorStop(0,'#f4d585'); g.addColorStop(0.68,isQueen?'#e0ab3c':'#d3a03f'); g.addColorStop(1,'#a1712c'); return g; });
+      ctx.beginPath(); ctx.arc(s*0.28,0,s*0.44,0,6.28); ctx.fill();
       // head + antennae, always reading the air
-      ctx.fillStyle='#23180a'; ctx.beginPath(); ctx.arc(s*0.88,0,s*0.3,0,6.28); ctx.fill();
+      ctx.fillStyle='#211608'; ctx.beginPath(); ctx.arc(s*0.88,0,s*0.3,0,6.28); ctx.fill();
+      ctx.fillStyle='rgba(120,150,190,0.5)'; ctx.beginPath(); ctx.arc(s*0.96,-s*0.1,s*0.09,0,6.28); ctx.fill(); // eye glint
       if(s>=4.5){ const aw=Math.sin((wob||0)*2)*0.14;
         ctx.strokeStyle='rgba(35,24,10,0.9)'; ctx.lineWidth=Math.max(0.7,s*0.07); ctx.lineCap='round';
         ctx.beginPath(); ctx.moveTo(s*1.0,-s*0.12); ctx.quadraticCurveTo(s*1.28,-s*(0.34+aw),s*1.45,-s*(0.52+aw)); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(s*1.0, s*0.12); ctx.quadraticCurveTo(s*1.28, s*(0.34-aw),s*1.45, s*(0.52-aw)); ctx.stroke(); }
-      if(flying){ // a blur of wingbeats; fanners beat faster still
+      if(flying){ // a blur of wingbeats with a faint iridescent sheen; fanners beat faster
         const rate=mode==='fan'?9:5, wf=0.55+0.45*Math.sin((wob||0)*rate);
-        ctx.fillStyle='rgba(220,235,255,'+(mode==='fan'?0.30:0.35)+')';
+        ctx.fillStyle='rgba(214,232,255,'+(mode==='fan'?0.32:0.38)+')';
         ctx.beginPath(); ctx.ellipse(s*0.1,-s*0.62*wf,s*0.72,s*0.3,-0.5,0,6.28); ctx.fill();
         ctx.beginPath(); ctx.ellipse(s*0.1, s*0.62*wf,s*0.72,s*0.3, 0.5,0,6.28); ctx.fill();
-        ctx.fillStyle='rgba(220,235,255,0.13)';
+        ctx.fillStyle='rgba(232,214,255,0.16)';   // a whisper of violet at the trailing edge
         ctx.beginPath(); ctx.ellipse(s*0.1,-s*0.62*(1-wf)*0.85,s*0.66,s*0.26,-0.5,0,6.28); ctx.fill();
-        ctx.beginPath(); ctx.ellipse(s*0.1, s*0.62*(1-wf)*0.85,s*0.66,s*0.26, 0.5,0,6.28); ctx.fill(); }
+        ctx.beginPath(); ctx.ellipse(s*0.1, s*0.62*(1-wf)*0.85,s*0.66,s*0.26, 0.5,0,6.28); ctx.fill();
+        ctx.strokeStyle='rgba(255,255,255,0.28)'; ctx.lineWidth=Math.max(0.5,s*0.05);   // bright leading edge
+        ctx.beginPath(); ctx.ellipse(s*0.1,-s*0.62*wf,s*0.72,s*0.3,-0.5,0,6.28); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(s*0.1, s*0.62*wf,s*0.72,s*0.3, 0.5,0,6.28); ctx.stroke(); }
       // the load rides where it really rides: pollen in the leg baskets, water at the mouth
-      if(carry==='pollen'){ ctx.fillStyle=COL.pollen;
+      if(carry==='pollen'){ ctx.fillStyle=gradFor('bPol',()=>{ const g=ctx.createRadialGradient(-s*0.4,-s*0.66,s*0.03,-s*0.35,-s*0.6,s*0.24);
+          g.addColorStop(0,'#ffc260'); g.addColorStop(1,COL.pollen); return g; });
         ctx.beginPath(); ctx.arc(-s*0.35,-s*0.6,s*0.22,0,6.28); ctx.fill();
         ctx.beginPath(); ctx.arc(-s*0.35, s*0.6,s*0.22,0,6.28); ctx.fill(); }
-      else if(carry==='water'){ ctx.fillStyle='#9fdcec'; ctx.beginPath(); ctx.arc(s*1.12,0,s*0.2,0,6.28); ctx.fill(); }
+      else if(carry==='water'){ ctx.fillStyle='#9fdcec'; ctx.beginPath(); ctx.arc(s*1.12,0,s*0.2,0,6.28); ctx.fill();
+        ctx.fillStyle='rgba(255,255,255,0.6)'; ctx.beginPath(); ctx.arc(s*1.06,-s*0.07,s*0.07,0,6.28); ctx.fill(); }
       if(isQueen){ ctx.strokeStyle='rgba(255,210,120,0.4)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(0,0,s*2.1,0,6.28); ctx.stroke(); }
       ctx.restore();
     }
@@ -3077,13 +3159,33 @@
       const sunF=(lerpM(tempM,day)+2)/28, sx=W*(0.18+0.64*((Math.sin(mt*0.05+1)+1)/2)), sy=Hh*(0.42-0.26*Math.max(0,Math.min(1,sunF))), sr=size*2.6, sunC=winter?'255,238,200':'255,236,170';
       let sg=ctx.createRadialGradient(sx,sy,0,sx,sy,sr*3); sg.addColorStop(0,'rgba('+sunC+',0.95)'); sg.addColorStop(0.3,'rgba('+sunC+',0.5)'); sg.addColorStop(1,'rgba('+sunC+',0)'); ctx.fillStyle=sg; ctx.beginPath(); ctx.arc(sx,sy,sr*3,0,6.28); ctx.fill();
       ctx.fillStyle='rgba('+sunC+',1)'; ctx.beginPath(); ctx.arc(sx,sy,sr,0,6.28); ctx.fill();
+      // god-rays: soft shafts breathing out of the sun, and warm pollen adrift in the sky
+      if(!winter){ const lit=Math.max(0,Math.min(1,sunF));
+        if(!RM){ ctx.save(); ctx.globalCompositeOperation='lighter';   // shafts are a flourish — off for reduced-motion, and it spares low-end fill-rate
+          for(let i=0;i<6;i++){ const a=1.5708+(-0.42+i*0.17)+Math.sin(mt*0.12+i)*0.03, len=Hh*1.15, w=size*(0.9+i*0.12);
+            const ex=sx+Math.cos(a)*len, ey=sy+Math.sin(a)*len, al=(0.045+0.028*Math.sin(mt*0.5+i*1.3))*lit;
+            let rg=ctx.createLinearGradient(sx,sy,ex,ey); rg.addColorStop(0,'rgba(255,242,196,'+al.toFixed(3)+')'); rg.addColorStop(1,'rgba(255,242,196,0)');
+            ctx.fillStyle=rg; ctx.beginPath(); ctx.moveTo(sx-w,sy); ctx.lineTo(sx+w,sy); ctx.lineTo(ex+w*2.4,ey); ctx.lineTo(ex-w*2.4,ey); ctx.closePath(); ctx.fill(); }
+          ctx.restore(); }
+        if(bloom>0.28){ ctx.fillStyle='rgba(255,236,180,0.6)';
+          for(let i=0;i<22;i++){ const mx=((i*137.5+mt*7)%(W+40))-20, my=Hh*0.12+((i*89)%1000)/1000*groundY*0.7+Math.sin(mt*0.6+i)*size*0.7, rr=0.8+((i*31)%3)*0.5;
+            ctx.globalAlpha=0.22+0.26*(0.5+0.5*Math.sin(mt*1.1+i)); ctx.beginPath(); ctx.arc(mx,my,rr,0,6.28); ctx.fill(); }
+          ctx.globalAlpha=1; } }
       for(const cl of clouds){ cl.x+=cl.v*dt; if(cl.x-cl.s*2>W)cl.x=-cl.s*2; ctx.fillStyle='rgba(255,255,255,'+(winter?0.5:0.7)+')'; for(let i=-1;i<=1;i++){ ctx.beginPath(); ctx.ellipse(cl.x+i*cl.s*0.8,cl.y,cl.s*0.9,cl.s*0.5,0,0,6.28); ctx.fill(); } }
       const [hi,hf]=sblend(HILL);
       ctx.fillStyle=lc(HILL[hi][0],HILL[hi+1][0],hf); ctx.beginPath(); ctx.moveTo(0,groundY); for(let x=0;x<=W;x+=20) ctx.lineTo(x,groundY-size*4-Math.sin(x*0.004+2)*size*2.2); ctx.lineTo(W,Hh); ctx.lineTo(0,Hh); ctx.fill();
       ctx.fillStyle=lc(HILL[hi][1],HILL[hi+1][1],hf); ctx.beginPath(); ctx.moveTo(0,groundY); for(let x=0;x<=W;x+=20) ctx.lineTo(x,groundY-Math.sin(x*0.006)*size*1.4); ctx.lineTo(W,Hh); ctx.lineTo(0,Hh); ctx.fill();
-      const gi=Math.min(3,Math.floor(day/90)), gf=(day/90)%1;
-      ctx.fillStyle=lc(GRASS[gi],GRASS[Math.min(4,gi+1)],gf); ctx.fillRect(0,groundY,W,Hh-groundY);
-      if(winter){ ctx.fillStyle='rgba(238,244,252,0.92)'; ctx.fillRect(0,groundY-size*0.4,W,Hh-groundY); }
+      if(!winter){ let hz=ctx.createLinearGradient(0,groundY-size*5,0,groundY+size*1.5);   // haze softens where land meets sky
+        hz.addColorStop(0,'rgba(252,248,232,0)'); hz.addColorStop(0.72,'rgba(250,246,226,0.30)'); hz.addColorStop(1,'rgba(250,246,226,0)');
+        ctx.fillStyle=hz; ctx.fillRect(0,groundY-size*5,W,size*6.5); }
+      const gi=Math.min(3,Math.floor(day/90)), gf=(day/90)%1, gTop=lc(GRASS[gi],GRASS[Math.min(4,gi+1)],gf);
+      if(winter){ ctx.fillStyle=gTop; ctx.fillRect(0,groundY,W,Hh-groundY); ctx.fillStyle='rgba(238,244,252,0.92)'; ctx.fillRect(0,groundY-size*0.4,W,Hh-groundY); }
+      else { // meadow floor with depth: sunlit and hazy at the horizon, deep and cool in the foreground
+        let gg=ctx.createLinearGradient(0,groundY,0,Hh);
+        gg.addColorStop(0,lc(gTop,'#e6efbe',0.34)); gg.addColorStop(0.22,gTop); gg.addColorStop(1,lc(gTop,'#2c5622',0.5));
+        ctx.fillStyle=gg; ctx.fillRect(0,groundY,W,Hh-groundY);
+        let sw=ctx.createRadialGradient(sx,groundY,0,sx,groundY,W*0.6);   // sun spills warm light across the turf
+        sw.addColorStop(0,'rgba(255,240,190,0.16)'); sw.addColorStop(1,'rgba(255,240,190,0)'); ctx.fillStyle=sw; ctx.fillRect(0,groundY,W,Hh-groundY); }
       const gcol=winter?'rgba(200,210,220,0.7)':lc(GRASS[gi],GRASS[Math.min(4,gi+1)],gf); ctx.strokeStyle=gcol; ctx.lineWidth=Math.max(1,size*0.08); const wind=Math.sin(mt*1.3)*0.25;
       for(const bl of blades){ const sway=Math.sin(mt*1.6+bl.ph)*0.12+wind+bl.bend, ln=bl.len*(winter?0.4:1); ctx.beginPath(); ctx.moveTo(bl.x,bl.y); ctx.quadraticCurveTo(bl.x+sway*ln*0.5,bl.y-ln*0.6,bl.x+sway*ln,bl.y-ln); ctx.stroke(); }
       for(const fl of flowers){ const open=winter?0:Math.min(1,bloom*1.2)*(0.4+0.6*((Math.sin(fl.ph*3+(day/30))+1)/2)); const sway=Math.sin(mt*1.4+fl.sway)*size*0.18;
@@ -3139,6 +3241,9 @@
       if(activePatch==null && !winter){ ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.font='500 '+Math.round(size*0.95)+'px Bricolage Grotesque'; ctx.textAlign='center';
         ctx.fillText('tap a patch to send the foragers', W/2, groundY+(Hh-groundY)*0.46);
         ctx.fillText('near flies cheap \u00b7 far must bloom hard to pay for the trip', W/2, groundY+(Hh-groundY)*0.46+size*1.25); ctx.textAlign='left'; }
+      // a gentle vignette frames the scene like a warm afternoon photograph
+      let mv=ctx.createRadialGradient(W/2,Hh*0.46,Math.min(W,Hh)*0.34,W/2,Hh*0.5,Math.max(W,Hh)*0.72);
+      mv.addColorStop(0,'rgba(20,14,4,0)'); mv.addColorStop(1,'rgba(20,14,4,'+(winter?0.20:0.26)+')'); ctx.fillStyle=mv; ctx.fillRect(0,0,W,Hh);
     }
     function rr2(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
 
