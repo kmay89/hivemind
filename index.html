@@ -3063,7 +3063,7 @@
         const flash=(1-p)*0.5; if(flash>0.01 && !RM){ ctx.fillStyle='rgba(255,206,110,'+(flash*0.4).toFixed(3)+')'; ctx.fillRect(0,0,W,Hh); }
         const rad=size*SQ3*(ringFx.ring+0.4)*(0.2+ease*1.15), th=size*(1.4-p);
         ctx.strokeStyle='rgba(255,224,150,'+((1-p)*0.9).toFixed(3)+')'; ctx.lineWidth=Math.max(1,th);
-        ctx.beginPath(); for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-30), px=hiveCx+rad*Math.cos(a), py=hiveCy+rad*Math.sin(a); i?ctx.lineTo(px,py):ctx.moveTo(px,py);} ctx.closePath(); ctx.stroke();
+        hexPath(hiveCx,hiveCy,rad); ctx.stroke();
         ctx.restore(); if(ringFx.t>0.95) ringFx=null; }
       // guidance: with hints on, the comb shows where the active brush CAN go
       // (faint rim) and where it's WISE to go (breathing glow) — chess for bees
@@ -3094,8 +3094,8 @@
       // ALIVENESS — bearding: when swarm pressure climbs, idle bees spill out and hang
       // in a living beard below the comb. You SEE the colony deciding to leave before it does.
       if(started&&!over&&!winter&&swarmP>0.5){ const beard=Math.round((swarmP-0.5)*2*13);
-        let maxY=hiveCy; for(const c of cells){ if(c.built){ const cy=oy+size*1.5*c.r; if(cy>maxY)maxY=cy; } }
-        const by0=maxY+size*0.7;
+        let maxR=CCR; for(const c of cells){ if(c.built&&c.r>maxR)maxR=c.r; }   // lowest built row → comb's lip (integer compare, one multiply)
+        const by0=oy+size*1.5*maxR+size*0.7;
         for(let i=0;i<beard;i++){ const t=i/Math.max(1,beard-1), spread=size*3.0*(1-t*0.45);
           const bxx=hiveCx+Math.sin(i*2.4)*spread*(1-t*0.35), byy=by0+t*size*4.2+Math.sin(gt*1.5+i)*size*0.14;
           drawBee(bxx,byy,1.5708+Math.sin(gt*0.8+i)*0.22,null,false,i*1.7+gt,'walk'); } }
