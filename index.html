@@ -1400,7 +1400,7 @@
     // / non-https, where no service worker runs) — the real source of truth is sw.js's
     // VERSION; syncGameVer() below asks the running worker and corrects this label
     // live, so the two only ever drift cosmetically for a moment, never permanently.
-    let GAME_VER='2026.07.28.21';
+    let GAME_VER='2026.07.28.22';
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1474,88 +1474,79 @@
       cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); g.setTransform(dpr,0,0,dpr,0,0);
       return { g, W:()=>W, H:()=>H }; }
 
-    // HIVEMIND: the game's own liquid-gold comb, gently filling from the nest out.
-    // Cells are drawn with the same backlit meniscus + wet gloss + additive glow the
-    // hive uses, in honey / nectar / pollen. Deliberately IMPERFECT — bigger cells,
-    // jittered positions and sizes, some cells missing, some left empty, a few with
-    // softly wobbled walls, and none of them brim-full — so the surface never becomes
-    // the dense, perfectly-regular repetition that triggers trypophobia / nausea.
+    // HIVEMIND: the game's own liquid-gold comb on a perfectly regular lattice. The
+    // honeycomb ignites outward from the nest in centred rings — the title's original
+    // signature gesture — but each cell now fills with real backlit honey: the pantry's
+    // meniscus, wet gloss, and additive glow, with a bright wavefront you watch travel
+    // out. Cells are uniform in size and evenly spaced; the only variation is a gentle
+    // ordered swell in fill height (concentric, breathing) and the moving crest — so it
+    // reads as a calm, even pattern, and no cell is ever filled to the brim.
     function startHoneycomb(cv){ if(!cv) return; const S=splashFxSetup(cv), g=S.g, W=S.W(), H=S.H();
-      const PAL={ honey:{lo:'#8f5413',mid:'#f0a828',hi:'#ffd873',spec:'rgba(255,249,224,',glow:'255,178,58',gloss:1.0},
-                  nectar:{lo:'#a1741d',mid:'#e6c04a',hi:'#f9e79c',spec:'rgba(255,253,228,',glow:'242,206,96',gloss:0.7},
-                  pollen:{lo:'#a04a0c',mid:'#e77f26',hi:'#ffb457',spec:'rgba(255,236,196,',glow:'236,138,48',gloss:0.22} };
-      // deterministic per-cell noise (no per-frame Math.random, so cells stay put)
-      function hs(a,b,s){ const n=Math.sin(a*127.1+b*311.7+s*74.7)*43758.5453; return n-Math.floor(n); }
-      const R=Math.max(30, Math.min(58, W/13)), hw=R*Math.sqrt(3), vh=R*1.5, cx=W/2, cy=H*0.46;
+      const L={ lo:'#8f5413', mid:'#f0a828', hi:'#ffd873', spec:'rgba(255,249,224,', glow:'255,178,58' };
+      const R=Math.max(24, Math.min(48, W/14)), hw=R*Math.sqrt(3), vh=R*1.5, cx=W/2, cy=H*0.46;
       const cosA=[], sinA=[]; for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-30); cosA.push(Math.cos(a)); sinA.push(Math.sin(a)); }
-      const cells=[]; let maxD=1;
+      const cells=[]; let maxD=1;   // a regular, un-jittered grid — every cell present, same size
       for(let r=-1; r<H/vh+2; r++) for(let c=-1; c<W/hw+2; c++){
-        const jx=(hs(c,r,1)-0.5)*R*0.20, jy=(hs(c,r,2)-0.5)*R*0.20, rr=R*(0.86+hs(c,r,3)*0.20);
-        const x=c*hw+(r&1?hw/2:0)+jx, y=r*vh+jy, d=Math.hypot(x-cx,y-cy);
-        const s0=hs(c,r,4);                                 // gaps + empties break the grid up
-        const state = s0<0.16 ? 'gap' : (s0<0.42 ? 'empty' : 'fill');
-        const k=hs(c,r,5), kind = k<0.64 ? 'honey' : (k<0.86 ? 'nectar' : 'pollen');
-        const target = 0.34+hs(c,r,6)*0.60;                 // varied fill levels read as organic, never uniform
-        const wob = hs(c,r,7)<0.13 ? [0,1,2,3,4,5].map(i=>1+(hs(c*7+i,r,8)-0.5)*0.18) : null;  // a few imperfect walls
-        cells.push({x,y,rr,d,state,kind,target,wob,_frac:0}); if(d>maxD) maxD=d;
-      }
-      function hexP(x,y,s,wob){ g.beginPath(); for(let i=0;i<6;i++){ const w=wob?wob[i]:1, px=x+s*w*cosA[i], py=y+s*w*sinA[i]; i?g.lineTo(px,py):g.moveTo(px,py);} g.closePath(); }
+        const x=c*hw+(r&1?hw/2:0), y=r*vh, d=Math.hypot(x-cx,y-cy);
+        cells.push({x,y,d,_frac:0}); if(d>maxD) maxD=d; }
+      function hexP(x,y,s){ g.beginPath(); for(let i=0;i<6;i++){ const px=x+s*cosA[i], py=y+s*sinA[i]; i?g.lineTo(px,py):g.moveTo(px,py);} g.closePath(); }
       let cupGrad=null;   // one cup gradient reused via translate — like the hive's gradFor('cup')
-      function cup(x,y,s,wob){ if(!cupGrad){ cupGrad=g.createRadialGradient(-R*0.22,-R*0.28,R*0.1,0,0,R*1.05);
+      function cup(x,y,s){ if(!cupGrad){ cupGrad=g.createRadialGradient(-R*0.22,-R*0.28,R*0.1,0,0,R*1.05);
           cupGrad.addColorStop(0,'#4a3719'); cupGrad.addColorStop(0.6,'#3a2c16'); cupGrad.addColorStop(1,'#241906'); }
-        g.save(); g.translate(x,y); hexP(0,0,s,wob); g.fillStyle=cupGrad; g.fill(); g.restore(); }
-      // a filled store: vertical body gradient (bright meniscus → deep floor) + a wet
-      // specular catch, exactly as fillCellLiquid paints the pantry in-game
-      // body gradient cached in UNIT space and scaled per cell: cells have jittered
-      // sizes, so a unit gradient + ctx.scale caches across all of them, keyed by
-      // kind+fill-bucket — the splash's take on the pantry's gradFor bucketing
+        g.save(); g.translate(x,y); hexP(0,0,s); g.fillStyle=cupGrad; g.fill(); g.restore(); }
+      // liquid honey body gradient (bright meniscus → deep floor) + a wet specular catch,
+      // exactly as fillCellLiquid paints the pantry. Cached in UNIT space keyed by fill
+      // bucket, scaled per cell — the splash's take on the pantry's gradFor bucketing
       const _lg={};
-      function liquid(x,y,s,kind,frac,e,wob){ const L=PAL[kind];
-        const fb=Math.round(frac*16), surfU=0.85-1.7*(fb/16), surfT=Math.max(0,Math.min(0.98,(surfU+1)/2)), key=kind+fb;
-        let gr=_lg[key]; if(!gr){ gr=g.createLinearGradient(0,-1,0,1);
+      function liquid(x,y,s,frac,e){ const fb=Math.round(frac*16), surfU=0.85-1.7*(fb/16), surfT=Math.max(0,Math.min(0.98,(surfU+1)/2));
+        let gr=_lg[fb]; if(!gr){ gr=g.createLinearGradient(0,-1,0,1);
           if(surfT>0.03) gr.addColorStop(Math.max(0,surfT-0.03),'rgba(255,255,255,0)');
-          gr.addColorStop(surfT,L.hi); gr.addColorStop(Math.min(1,surfT+0.06),L.mid); gr.addColorStop(Math.min(1,surfT+0.34),L.mid); gr.addColorStop(1,L.lo); _lg[key]=gr; }
-        g.save(); g.translate(x,y); g.scale(s,s); hexP(0,0,0.94,wob); g.fillStyle=gr; g.fill(); g.restore();
-        if(frac>0.02){ const surf=s*surfU, sh=0.5+0.5*Math.sin(e*0.0016+x*0.05+y*0.07);
-          g.fillStyle=L.spec+(0.20+0.18*sh*L.gloss).toFixed(3)+')';
-          g.beginPath(); g.ellipse(x,y+surf,s*0.8,Math.max(0.8,s*0.11),0,0,6.283); g.fill();
-          if(L.gloss>0.4){ g.fillStyle=L.spec+(0.42*L.gloss).toFixed(3)+')';
-            g.beginPath(); g.ellipse(x-s*0.3,y+surf+s*0.2,s*0.2,s*0.08,-0.4,0,6.283); g.fill(); } } }
-      const RISE=1500; let t0=0, raf;
-      // these full-screen gradients are frame-invariant (cx/cy/W/H/maxD fixed) — build once
+          gr.addColorStop(surfT,L.hi); gr.addColorStop(Math.min(1,surfT+0.06),L.mid); gr.addColorStop(Math.min(1,surfT+0.34),L.mid); gr.addColorStop(1,L.lo); _lg[fb]=gr; }
+        g.save(); g.translate(x,y); g.scale(s,s); hexP(0,0,0.94); g.fillStyle=gr; g.fill(); g.restore();
+        const surf=s*surfU, sh=0.5+0.5*Math.sin(e*0.0016+x*0.05+y*0.07);   // shimmering meniscus + wet catch
+        g.fillStyle=L.spec+(0.20+0.18*sh).toFixed(3)+')';
+        g.beginPath(); g.ellipse(x,y+surf,s*0.8,Math.max(0.8,s*0.11),0,0,6.283); g.fill();
+        g.fillStyle=L.spec+'0.42)'; g.beginPath(); g.ellipse(x-s*0.3,y+surf+s*0.2,s*0.2,s*0.08,-0.4,0,6.283); g.fill(); }
+      let t0=0, raf;
+      // frame-invariant full-screen gradients — build once
       const hg=g.createRadialGradient(cx,cy,0,cx,cy,maxD*0.95);   // warm hearth behind the comb
-      hg.addColorStop(0,'rgba(120,72,20,0.40)'); hg.addColorStop(0.5,'rgba(70,42,12,0.18)'); hg.addColorStop(1,'rgba(20,12,4,0)');
+      hg.addColorStop(0,'rgba(120,72,20,0.42)'); hg.addColorStop(0.5,'rgba(70,42,12,0.18)'); hg.addColorStop(1,'rgba(20,12,4,0)');
       const scrim=g.createRadialGradient(cx,H*0.5,0,cx,H*0.5,W*0.66);   // keeps HIVEMIND + credits crisp over the comb
       scrim.addColorStop(0,'rgba(8,5,2,0.60)'); scrim.addColorStop(0.55,'rgba(8,5,2,0.26)'); scrim.addColorStop(1,'rgba(8,5,2,0)');
       const vg=g.createRadialGradient(cx,cy,Math.min(W,H)*0.3,cx,cy,Math.max(W,H)*0.8);   // vignette
       vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.5)');
-      // one unit glow gradient per kind, reused via translate/scale + globalAlpha
-      const _gg={}; function glowGrad(kind){ let gr=_gg[kind]; if(!gr){ const L=PAL[kind];
-          gr=g.createRadialGradient(0,0,0,0,0,1); gr.addColorStop(0,'rgba('+L.glow+',0.26)'); gr.addColorStop(1,'rgba('+L.glow+',0)'); _gg[kind]=gr; } return gr; }
-      function frame(ts){ if(!cv.isConnected) return; if(!t0) t0=ts; const e=ts-t0;
+      const spk=g.createRadialGradient(cx,cy,0,cx,cy,R*3.4);   // spark at the nest's heart — pulse carried by globalAlpha
+      spk.addColorStop(0,'rgba(255,246,214,1)'); spk.addColorStop(1,'rgba(255,200,110,0)');
+      let glowG=null; function glow(){ if(!glowG){ glowG=g.createRadialGradient(0,0,0,0,0,1);   // unit glow, reused via scale + globalAlpha
+          glowG.addColorStop(0,'rgba('+L.glow+',0.26)'); glowG.addColorStop(1,'rgba('+L.glow+',0)'); } return glowG; }
+      const V=maxD/2600;   // the ignition sweeps out over ~2.6s — a slow, deliberate bloom
+      function frame(ts){ if(!cv.isConnected) return; if(!t0) t0=ts; const e=ts-t0, front=e*V;
         g.clearRect(0,0,W,H);
         g.fillStyle=hg; g.fillRect(0,0,W,H);
-        const breath=0.82+0.18*Math.sin(e*0.0018);
-        for(const cl of cells){ if(cl.state==='gap'){                       // a real gap: only a faint ghost rim
-            hexP(cl.x,cl.y,cl.rr*0.92,cl.wob); g.lineWidth=1; g.strokeStyle='rgba(120,92,48,0.13)'; g.stroke(); cl._frac=0; continue; }
-          cup(cl.x,cl.y,cl.rr,cl.wob);
-          if(cl.state==='fill'){ const t=Math.max(0,Math.min(1,(e-cl.d/maxD*1200)/RISE)), ease=t*t*(3-2*t);
-            cl._frac=cl.target*ease; liquid(cl.x,cl.y,cl.rr,cl.kind,cl._frac,e,cl.wob); } else cl._frac=0;
-          g.lineWidth=1; g.strokeStyle='#5a4624'; hexP(cl.x,cl.y,cl.rr,cl.wob); g.stroke();
-          const bv=cl.rr*0.075;                                             // sculpted emboss, light from upper-left
-          g.lineWidth=1.3; g.strokeStyle='rgba(255,240,190,0.24)'; hexP(cl.x-bv,cl.y-bv,cl.rr*0.9,cl.wob); g.stroke();
-          g.strokeStyle='rgba(28,17,3,0.40)'; hexP(cl.x+bv,cl.y+bv,cl.rr*0.9,cl.wob); g.stroke(); }
-        // additive glow pass — the honey actually radiates, like the pantry's later pass.
-        // globalAlpha carries the per-cell strength (0.26 baked into the cached gradient)
+        // pass 1 — comb bodies: an even cup everywhere, honey filled up to the moving front
+        for(const cl of cells){ cup(cl.x,cl.y,R);
+          const p=Math.max(0,Math.min(1,(front-cl.d)/(R*3.2)));            // ignition progress at this cell
+          const lvl=0.60+0.16*Math.sin(cl.d*0.045-e*0.0016);              // a gentle concentric swell — regular, breathing
+          cl._frac=p*lvl;
+          if(cl._frac>0.02) liquid(cl.x,cl.y,R,cl._frac,e);
+          g.lineWidth=1; g.strokeStyle='#5a4624'; hexP(cl.x,cl.y,R); g.stroke();
+          const bv=R*0.075;                                                // sculpted emboss, light from upper-left
+          g.lineWidth=1.3; g.strokeStyle='rgba(255,240,190,0.24)'; hexP(cl.x-bv,cl.y-bv,R*0.9); g.stroke();
+          g.strokeStyle='rgba(28,17,3,0.40)'; hexP(cl.x+bv,cl.y+bv,R*0.9); g.stroke(); }
+        // pass 2 — additive glow, plus the bright wavefront you watch travel outward
         g.globalCompositeOperation='lighter';
-        for(const cl of cells){ if(!cl._frac) continue; const L=PAL[cl.kind], gl=cl._frac*breath*(0.5+0.5*L.gloss);
-          g.globalAlpha=gl<1?gl:1; g.save(); g.translate(cl.x,cl.y); const gr=cl.rr*1.5; g.scale(gr,gr);
-          g.fillStyle=glowGrad(cl.kind); g.beginPath(); g.arc(0,0,1,0,6.283); g.fill(); g.restore(); }
+        for(const cl of cells){ if(cl._frac>0.02){ g.globalAlpha=Math.min(1,cl._frac);
+            g.save(); g.translate(cl.x,cl.y); const gr=R*1.5; g.scale(gr,gr); g.fillStyle=glow(); g.beginPath(); g.arc(0,0,1,0,6.283); g.fill(); g.restore(); }
+          const edge=1-Math.min(1,Math.abs(front-cl.d)/(R*2.2));           // the travelling crest ring
+          if(edge>0){ g.globalAlpha=0.62*edge*edge; g.fillStyle='rgba(255,247,206,1)'; hexP(cl.x,cl.y,R*0.94); g.fill(); } }
+        // a soft spark pulsing at the nest's heart — cached gradient, pulse via globalAlpha
+        const pul=0.5+0.5*Math.sin(e*0.005);
+        g.globalAlpha=0.34*pul; g.fillStyle=spk; g.fillRect(cx-R*3.4,cy-R*3.4,R*6.8,R*6.8);
         g.globalAlpha=1; g.globalCompositeOperation='source-over';
-        g.fillStyle=scrim; g.fillRect(0,0,W,H);   // wordmark scrim, then vignette — both cached above
+        g.fillStyle=scrim; g.fillRect(0,0,W,H);   // wordmark scrim, then vignette
         g.fillStyle=vg; g.fillRect(0,0,W,H);
         if(!RM) raf=requestAnimationFrame(frame); }
-      if(RM){ requestAnimationFrame(t=>{ t0=t-4000; frame(t); }); } else raf=requestAnimationFrame(frame); }
+      if(RM){ requestAnimationFrame(t=>{ t0=t-5200; frame(t); }); } else raf=requestAnimationFrame(frame); }
 
     // ErrerLabs — Echo · Resonance · Research: a single drop breaks a dark pool.
     // Concentric gravity waves ring outward; each crest refracts an ordered band of
