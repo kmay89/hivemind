@@ -1374,7 +1374,7 @@
 
   <script>
   (function(){
-    const GAME_VER='2026.07.28.16';   // keep in step with sw.js VERSION on every release
+    const GAME_VER='2026.07.28.17';   // keep in step with sw.js VERSION on every release
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2133,6 +2133,14 @@
       const bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=kind==='primary'?2200:3000; bp.Q.value=0.9;
       const ng=c.createGain(); ng.gain.setValueAtTime(0.09,t); ng.gain.exponentialRampToValueAtTime(0.0001,t+0.04);
       src.connect(bp); bp.connect(ng); ng.connect(AU.sfxG||AU.master); src.start(t); }
+    // a soft wax "dab" when comb is painted — quiet, pitched per brush, gently varied so
+    // a dragged stroke reads like laying wax rather than a machine gun
+    function paintDab(kind){ if(!AU.on||!AU.ctx) return; const c=AU.ctx, t=c.currentTime;
+      const base={brood:560, honey:680, expand:610, erase:340}[kind]||620;
+      const o=c.createOscillator(), g=c.createGain(); o.type='sine';
+      o.frequency.setValueAtTime(base*(0.96+Math.random()*0.08),t); o.frequency.exponentialRampToValueAtTime(base*0.7,t+0.09);
+      g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.05,t+0.006); g.gain.exponentialRampToValueAtTime(0.0001,t+0.13);
+      o.connect(g); g.connect(AU.sfxG||AU.master); o.start(t); o.stop(t+0.15); }
     function popFx(el, kind){
       // press-into-the-shadow then spring back — WAAPI so it never fights CSS pulses;
       // cancel any in-flight pop first so spammed taps don't stack and jitter
@@ -2314,11 +2322,20 @@
     // placing a few of a kind, not on the very first tap. Armed here, shown after the stroke.
     let pendingLesson=null; const LESSON_AT=4;
     function armLesson(key,count){ if(!onboard && !lessonSeen[key] && count>=LESSON_AT) pendingLesson=key; }
-    function applyBrush(cell){ if(!cell)return;
-      if(brush==='expand'){ if(cell.built)return; if(neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built)){ if(!cell.flagExpand&&!paintErase){flaggedExpand++; armLesson('expand',flaggedExpand);} cell.flagExpand=!paintErase; if(!cell.flagExpand)cell.bp=0; checkCoachProgress(); watchHands(); } return; }
+    // ---- paint juice: every placed cell answers back with a flash, a dab of particles,
+    // and a soft pitched tick (throttled so a dragged stroke stays pleasant, not rattly) ----
+    let paintSndCool=0;
+    const PAINTCOL={brood:'#8fc4ff', honey:'#ffd66b', expand:'#a7e07c', erase:'#c9b48a'};
+    function paintFx(cell,kind){ cell.pf=1;                       // per-cell "just placed" flash, decayed in the render
+      const p=cellCenter(cell.c,cell.r);
+      if(!RM) puff(p.x,p.y,PAINTCOL[kind]||'#ffd66b', kind==='erase'?3:5, 0.7);
+      if(paintSndCool<=0){ paintDab(kind); paintSndCool=0.05; } }
+    function applyBrush(cell){ if(!cell)return; let changed=false, kind=brush;
+      if(brush==='expand'){ if(cell.built)return; if(neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built)){ const was=cell.flagExpand; if(!cell.flagExpand&&!paintErase){flaggedExpand++; armLesson('expand',flaggedExpand);} cell.flagExpand=!paintErase; if(!cell.flagExpand)cell.bp=0; changed=(was!==cell.flagExpand); kind=paintErase?'erase':'expand'; checkCoachProgress(); watchHands(); if(changed) paintFx(cell,kind); } return; }
       if(!cell.built)return;
-      if(paintErase){ if(cell.zone==='brood'&&cell.brood)return; cell.zone='none'; }
-      else { if(brush==='brood'){ if(cell.zone!=='brood'){brushedBrood++; armLesson('brood',brushedBrood);} cell.zone='brood'; } else if(brush==='honey'){ if(cell.zone!=='honey'){paintedHoney++; armLesson('honey',paintedHoney);} cell.zone='honey'; if(cell.brood) cell.brood=null; } checkCoachProgress(); watchHands(); }
+      if(paintErase){ if(cell.zone==='brood'&&cell.brood)return; changed=(cell.zone!=='none'); cell.zone='none'; kind='erase'; }
+      else { if(brush==='brood'){ if(cell.zone!=='brood'){brushedBrood++; armLesson('brood',brushedBrood); changed=true;} cell.zone='brood'; } else if(brush==='honey'){ if(cell.zone!=='honey'){paintedHoney++; armLesson('honey',paintedHoney); changed=true;} cell.zone='honey'; if(cell.brood) cell.brood=null; } checkCoachProgress(); watchHands(); }
+      if(changed) paintFx(cell,kind);
     }
     // ---- undo: take back the last comb change (over-expansion, a stray paint) ----
     let undoStack=[], strokeSnap=null;
@@ -3110,6 +3127,12 @@
         for(const p of glowPts){ ctx.globalAlpha=p.a; ctx.fillStyle=uG(p.k);
           ctx.save(); ctx.translate(p.x,p.y); ctx.fillRect(-s2*1.5,-s2*1.5,s2*3,s2*3); ctx.restore(); }
         ctx.globalAlpha=1; ctx.restore(); }
+      // freshly-painted cells flash bright and settle — the wax "takes" under your hand
+      if(!heatView) for(const cell of cells){ if(!cell.pf||cell.pf<=0) continue;
+        const {x,y}=cellCenter(cell.c,cell.r), pf=cell.pf;
+        ctx.save(); ctx.globalCompositeOperation='lighter';
+        hexPath(x,y,s2*(0.9+0.45*(1-pf))); ctx.fillStyle='rgba(255,245,216,'+(0.55*pf).toFixed(3)+')'; ctx.fill();
+        ctx.restore(); cell.pf-=lastDt*3.4; if(cell.pf<0)cell.pf=0; }
       const dA=danceAngle(), dcx=hiveCx, dcy=hiveCy-size*4, dco=Math.cos(dA), dsn=Math.sin(dA);
       for(const b of bees){ if(b.state==='waggle'){ ctx.strokeStyle='rgba(255,210,120,0.35)'; ctx.lineWidth=1.5; ctx.beginPath(); let first=true; for(let t=0;t<6.3;t+=0.3){ const u=Math.sin(t)*size*2.2, v=Math.sin(t*2)*size*1.1; const xx=dcx+u*dco-v*dsn, yy=dcy+u*dsn+v*dco; if(first){ctx.moveTo(xx,yy);first=false;} else ctx.lineTo(xx,yy);} ctx.stroke(); }
         let bx=b.x, by=b.y;
@@ -4400,6 +4423,7 @@
       ctx.setTransform(DPR,0,0,DPR,shx*DPR,shy*DPR);
       drawLessonArt(dt);
       if(nudgeCool>0) nudgeCool-=dt;
+      if(paintSndCool>0) paintSndCool-=dt;
       if(tipCool>0){ tipCool-=dt; if(tipCool<=0 && tipQ.length){ toast(tipQ.shift()); tipCool=TIP_GAP; } }
       if(hzHold>0) hzHold-=dt;
       idleT+=dt; if(idleT>4){ idleT=0; watchIdle(); }
