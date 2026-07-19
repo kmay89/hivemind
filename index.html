@@ -1400,7 +1400,7 @@
     // / non-https, where no service worker runs) — the real source of truth is sw.js's
     // VERSION; syncGameVer() below asks the running worker and corrects this label
     // live, so the two only ever drift cosmetically for a moment, never permanently.
-    let GAME_VER='2026.07.28.19';
+    let GAME_VER='2026.07.28.20';
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2163,6 +2163,12 @@
       g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.2,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+0.45);
       o.connect(g); g.connect(AU.sfxG||AU.master); o.start(t); o.stop(t+0.5); }
     function fanfare(){ if(!AU.on||!AU.ctx)return; [[523,659],[659,784],[784,1175]].forEach((p,i)=>setTimeout(()=>chime(p[0],p[1]), i*110)); }
+    // a soft distant birdsong for the zen meadow — a little run of gentle whistled notes
+    function birdChirp(){ if(!AU.on||!AU.ctx)return; const c=AU.ctx, t=c.currentTime, base=1500+Math.random()*1000, n=2+((Math.random()*3)|0);
+      for(let i=0;i<n;i++){ const o=c.createOscillator(), g=c.createGain(), st=t+i*0.075, f=base*(1+i*0.11)*(0.92+Math.random()*0.16);
+        o.type='sine'; o.frequency.setValueAtTime(f,st); o.frequency.exponentialRampToValueAtTime(f*0.82,st+0.055);
+        g.gain.setValueAtTime(0.0001,st); g.gain.exponentialRampToValueAtTime(0.028*VOL.fx,st+0.008); g.gain.exponentialRampToValueAtTime(0.0001,st+0.075);
+        o.connect(g); g.connect(AU.sfxG||AU.master); o.start(st); o.stop(st+0.09); } }
     function clink(){ chime(1240,880); }
     function buzzAlert(){ if(!AU.on||!AU.ctx)return; const c=AU.ctx,t=c.currentTime;
       const o=c.createOscillator(),g=c.createGain(); o.type='sawtooth'; o.frequency.setValueAtTime(74,t); o.frequency.linearRampToValueAtTime(52,t+0.7);
@@ -2389,7 +2395,7 @@
     let blades=[], flowers=[], clouds=[], flits=[], birds=[], hummers=[], dflies=[];
     // ambient meadow weather: a slow dry → shower → rainbow → dry cycle, purely cosmetic
     let sky={phase:'dry', phaseT:18+Math.random()*30, rain:0, bow:0};
-    let zenT=0;   // seconds spent in zen — drives the golden-hour drift
+    let zenT=0, rabbit=null, chirpT=0;   // zen seconds (golden-hour drift), a visiting rabbit, birdsong timer
     // meadow flower species — each drawn with its own silhouette (daisy, clover, spike,
     // plume, poppy, cornflower) so the field reads like a real wildflower meadow
     const FSPECIES=[
@@ -2425,6 +2431,7 @@
       birds=[]; for(let i=0;i<5;i++) birds.push({x:Math.random()*W, y:Hh*(0.08+Math.random()*0.34), v:(16+Math.random()*26)*(Math.random()<0.5?1:-1), ph:Math.random()*6.28, sc:0.55+Math.random()*0.8});
       hummers=[]; const hc=['#2fae8a','#c0457a','#2a8fbf']; for(let i=0;i<3;i++) hummers.push({x:Math.random()*W, y:Hh*(0.74+Math.random()*0.16), tx:Math.random()*W, ty:Hh*0.8, ph:Math.random()*6.28, col:hc[i%3], hold:0});
       dflies=[]; const dc=['#3fd0c0','#ff6f9a']; for(let i=0;i<2;i++) dflies.push({x:Math.random()*W, y:groundY+mSize*(0.5+Math.random()), tx:Math.random()*W, ty:groundY+mSize, ph:Math.random()*6.28, col:dc[i], hold:0});
+      rabbit={x:W*(0.1+Math.random()*0.22), base:groundY+(Hh-groundY)*0.34, tx:0, state:'sit', t:3+Math.random()*4, dir:1, hop:0, ear:0};
     }
     function patchPos(i){ const p=PATCHES[i], gy=Hh*0.72; return {x:p.fx*W, y:gy+(Hh-gy)*(0.03+0.25*p.fy)}; }
     // the dance is a map: its axis is the true bearing from the hive to the
@@ -3505,6 +3512,26 @@
       ctx.strokeStyle=d.col; ctx.lineWidth=Math.max(1,s*0.13); ctx.lineCap='round'; ctx.beginPath(); ctx.moveTo(-s*0.7,0); ctx.lineTo(s*0.55,0); ctx.stroke();
       ctx.fillStyle=d.col; ctx.beginPath(); ctx.arc(s*0.55,0,s*0.1,0,6.28); ctx.fill();
       ctx.restore(); }
+    // a shy rabbit visits the field edge — sits and nibbles, hops a little, sits again
+    function drawRabbit(dt){ const r=rabbit; if(!r) return; const s=size*0.85;
+      if(r.state==='sit'){ r.t-=dt; r.ear=Math.max(0,r.ear-dt*3);
+        if(Math.random()<dt*0.4) r.ear=1;                       // an ear-flick
+        if(r.t<=0){ r.dir=Math.random()<0.5?-1:1; r.tx=Math.max(s,Math.min(W*0.55, r.x+r.dir*size*(3+Math.random()*5))); r.state='hop'; r.hop=0; } }
+      else { r.hop+=dt*3.2; const dx=r.tx-r.x; r.x+=Math.sign(dx)*Math.min(Math.abs(dx), size*7*dt);
+        if(r.hop>=1||Math.abs(dx)<1){ r.state='sit'; r.t=2.5+Math.random()*5; r.hop=0; } }
+      const hopY=r.state==='hop'?Math.sin(Math.min(1,r.hop)*Math.PI)*size*1.3:0, y=r.base-hopY;
+      ctx.save(); ctx.translate(r.x,y); ctx.scale(r.dir,1);
+      ctx.fillStyle='rgba(20,14,4,0.14)'; ctx.beginPath(); ctx.ellipse(0,r.base-y+s*0.12,s*0.7,s*0.14,0,0,6.28); ctx.fill();   // shadow on the ground
+      ctx.fillStyle='#a68a6a';
+      ctx.beginPath(); ctx.ellipse(-s*0.1,0,s*0.62,s*0.42,0,0,6.28); ctx.fill();                    // body
+      ctx.beginPath(); ctx.arc(s*0.5,-s*0.28,s*0.26,0,6.28); ctx.fill();                             // head
+      const em=r.state==='hop'?0.5:1;                                                                 // ears fold back on a hop
+      for(const eo of [-0.09,0.12]){ ctx.save(); ctx.translate(s*0.5+eo*s,-s*0.5); ctx.rotate((eo*2+ (r.ear? -0.3:0))* em);
+        ctx.fillStyle='#a68a6a'; ctx.beginPath(); ctx.ellipse(0,-s*0.18,s*0.09,s*0.28*em,0,0,6.28); ctx.fill();
+        ctx.fillStyle='#e6b8c0'; ctx.beginPath(); ctx.ellipse(0,-s*0.18,s*0.04,s*0.2*em,0,0,6.28); ctx.fill(); ctx.restore(); }
+      ctx.fillStyle='#fdf6ee'; ctx.beginPath(); ctx.arc(-s*0.66,s*0.06,s*0.16,0,6.28); ctx.fill();    // cotton tail
+      ctx.fillStyle='#241a10'; ctx.beginPath(); ctx.arc(s*0.6,-s*0.3,s*0.05,0,6.28); ctx.fill();       // eye
+      ctx.restore(); }
     function drawMeadowBody(dt){
       mt+=dt; const dif=difficulty(); const T=currentTemp(), Na=lerpM(nectarM,day)*dif.flow, Pa=lerpM(pollenM,day)*dif.flow;
       const winter=T<WIN_TEMP, bloom=Math.max(Na,Pa), groundY=Hh*0.72;
@@ -3598,7 +3625,7 @@
       }
       if(day>=170&&day<250){ ctx.fillStyle='rgba(210,130,50,0.8)'; for(let i=0;i<22;i++){ const t=(mt*30+i*60)%Hh, x=(i*W/22+Math.sin(t*0.05+i)*40)%W; ctx.beginPath(); ctx.ellipse(x,t%Hh,size*0.18,size*0.1,t*0.1,0,6.28); ctx.fill(); } }
       if(winter){ ctx.fillStyle='rgba(255,255,255,0.85)'; for(let i=0;i<60;i++){ const t=mt*40+i*40, y=t%Hh, x=(i*W/60+Math.sin(t*0.04+i)*30)%W; ctx.beginPath(); ctx.arc(x,y,size*0.08,0,6.28); ctx.fill(); } }
-      if(!winter && bloom>0.28){ for(const f of flits) drawButterfly(f,dt); for(const h of hummers) drawHummer(h,dt); for(const d of dflies) drawDragonfly(d,dt); }
+      if(!winter && bloom>0.28){ for(const f of flits) drawButterfly(f,dt); for(const h of hummers) drawHummer(h,dt); for(const d of dflies) drawDragonfly(d,dt); if(!RM) drawRabbit(dt); }
       const bx=W*0.85, by=groundY, bw=size*4.4, boxes=3;
       for(let i=0;i<boxes;i++){ const yy=by-(i+1)*size*1.8; ctx.fillStyle=i?'#caa066':'#b98a48'; rr2(bx-bw/2,yy,bw,size*1.8,3); ctx.fill(); ctx.strokeStyle='rgba(80,55,20,0.6)'; ctx.lineWidth=1.5; ctx.stroke(); ctx.fillStyle='rgba(0,0,0,0.10)'; ctx.fillRect(bx-bw/2,yy+size*1.6,bw,size*0.2); }
       ctx.fillStyle='#8a6a36'; rr2(bx-bw/2-2,by-boxes*size*1.8-size*0.5,bw+4,size*0.6,3); ctx.fill();
@@ -4702,7 +4729,9 @@
         musMood = danceMode ? 'dance' : (storyMode ? 'story' : ['spring','summer','autumn','winter'][seasonIdx(day)]);
         musicTick();
         if(AU.musicG){ const mt2=(danceMode?1.15:(storyMode?1:(over?0.5:0.62)))*VOL.music;
-          try{ AU.musicG.gain.setTargetAtTime(mt2, AU.ctx.currentTime, 0.5); }catch(e){} } }
+          try{ AU.musicG.gain.setTargetAtTime(mt2, AU.ctx.currentTime, 0.5); }catch(e){} }
+        // zen meadow ambience: an occasional soft birdsong drifts in
+        if(zen && !RM){ chirpT-=dt; if(chirpT<=0){ birdChirp(); chirpT=1.8+Math.random()*4; } } }
       if(AU.ctx&&AU.on&&AU.humG){ const T=currentTemp(), winter=T<WIN_TEMP;
         const tgt=((started&&!over)?(0.08+0.5*Math.min(1,P/CAP))*(winter?0.45:1)*(speed===0?0.3:1)*(hornet&&hornet.state==='raid'?1.4:1):0)*VOL.hum;
         AU.humG.gain.value+= (tgt-AU.humG.gain.value)*Math.min(1,dt*2.5); }
