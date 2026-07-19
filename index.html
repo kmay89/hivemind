@@ -1506,22 +1506,34 @@
         g.save(); g.translate(x,y); hexP(0,0,s,wob); g.fillStyle=cupGrad; g.fill(); g.restore(); }
       // a filled store: vertical body gradient (bright meniscus → deep floor) + a wet
       // specular catch, exactly as fillCellLiquid paints the pantry in-game
-      function liquid(x,y,s,kind,frac,e,wob){ const L=PAL[kind], surf=s*0.85-s*1.7*frac, surfT=Math.max(0,Math.min(0.98,(surf+s)/(2*s)));
-        const gr=g.createLinearGradient(x,y-s,x,y+s);
-        if(surfT>0.03) gr.addColorStop(Math.max(0,surfT-0.03),'rgba(255,255,255,0)');
-        gr.addColorStop(surfT,L.hi); gr.addColorStop(Math.min(1,surfT+0.06),L.mid); gr.addColorStop(Math.min(1,surfT+0.34),L.mid); gr.addColorStop(1,L.lo);
-        hexP(x,y,s*0.94,wob); g.fillStyle=gr; g.fill();
-        if(frac>0.02){ const sh=0.5+0.5*Math.sin(e*0.0016+x*0.05+y*0.07);
+      // body gradient cached in UNIT space and scaled per cell: cells have jittered
+      // sizes, so a unit gradient + ctx.scale caches across all of them, keyed by
+      // kind+fill-bucket — the splash's take on the pantry's gradFor bucketing
+      const _lg={};
+      function liquid(x,y,s,kind,frac,e,wob){ const L=PAL[kind];
+        const fb=Math.round(frac*16), surfU=0.85-1.7*(fb/16), surfT=Math.max(0,Math.min(0.98,(surfU+1)/2)), key=kind+fb;
+        let gr=_lg[key]; if(!gr){ gr=g.createLinearGradient(0,-1,0,1);
+          if(surfT>0.03) gr.addColorStop(Math.max(0,surfT-0.03),'rgba(255,255,255,0)');
+          gr.addColorStop(surfT,L.hi); gr.addColorStop(Math.min(1,surfT+0.06),L.mid); gr.addColorStop(Math.min(1,surfT+0.34),L.mid); gr.addColorStop(1,L.lo); _lg[key]=gr; }
+        g.save(); g.translate(x,y); g.scale(s,s); hexP(0,0,0.94,wob); g.fillStyle=gr; g.fill(); g.restore();
+        if(frac>0.02){ const surf=s*surfU, sh=0.5+0.5*Math.sin(e*0.0016+x*0.05+y*0.07);
           g.fillStyle=L.spec+(0.20+0.18*sh*L.gloss).toFixed(3)+')';
           g.beginPath(); g.ellipse(x,y+surf,s*0.8,Math.max(0.8,s*0.11),0,0,6.283); g.fill();
           if(L.gloss>0.4){ g.fillStyle=L.spec+(0.42*L.gloss).toFixed(3)+')';
             g.beginPath(); g.ellipse(x-s*0.3,y+surf+s*0.2,s*0.2,s*0.08,-0.4,0,6.283); g.fill(); } } }
       const RISE=1500; let t0=0, raf;
+      // these full-screen gradients are frame-invariant (cx/cy/W/H/maxD fixed) — build once
+      const hg=g.createRadialGradient(cx,cy,0,cx,cy,maxD*0.95);   // warm hearth behind the comb
+      hg.addColorStop(0,'rgba(120,72,20,0.40)'); hg.addColorStop(0.5,'rgba(70,42,12,0.18)'); hg.addColorStop(1,'rgba(20,12,4,0)');
+      const scrim=g.createRadialGradient(cx,H*0.5,0,cx,H*0.5,W*0.66);   // keeps HIVEMIND + credits crisp over the comb
+      scrim.addColorStop(0,'rgba(8,5,2,0.60)'); scrim.addColorStop(0.55,'rgba(8,5,2,0.26)'); scrim.addColorStop(1,'rgba(8,5,2,0)');
+      const vg=g.createRadialGradient(cx,cy,Math.min(W,H)*0.3,cx,cy,Math.max(W,H)*0.8);   // vignette
+      vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.5)');
+      // one unit glow gradient per kind, reused via translate/scale + globalAlpha
+      const _gg={}; function glowGrad(kind){ let gr=_gg[kind]; if(!gr){ const L=PAL[kind];
+          gr=g.createRadialGradient(0,0,0,0,0,1); gr.addColorStop(0,'rgba('+L.glow+',0.26)'); gr.addColorStop(1,'rgba('+L.glow+',0)'); _gg[kind]=gr; } return gr; }
       function frame(ts){ if(!cv.isConnected) return; if(!t0) t0=ts; const e=ts-t0;
         g.clearRect(0,0,W,H);
-        // a warm hearth pooling behind the comb — the hive lit from within
-        let hg=g.createRadialGradient(cx,cy,0,cx,cy,maxD*0.95);
-        hg.addColorStop(0,'rgba(120,72,20,0.40)'); hg.addColorStop(0.5,'rgba(70,42,12,0.18)'); hg.addColorStop(1,'rgba(20,12,4,0)');
         g.fillStyle=hg; g.fillRect(0,0,W,H);
         const breath=0.82+0.18*Math.sin(e*0.0018);
         for(const cl of cells){ if(cl.state==='gap'){                       // a real gap: only a faint ghost rim
@@ -1533,19 +1545,15 @@
           const bv=cl.rr*0.075;                                             // sculpted emboss, light from upper-left
           g.lineWidth=1.3; g.strokeStyle='rgba(255,240,190,0.24)'; hexP(cl.x-bv,cl.y-bv,cl.rr*0.9,cl.wob); g.stroke();
           g.strokeStyle='rgba(28,17,3,0.40)'; hexP(cl.x+bv,cl.y+bv,cl.rr*0.9,cl.wob); g.stroke(); }
-        // additive glow pass — the honey actually radiates, like the pantry's later pass
+        // additive glow pass — the honey actually radiates, like the pantry's later pass.
+        // globalAlpha carries the per-cell strength (0.26 baked into the cached gradient)
         g.globalCompositeOperation='lighter';
         for(const cl of cells){ if(!cl._frac) continue; const L=PAL[cl.kind], gl=cl._frac*breath*(0.5+0.5*L.gloss);
-          const rg=g.createRadialGradient(cl.x,cl.y,0,cl.x,cl.y,cl.rr*1.5);
-          rg.addColorStop(0,'rgba('+L.glow+','+(0.26*gl).toFixed(3)+')'); rg.addColorStop(1,'rgba('+L.glow+',0)');
-          g.fillStyle=rg; g.beginPath(); g.arc(cl.x,cl.y,cl.rr*1.5,0,6.283); g.fill(); }
-        g.globalCompositeOperation='source-over';
-        // a soft scrim behind the wordmark so HIVEMIND + credits stay crisp over the comb
-        let scrim=g.createRadialGradient(cx,H*0.5,0,cx,H*0.5,W*0.66);
-        scrim.addColorStop(0,'rgba(8,5,2,0.60)'); scrim.addColorStop(0.55,'rgba(8,5,2,0.26)'); scrim.addColorStop(1,'rgba(8,5,2,0)');
-        g.fillStyle=scrim; g.fillRect(0,0,W,H);
-        let vg=g.createRadialGradient(cx,cy,Math.min(W,H)*0.3,cx,cy,Math.max(W,H)*0.8);   // vignette
-        vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(1,'rgba(0,0,0,0.5)'); g.fillStyle=vg; g.fillRect(0,0,W,H);
+          g.globalAlpha=gl<1?gl:1; g.save(); g.translate(cl.x,cl.y); const gr=cl.rr*1.5; g.scale(gr,gr);
+          g.fillStyle=glowGrad(cl.kind); g.beginPath(); g.arc(0,0,1,0,6.283); g.fill(); g.restore(); }
+        g.globalAlpha=1; g.globalCompositeOperation='source-over';
+        g.fillStyle=scrim; g.fillRect(0,0,W,H);   // wordmark scrim, then vignette — both cached above
+        g.fillStyle=vg; g.fillRect(0,0,W,H);
         if(!RM) raf=requestAnimationFrame(frame); }
       if(RM){ requestAnimationFrame(t=>{ t0=t-4000; frame(t); }); } else raf=requestAnimationFrame(frame); }
 
@@ -1554,7 +1562,9 @@
     // spectrum — a rainbow reflected straight off the wave's leading face — and the
     // waves pass bodily through the ERRER·LABS letters, bobbing each as the front
     // sweeps its column. Calm, deliberate, physical.
-    function startResonance(cv){ if(!cv) return; const S=splashFxSetup(cv), g=S.g; let t0=0, raf;
+    function startResonance(cv){ if(!cv) return; const S=splashFxSetup(cv), g=S.g, W=S.W(), H=S.H(), cx=W/2, cy=H*0.46; let t0=0, raf;
+      const bg=g.createRadialGradient(cx,cy,0,cx,cy,Math.max(W,H)*0.72);   // the dark pool, lit from the drop — frame-invariant
+      bg.addColorStop(0,'rgba(14,34,38,0.55)'); bg.addColorStop(0.5,'rgba(7,15,20,0.28)'); bg.addColorStop(1,'rgba(0,0,0,0)');
       const SPEED=0.11;                          // px/ms the wavefront travels — a gentle spread
       const drops=[{t0:260}];                    // impact times; the first drop lands at 260ms
       // surface height at ring-distance d (px from centre) and clock e (ms): a decaying
@@ -1574,11 +1584,9 @@
           if(r.width){ el.style.animation='none'; el.style.opacity='1'; el.style.filter='none';
             letters.push({el, x:r.left+r.width/2, y:r.top+r.height/2}); } }); }
       setTimeout(grabLetters, RM?0:1900);
-      function frame(ts){ if(!cv.isConnected) return; if(!t0) t0=ts; const e=ts-t0, W=S.W(), H=S.H(), cx=W/2, cy=H*0.46;
+      function frame(ts){ if(!cv.isConnected) return; if(!t0) t0=ts; const e=ts-t0;
         if(e-drops[drops.length-1].t0>2900) drops.push({t0:e});             // the pool keeps breathing
         g.clearRect(0,0,W,H);
-        let bg=g.createRadialGradient(cx,cy,0,cx,cy,Math.max(W,H)*0.72);     // the dark pool, lit from the drop
-        bg.addColorStop(0,'rgba(14,34,38,0.55)'); bg.addColorStop(0.5,'rgba(7,15,20,0.28)'); bg.addColorStop(1,'rgba(0,0,0,0)');
         g.fillStyle=bg; g.fillRect(0,0,W,H);
         g.globalCompositeOperation='lighter';                               // light adds — crests glow, rainbows blend
         for(let i=0;i<drops.length;i++){ const te=e-drops[i].t0; if(te<=0) continue;
