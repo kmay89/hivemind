@@ -1,0 +1,12 @@
+{
+  "name": "hivemind-devtools",
+  "private": true,
+  "description": "Dev-only tooling for HIVEMIND — never a runtime dependency of index.html, never touched by the Netlify deploy. See CLAUDE.md.",
+  "scripts": {
+    "check": "npm run check:syntax && npm run check:ids && npm run check:manifest && npm run check:economy",
+    "check:syntax": "node tools/check-syntax.js",
+    "check:ids": "node tools/check-dom-ids.js",
+    "check:manifest": "node tools/check-manifest.js",
+    "check:economy": "node tools/economy-sim.js"
+  }
+}

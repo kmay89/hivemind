@@ -25,6 +25,9 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('message', (e) => {
   if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
+  // lets the page display the real running version instead of keeping its own
+  // hand-bumped copy of VERSION in sync by hand — see index.html's syncGameVer()
+  if (e.data && e.data.type === 'GET_VERSION' && e.ports && e.ports[0]) e.ports[0].postMessage({ version: VERSION });
 });
 
 self.addEventListener('fetch', (e) => {
