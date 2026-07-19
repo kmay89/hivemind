@@ -61,8 +61,10 @@
     background:linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,0)); pointer-events:none; }
   .btn:hover{ filter:brightness(1.05) saturate(1.04); transform:translateY(-2px);
     box-shadow:0 2px 0 rgba(255,255,255,.6) inset, 0 -5px 9px rgba(150,78,12,.26) inset, 0 8px 0 #a35f16, 0 18px 30px rgba(140,70,10,.5); }
-  /* the finger holds it down: the ledge collapses and the cap travels down into the base */
-  .btn:active{ transform:translateY(6px);
+  /* the finger holds it down: the ledge collapses and the cap travels down into the
+     base. Press-down is near-instant so it feels tactile; the springy overshoot lives
+     on release (the base .btn transition), giving a satisfying pop back up. */
+  .btn:active{ transform:translateY(6px); transition:none;
     box-shadow:0 2px 0 rgba(255,255,255,.5) inset, 0 -2px 5px rgba(150,78,12,.22) inset, 0 0 0 #a35f16, 0 3px 8px rgba(140,70,10,.4); }
   .btn.ghost{ background:linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.03)); color:var(--text); border:1px solid var(--border); font-weight:600;
     box-shadow:0 1px 0 rgba(255,255,255,.1) inset, 0 4px 0 rgba(0,0,0,.3), 0 9px 16px rgba(0,0,0,.32); }
