@@ -1,0 +1,21 @@
+name: CI
+
+# Pre-merge checks only — this does not build or deploy anything. Netlify keeps
+# publishing the repo root as-is (see netlify.toml); this workflow just catches
+# a broken commit before it reaches that pipeline. All checks are dev-only
+# Node scripts under tools/, no npm install / dependencies required. See
+# CLAUDE.md.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm run check
