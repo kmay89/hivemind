@@ -3336,7 +3336,7 @@
       if(!heatView) for(const cell of cells){ if(!cell.pf||cell.pf<=0) continue;
         const {x,y}=cellCenter(cell.c,cell.r), pf=cell.pf;
         ctx.save(); ctx.globalCompositeOperation='lighter';
-        hexPath(x,y,s2*(0.9+0.45*(1-pf))); ctx.fillStyle='rgba(255,245,216,'+(0.55*pf).toFixed(3)+')'; ctx.fill();
+        hexPathOn(ctx,x,y,s2*(0.9+0.45*(1-pf))); ctx.fillStyle='rgba(255,245,216,'+(0.55*pf).toFixed(3)+')'; ctx.fill();
         ctx.restore(); cell.pf-=lastDt*3.4; if(cell.pf<0)cell.pf=0; }
       const dA=danceAngle(), dcx=hiveCx, dcy=hiveCy-size*4, dco=Math.cos(dA), dsn=Math.sin(dA);
       for(const b of bees){ if(b.state==='waggle'){ ctx.strokeStyle='rgba(255,210,120,0.35)'; ctx.lineWidth=1.5; ctx.beginPath(); let first=true; for(let t=0;t<6.3;t+=0.3){ const u=Math.sin(t)*size*2.2, v=Math.sin(t*2)*size*1.1; const xx=dcx+u*dco-v*dsn, yy=dcy+u*dsn+v*dco; if(first){ctx.moveTo(xx,yy);first=false;} else ctx.lineTo(xx,yy);} ctx.stroke(); }
