@@ -66,7 +66,13 @@ appears on every screen, **anyone's comb counts toward it**, and filling it
 pays +1 ✧ with a fanfare. Misses are a shrug, not a punishment ("the dusk
 took that one"). Orders pause while a vote is live or the host has a modal
 open. Filled orders land on the end-of-year scorecard. Add new orders as
-table rows (id/lo/hi/txt/meas), not branches.
+table rows (id/lo/hi/sect/txt/meas), not branches.
+
+With **3+ keepers**, half the orders **call a specific post** — "🍼 Buzz's
+post: paint 4 nursery cells" — measured only inside that keeper's wedge
+(`meas(who)`), with a smaller target and a personal fanfare on their device
+("That one's yours!"). Everyone else's chip says whose moment it is. Duos
+keep hive-wide orders only (a called post is meaningless with one wedge).
 
 Hornet raids are also a shared moment: the hornet is mirrored to every
 screen (position travels in comb units, so screen sizes don't matter) and
@@ -222,6 +228,3 @@ can't see.
   proper) would be a season-2 feature; co-op first.
 - Invite codes could compress (`CompressionStream`) or ride QR codes; both
   sides must feature-detect, so plain base64url ships for now.
-- Orders are hive-wide; per-sector orders ("East Comb: 3 nursery cells")
-  would sharpen the Overcooked role-friction further once the base loop is
-  playtested.

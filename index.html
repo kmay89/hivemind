@@ -1539,7 +1539,7 @@
     // / non-https, where no service worker runs) — the real source of truth is sw.js's
     // VERSION; syncGameVer() below asks the running worker and corrects this label
     // live, so the two only ever drift cosmetically for a moment, never permanently.
-    let GAME_VER='2026.07.29.25';
+    let GAME_VER='2026.07.30.26';
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -5160,7 +5160,9 @@
       else if(m.t==='vst'){ netStripVoted(m.voted||[]); }
       else if(m.t==='tally'){ netVoteResult(m.k,m.v,m.yes,m.no,m.pass); }
       else if(m.t==='ev'){ toast(m.msg); }  // host-authored copy — same-room trust model
-      else if(m.t==='ord'){ NET.order={id:m.id,ic:m.ic,n:m.n,base:m.base,secs:m.secs,rem:m.secs,txt:m.txt}; try{ chime(440,587); }catch(e){} netOrderShow(); }
+      else if(m.t==='ord'){ NET.order={id:m.id,ic:m.ic,n:m.n,who:(typeof m.who==='number'?m.who:null),base:m.base,secs:m.secs,rem:m.secs,txt:m.txt};
+        try{ chime(440,587); }catch(e){} netOrderShow();
+        if(NET.order.who===NET.myIx){ try{ fanfare(); }catch(e){} toast('📣 <b>That one’s yours!</b> Your comb, your moment — the hive is watching.'); } }
       else if(m.t==='ordend'){ if(m.ok){ try{ fanfare(); }catch(e){} } NET.order=null; netOrderShow(); }
       else if(m.t==='end'){ NET.endSent=true; over=true; setSpeed(0); NET.order=null; netOrderShow(); netShowEnd(m.sum); } }
     function clientHostGone(){ if(!NET.on) return;
@@ -5238,26 +5240,46 @@
     // ---- hive orders: Overcooked-style micro-goals the whole hive fills together ----
     // ("you take the wax, I'll steer forage" — short, loud, shared; the host runs
     //  the clock, everyone's paints count, +1 ✧ on success, a shrug on a miss)
+    // meas(who): who==null counts the whole comb; a player index counts only that
+    // keeper's wedge — the fuel for called-post orders ("Buzz's post: …")
     const NET_ORDERS=[
-      {id:'wax',  ic:'🔨', lo:5, hi:9, txt:n=>'Draw '+n+' fresh comb cells',   meas:()=>builtCells()},
-      {id:'brood',ic:'🍼', lo:4, hi:7, txt:n=>'Paint '+n+' new nursery cells', meas:()=>cells.reduce((a,c)=>a+((c.built&&c.zone==='brood')?1:0),0)},
-      {id:'shelf',ic:'🍯', lo:5, hi:9, txt:n=>'Zone '+n+' new honey shelves',  meas:()=>cells.reduce((a,c)=>a+((c.built&&c.zone==='honey')?1:0),0)},
-      {id:'bank', ic:'🏺', lo:3, hi:6, txt:n=>'Bank '+n+' cells of honey',     meas:()=>Math.round(honeyCellsStored())},
+      {id:'wax',  ic:'🔨', lo:5, hi:9, sect:1, txt:n=>'draw '+n+' fresh comb cells',
+        meas:w=>cells.reduce((a,c,i)=>a+((c.built&&(w==null||(netSector&&netSector[i]===w)))?1:0),0)},
+      {id:'brood',ic:'🍼', lo:4, hi:7, sect:1, txt:n=>'paint '+n+' new nursery cells',
+        meas:w=>cells.reduce((a,c,i)=>a+((c.built&&c.zone==='brood'&&(w==null||(netSector&&netSector[i]===w)))?1:0),0)},
+      {id:'shelf',ic:'🍯', lo:5, hi:9, sect:1, txt:n=>'zone '+n+' new honey shelves',
+        meas:w=>cells.reduce((a,c,i)=>a+((c.built&&c.zone==='honey'&&(w==null||(netSector&&netSector[i]===w)))?1:0),0)},
+      {id:'bank', ic:'🏺', lo:3, hi:6, sect:0, txt:n=>'bank '+n+' cells of honey',
+        meas:()=>Math.round(honeyCellsStored())},
     ];
     function netOrderShow(){ const el=$('mpOrder'); if(!el) return; const O=NET.order;
       if(!O){ el.classList.add('hide'); return; }
       el.classList.remove('hide');
-      const k=Math.max(0,(NET_ORDERS.find(o=>o.id===O.id)||NET_ORDERS[0]).meas()-O.base);
-      el.innerHTML='<b>'+O.ic+' Hive order:</b> '+O.txt+' <span class="ok">'+Math.min(k,O.n)+'/'+O.n+'</span><div id="mpOrderBar"><i style="width:'+Math.max(0,Math.min(100,100*O.rem/O.secs))+'%"></i></div>'; }
-    function hostStartOrder(){ const t=NET_ORDERS[(Math.random()*NET_ORDERS.length)|0];
-      const n=t.lo+((Math.random()*(t.hi-t.lo+1))|0);
-      NET.order={id:t.id, ic:t.ic, n, base:t.meas(), secs:50, rem:50, txt:t.txt(n)};
-      netBcast({t:'ord',id:t.id,n,base:NET.order.base,secs:50,txt:NET.order.txt,ic:t.ic});
+      const t=NET_ORDERS.find(o=>o.id===O.id)||NET_ORDERS[0];
+      const k=Math.max(0,t.meas(O.who==null?null:O.who)-O.base);
+      const p=(O.who!=null)?NET.players[O.who]:null;
+      const lead=p?('<b style="color:#5a3a10">'+O.ic+' '+netEsc(p.name)+'’s post'+((O.who===NET.myIx)?' (you!)':'')+':</b> ')
+                  :('<b>'+O.ic+' Hive order:</b> ');
+      el.innerHTML=lead+O.txt+' <span class="ok">'+Math.min(k,O.n)+'/'+O.n+'</span><div id="mpOrderBar"><i style="width:'+Math.max(0,Math.min(100,100*O.rem/O.secs))+'%"></i></div>'; }
+    function hostStartOrder(){
+      // with 3+ keepers, half the orders call a specific post — the Overcooked
+      // role-friction beat ("that's yours, Buzz — we'll hold the fort")
+      const workers=NET.players.filter(p=>p.ix>0&&!p.gone);
+      const targeted=workers.length>=2&&Math.random()<0.5;
+      const pool=targeted?NET_ORDERS.filter(t=>t.sect):NET_ORDERS;
+      const t=pool[(Math.random()*pool.length)|0];
+      const who=targeted?workers[(Math.random()*workers.length)|0].ix:null;
+      const n=Math.max(2, targeted?Math.ceil((t.lo+((Math.random()*(t.hi-t.lo+1))|0))/2):(t.lo+((Math.random()*(t.hi-t.lo+1))|0)));
+      NET.order={id:t.id, ic:t.ic, n, who, base:t.meas(who), secs:50, rem:50, txt:t.txt(n)};
+      netBcast({t:'ord',id:t.id,n,who,base:NET.order.base,secs:50,txt:NET.order.txt,ic:t.ic});
       if(!NET.orderTaught){ NET.orderTaught=true; netToastAll('📣 <b>Hive order!</b> Anyone’s comb counts — call your jobs out loud.'); }
+      else if(who!=null){ const p=NET.players[who]; netToastAll('📣 The hive calls on <b>'+netEsc(p?p.name:'a keeper')+'</b> — everyone else, hold the fort.'); }
       try{ chime(440,587); }catch(e){} netOrderShow(); }
     function hostEndOrder(ok){ const O=NET.order; if(!O) return; NET.order=null; NET.orderCD=30+Math.random()*30;
       netBcast({t:'ordend',ok:ok?1:0});
-      if(ok){ rj++; NET.ordersDone=(NET.ordersDone||0)+1; netToastAll('✨ Order filled — '+O.txt.toLowerCase()+'. +1 ✧ royal jelly.'); try{ fanfare(); }catch(e){} }
+      const p=(O.who!=null)?NET.players[O.who]:null;
+      if(ok){ rj++; NET.ordersDone=(NET.ordersDone||0)+1;
+        netToastAll('✨ '+(p?('<b>'+netEsc(p.name)+'</b> delivered'):'Order filled')+' — '+O.txt+'. +1 ✧ royal jelly.'); try{ fanfare(); }catch(e){} }
       else toast('🌒 The dusk took that order — no harm done.');
       netOrderShow(); }
     // ---- per-frame housekeeping: vote clock, snapshots, orders, link health ----
