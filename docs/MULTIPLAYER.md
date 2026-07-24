@@ -99,8 +99,11 @@ Implementation notes:
 - **QR codes** come from a ~120-line inline encoder (byte mode, EC level L;
   ported from the public-domain qrcodegen algorithm). It is validated in
   `tools/mp-smoke.js` by decoding rendered symbols with an independent
-  decoder (jsqr) across payload sizes, which sweeps the version/table space.
-  Don't touch the tables without re-running that sweep.
+  decoder across payload sizes, which sweeps the version/table space —
+  zxing-wasm preferred (the decoder family real camera stacks use), jsqr as
+  fallback (only trusted to ~950 chars; it drops some perfectly valid dense
+  symbols that zxing and phone cameras read fine). Don't touch the tables
+  without re-running that sweep.
 - **Scanning** uses `BarcodeDetector` + `getUserMedia`, strictly
   feature-gated (buttons hide where unsupported — e.g. some desktop Linux
   browsers); frames are read locally and the stream stops the instant a code

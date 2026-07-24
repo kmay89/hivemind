@@ -71,20 +71,34 @@ async function waitVal(page, sel, tries = 60) {
   const host = await mk('host');
   const join = await mk('join');
 
-  // --- QR encoder sweep: render QRs of many sizes, decode with an independent
-  // decoder (jsqr), so every version/table row we can emit is validated ---
-  let jsQR = null;
-  try { jsQR = require('jsqr'); } catch (e) { console.log('(jsqr not installed — skipping QR validation: npm i jsqr)'); }
-  if (jsQR) {
+  // --- QR encoder sweep: render QRs of many sizes and decode them with an
+  // independent decoder, so every version/table row we can emit is validated.
+  // zxing (what real camera stacks use) is preferred; jsqr is the fallback but
+  // is only trusted up to ~950 chars — it fails some perfectly valid dense
+  // symbols that zxing and phone cameras read fine.
+  async function makeQRDecoder() {
+    try {
+      const pkgDir = path.dirname(require.resolve('zxing-wasm/package.json'));
+      const { readBarcodes, prepareZXingModule } = await import('zxing-wasm/reader');
+      await prepareZXingModule({ overrides: { wasmBinary: fs.readFileSync(path.join(pkgDir, 'dist/reader/zxing_reader.wasm')).buffer }, fireImmediately: true });
+      return { name: 'zxing', cap: Infinity, fn: async img => { const r = await readBarcodes({ data: new Uint8ClampedArray(img.data), width: img.width, height: img.height }, { formats: ['QRCode'] }); return r && r[0] ? r[0].text : null; } };
+    } catch (e) {}
+    try { const jsQR = require('jsqr');
+      return { name: 'jsqr', cap: 950, fn: async img => { const r = jsQR(new Uint8ClampedArray(img.data), img.width, img.height); return r ? r.data : null; } };
+    } catch (e) { return null; }
+  }
+  const qrDec = await makeQRDecoder();
+  if (!qrDec) console.log('(no QR decoder installed — skipping QR validation: npm i zxing-wasm jsqr)');
+  else {
     let allOk = true;
-    for (const len of [20, 80, 160, 300, 450, 600, 800, 1000]) {
+    for (const len of [20, 80, 160, 300, 450, 600, 800, 950, 1100].filter(l => l <= qrDec.cap)) {
       const payload = 'HIVE2.' + 'Ab-_'.repeat(Math.ceil(len / 4)).slice(0, len);
       const img = await host.evaluate(t => { const d = window.__hmQR(t); return d ? { data: Array.from(d.data), width: d.width, height: d.height } : null; }, payload);
       if (!img) { console.log(`✗ QR encode failed at len=${len}`); allOk = false; continue; }
-      const res = jsQR(new Uint8ClampedArray(img.data), img.width, img.height);
-      if (!res || res.data !== payload) { console.log(`✗ QR decode mismatch at len=${len}: ${res ? 'wrong data' : 'no decode'}`); allOk = false; }
+      const got = await qrDec.fn(img);
+      if (got !== payload) { console.log(`✗ QR decode mismatch at len=${len} (${qrDec.name}): ${got ? 'wrong data' : 'no decode'}`); allOk = false; }
     }
-    console.log(allOk ? '✓ QR encoder sweep: all payload sizes decode correctly (independent decoder)' : '✗ QR encoder sweep had failures');
+    console.log(allOk ? `✓ QR encoder sweep: all payload sizes decode correctly (${qrDec.name})` : '✗ QR encoder sweep had failures');
   }
 
   // --- host: title -> Play Together -> Host a hive ---
@@ -94,13 +108,13 @@ async function waitVal(page, sel, tries = 60) {
   await host.$eval('#mpHost .mpDetails', d => { d.open = true; });   // paste boxes live behind a fold now
   const invite = await waitVal(host, '#inviteCode');
   console.log('✓ invite code generated (' + invite.length + ' chars' + (invite.includes('HIVE2.') ? ', deflated' : '') + ')');
-  if (jsQR) {
+  if (qrDec) {
     const shown = await host.evaluate(() => { const cv = document.getElementById('inviteQR');
       if (!cv || !cv.width) return null; const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height);
       return { data: Array.from(d.data), width: d.width, height: d.height }; });
     if (shown) {
-      const res = jsQR(new Uint8ClampedArray(shown.data), shown.width, shown.height);
-      console.log(res && res.data === invite ? '✓ on-screen invite QR decodes to the exact invite URL' : '✗ invite QR decode failed');
+      const got = await qrDec.fn(shown);
+      console.log(got === invite ? '✓ on-screen invite QR decodes to the exact invite URL' : '✗ invite QR decode failed');
     } else console.log('✗ invite QR canvas empty');
   }
 
