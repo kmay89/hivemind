@@ -987,6 +987,39 @@
   @media (prefers-reduced-motion: reduce){
     *,*::before,*::after{ animation-duration:.001s !important; transition-duration:.05s !important; }
   }
+  /* ===== hive link (same-room multiplayer) ===== */
+  #mpStrip{ position:fixed; left:50%; transform:translateX(-50%); top:calc(env(safe-area-inset-top,0px) + 50px); z-index:58; display:flex; gap:5px; flex-wrap:wrap; justify-content:center; max-width:92vw; pointer-events:none; }
+  #mpStrip .chip{ font:600 10.5px 'JetBrains Mono',monospace; color:#1c1508; border-radius:20px; padding:3px 9px; box-shadow:0 2px 6px rgba(0,0,0,0.35); border:1.5px solid rgba(0,0,0,0.28); opacity:0.94; }
+  #mpStrip .chip.gone{ opacity:0.35; text-decoration:line-through; }
+  .mpCode{ width:100%; min-height:72px; max-height:104px; resize:none; font:500 9.5px 'JetBrains Mono',monospace; color:#f5e9c8; background:rgba(0,0,0,0.35); border:1px solid rgba(255,214,107,0.35); border-radius:9px; padding:7px; word-break:break-all; }
+  .mpRow{ display:flex; gap:7px; margin-top:7px; }
+  .mpRow .btn{ flex:1; }
+  #mpPlayers,#mpPlayersJ{ display:flex; flex-direction:column; gap:5px; margin:9px 0 0; }
+  .mpP{ display:flex; align-items:center; gap:8px; font:600 12.5px 'Bricolage Grotesque',sans-serif; background:rgba(0,0,0,0.25); border-radius:9px; padding:6px 10px; text-align:left; }
+  .mpP i{ width:12px; height:12px; border-radius:50%; flex:none; display:inline-block; }
+  #mpName{ width:100%; font:600 14px 'Bricolage Grotesque',sans-serif; color:#f5e9c8; background:rgba(0,0,0,0.35); border:1px solid rgba(255,214,107,0.35); border-radius:9px; padding:9px 10px; margin:0; min-width:0; }
+  .mpHow{ font:500 11px 'JetBrains Mono',monospace; color:var(--dim); line-height:1.55; margin-top:8px; text-align:left; }
+  #voteBarWrap{ height:7px; border-radius:4px; background:rgba(255,255,255,0.14); overflow:hidden; margin-top:10px; }
+  #voteBar{ height:100%; width:100%; background:linear-gradient(90deg,#ffd66b,#ff9d5a); }
+  #voteTally{ font:600 14.5px 'Bricolage Grotesque',sans-serif; margin-top:9px; min-height:22px; letter-spacing:1px; }
+  .voteBtns{ display:flex; gap:9px; margin-top:11px; }
+  .voteBtns .btn{ flex:1; font-size:16px; padding:13px 8px; }
+  .netc [data-sp]{ display:none !important; }
+  .netc #undoBtn{ display:none !important; }
+  .mpBadge{ font:700 11px 'JetBrains Mono',monospace; letter-spacing:1.5px; color:#ffd66b; text-transform:uppercase; }
+  .mpSector{ font:800 24px 'Bricolage Grotesque',sans-serif; margin:5px 0 2px; }
+  #mpOrder{ position:fixed; left:50%; transform:translateX(-50%); top:calc(env(safe-area-inset-top,0px) + 82px); z-index:57;
+    font:600 12px 'Bricolage Grotesque',sans-serif; color:#1c1508; background:linear-gradient(180deg,#ffe9a8,#ffd66b);
+    border:1.5px solid rgba(0,0,0,0.3); border-radius:12px; padding:6px 12px 8px; box-shadow:0 3px 10px rgba(0,0,0,0.4);
+    max-width:88vw; text-align:center; pointer-events:none; }
+  #mpOrder .ok{ font-family:'JetBrains Mono',monospace; font-weight:700; }
+  #mpOrderBar{ height:4px; border-radius:2px; background:rgba(0,0,0,0.18); overflow:hidden; margin-top:5px; }
+  #mpOrderBar i{ display:block; height:100%; background:#7a4d12; border-radius:2px; }
+  .qrWrap{ background:#fff; border-radius:14px; padding:10px; display:flex; justify-content:center; margin-top:9px; box-shadow:0 4px 14px rgba(0,0,0,0.35); }
+  .qrWrap canvas{ width:min(236px,62vw); height:auto; image-rendering:pixelated; }
+  .mpDetails{ margin-top:8px; text-align:left; }
+  .mpDetails summary{ font:600 11px 'JetBrains Mono',monospace; color:var(--dim); cursor:pointer; padding:3px 0; }
+  #scanVid{ width:100%; max-height:52vh; border-radius:12px; background:#000; margin-top:8px; }
 </style>
 </head>
 <body>
@@ -1334,6 +1367,7 @@
         <button class="btn pulse" id="startNew">Found a new colony</button>
       </div>
       <button class="btn" id="startDaily" style="margin-top:8px"><span class="dsun">☀</span> Daily Challenge</button>
+      <button class="btn" id="startParty" style="margin-top:8px">🐝 Play Together <span style="opacity:0.7;font-size:11px">· 2–8 keepers, one hive</span></button>
       <div id="dailyCap" style="font:500 11px 'JetBrains Mono',monospace; color:var(--dim); margin-top:5px"></div>
       <div class="cardLinks">
         <a href="about.html" target="_blank" rel="noopener">About</a><a href="privacy.html" target="_blank" rel="noopener">Privacy</a><a href="terms.html" target="_blank" rel="noopener">Terms</a>
@@ -1354,6 +1388,111 @@
       </div>
     </div>
   </div>
+
+  <!-- hive link: same-room multiplayer — 2–8 keepers, one hive, no server -->
+  <div class="ov hide" id="mpHome" role="dialog" aria-modal="true">
+    <div class="card panel">
+      <h1>PLAY TOGETHER</h1>
+      <div class="sub">one hive · 2–8 keepers · same room or same Wi-Fi</div>
+      <p style="margin:8px 0 2px">Everyone tends their own patch of comb. The big calls — where to forage, when to harvest — the hive <b>votes on</b>, the way real bees do.</p>
+      <div class="mpRow" style="margin-top:7px">
+        <input id="mpName" maxlength="16" placeholder="what shall the bees call you?" autocomplete="off" style="flex:1">
+        <button class="btn" id="mpNameRoll" title="Roll a keeper name" style="flex:0 0 auto">🎲</button>
+      </div>
+      <div class="mpRow">
+        <button class="btn pulse" id="mpHostBtn">👑 Host a hive</button>
+        <button class="btn" id="mpJoinBtn">🐝 Join a hive</button>
+      </div>
+      <div id="mpSafe" class="mpHow hide" style="text-align:center">🛡 Your solo colony stays tucked in its own comb — parties never touch that save.</div>
+      <button class="btn ghost" id="mpHomeBack" style="margin-top:8px">‹ Back</button>
+    </div>
+  </div>
+  <div class="ov hide" id="mpHost" role="dialog" aria-modal="true">
+    <div class="card panel">
+      <h1>YOUR HIVE</h1>
+      <div class="sub" id="mpHostState">brewing your first invite…</div>
+      <div id="inviteQRWrap" class="qrWrap hide"><canvas id="inviteQR" aria-label="Invite code as a QR — scan with a phone camera"></canvas></div>
+      <div class="mpRow">
+        <button class="btn" id="inviteShare">📤 Send invite</button>
+        <button class="btn" id="inviteScan">📷 Scan their reply</button>
+      </div>
+      <details class="mpDetails"><summary>more ways (copy &amp; paste)</summary>
+        <textarea class="mpCode" id="inviteCode" readonly aria-label="Invite code"></textarea>
+        <div class="mpRow"><button class="btn" id="inviteCopy">📋 Copy invite</button></div>
+        <textarea class="mpCode" id="answerIn" placeholder="…or paste their reply here" style="margin-top:9px" aria-label="Reply code from a joining keeper"></textarea>
+        <div class="mpRow"><button class="btn" id="answerAdd">＋ Welcome them in</button></div>
+      </details>
+      <button class="btn hide" id="mpResume" style="margin-top:8px"></button>
+      <div id="mpPlayers"></div>
+      <div class="mpRow">
+        <button class="btn ghost" id="mpHostBack">‹ Cancel</button>
+        <button class="btn pulse" id="mpStart">Wake the hive ▶</button>
+      </div>
+      <div class="mpHow">1&nbsp;· They <b>scan the honeycomb code</b> with their camera (or you send the link).<br>2&nbsp;· Their phone shows a reply — <b>scan their screen</b> (or they send it back).<br>3&nbsp;· 🎉 They’re in. Repeat for the next keeper, then wake the hive.</div>
+    </div>
+  </div>
+  <div class="ov hide" id="mpJoin" role="dialog" aria-modal="true">
+    <div class="card panel">
+      <h1>JOIN A HIVE</h1>
+      <div class="sub" id="joinState">paste the invite your host sent you — or scan their screen</div>
+      <textarea class="mpCode" id="joinIn" placeholder="paste the invite code here…" aria-label="Invite code from the host"></textarea>
+      <div class="mpRow">
+        <button class="btn pulse" id="joinGo">Answer the call 🐝</button>
+        <button class="btn" id="joinScan">📷 Scan invite</button>
+      </div>
+      <div id="replyWrap" class="hide">
+        <div id="replyQRWrap" class="qrWrap hide"><canvas id="replyQR" aria-label="Your reply code as a QR — show it to the host"></canvas></div>
+        <div class="mpRow">
+          <button class="btn" id="replyShare">📤 Send it back</button>
+          <button class="btn" id="replyCopy">📋 Copy</button>
+        </div>
+        <textarea class="mpCode" id="replyCode" readonly style="margin-top:9px" aria-label="Your reply code"></textarea>
+        <div class="mpHow">Show the code to your host to scan — or send it back any way you like. Nothing to get wrong: any path works.</div>
+      </div>
+      <div id="mpPlayersJ"></div>
+      <button class="btn ghost" id="mpJoinBack" style="margin-top:8px">‹ Back</button>
+    </div>
+  </div>
+  <div class="ov hide" id="mpScan" role="dialog" aria-modal="true">
+    <div class="card panel">
+      <div class="mpBadge">📷 scanning</div>
+      <div class="sub" id="scanHint">point at the code</div>
+      <video id="scanVid" playsinline muted></video>
+      <button class="btn ghost" id="scanCancel" style="margin-top:9px">✕ Never mind</button>
+    </div>
+  </div>
+  <div class="ov hide" id="mpRole" role="dialog" aria-modal="true">
+    <div class="card panel">
+      <div class="mpHow" id="roleHive" style="text-align:center;margin:0 0 4px"></div>
+      <div class="mpBadge" id="roleBadge">your post</div>
+      <div class="mpSector" id="roleName"></div>
+      <p id="roleText" style="margin:6px 0 2px"></p>
+      <button class="btn pulse" id="roleGo" style="margin-top:10px">To the comb ▶</button>
+    </div>
+  </div>
+  <div class="ov hide" id="mpVote" role="dialog" aria-modal="true">
+    <div class="card panel">
+      <div class="mpBadge">🗳 the hive decides</div>
+      <h1 id="voteQ" style="font-size:21px"></h1>
+      <div class="sub" id="voteSub"></div>
+      <div class="voteBtns">
+        <button class="btn pulse" id="voteYes">🐝 For</button>
+        <button class="btn" id="voteNo">✋ Against</button>
+      </div>
+      <div id="voteTally"></div>
+      <div id="voteBarWrap"><div id="voteBar"></div></div>
+    </div>
+  </div>
+  <div class="ov hide" id="mpEnd" role="dialog" aria-modal="true">
+    <div class="card panel">
+      <h1 id="mpEndTitle">THE YEAR TURNS</h1>
+      <div id="mpEndBody" style="margin:8px 0"></div>
+      <button class="btn pulse hide" id="mpEndAgain">Another year — same crew ▶</button>
+      <button class="btn ghost" id="mpEndClose" style="margin-top:8px">Back to the meadow</button>
+    </div>
+  </div>
+  <div id="mpStrip" class="hide" aria-hidden="true"></div>
+  <div id="mpOrder" class="hide" role="status"></div>
 
   <!-- cinematic intro -->
   <div class="ov hide" id="story">
@@ -1400,7 +1539,7 @@
     // / non-https, where no service worker runs) — the real source of truth is sw.js's
     // VERSION; syncGameVer() below asks the running worker and corrects this label
     // live, so the two only ever drift cosmetically for a moment, never permanently.
-    let GAME_VER='2026.07.28.24';
+    let GAME_VER='2026.07.29.25';
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2281,13 +2420,21 @@
           toast(raidLoss?('Your guards drove the hornet off — '+raidLoss+' bees were lost.'):'Your guards drove the hornet off.'); } }
       else { h.x+=h.vx*size*dt; mv(h.x>hiveCx?W+size*6:-size*6, -size*6, 6);
         if(h.y<-size*4||h.x<-size*5||h.x>W+size*5){ hornet=null; hornetCD=(year>=4?14+Math.random()*20:24+Math.random()*36); } } }
-    function hitHornet(p){ const h=hornet; if(!h||h.state==='flee') return false;
-      if(Math.hypot(p.x-h.x,p.y-h.y)>size*2.4) return false;
+    function hornetDamage(){ const h=hornet; if(!h||h.state==='flee') return;
       h.hp--; h.x+=(Math.random()-0.5)*size*1.5; h.y-=size*0.4; shake=Math.max(shake,0.22); hitstop=0.055;
       puff(h.x,h.y,'#ff9a7a',6,1.4); chime(220+(h.maxhp-h.hp)*130, 160);
       if(h.hp<=0){ h.state='flee'; grantBadge('guardian'); puff(h.x,h.y,'#ffd76b',18,1.8); chime(520,880);
         if(raidLoss===0){ rj++; burst(h.x,h.y,22); toast('Perfect defense — not one bee lost! +1 ✧ royal jelly 🛡'); fanfare(); }
-        else toast('Hornet driven off! The guard bees prevail. 🛡'); saveGame(); }
+        else toast('Hornet driven off! The guard bees prevail. 🛡');
+        if(NET.on&&NET.host) netBcast({t:'ev',msg:raidLoss===0?'🛡 Perfect defense — not one bee lost! +1 ✧':'🛡 Hornet driven off — the hive prevails.'});
+        saveGame(); } }
+    function hitHornet(p){ const h=hornet; if(!h||h.state==='flee') return false;
+      if(Math.hypot(p.x-h.x,p.y-h.y)>size*2.4) return false;
+      if(netClient()){ // the swat lands on the Queen's sim; keep the local juice immediate
+        netSend({t:'hh'}); shake=Math.max(shake,0.18); hitstop=0.045;
+        puff(h.x,h.y,'#ff9a7a',6,1.4); chime(220+(h.maxhp-Math.max(1,h.hp))*130,160); h.x+=(Math.random()-0.5)*size;
+        return true; }
+      hornetDamage();
       return true; }
     function drawHornet(){ const h=hornet; if(!h) return; const s=size*0.5;
       if(h.state==='raid'){ const pr=size*2.4*(1+0.08*Math.sin(gt*6));
@@ -2506,8 +2653,9 @@
     function paintFx(cell,kind){ cell.pf=1;                       // per-cell "just placed" flash, decayed in the render
       const p=cellCenter(cell.c,cell.r);
       if(!RM) puff(p.x,p.y,PAINTCOL[kind]||'#ffd66b', kind==='erase'?3:5, 0.7);
+      netPaintChanged(cell);   // hive link: a joiner reports the cell's new state to the Queen's device
       if(paintSndCool<=0){ paintDab(kind); paintSndCool=0.05; } }
-    function applyBrush(cell){ if(!cell)return; let changed=false, kind=brush;
+    function applyBrush(cell){ if(!cell)return; if(!netPaintOk(cell))return; let changed=false, kind=brush;
       if(brush==='expand'){ if(cell.built)return; if(neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built)){ const was=cell.flagExpand; if(!cell.flagExpand&&!paintErase){flaggedExpand++; armLesson('expand',flaggedExpand);} cell.flagExpand=!paintErase; if(!cell.flagExpand)cell.bp=0; changed=(was!==cell.flagExpand); kind=paintErase?'erase':'expand'; checkCoachProgress(); watchHands(); if(changed) paintFx(cell,kind); } return; }
       if(!cell.built)return;
       if(paintErase){ if(cell.zone==='brood'&&cell.brood)return; changed=(cell.zone!=='none'); cell.zone='none'; kind='erase'; }
@@ -2518,10 +2666,10 @@
     let undoStack=[], strokeSnap=null;
     function combSnap(){ return cells.map(c=>({z:c.zone,f:c.flagExpand,p:c.bp,b:c.brood})); }
     function combRestore(sn){ for(let i=0;i<cells.length;i++){ const c=cells[i],v=sn[i]; if(!v)continue; c.zone=v.z; c.flagExpand=v.f; c.bp=v.p||0; c.brood=v.b; } }
-    function syncUndoBtn(){ const b=$('undoBtn'); if(b) b.classList.toggle('hide', undoStack.length===0||onboard||!started||over); }
+    function syncUndoBtn(){ const b=$('undoBtn'); if(b) b.classList.toggle('hide', undoStack.length===0||onboard||!started||over||(NET.on&&NET.started)); }   // no undo in a shared comb
     function commitStroke(){ if(!strokeSnap) return; let ch=false;
       for(let i=0;i<cells.length;i++){ const c=cells[i],v=strokeSnap[i]; if(c.zone!==v.z||c.flagExpand!==v.f||c.brood!==v.b){ ch=true; break; } }
-      if(ch){ undoStack.push(strokeSnap); if(undoStack.length>24) undoStack.shift(); syncUndoBtn(); } strokeSnap=null;
+      if(ch&&!(NET.on&&NET.started)){ undoStack.push(strokeSnap); if(undoStack.length>24) undoStack.shift(); syncUndoBtn(); } strokeSnap=null;
       if(pendingLesson && !onboard){ const k=pendingLesson; pendingLesson=null; showLesson(k); } } // second-pass card, after the stroke
     function doUndo(){ if(!undoStack.length||onboard) return; combRestore(undoStack.pop()); syncUndoBtn();
       forecastCache=forecastToSpring(); syncHUD(); toast('\u21a9 Last comb change undone.'); }
@@ -2600,7 +2748,8 @@
     function rel(e){ const r=canvas.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; }
     function selectPatch(p){ let best=null,bd=(W*0.14)**2;
       for(let i=0;i<PATCHES.length;i++){ const q=patchQuality(i,day); if(q<=0.02)continue; const pp=patchPos(i); const d=(pp.x-p.x)**2+(pp.y-p.y)**2; if(d<bd){bd=d;best=i;} }
-      if(best!=null){ activePatch=best; grantBadge('waggler'); forecastCache=forecastToSpring();
+      if(best!=null){ if(NET.on&&NET.started){ netPropose('patch',best); return; }   // in a linked hive, the patch is the hive's call
+        activePatch=best; grantBadge('waggler'); forecastCache=forecastToSpring();
         const q=patchQuality(best,day), D=PATCHES[best].dist;
         const bl=q>0.6?'a rich bloom':q>0.25?'a modest bloom':'a thin bloom';
         const fl=D<0.35?'a short flight':D<0.65?'a fair flight':'a long flight \u2014 it had better be worth it';
@@ -2674,7 +2823,9 @@
     canvas.addEventListener('pointerleave',()=>{hoveredCell=null; lastInspectedCell=null; hideInspect();});
     canvas.addEventListener('contextmenu',e=>e.preventDefault());
 
-    { const sl=$('forageSlider'); if(sl) sl.addEventListener('input',()=>{ forage=FORAGE_STEPS[Math.max(0,Math.min(4,+sl.value))]; forageTouched=true; forecastCache=forecastToSpring(); syncForageUI(); checkCoachProgress(); }); }
+    { const sl=$('forageSlider'); if(sl) sl.addEventListener('input',()=>{
+      if(netClient()){ syncForageUI(); if(NET.denyCool<=0){ NET.denyCool=4; toast('👑 The forage balance is the Queen’s call — lean over and talk her into it!'); } return; }
+      forage=FORAGE_STEPS[Math.max(0,Math.min(4,+sl.value))]; forageTouched=true; forecastCache=forecastToSpring(); syncForageUI(); checkCoachProgress(); }); }
     document.querySelectorAll('[data-brush]').forEach(b=>press(b,()=>{brush=b.dataset.brush;document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x===b)); syncBrushHelp(); checkCoachProgress();}));
     press($('undoBtn'), doUndo);
     press($('confYes'), confirmYes);
@@ -2785,6 +2936,7 @@
     function harvestSurplus(){ const hs=harvestState();
       if(!hs.inWin){ if(started&&!over&&!onboard) toast('Not yet \u2014 harvest is an autumn job. The amber window on the timeline knows when.'); return; }
       if(!hs.ok){ toast('The bees need this honey more than the shelf does. Bank '+Math.ceil(hs.need*1.25+8)+' cells, then take your jar.'); return; }
+      if(NET.on&&NET.started&&!netExec){ netPropose('harvest',1); return; }   // linked hive: a jar comes off only by vote
       honeyU-=8*HC; jars++; jarsThisYear++; LIFE.j++; lifeSave(); clink(); burst(hiveCx,hiveCy,16);
       const jar=sealJar(); CELLAR.push(jar); cellarSave(); syncCellarN(); mix=FLOWERS.map(()=>0);
       forecastCache=forecastToSpring(); setN('vRJ','✧'+rj); $('sJars').textContent=jars+(jars===1?' jar':' jars');
@@ -2796,7 +2948,9 @@
     press($('harvestBtn'),harvestSurplus);
 
     // ===================== emergency feed (one comeback per winter) =====================
-    function feedSyrup(){ if(fedWinter||over) return; fedWinter=true; honeyU+=10*HC; starveT=0;
+    function feedSyrup(){ if(fedWinter||over) return;
+      if(NET.on&&NET.started&&!netExec){ netPropose('feed',1); return; }   // linked hive: syrup goes in by vote
+      fedWinter=true; honeyU+=10*HC; starveT=0;
       chime(320,540); puff(hiveCx,hiveCy,'#ffd97a',18,1.2);
       toast('You slide in a syrup feeder \u2014 the whole cluster leans toward it. +10 cells. (Kindness caps the year at a B. Worth it.)');
       $('feedBtn').classList.add('hide'); forecastCache=forecastToSpring(); saveGame(); }
@@ -3847,7 +4001,7 @@
       const bx=cells.map(c=>(!c.built&&c.flagExpand&&c.bp>0)?Math.round(c.bp*100):0);
       return {v:SAVE_V,t:Date.now(),day,year,P,honeyU,pollenU,nectarU,peakPop,bornTotal,swarmP,mite:Math.round(mite*1000)/1000,forage,activePatch,grades,queenAge,cb,bt,bx,
         rj,jars,jy:jarsThisYear,ql:queenLine,rs:roster,se:curSeason?curSeason.id:'calm',sq:seasonEventDone?1:0,sx:seasonEventFired,mx:mix.map(v=>Math.round(v)),ow:Object.keys(owned),fw:fedWinter?1:0,bf:Math.round(bankAtFrost),tp:Object.keys(seenTips),ls:Object.keys(lessonSeen),gd:goals?goals.map(g=>g.done?1:0):[0,0,0,0]}; }
-    function saveGame(){ if(dailyMode) return true; return lsSet(SAVE_KEY,JSON.stringify(serialize())); }
+    function saveGame(){ if(dailyMode||NET.on) return true; return lsSet(SAVE_KEY,JSON.stringify(serialize())); }   // a hive-link party never touches the solo save
     function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
     // a save is only safe to hand to deserialize() if it's the shape that code below
     // actually expects — same version, and the cell arrays sized for the live grid
@@ -4634,6 +4788,687 @@
     press($('helpBtn'),()=>openOverlay('guide'));
     press($('guideClose'),()=>closeOverlay('guide'));
 
+    // ===================== hive link (same-room multiplayer, 2–8 keepers) =====================
+    // One hive, many hands. The host device is the Queen: it runs the one true
+    // simulation and streams state snapshots to every joined keeper over WebRTC
+    // data channels. There is no signaling server — invites and replies are
+    // copy-pasted / AirDropped codes (STUN only for candidate discovery), which
+    // keeps the zero-dependency, zero-server rule intact. Joiners paint their
+    // own sector of comb; colony-wide calls (forage patch, harvest, syrup) go
+    // to a hive vote — real colonies decide the same way, by waggle-dance
+    // quorum, which is the teachable moment baked into the vote cards.
+    const NET={ on:false, host:false, started:false, endSent:false, myIx:-1, name:'',
+      players:[], pend:null, snapT:0, vote:null, cVote:null, voteN:0, denyCool:0, hadHornet:false };
+    // ---- a tiny QR encoder (byte mode, error-correction level L) ----
+    // Exists so invites/replies can be *scanned* instead of pasted — the whole
+    // "grandma joins in ten seconds" flow. Ported from the public-domain
+    // qrcodegen algorithm (Project Nayuki); validated in tools/mp-smoke.js by
+    // decoding rendered symbols with an independent decoder across versions.
+    const QR_ECC_L=[-1,7,10,15,20,26,18,20,24,30,18,20,24,26,30,22,24,28,30,28,28,28,28,30,30,26,28,30,30,30,30,30,30,30,30,30,30,30,30,30,30];
+    const QR_NB_L=[-1,1,1,1,1,1,2,2,2,2,4,4,4,4,4,6,6,6,6,7,8,8,9,9,10,12,12,12,13,14,15,16,17,18,19,19,20,21,22,24,25];
+    const QR_EXP=new Uint8Array(512), QR_LOG=new Uint8Array(256);
+    (function(){ let x=1; for(let i=0;i<255;i++){ QR_EXP[i]=x; QR_LOG[x]=i; x<<=1; if(x&0x100) x^=0x11D; } for(let i=255;i<512;i++) QR_EXP[i]=QR_EXP[i-255]; })();
+    function qrMul(a,b){ return (a&&b)?QR_EXP[QR_LOG[a]+QR_LOG[b]]:0; }
+    function qrRawModules(v){ let r=(16*v+128)*v+64; if(v>=2){ const na=Math.floor(v/7)+2; r-=(25*na-10)*na-55; if(v>=7) r-=36; } return r; }
+    function qrDataCW(v){ return (qrRawModules(v)>>3)-QR_ECC_L[v]*QR_NB_L[v]; }
+    function qrDivisor(deg){ const res=new Uint8Array(deg); res[deg-1]=1; let root=1;
+      for(let i=0;i<deg;i++){ for(let j=0;j<deg;j++){ res[j]=qrMul(res[j],root)^(j+1<deg?res[j+1]:0); } root=qrMul(root,2); }
+      return res; }
+    function qrRemainder(data,div){ const res=new Uint8Array(div.length);
+      for(const b of data){ const f=b^res[0]; res.copyWithin(0,1); res[res.length-1]=0;
+        for(let j=0;j<div.length;j++) res[j]^=qrMul(div[j],f); }
+      return res; }
+    function qrEncode(text){ const bytes=new TextEncoder().encode(text);
+      let v=0; for(let t=1;t<=40;t++){ if(4+(t<10?8:16)+bytes.length*8<=qrDataCW(t)*8){ v=t; break; } }
+      if(!v) return null;
+      const cap=qrDataCW(v)*8, bits=[];
+      const push=(val,n)=>{ for(let i=n-1;i>=0;i--) bits.push((val>>>i)&1); };
+      push(4,4); push(bytes.length, v<10?8:16); for(const b of bytes) push(b,8);
+      push(0, Math.min(4, cap-bits.length)); if(bits.length%8) push(0, 8-bits.length%8);
+      for(let pad=0xEC; bits.length<cap; pad^=0xEC^0x11) push(pad,8);
+      const data=new Uint8Array(cap/8); for(let i=0;i<bits.length;i++) data[i>>3]|=bits[i]<<(7-(i&7));
+      // split into RS blocks (short blocks first), then interleave column-wise
+      const nb=QR_NB_L[v], ecl=QR_ECC_L[v], total=qrRawModules(v)>>3;
+      const shortData=Math.floor(total/nb)-ecl, numLong=total%nb, div=qrDivisor(ecl), blocks=[];
+      let off=0;
+      for(let i=0;i<nb;i++){ const len=shortData+(i>=nb-numLong?1:0);
+        const d=data.slice(off,off+len); off+=len; blocks.push({d, e:qrRemainder(d,div)}); }
+      const cw=[];
+      for(let i=0;i<=shortData;i++) for(const b of blocks){ if(i<b.d.length) cw.push(b.d[i]); }
+      for(let i=0;i<ecl;i++) for(const b of blocks) cw.push(b.e[i]);
+      // ---- build the matrix ----
+      const size=v*4+17, mod=new Uint8Array(size*size), fun=new Uint8Array(size*size);
+      const set=(x,y,dark)=>{ mod[y*size+x]=dark?1:0; fun[y*size+x]=1; };
+      const finder=(cx,cy)=>{ for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){ const x=cx+dx,y=cy+dy;
+        if(x<0||y<0||x>=size||y>=size) continue; const d=Math.max(Math.abs(dx),Math.abs(dy)); set(x,y,d!==2&&d!==4); } };
+      finder(3,3); finder(size-4,3); finder(3,size-4);
+      for(let i=0;i<size;i++){ if(!fun[6*size+i]) set(i,6,i%2===0); if(!fun[i*size+6]) set(6,i,i%2===0); }
+      if(v>=2){ const na=Math.floor(v/7)+2;
+        const step=(v===32)?26:Math.ceil((v*4+4)/(na*2-2))*2;
+        const pos=[6]; for(let p=size-7;pos.length<na;p-=step) pos.splice(1,0,p);
+        // skip only the three finder corners — edge patterns on the timing lines are required
+        for(let i=0;i<na;i++) for(let j=0;j<na;j++){
+          if((i===0&&j===0)||(i===0&&j===na-1)||(i===na-1&&j===0)) continue;
+          const cx=pos[j], cy=pos[i];
+          for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++) set(cx+dx,cy+dy,Math.max(Math.abs(dx),Math.abs(dy))!==1); } }
+      if(v>=7){ let rem=v; for(let i=0;i<12;i++) rem=(rem<<1)^((rem>>>11)*0x1F25);
+        const vb=(v<<12)|rem;
+        for(let i=0;i<18;i++){ const bit=(vb>>>i)&1, a=size-11+i%3, b=Math.floor(i/3); set(a,b,bit); set(b,a,bit); } }
+      // reserve format areas (values written per-mask below)
+      for(let i=0;i<=8;i++){ if(i!==6){ fun[8*size+i]=1; fun[i*size+8]=1; } }
+      for(let i=0;i<8;i++) fun[8*size+size-1-i]=1;
+      for(let i=0;i<7;i++) fun[(size-7+i)*size+8]=1;
+      set(8,size-8,true);
+      // zigzag data placement
+      const dataPos=[]; let up=true;
+      for(let right=size-1;right>=1;right-=2){ if(right===6) right=5;
+        for(let k=0;k<size;k++){ const y=up?size-1-k:k;
+          for(const x of [right,right-1]) if(!fun[y*size+x]) dataPos.push([x,y]); }
+        up=!up; }
+      for(let i=0;i<dataPos.length;i++){ const [x,y]=dataPos[i];
+        mod[y*size+x]=(i>>3)<cw.length ? (cw[i>>3]>>>(7-(i&7)))&1 : 0; }
+      const MASKS=[(x,y)=>(x+y)%2===0,(x,y)=>y%2===0,(x,y)=>x%3===0,(x,y)=>(x+y)%3===0,
+        (x,y)=>(Math.floor(x/3)+Math.floor(y/2))%2===0,(x,y)=>(x*y)%2+(x*y)%3===0,
+        (x,y)=>((x*y)%2+(x*y)%3)%2===0,(x,y)=>((x+y)%2+(x*y)%3)%2===0];
+      const writeFormat=(mask)=>{ let fb=(1<<3)|mask, rem=fb;   // 1 = EC level L
+        for(let i=0;i<10;i++) rem=(rem<<1)^((rem>>>9)*0x537);
+        const f=((fb<<10)|rem)^0x5412, bit=i=>(f>>>i)&1;
+        for(let i=0;i<=5;i++) mod[i*size+8]=bit(i);
+        mod[7*size+8]=bit(6); mod[8*size+8]=bit(7); mod[8*size+7]=bit(8);
+        for(let i=9;i<15;i++) mod[8*size+(14-i)]=bit(i);
+        for(let i=0;i<8;i++) mod[8*size+(size-1-i)]=bit(i);
+        for(let i=8;i<15;i++) mod[(size-15+i)*size+8]=bit(i); };
+      const applyMask=(mask)=>{ for(const [x,y] of dataPos) mod[y*size+x]^=MASKS[mask](x,y)?1:0; };
+      const penalty=()=>{ let p=0;
+        for(let y=0;y<size;y++){ let run=1; for(let x=1;x<size;x++){ if(mod[y*size+x]===mod[y*size+x-1]){ run++; if(x===size-1&&run>=5)p+=run-2; } else { if(run>=5)p+=run-2; run=1; } } }
+        for(let x=0;x<size;x++){ let run=1; for(let y=1;y<size;y++){ if(mod[y*size+x]===mod[(y-1)*size+x]){ run++; if(y===size-1&&run>=5)p+=run-2; } else { if(run>=5)p+=run-2; run=1; } } }
+        let dark=0; for(let i=0;i<size*size;i++) dark+=mod[i];
+        p+=10*Math.floor(Math.abs(dark*20-size*size*10)/(size*size));
+        return p; };
+      let best=0,bp=1e9;
+      for(let m=0;m<8;m++){ applyMask(m); writeFormat(m); const p=penalty(); if(p<bp){ bp=p; best=m; } applyMask(m); }
+      applyMask(best); writeFormat(best);
+      return {size, mod}; }
+    function drawQR(cv,text){ const q=qrEncode(text); if(!q||!cv) return false;
+      const quiet=4, n=q.size+quiet*2, scale=Math.max(2,Math.floor(560/n));
+      cv.width=n*scale; cv.height=n*scale;
+      const g=cv.getContext('2d'); g.fillStyle='#ffffff'; g.fillRect(0,0,cv.width,cv.height);
+      g.fillStyle='#1c1508';
+      for(let y=0;y<q.size;y++)for(let x=0;x<q.size;x++) if(q.mod[y*q.size+x]) g.fillRect((x+quiet)*scale,(y+quiet)*scale,scale,scale);
+      return true; }
+    window.__hmQR=(text)=>{ const cv=document.createElement('canvas'); if(!drawQR(cv,text)) return null;
+      return cv.getContext('2d').getImageData(0,0,cv.width,cv.height); };   // dev/test handle, like __hm
+    const NET_MAX=8, NET_VOTE_SECS=25;
+    const NETCOL=['#ffd66b','#8fc4ff','#a7e07c','#ff9d9d','#d9a7ff','#7fe2d3','#ffb063','#f0f0f0'];
+    let netSector=null, netVoteUI=null, netVotedIx=[], netExec=false, netLastSI=-1;
+    let joinPc=null, joinDc=null;
+    function netEsc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    function netClient(){ return NET.on && !NET.host && NET.started; }
+    // ---- signaling codes: base64url(JSON) with a magic prefix, whitespace-proof ----
+    function netB64(bytes){ let s=''; for(let i=0;i<bytes.length;i++) s+=String.fromCharCode(bytes[i]);
+      return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+    function netUnB64(str){ const s=atob(str.replace(/-/g,'+').replace(/_/g,'/'));
+      const b=new Uint8Array(s.length); for(let i=0;i<s.length;i++) b[i]=s.charCodeAt(i); return b; }
+    // codes are deflated when the browser can (HIVE2 ≈ half the size — smaller QR,
+    // faster AirDrop); HIVE1 is the plain fallback and stays accepted forever
+    async function netEnc(o){ const json=JSON.stringify(o);
+      if(typeof CompressionStream==='function'){ try{
+        const cs=new CompressionStream('deflate-raw'), w=cs.writable.getWriter();
+        w.write(new TextEncoder().encode(json)); w.close();
+        return 'HIVE2.'+netB64(new Uint8Array(await new Response(cs.readable).arrayBuffer())); }catch(e){} }
+      return 'HIVE1.'+btoa(unescape(encodeURIComponent(json))).replace(/\+/g,'-').replace(/\//g,'_'); }
+    async function netDec(t){ t=(t||'').replace(/\s+/g,'');   // codes survive URLs, messages, line wraps — find them anywhere
+      const m=t.match(/HIVE(1|2)\.([A-Za-z0-9_-]+)/); if(!m) return null;
+      try{
+        if(m[1]==='2'){ if(typeof DecompressionStream!=='function') return null;
+          const ds=new DecompressionStream('deflate-raw'), w=ds.writable.getWriter();
+          w.write(netUnB64(m[2])); w.close();
+          return JSON.parse(new TextDecoder().decode(await new Response(ds.readable).arrayBuffer())); }
+        return JSON.parse(decodeURIComponent(escape(atob(m[2].replace(/-/g,'+').replace(/_/g,'/'))))); }
+      catch(e){ return null; } }
+    // invite/reply travel as tappable links when we're on the web; raw codes on file://
+    function netUrl(kind,code){ const web=(location.protocol==='https:'||location.protocol==='http:');
+      return web?(location.origin+location.pathname+'#'+kind+'='+code):code; }
+    function netRtc(){ return new RTCPeerConnection({iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']}]}); }
+    // non-trickle: wait for the full candidate set so one code carries everything
+    // (iOS Safari withholds host candidates without camera permission — the STUN
+    // reflexive candidates gathered here are what let same-room iPhones link up)
+    function netIceDone(pc){ return new Promise(res=>{ if(pc.iceGatheringState==='complete') return res();
+      const t=setTimeout(res,3500);
+      pc.addEventListener('icegatheringstatechange',()=>{ if(pc.iceGatheringState==='complete'){ clearTimeout(t); res(); } }); }); }
+    function netSend(m){ if(joinDc&&joinDc.readyState==='open'){ try{ joinDc.send(JSON.stringify(m)); }catch(e){} } }
+    function netSendTo(p,m){ if(p&&p.dc&&p.dc.readyState==='open'){ try{ p.dc.send(JSON.stringify(m)); }catch(e){} } }
+    function netBcast(m){ if(!NET.host) return; const s=JSON.stringify(m);
+      for(const p of NET.players){ if(p.ix===0||p.gone||!p.dc) continue; try{ if(p.dc.readyState==='open') p.dc.send(s); }catch(e){} } }
+    function netToastAll(msg){ toast(msg); netBcast({t:'ev',msg}); }
+    function netRoster(){ return NET.players.map(p=>({ix:p.ix,n:p.name,g:p.gone?1:0})); }
+    // ---- the party ledger: the host autosaves the shared year under its own key,
+    // so a dead battery costs the room thirty seconds, not the whole evening.
+    // Completely separate from the solo save; resuming re-seats keepers by name.
+    const PARTY_KEY='hivemind.party.v1';
+    function partyWrite(){ if(!NET.host||!NET.started||NET.endSent) return;
+      lsSet(PARTY_KEY,JSON.stringify({v:1,t:Date.now(),name:NET.hiveName||'',od:NET.ordersDone||0,
+        s:serialize(), ps:NET.players.map(p=>p.name)})); }
+    function partyRead(){ try{ const raw=localStorage.getItem(PARTY_KEY); if(!raw) return null;
+      const sv=JSON.parse(raw); return (sv&&sv.v===1&&sv.s&&Array.isArray(sv.s.cb)&&sv.s.cb.length===cells.length)?sv:null; }catch(e){ return null; } }
+    function partyClear(){ try{ localStorage.removeItem(PARTY_KEY); }catch(e){} }
+    function netHiveName(){ const n=netMakeName().split(' '); return 'The '+n[0]+' '+n[1]+' Hive'; }
+    function netSnapObj(){ const s=serialize();
+      if(hornet) s.hn={x:(hornet.x-hiveCx)/size, y:(hornet.y-hiveCy)/size, vx:hornet.vx, vy:hornet.vy,
+        hp:hornet.hp, mh:hornet.maxhp, st:hornet.state, wob:hornet.wob};
+      return s; }
+    // ---- sectors: the Queen keeps the royal core; joiners get compass wedges ----
+    function netAssignSectors(){ netSector=new Int8Array(cells.length); const nw=NET.players.length-1;
+      const cx0=CCC+0.5*(CCR&1), TAU=Math.PI*2;
+      for(let i=0;i<cells.length;i++){ const c=cells[i];
+        // the royal core is just the brood nest — the starting ring beyond it
+        // falls into worker wedges so every keeper has comb to paint on day one
+        if(cellDist(c.c,c.r)<1.35){ netSector[i]=0; continue; }
+        if(nw<1){ netSector[i]=-2; continue; }
+        const gx=(c.c+0.5*(c.r&1)-cx0)*SQ3, gy=(c.r-CCR)*1.5;
+        let rel=Math.atan2(gy,gx)+Math.PI/2+Math.PI/nw; rel=((rel%TAU)+TAU)%TAU;
+        netSector[i]=Math.min(nw-1,Math.floor(rel/(TAU/nw)))+1; } }
+    function netSectorName(w,nw){ if(nw<=1) return 'the Whole Comb';
+      const A=-Math.PI/2+w*2*Math.PI/nw, names=['North','Northeast','East','Southeast','South','Southwest','West','Northwest'];
+      const k=((Math.round((A+Math.PI/2)/(Math.PI/4))%8)+8)%8;
+      return 'the '+names[k]+' Comb'; }
+    function netPaintOk(cell){ if(!NET.on||!NET.started||NET.host) return true;
+      const s=netSector?netSector[idx(cell.c,cell.r)]:-2;
+      if(s===-2||s===NET.myIx) return true;
+      if(s>=0&&NET.players[s]&&NET.players[s].gone) return true;
+      if(NET.denyCool<=0){ NET.denyCool=3; const p=NET.players[s];
+        toast('🚧 That’s '+(s===0?'the Queen’s royal core':(p?netEsc(p.name)+'’s comb':'another keeper’s comb'))+' — yours is <b>'+netSectorName(NET.myIx-1,NET.players.length-1)+'</b>.'); }
+      return false; }
+    // joiner → host: the changed cell's resulting state (idempotent, order-safe)
+    function netPaintChanged(cell){ if(!netClient()) return;
+      netSend({t:'p', i:idx(cell.c,cell.r), z:cell.zone, f:cell.flagExpand?1:0}); }
+    function netApplyPaint(m,pix){ const cell=cells[m.i]; if(!cell||!netSector) return;
+      const s=netSector[m.i]; const owner=NET.players[s];
+      if(!(s===-2||s===pix||(s>=0&&owner&&owner.gone))) return;
+      if(!cell.built){ const f=!!m.f;
+        if(f&&!neighbors(cell.c,cell.r).some(([c2,r2])=>cells[idx(c2,r2)].built)) return;
+        if(cell.flagExpand!==f){ cell.flagExpand=f; if(!f) cell.bp=0; paintFx(cell,f?'expand':'erase'); } return; }
+      const z=(m.z==='brood'||m.z==='honey')?m.z:'none';
+      if(z==='none'&&cell.zone==='brood'&&cell.brood) return;
+      if(z!==cell.zone){ cell.zone=z; if(z==='honey') cell.brood=null; paintFx(cell,z==='none'?'erase':z); } }
+    // ---- snapshots: the host's serialize() is already the state schema — reuse it ----
+    function netApplySnap(s){ if(!s||!Array.isArray(s.cb)||s.cb.length!==cells.length) return;
+      const ZN=['none','brood','honey'], STN=['egg','larva','pupa'];
+      day=s.day; year=s.year; P=s.P; honeyU=s.honeyU; pollenU=s.pollenU; nectarU=s.nectarU;
+      peakPop=s.peakPop||Math.round(P); mite=(typeof s.mite==='number')?s.mite:0;
+      if(typeof s.forage==='number') forage=s.forage;
+      activePatch=(s.activePatch===undefined?null:s.activePatch);
+      queenAge=s.queenAge||1; rj=s.rj||0; jars=s.jars||0; jarsThisYear=s.jy||0; fedWinter=!!s.fw;
+      if(s.mx&&s.mx.length===FLOWERS.length) mix=s.mx.slice();
+      curSeason=WEATHERS.find(x=>x.id===s.se)||curSeason;
+      if(goals) (s.gd||[]).forEach((d,i)=>{ if(goals[i]) goals[i].done=!!d; });
+      for(let i=0;i<cells.length;i++){ const v=s.cb[i],c=cells[i];
+        c.built=!!(v&1); c.zone=ZN[(v>>1)&3]; c.flagExpand=!!(v>>3&1);
+        c.bp=(c.flagExpand&&s.bx)?(s.bx[i]||0)/100:0;
+        if(v>>4&1){ if(!c.brood) c.brood={stage:'egg',t:0}; c.brood.stage=STN[(v>>5)&3]; c.brood.t=(s.bt[i]||0)/10; }
+        else c.brood=null; }
+      const si=seasonIdx(day); if(si!==netLastSI){ const prev=netLastSI; netLastSI=si; if(prev>=0&&started) seasonBanner(si); }
+      // the hornet fights on every screen: reconstruct the Queen's hornet as a local
+      // ghost (positions travel in comb units so different screen sizes agree)
+      if(s.hn){ const tx=hiveCx+s.hn.x*size, ty=hiveCy+s.hn.y*size;
+        if(!hornet||!hornet._net) hornet={x:tx,y:ty,vx:s.hn.vx,vy:s.hn.vy,hp:s.hn.hp,maxhp:s.hn.mh,t:0,atk:9,state:s.hn.st,wob:s.hn.wob,_net:true,_tx:tx,_ty:ty};
+        else{ hornet._tx=tx; hornet._ty=ty; hornet.vx=s.hn.vx; hornet.vy=s.hn.vy; hornet.hp=s.hn.hp; hornet.maxhp=s.hn.mh; hornet.state=s.hn.st; } }
+      else if(hornet&&hornet._net) hornet=null;
+      syncBeePool(); syncForageUI(); }
+    // ---- votes: one at a time, 25 seconds, majority rules, the Queen breaks ties ----
+    function netValidProp(k,v){ if(k==='patch') return typeof v==='number'&&PATCHES[v]&&patchQuality(v,day)>0.02;
+      if(k==='harvest') return harvestState().ok;
+      if(k==='feed') return !fedWinter&&!over;
+      return false; }
+    function netWhyNot(k){ if(k==='harvest'){ const hs=harvestState();
+        return hs.inWin?('🫙 Not enough surplus for a jar yet — bank '+Math.ceil(hs.need*1.25+8)+' cells first.'):'🫙 Harvest is an autumn job — wait for the amber window.'; }
+      if(k==='feed') return '🥄 The syrup feeder is spent — one comeback per winter.';
+      return 'Not now.'; }
+    function netVoteText(k,v){
+      if(k==='patch'){ const F=FLOWERS[PATCHES[v].f]; return {q:'Send the foragers to the '+F.n.toLowerCase()+' '+F.ic+'?', sub:'real hives choose exactly this way — scouts waggle-dance, the colony votes'}; }
+      if(k==='harvest') return {q:'Harvest a jar of honey? 🫙', sub:'8 cells off the winter shelf — sweet now, thinner pantry later'};
+      if(k==='feed') return {q:'Feed emergency syrup? 🥄', sub:'once a winter — kindness caps the year at a B, and it’s worth it'};
+      return {q:'Decide together?', sub:''}; }
+    function netPropose(k,v){ if(!NET.on||!NET.started||over) return;
+      if(NET.vote||NET.cVote){ toast('🗳 One vote at a time — the hive is mid-decision.'); return; }
+      if(NET.host){ if(netValidProp(k,v)) hostStartVote(k,v,0); else toast(netWhyNot(k)); }
+      else netSend({t:'prop',k,v}); }
+    function hostStartVote(k,v,byIx){ if(NET.vote) return;
+      const id=++NET.voteN; NET.vote={id,k,v,by:byIx,bal:{}};
+      NET.vote.bal[byIx]=true;   // proposing IS your dance — in a duo, only your partner needs to answer
+      netBcast({t:'vote',id,k,v,by:byIx,secs:NET_VOTE_SECS});
+      netShowVote(k,v,byIx,NET_VOTE_SECS);
+      netBcast({t:'vst',id,voted:[byIx]}); netStripVoted([byIx]);
+      if(Object.keys(NET.vote.bal).length>=NET.players.filter(p=>!p.gone).length) hostEndVote(); }
+    function hostBallot(ix,yes){ const V=NET.vote; if(!V||V.bal[ix]!==undefined) return; V.bal[ix]=!!yes;
+      const voted=Object.keys(V.bal).map(Number);
+      netBcast({t:'vst',id:V.id,voted}); netStripVoted(voted);
+      if(voted.length>=NET.players.filter(p=>!p.gone).length) hostEndVote(); }
+    function hostEndVote(){ const V=NET.vote; if(!V) return; NET.vote=null;
+      let yes=0,no=0; for(const k2 in V.bal) V.bal[k2]?yes++:no++;
+      const pass=yes>no;   // a real quorum: a tie means the hive holds still
+      netBcast({t:'tally',id:V.id,yes,no,pass,k:V.k,v:V.v});
+      netVoteResult(V.k,V.v,yes,no,pass);
+      if(pass) netApplyDecision(V.k,V.v); }
+    function netApplyDecision(k,v){ // host only — state flows back out on the next snapshot
+      if(k==='patch'){ if(v!=null&&PATCHES[v]){ activePatch=v; grantBadge('waggler'); forecastCache=forecastToSpring();
+        netToastAll('💃 The dance is decided — foragers fly to the <b>'+FLOWERS[PATCHES[v].f].n.toLowerCase()+'</b>.'); } }
+      else if(k==='harvest'){ netExec=true; try{ harvestSurplus(); }finally{ netExec=false; }
+        netBcast({t:'ev',msg:'🫙 A jar comes off the comb — sealed by a hive vote.'}); }
+      else if(k==='feed'){ netExec=true; try{ feedSyrup(); }finally{ netExec=false; }
+        netBcast({t:'ev',msg:'🥄 The hive votes to feed — a syrup feeder slides in. +10 cells.'}); } }
+    function netShowVote(k,v,byIx,secs){ const by=NET.players[byIx], D=netVoteText(k,v);
+      const mine=(NET.host?0:NET.myIx)===byIx;
+      $('voteQ').innerHTML=D.q; $('voteSub').innerHTML='proposed by <b>'+(mine?'you':(by?netEsc(by.name):'a keeper'))+'</b>'+(D.sub?' · '+D.sub:'');
+      $('voteTally').textContent=mine?'proposing is your dance — 🐝 cast':'';
+      $('voteYes').disabled=mine; $('voteNo').disabled=mine;
+      netVoteUI={deadline:performance.now()+secs*1000, dur:secs*1000, cast:mine};
+      netStripVoted([]); openOverlay('mpVote'); try{ chime(392,523); }catch(e){} }
+    function netVoteResult(k,v,yes,no,pass){ netVoteUI=null; NET.cVote=null;
+      const bees='🐝'.repeat(Math.min(8,yes))||'·', hands='✋'.repeat(Math.min(8,no));
+      $('voteTally').innerHTML=(pass?'✅ ':'🚫 ')+bees+(no?'  vs  '+hands:'')+((yes===no&&yes+no>0)?' — a tie: the hive holds still':'');
+      $('voteYes').disabled=true; $('voteNo').disabled=true;
+      setTimeout(()=>{ closeOverlay('mpVote'); },1600);
+      if(pass){ try{ fanfare(); }catch(e){} } else { const D=netVoteText(k,v); toast('✋ The hive says not yet — '+D.q); }
+      netStripVoted([]); }
+    function netCastBallot(yes){ if(!netVoteUI||netVoteUI.cast) return; netVoteUI.cast=true;
+      $('voteYes').disabled=true; $('voteNo').disabled=true;
+      $('voteTally').textContent=yes?'your dance says go 🐝':'your dance says wait ✋';
+      if(NET.host) hostBallot(0,yes); else netSend({t:'bal',id:NET.cVote?NET.cVote.id:0,yes}); }
+    // ---- the keeper strip: who's in the hive, who has danced their vote ----
+    function netStripVoted(ixs){ netVotedIx=ixs||[]; netStripSync(); }
+    function netStripSync(){ const el=$('mpStrip'); if(!el) return;
+      if(!NET.on||!NET.started){ el.classList.add('hide'); el.style.pointerEvents='none'; return; }
+      el.classList.remove('hide');
+      el.style.pointerEvents=NET.host?'auto':'none';   // the Queen's crown chip doubles as the invite door
+      el.innerHTML=NET.players.map(p=>'<span class="chip'+(p.gone?' gone':'')+'" style="background:'+NETCOL[p.ix]+'">'+(p.ix===0?'👑 ':'')+netEsc(p.name)+(netVotedIx.indexOf(p.ix)>=0?' ✓':'')+'</span>').join('')
+        +(NET.stale?'<span class="chip" style="background:#3a2f1a;color:#ffd66b">🔗 re-linking…</span>':''); }
+    // ---- host plumbing ----
+    async function hostNewInvite(){ const st=$('mpHostState');
+      if(NET.players.filter(p=>!p.gone).length>=NET_MAX){ st.textContent='the hive is full — eight keepers is a crowd already'; $('inviteCode').value=''; NET.pend=null; return; }
+      const pc=netRtc(), dc=pc.createDataChannel('hive',{ordered:true});
+      NET.pend={pc,dc}; st.textContent='brewing a fresh invite…'; $('inviteCode').value='';
+      dc.onopen=()=>hostPeerJoined(pc,dc);
+      try{ const off=await pc.createOffer(); await pc.setLocalDescription(off); await netIceDone(pc); }
+      catch(e){ st.textContent='couldn’t brew an invite — try again'; return; }
+      if(NET.pend&&NET.pend.pc===pc&&NET.host){ const url=netUrl('hive',await netEnc({o:pc.localDescription.sdp}));
+        $('inviteCode').value=url;
+        const ok=drawQR($('inviteQR'),url); $('inviteQRWrap').classList.toggle('hide',!ok);
+        st.innerHTML='ready! <b>have them scan this</b> with their camera — or send the link'; } }
+    function hostPeerJoined(pc,dc){ if(NET.pend&&NET.pend.pc===pc) NET.pend=null;
+      const p={ix:NET.players.length,name:'Keeper '+(NET.players.length+1),pc,dc,gone:false,propAt:-1e9,pendingStart:NET.started};
+      NET.players.push(p);
+      dc.onmessage=e=>hostOnMsg(p,e.data);
+      dc.onclose=()=>netPeerGone(p);
+      try{ chime(523,659); }catch(e){}
+      netLobbySync(); hostNewInvite(); }
+    function hostOnMsg(p,raw){ let m; try{ m=JSON.parse(raw); }catch(e){ return; }
+      if(m.t==='hi'){ p.name=netEsc(String(m.name||'').slice(0,16))||p.name;
+        if(NET.started&&p.pendingStart){ p.pendingStart=false; hostAdmitMidGame(p); return; }
+        if(!p.hello){ p.hello=true; toast('🎉 <b>'+p.name+'</b> is in the hive!'); try{ fanfare(); }catch(e){} }
+        netLobbySync(); netStripSync(); }
+      else if(m.t==='p'&&NET.started&&!over){ netApplyPaint(m,p.ix); }
+      else if(m.t==='prop'&&NET.started&&!over){ const now=performance.now();
+        if(NET.vote||now-p.propAt<8000) return; p.propAt=now;
+        if(netValidProp(m.k,m.v)) hostStartVote(m.k,m.v,p.ix); else netSendTo(p,{t:'ev',msg:netWhyNot(m.k)}); }
+      else if(m.t==='bal'&&NET.vote&&m.id===NET.vote.id){ hostBallot(p.ix,!!m.yes); }
+      else if(m.t==='hh'&&NET.started&&!over){ if(hornet&&!hornet._net) hornetDamage(); } }
+    // recompute wedges from the live roster, then free every departed keeper's cells —
+    // the ONE way sector ownership is derived, on every device, after any roster change
+    function netRecomputeSectors(){ netAssignSectors();
+      if(!netSector) return;
+      for(const q of NET.players){ if(q.gone){ for(let i=0;i<netSector.length;i++) if(netSector[i]===q.ix) netSector[i]=-2; } } }
+    // a keeper connecting after the hive woke: reclaim their old seat by name, or take a fresh wedge
+    function hostAdmitMidGame(p){
+      const seat=NET.players.find(q=>q!==p&&q.gone&&q.name.toLowerCase()===p.name.toLowerCase());
+      if(seat){ seat.pc=p.pc; seat.dc=p.dc; seat.gone=false; seat.propAt=-1e9;
+        p.dc.onmessage=e=>hostOnMsg(seat,e.data); p.dc.onclose=()=>netPeerGone(seat);
+        NET.players.splice(NET.players.indexOf(p),1);
+        netRecomputeSectors();
+        netSendTo(seat,{t:'start',s:netSnapObj(),ps:netRoster(),pace:'easy',you:seat.ix,name:NET.hiveName});
+        netToastAll('🐝 <b>'+netEsc(seat.name)+'</b> returns to the comb — their wedge was kept warm.'); }
+      else{ netRecomputeSectors();
+        netSendTo(p,{t:'start',s:netSnapObj(),ps:netRoster(),pace:'easy',you:p.ix,name:NET.hiveName});
+        netToastAll('🐝 <b>'+netEsc(p.name)+'</b> joins mid-season — the comb redraws its wedges.'); }
+      netLobbySync(); netStripSync(); }
+    function netPeerGone(p){ if(p.gone) return; p.gone=true;
+      netRecomputeSectors();
+      if(NET.on&&NET.host){ if(NET.started) netToastAll('🍂 <b>'+netEsc(p.name)+'</b> drifted from the hive — their comb is anyone’s to tend. They can rejoin with a fresh invite (👑 tap your crown chip).');
+        netLobbySync(); netStripSync();
+        if(NET.vote) hostBallot(p.ix,false); } }
+    function netLobbySync(){ if(!NET.host) return; const box=$('mpPlayers');
+      if(box) box.innerHTML=NET.players.map(p=>'<div class="mpP"><i style="background:'+NETCOL[p.ix]+'"></i>'+(p.ix===0?'👑 ':'🐝 ')+netEsc(p.name)+(p.ix===0?' (you)':'')+(p.gone?' · gone':'')+'</div>').join('');
+      for(const p of NET.players){ if(p.ix===0||p.gone) continue; netSendTo(p,{t:'lob',ps:netRoster(),you:p.ix}); } }
+    // ---- joiner plumbing ----
+    function clientLinked(){ NET.on=true; NET.host=false;
+      $('joinState').textContent='🐝 linked! introducing yourself…';
+      // 'hi' is idempotent on the host — say it thrice so a channel-open race can't eat the name
+      netSend({t:'hi',name:NET.name||'Keeper'});
+      setTimeout(()=>netSend({t:'hi',name:NET.name||'Keeper'}),800);
+      setTimeout(()=>netSend({t:'hi',name:NET.name||'Keeper'}),2200);
+      try{ fanfare(); }catch(e){} }
+    function clientLobbyRender(){ const box=$('mpPlayersJ'); if(!box) return;
+      box.innerHTML=NET.players.map(p=>'<div class="mpP"><i style="background:'+NETCOL[p.ix]+'"></i>'+(p.ix===0?'👑 ':'🐝 ')+netEsc(p.name)+(p.ix===NET.myIx?' (you)':'')+'</div>').join(''); }
+    function clientOnMsg(raw){ let m; try{ m=JSON.parse(raw); }catch(e){ return; }
+      NET.lastSnap=performance.now();   // any word from the Queen's device means the link is alive
+      if(m.t==='lob'){ NET.myIx=m.you; NET.players=m.ps.map(p=>({ix:p.ix,name:p.n,gone:!!p.g}));
+        if(NET.started){ netRecomputeSectors(); netStripSync(); }
+        else{ $('joinState').textContent='🐝 in the lobby — waiting for the Queen to wake the hive'; clientLobbyRender(); } }
+      else if(m.t==='start'){ clientStartGame(m); }
+      else if(m.t==='snap'&&NET.started){ netApplySnap(m.s); }
+      else if(m.t==='vote'){ NET.cVote={id:m.id}; netShowVote(m.k,m.v,m.by,m.secs); }
+      else if(m.t==='vst'){ netStripVoted(m.voted||[]); }
+      else if(m.t==='tally'){ netVoteResult(m.k,m.v,m.yes,m.no,m.pass); }
+      else if(m.t==='ev'){ toast(m.msg); }  // host-authored copy — same-room trust model
+      else if(m.t==='ord'){ NET.order={id:m.id,ic:m.ic,n:m.n,base:m.base,secs:m.secs,rem:m.secs,txt:m.txt}; try{ chime(440,587); }catch(e){} netOrderShow(); }
+      else if(m.t==='ordend'){ if(m.ok){ try{ fanfare(); }catch(e){} } NET.order=null; netOrderShow(); }
+      else if(m.t==='end'){ NET.endSent=true; over=true; setSpeed(0); NET.order=null; netOrderShow(); netShowEnd(m.sum); } }
+    function clientHostGone(){ if(!NET.on) return;
+      if(!NET.started){ NET.on=false; const js=$('joinState'); if(js) js.textContent='the link dropped — ask the host for a fresh invite'; return; }
+      if(NET.endSent) return; NET.endSent=true; over=true; setSpeed(0);
+      $('mpEndTitle').textContent='THE LINK DISSOLVED';
+      $('mpEndBody').innerHTML='<p>The Queen’s device left the meadow — the hive can’t hear itself think. Gather again and re-link.</p>';
+      openOverlay('mpEnd'); }
+    function clientStartGame(m){ NET.players=m.ps.map(p=>({ix:p.ix,name:p.n,gone:!!p.g}));
+      NET.hiveName=m.name||'';
+      if(typeof m.you==='number') NET.myIx=m.you;   // mid-game admits (and seat reclaims) re-pin the seat
+      NET.started=true; NET.endSent=false; NET.lastSnap=performance.now();
+      document.body.classList.add('netc');
+      closeOverlay('mpJoin'); closeOverlay('mpEnd'); $('intro').classList.add('hide');
+      dailyMode=false; onboard=false; queenLine='meadow'; setPace('easy');
+      tinyComb(); resetColonyIdentity(); goals=makeGoals(); netLastSI=-1; clearUndo();
+      brush='brood'; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x.dataset.brush==='brood')); setReveal(false);
+      netRecomputeSectors(); netApplySnap(m.s);
+      over=false; beginCommon(); netLastSI=seasonIdx(day);
+      netShowRole(); netStripSync(); }
+    // ---- the party itself ----
+    function netStartParty(){ if(!NET.host) return;
+      if(NET.started){ closeOverlay('mpHost'); return; }   // panel reopened mid-game via the crown chip
+      if(NET.players.filter(p=>!p.gone).length<2){ toast('Invite at least one keeper first — the whole point is company.'); return; }
+      NET.started=true;
+      netSeedParty(); }
+    // seed (or re-seed, for "another year" replays / ledger resumes) the shared
+    // colony and broadcast the start
+    function netSeedParty(){
+      const resume=NET.resume; NET.resume=null;
+      NET.endSent=false; NET.hadHornet=false; NET.order=null; NET.orderCD=18; NET.ordersDone=0; netOrderShow();
+      NET.hiveName=resume?(resume.name||netHiveName()):netHiveName();
+      if(!resume) partyClear();
+      closeOverlay('mpHost'); closeOverlay('mpEnd'); $('intro').classList.add('hide');
+      dailyMode=false; setPace('easy'); tinyComb();
+      for(const cell of cells){ if(!cell.built&&cellDist(cell.c,cell.r)<2.9){ cell.built=true; cell.zone='none'; } }   // a wider founding comb — every wedge gets cells
+      seedStarterZones();
+      honeyU=10*HC; pollenU=5*HC; nectarU=0; P=18; day=0; year=1; peakPop=18; bornTotal=0; swarmP=0; mite=0; grades=[]; forage=0.6; activePatch=null; resetColonyIdentity(); drawSeason();
+      queenAge=1; hornet=null; hornetCD=25+Math.random()*20; parts.length=0; shake=0;
+      rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=makeGoals(); lastSI=0; scoutShown=true; seenTips={}; lessonSeen={}; nudged={}; tipQ.length=0; tipCool=0; starveT=0; bankAtFrost=0; raidLoss=0;
+      brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=true; coachStep=0; onboard=false; yearHist.length=0; histT=2.7; popMilo={}; queenLine='meadow'; netLastSI=0;
+      brush='brood'; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x.dataset.brush==='brood')); setReveal(false); clearUndo();
+      over=false;
+      if(resume){ netApplySnap(resume.s); NET.ordersDone=resume.od||0;
+        if(day>=270) armMidwinter(true); lastSI=seasonIdx(day); netLastSI=lastSI; }
+      netRecomputeSectors();
+      beginCommon();
+      netBcast({t:'start',s:netSnapObj(),ps:netRoster(),pace:'easy',name:NET.hiveName});
+      netShowRole(); netStripSync();
+      toast(resume
+        ?('🕯 <b>'+netEsc(NET.hiveName)+'</b> stirs again — day '+Math.floor(day+1)+', right where the ledger left it.')
+        :('🐝 <b>'+netEsc(NET.hiveName)+'</b> wakes — '+NET.players.filter(p=>!p.gone).length+' keepers, one colony. Bring it to spring together.')); }
+    function netShowRole(){ const nw=NET.players.length-1;
+      $('roleHive').textContent=NET.hiveName||'';
+      if(NET.host){ $('roleBadge').textContent='👑 you are the queen keeper';
+        $('roleName').textContent='the Royal Core';
+        $('roleText').innerHTML='You hold <b>time</b> and the <b>forage dial</b>. Tend the core, watch the whole comb, keep everyone alive. Tap your 👑 chip any time to invite or re-invite keepers. No pressure.'; }
+      else{ $('roleBadge').textContent='🐝 your post';
+        $('roleName').textContent=netSectorName(NET.myIx-1,nw);
+        $('roleName').style.color=NETCOL[NET.myIx]||'#ffd66b';
+        $('roleText').innerHTML='Paint <b>your</b> comb — 🍼 nursery, 🍯 shelves, 🔨 fresh wax. When the hive calls a <b>vote</b>, dance your answer. The bees do the rest.'; }
+      openOverlay('mpRole'); }
+    function netYearEnd(){ if(!NET.host||NET.endSent) return; NET.endSent=true;
+      const sum={peak:Math.round(peakPop), jars, rj, goals:goals?goals.filter(g=>g.done).length:0, orders:NET.ordersDone||0, died:P<1||over&&day<YEAR, hands:NET.players.filter(p=>!p.gone).length, name:NET.hiveName};
+      over=true; setSpeed(0); NET.order=null; netOrderShow(); partyClear();   // the ledger's year is finished either way
+      netBcast({t:'end',sum}); netShowEnd(sum); }
+    function netShowEnd(sum){ $('mpEndTitle').textContent=sum.died?'THE COMB FELL QUIET':'YOU WINTERED — TOGETHER';
+      $('mpEndBody').innerHTML=(sum.name?'<div class="mpBadge">'+netEsc(sum.name)+'</div>':'')+(sum.died
+        ?'<p>The colony didn’t reach spring. It happens to every keeper — the real ones too. Same crew, another go?</p>'
+        :'<p>A whole year, kept by <b>'+(sum.hands||NET.players.filter(p=>!p.gone).length)+'</b> pairs of hands.</p>')
+        +'<div class="mpHow" style="text-align:center">🐝 peak '+(sum.peak||0)+' bees · 🫙 '+(sum.jars||0)+' jars · ✧ '+(sum.rj||0)+' royal jelly · 📣 '+(sum.orders||0)+' orders filled · '+(sum.goals||0)+'/4 season goals</div>'
+        +(NET.host?'':'<div class="mpHow" style="text-align:center;opacity:0.75">…or hold on — the Queen can call <b>another year</b> and you’re all still linked.</div>');
+      $('mpEndAgain').classList.toggle('hide', !(NET.host&&NET.players.some(p=>p.ix>0&&!p.gone)));
+      openOverlay('mpEnd'); if(!sum.died){ try{ fanfare(); }catch(e){} } }
+    // ---- hive orders: Overcooked-style micro-goals the whole hive fills together ----
+    // ("you take the wax, I'll steer forage" — short, loud, shared; the host runs
+    //  the clock, everyone's paints count, +1 ✧ on success, a shrug on a miss)
+    const NET_ORDERS=[
+      {id:'wax',  ic:'🔨', lo:5, hi:9, txt:n=>'Draw '+n+' fresh comb cells',   meas:()=>builtCells()},
+      {id:'brood',ic:'🍼', lo:4, hi:7, txt:n=>'Paint '+n+' new nursery cells', meas:()=>cells.reduce((a,c)=>a+((c.built&&c.zone==='brood')?1:0),0)},
+      {id:'shelf',ic:'🍯', lo:5, hi:9, txt:n=>'Zone '+n+' new honey shelves',  meas:()=>cells.reduce((a,c)=>a+((c.built&&c.zone==='honey')?1:0),0)},
+      {id:'bank', ic:'🏺', lo:3, hi:6, txt:n=>'Bank '+n+' cells of honey',     meas:()=>Math.round(honeyCellsStored())},
+    ];
+    function netOrderShow(){ const el=$('mpOrder'); if(!el) return; const O=NET.order;
+      if(!O){ el.classList.add('hide'); return; }
+      el.classList.remove('hide');
+      const k=Math.max(0,(NET_ORDERS.find(o=>o.id===O.id)||NET_ORDERS[0]).meas()-O.base);
+      el.innerHTML='<b>'+O.ic+' Hive order:</b> '+O.txt+' <span class="ok">'+Math.min(k,O.n)+'/'+O.n+'</span><div id="mpOrderBar"><i style="width:'+Math.max(0,Math.min(100,100*O.rem/O.secs))+'%"></i></div>'; }
+    function hostStartOrder(){ const t=NET_ORDERS[(Math.random()*NET_ORDERS.length)|0];
+      const n=t.lo+((Math.random()*(t.hi-t.lo+1))|0);
+      NET.order={id:t.id, ic:t.ic, n, base:t.meas(), secs:50, rem:50, txt:t.txt(n)};
+      netBcast({t:'ord',id:t.id,n,base:NET.order.base,secs:50,txt:NET.order.txt,ic:t.ic});
+      if(!NET.orderTaught){ NET.orderTaught=true; netToastAll('📣 <b>Hive order!</b> Anyone’s comb counts — call your jobs out loud.'); }
+      try{ chime(440,587); }catch(e){} netOrderShow(); }
+    function hostEndOrder(ok){ const O=NET.order; if(!O) return; NET.order=null; NET.orderCD=30+Math.random()*30;
+      netBcast({t:'ordend',ok:ok?1:0});
+      if(ok){ rj++; NET.ordersDone=(NET.ordersDone||0)+1; netToastAll('✨ Order filled — '+O.txt.toLowerCase()+'. +1 ✧ royal jelly.'); try{ fanfare(); }catch(e){} }
+      else toast('🌒 The dusk took that order — no harm done.');
+      netOrderShow(); }
+    // ---- per-frame housekeeping: vote clock, snapshots, orders, link health ----
+    function netFrame(dt){ if(!NET.on) return;
+      if(NET.denyCool>0) NET.denyCool-=dt;
+      if(netVoteUI){ const rem=netVoteUI.deadline-performance.now();
+        const bar=$('voteBar'); if(bar) bar.style.width=Math.max(0,Math.min(100,100*rem/netVoteUI.dur))+'%';
+        if(rem<=0&&NET.host&&NET.vote) hostEndVote();
+        if(rem<=-5000&&!NET.host){ netVoteUI=null; NET.cVote=null; closeOverlay('mpVote'); } }
+      if(!NET.host){ // joiner: keepalive out, staleness watch in, cosmetic hornet easing
+        if(NET.started&&!NET.endSent){
+          NET.kaT=(NET.kaT||0)+dt; if(NET.kaT>2){ NET.kaT=0; netSend({t:'ka'}); }
+          const quiet=performance.now()-(NET.lastSnap||0)>6000;
+          if(quiet!==NET.stale){ NET.stale=quiet; netStripSync();
+            toast(quiet?'🔗 The Queen’s device went quiet — holding the comb until it returns.':'🔗 Re-linked — the hive hums again.'); }
+          if(hornet&&hornet._net){ hornet.wob+=dt*26;
+            hornet.x+=(hornet._tx-hornet.x)*Math.min(1,dt*10); hornet.y+=(hornet._ty-hornet.y)*Math.min(1,dt*10); }
+          if(NET.order){ NET.order.rem=Math.max(0,NET.order.rem-dt);
+            NET.ordT=(NET.ordT||0)+dt; if(NET.ordT>0.2){ NET.ordT=0; netOrderShow(); } } }
+        return; }
+      if(!NET.started||NET.endSent) return;
+      if(over){ netYearEnd(); return; }
+      NET.snapT+=dt; if(NET.snapT>0.4){ NET.snapT=0; netBcast({t:'snap',s:netSnapObj()}); }
+      NET.ledgerT=(NET.ledgerT||0)+dt; if(NET.ledgerT>6){ NET.ledgerT=0; partyWrite(); }
+      if(!paused){ // orders tick only while the hive is actually living
+        if(NET.order){ NET.order.rem-=dt;
+          NET.ordT=(NET.ordT||0)+dt; if(NET.ordT>0.2){ NET.ordT=0; netOrderShow(); }
+          const t=NET_ORDERS.find(o=>o.id===NET.order.id);
+          if(t&&t.meas()-NET.order.base>=NET.order.n) hostEndOrder(true);
+          else if(NET.order.rem<=0) hostEndOrder(false); }
+        else if(day>2&&currentTemp()>=WIN_TEMP&&!NET.vote){ NET.orderCD=(NET.orderCD===undefined?18:NET.orderCD)-dt;
+          if(NET.orderCD<=0) hostStartOrder(); } }
+      const h=!!hornet; if(h!==NET.hadHornet){ NET.hadHornet=h;
+        if(h) netBcast({t:'ev',msg:'⚔️ A hornet is raiding the hive — <b>everyone</b>, tap it!'}); } }
+    // ---- sector overlay: whose comb is whose, painted straight on the canvas ----
+    function drawSectorOverlay(){ if(!NET.on||!NET.started||!netSector) return;
+      const nw=NET.players.length-1; if(nw<1) return;
+      ctx.save();
+      for(let i=0;i<cells.length;i++){ const c=cells[i]; if(!c.built&&!c.flagExpand) continue;
+        const s=netSector[i]; if(s<0) continue; const p2=NET.players[s]; if(!p2||p2.gone) continue;
+        ctx.globalAlpha=(s===NET.myIx&&!NET.host)?0.15:0.08; ctx.fillStyle=NETCOL[s]||'#fff';
+        const p=cellCenter(c.c,c.r); hexPathOn(ctx,p.x,p.y,size*0.98); ctx.fill(); }
+      ctx.globalAlpha=0.8; ctx.font='700 '+Math.round(size*1.05)+'px Bricolage Grotesque'; ctx.textAlign='center';
+      for(let w=0;w<nw;w++){ const p2=NET.players[w+1]; if(!p2||p2.gone) continue;
+        const A=-Math.PI/2+w*2*Math.PI/nw;
+        ctx.fillStyle=NETCOL[w+1];
+        ctx.fillText((p2.ix===NET.myIx?'★ ':'')+p2.name, hiveCx+Math.cos(A)*size*SQ3*7.2, hiveCy+Math.sin(A)*size*SQ3*6.2); }
+      ctx.textAlign='left'; ctx.globalAlpha=1; ctx.restore(); }
+    function netTeardown(){ try{ if(NET.pend&&NET.pend.pc) NET.pend.pc.close(); }catch(e){}
+      for(const p of NET.players){ try{ if(p.pc) p.pc.close(); }catch(e){} }
+      try{ if(joinPc) joinPc.close(); }catch(e){}
+      joinPc=null; joinDc=null; NET.on=false; NET.host=false; NET.started=false; NET.endSent=false;
+      NET.players=[]; NET.pend=null; NET.vote=null; NET.cVote=null; NET.myIx=-1; netVoteUI=null; netSector=null; netVotedIx=[];
+      NET.order=null; NET.orderCD=undefined; NET.ordersDone=0; NET.stale=false; NET.orderTaught=false; NET.resume=null; NET.hiveName=''; netOrderShow();
+      document.body.classList.remove('netc');
+      $('replyWrap').classList.add('hide'); $('inviteCode').value=''; $('answerIn').value=''; $('joinIn').value=''; $('replyCode').value='';
+      $('mpPlayers').innerHTML=''; $('mpPlayersJ').innerHTML=''; netStripSync(); }
+    // ---- UI wiring ----
+    // keeper names roll off the tongue — alliterative, meadow-sweet, the kind of
+    // nickname that survives the game night ("nice one, Bumbly Biscuit").
+    // Each row shares an initial: [adjectives..., '|', nouns...]. Add rows, keep ≤16 chars.
+    const NET_NAMES=[
+      ['Buzzy','Bumbly','Breezy','|','Biscuit','Beatrix','Bramble'],
+      ['Cozy','Clever','Curly','|','Clover','Crumpet','Cricket'],
+      ['Dandy','Dewy','Dozy','|','Dumpling','Dahlia','Drone'],
+      ['Fuzzy','Flitty','Fancy','|','Fig','Fern','Flora'],
+      ['Golden','Giddy','Gentle','|','Goose','Gus','Gloria'],
+      ['Honeyed','Humming','Happy','|','Hazel','Hugo','Hattie'],
+      ['Mellow','Merry','Mighty','|','Maple','Mabel','Morsel'],
+      ['Nifty','Nimble','Nutty','|','Nectar','Nell','Nugget'],
+      ['Plush','Perky','Pollen','|','Petal','Pip','Poppy'],
+      ['Silky','Sunny','Snug','|','Saffron','Sage','Sprout'],
+      ['Toasty','Tender','Tidy','|','Tulip','Truffle','Ted'],
+      ['Velvet','Vivid','Very','|','Viola','Vespa','Violet'],
+      ['Waggly','Warm','Wild','|','Willow','Wilma','Waffles'],
+      ['Zippy','Zesty','Zen','|','Zinnia','Ziggy','Zoe'],
+    ];
+    function netMakeName(){ const row=NET_NAMES[(Math.random()*NET_NAMES.length)|0], cut=row.indexOf('|');
+      for(let tries=0;tries<8;tries++){ const a=row[(Math.random()*cut)|0], n=row[cut+1+((Math.random()*(row.length-cut-1))|0)];
+        const full=a+' '+n; if(full.length<=16&&a!==n) return full; }
+      return 'Busy Bee'; }
+    function mpTakeName(){ let n=($('mpName').value||'').trim().slice(0,16); if(!n) n=netMakeName(); NET.name=n; lsSet('hm_mpname',n); return n; }
+    press($('mpNameRoll'),()=>{ $('mpName').value=netMakeName(); try{ chime(494,659); }catch(e){} });
+    press($('startParty'),()=>{ if(!window.RTCPeerConnection){ toast('This browser can’t link hives (no WebRTC) — try Safari, Chrome or Firefox.'); return; }
+      try{ $('mpName').value=localStorage.getItem('hm_mpname')||netMakeName(); }catch(e){ $('mpName').value=netMakeName(); }
+      $('mpSafe').classList.toggle('hide',!loadSave());   // "will this eat my colony?" — answered before it's asked
+      $('intro').classList.add('hide'); openOverlay('mpHome'); });
+    press($('mpHomeBack'),()=>{ closeOverlay('mpHome'); $('intro').classList.remove('hide'); });
+    press($('mpHostBtn'),()=>{ mpTakeName(); closeOverlay('mpHome'); openOverlay('mpHost');
+      NET.on=true; NET.host=true; NET.myIx=0; NET.started=false; NET.resume=null;
+      NET.players=[{ix:0,name:NET.name,pc:null,dc:null,gone:false,propAt:-1e9}];
+      $('mpStart').textContent='Wake the hive ▶';
+      const sv=partyRead(); const rb=$('mpResume');
+      if(sv){ rb.classList.remove('hide');
+        rb.innerHTML='🕯 Resume <b>'+netEsc(sv.name||'the last party')+'</b> — day '+Math.floor((sv.s.day||0)+1)+' · '+netEsc((sv.ps||[]).slice(1).join(', ')||'your keepers'); }
+      else rb.classList.add('hide');
+      netLobbySync(); hostNewInvite(); });
+    press($('mpResume'),()=>{ const sv=partyRead(); if(!sv) return; const rb=$('mpResume');
+      if(NET.resume){ NET.resume=null; rb.style.opacity='';
+        $('mpStart').textContent='Wake the hive ▶'; toast('Fresh spring it is.'); return; }
+      NET.resume=sv; rb.style.opacity='0.55';
+      $('mpStart').textContent='Rekindle '+((sv.name||'the hive').replace(/^The /,''))+' ▶';
+      toast('🕯 The ledger is open — invite your keepers back. <b>Same names re-claim their combs.</b>'); });
+    press($('mpStrip'),()=>{ if(!NET.host||!NET.started) return;   // the crown chip is the mid-game invite door
+      $('mpStart').textContent='Back to the comb ▶'; openOverlay('mpHost');
+      if(!NET.pend) hostNewInvite(); });
+    press($('mpEndAgain'),()=>{ if(!NET.host) return; netSeedParty(); });
+    press($('mpJoinBtn'),()=>{ mpTakeName(); closeOverlay('mpHome'); openOverlay('mpJoin');
+      if($('joinIn').value.trim()) joinAnswer(); });   // arrived via an invite link — no extra taps
+    press($('mpHostBack'),()=>{ if(NET.started){ closeOverlay('mpHost'); return; }   // mid-game: just tuck the panel away
+      netTeardown(); closeOverlay('mpHost'); $('intro').classList.remove('hide'); });
+    press($('mpJoinBack'),()=>{ netTeardown(); closeOverlay('mpJoin'); $('intro').classList.remove('hide'); });
+    press($('mpStart'),netStartParty);
+    press($('roleGo'),()=>closeOverlay('mpRole'));
+    press($('voteYes'),()=>netCastBallot(true));
+    press($('voteNo'),()=>netCastBallot(false));
+    press($('mpEndClose'),()=>{ location.reload(); });
+    async function hostTakeReply(text){ const d=await netDec(text);
+      if(!d||!d.a){ toast('That doesn’t look like a reply — ask them to show their screen or resend it.'); return false; }
+      if(!NET.pend){ toast('No invite is waiting — the newest invite pairs with the newest reply.'); return false; }
+      try{ await NET.pend.pc.setRemoteDescription({type:'answer',sdp:d.a}); $('answerIn').value='';
+        $('mpHostState').textContent='linking… give it a breath 🐝'; return true; }
+      catch(e){ toast('That reply didn’t match this invite — have them scan the newest one.'); return false; } }
+    press($('answerAdd'),()=>hostTakeReply($('answerIn').value));
+    async function joinAnswer(){ const d=await netDec($('joinIn').value);
+      if(!d||!d.o){ toast('That doesn’t look like an invite code — ask the host to copy it again.'); return; }
+      if(joinPc){ try{ joinPc.close(); }catch(e){} joinPc=null; joinDc=null; }
+      const pc=joinPc=netRtc();
+      pc.addEventListener('iceconnectionstatechange',()=>{ if(pc.iceConnectionState==='failed') clientHostGone(); });   // 'disconnected' often self-heals — only 'failed' is final
+      pc.ondatachannel=ev=>{ joinDc=ev.channel; joinDc.onopen=()=>clientLinked();
+        joinDc.onmessage=e=>clientOnMsg(e.data); joinDc.onclose=()=>clientHostGone(); };
+      $('joinState').textContent='answering the call…';
+      try{ await pc.setRemoteDescription({type:'offer',sdp:d.o});
+        const an=await pc.createAnswer(); await pc.setLocalDescription(an); await netIceDone(pc);
+        const url=netUrl('reply',await netEnc({a:pc.localDescription.sdp}));
+        $('replyCode').value=url;
+        const ok=drawQR($('replyQR'),url); $('replyQRWrap').classList.toggle('hide',!ok);
+        $('replyWrap').classList.remove('hide');
+        $('joinState').innerHTML='one step left: <b>show this to your host</b> 📱→📷 — or send it back'; }
+      catch(e){ $('joinState').textContent='that invite didn’t take — nothing broke; just ask for a fresh one'; } }
+    press($('joinGo'),joinAnswer);
+    // ---- invite links: tapping an AirDropped/messaged link skips the whole ritual ----
+    (function(){ let h=''; try{ h=location.hash||''; }catch(e){}
+      const mi=h.match(/[#&]hive=([^&]+)/), mr=h.match(/[#&]reply=([^&]+)/);
+      if(mr){ // this tab is only a courier: hand the reply to the running host tab next door
+        lsSet('hm_reply', JSON.stringify({c:decodeURIComponent(mr[1]), t:Date.now()}));
+        try{ history.replaceState(null,'',location.pathname); }catch(e){}
+        const d=document.createElement('div');
+        d.style.cssText='position:fixed;inset:0;z-index:2147483647;background:#140e04;color:#f5e9c8;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font:600 17px Bricolage Grotesque,sans-serif';
+        d.innerHTML='<div style="max-width:420px">🐝 <b>Reply delivered.</b><br><br>Hop back to your hive tab — your keeper is being welcomed in.<br><br><span style="opacity:0.6;font-size:13px">You can close this tab.</span></div>';
+        document.body.appendChild(d); }
+      else if(mi){ // an invite link: straight to the join door, no ceremony —
+        // not even the first-run cold open (invitees are often brand-new players)
+        try{ history.replaceState(null,'',location.pathname); }catch(e){}
+        const sp=$('splash'); if(sp) sp.remove(); const g=$('gsplash'); if(g) g.remove();
+        const co=$('coldopen'); if(co) co.remove();
+        try{ $('mpName').value=localStorage.getItem('hm_mpname')||netMakeName(); }catch(e){ $('mpName').value=netMakeName(); }
+        $('joinIn').value=decodeURIComponent(mi[1]);
+        $('mpSafe').classList.toggle('hide',!loadSave());
+        $('intro').classList.add('hide'); openOverlay('mpHome');
+        toast('🐝 You’re invited to a hive — pick a name and tap <b>Join</b>.'); } })();
+    // the host tab hears a courier tab deliver a reply and welcomes the keeper in
+    addEventListener('storage',async e=>{ if(e.key!=='hm_reply'||!e.newValue) return;
+      if(!NET.host||!NET.pend) return;
+      let d=null; try{ d=await netDec(JSON.parse(e.newValue).c); }catch(err){}
+      if(!d||!d.a) return;
+      try{ await NET.pend.pc.setRemoteDescription({type:'answer',sdp:d.a});
+        $('mpHostState').textContent='reply received — linking…'; toast('📨 Reply received — welcoming them in.'); }
+      catch(err){} });
+    function netCopyBtn(btnId,srcId){ const b=$(btnId), lbl=b.textContent;
+      press(b,()=>{ const el=$(srcId), txt=el.value; if(!txt) return;
+        const done=()=>{ b.textContent='✓ copied'; setTimeout(()=>{ b.textContent=lbl; },1300); };
+        const manual=()=>{ try{ el.focus(); el.select(); document.execCommand('copy'); done(); }catch(e){ toast('Select the code and copy it by hand.'); } };
+        if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done).catch(manual);
+        else manual(); }); }
+    function netShareBtn(btnId,srcId,title){ press($(btnId),async()=>{ const txt=$(srcId).value; if(!txt) return;
+      if(navigator.share){ try{ await navigator.share({title,text:txt}); }catch(e){} }
+      else toast('Sharing isn’t available here — use 📋 Copy instead.'); }); }
+    netCopyBtn('inviteCopy','inviteCode'); netShareBtn('inviteShare','inviteCode','HIVEMIND — join my hive');
+    netCopyBtn('replyCopy','replyCode'); netShareBtn('replyShare','replyCode','HIVEMIND — my reply code');
+    // ---- camera scanning: the "just show me your phone" flow ----
+    // Feature-gated on BarcodeDetector + getUserMedia (and Permissions-Policy
+    // allowing camera, see netlify.toml). The video never leaves the device —
+    // it's read locally for QR codes and stopped the moment one lands.
+    let scanStream=null, scanTimer=0;
+    function netCanScan(){ return ('BarcodeDetector' in window)&&!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia); }
+    function netScanStop(){ clearTimeout(scanTimer);
+      if(scanStream){ try{ scanStream.getTracks().forEach(t=>t.stop()); }catch(e){} scanStream=null; }
+      const vid=$('scanVid'); if(vid) vid.srcObject=null; closeOverlay('mpScan'); }
+    async function netScan(hint,onCode){ if(!netCanScan()) return;
+      let det; try{ det=new BarcodeDetector({formats:['qr_code']}); }catch(e){ toast('This browser can’t scan — the share buttons work just as well.'); return; }
+      try{ scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}); }
+      catch(e){ toast('Camera said no — no problem, the share buttons do the same job.'); return; }
+      $('scanHint').textContent=hint;
+      const vid=$('scanVid'); vid.srcObject=scanStream; try{ await vid.play(); }catch(e){}
+      openOverlay('mpScan');
+      let busy=false;
+      const loop=async()=>{ if(!scanStream) return;
+        if(!busy&&vid.readyState>=2){ busy=true;
+          try{ const codes=await det.detect(vid);
+            const hit=codes&&codes.find(c=>/HIVE(1|2)\./.test(c.rawValue||''));
+            if(hit){ netScanStop(); try{ chime(660,880); }catch(e){} onCode(hit.rawValue); return; } }
+          catch(e){}
+          busy=false; }
+        scanTimer=setTimeout(loop,180); };
+      loop(); }
+    press($('scanCancel'),netScanStop);
+    press($('inviteScan'),()=>netScan('Point at their reply code 📱',code=>hostTakeReply(code)));
+    press($('joinScan'),()=>netScan('Point at the Queen’s invite 📱',code=>{ $('joinIn').value=code; joinAnswer(); }));
+    if(!netCanScan()){ $('inviteScan').classList.add('hide'); $('joinScan').classList.add('hide'); }
+
     // ===================== boot =====================
     layout();
     // debounced: layout() re-seeds the meadow decoration with fresh random
@@ -4705,7 +5540,7 @@
     syncHUD();
 
     // debug/testing handle
-    window.__hm=()=>({day,year,P,honeyU,pollenU,nectarU,honeyCells:honeyCells(),broodCells:broodCells(),
+    window.__hm=()=>({day,year,P,honeyU,pollenU,nectarU,honeyCells:honeyCells(),broodCells:broodCells(),ap:activePatch,
       story:{on:storyMode, ix:storyIx, sc:((curBeats||STORY)[storyIx]||{}).sc, camX, camS, hiveX:W*camX, W, horizon:storyHorizon(), Hh},
       view:{W,Hh,size,mSize,tSize,ox,oy,hiveCx,hiveCy,topH,botH,stage:Math.min(W,STAGE_W),bounds:combBounds()},
       therm:{warmth:nestWarmth(), amb:AMB(currentTemp()),
@@ -4713,7 +5548,11 @@
         growAvg:(()=>{const b=cells.filter(c=>c.brood); return b.length? b.reduce((a,c)=>a+thermF(c.heat),0)/b.length : 0;})()},
       built:cells.filter(c=>c.built).length, flagged:cells.filter(c=>!c.built&&c.flagExpand).length,
       zones:{brood:cells.filter(c=>c.built&&c.zone==='brood').length,honey:cells.filter(c=>c.built&&c.zone==='honey').length,none:cells.filter(c=>c.built&&c.zone==='none').length},
-      rateH:rate.h, rj, jars, goals:goals?goals.map(g=>({l:g.label,d:g.done})):null});
+      rateH:rate.h, rj, jars, goals:goals?goals.map(g=>({l:g.label,d:g.done})):null,
+      net:{on:NET.on,host:NET.host,started:NET.started,ix:NET.myIx,players:NET.players.map(p=>({ix:p.ix,n:p.name,g:p.gone})),vote:!!(NET.vote||NET.cVote),
+        ownBuilt:(netSector?cells.reduce((a,c,i)=>a+((c.built&&netSector[i]===NET.myIx)?1:0),0):0),
+        ownCellPx:(()=>{ if(!netSector) return null; for(let i=0;i<cells.length;i++){ if(cells[i].built&&netSector[i]===NET.myIx&&cells[i].zone!=='brood'){ const p=cellCenter(cells[i].c,cells[i].r); return {x:p.x,y:p.y}; } } return null; })()},
+      patches:PATCHES.map((pt,i)=>{ const pp=patchPos(i); return {i,x:pp.x,y:pp.y,q:patchQuality(i,day)}; })});
 
     // ===================== main loop =====================
     let last=performance.now(), relayoutT=0, lastDt=1/60, idleT=0;
@@ -4721,6 +5560,7 @@
       requestAnimationFrame(frame);
       let dt=(now-last)/1000; last=now; if(dt>0.05)dt=0.05; if(dt<0)dt=0;
       gt+=dt; lastDt=dt; shake=Math.max(0,shake-dt*1.2);
+      netFrame(dt);   // hive link housekeeping: vote clock, snapshots, event relay
       const frozen=hitstop>0; if(frozen) hitstop-=dt;
       relayoutT+=dt; if(relayoutT>1){ relayoutT=0; checkBadges(); const t=$('hud-top'),b=$('hud-bottom');
         if(Math.abs((t.offsetHeight+8)-topH)>6 || Math.abs((b.offsetHeight+8)-botH)>6) layout(); }
@@ -4734,10 +5574,10 @@
       const autoFast=started&&!over&&!onboard&&winterNow&&!hornet&&speed>0&&forecastCache&&forecastCache.starve===null&&forecastCache.minW>10;
       if(autoFast) eff=Math.max(speed,3);
       $('fastW').classList.toggle('hide',!autoFast);
-      if(started && !over && speed>0 && !paused && !frozen){
+      if(started && !over && speed>0 && !paused && !frozen && !netClient()){   // a linked joiner's sim lives on the Queen's device
         const dd=(dt/DAY_LEN)*eff; day+=dd;
         if(dailyMode){ if(day>=DAILY_LEN && !over){ day=DAILY_LEN; syncHUD(); finishDaily(); } else stepDay(dd,false); }
-        else if(day>=YEAR){ day=YEAR; stepDay(0.0001,false); if(!over){ syncHUD(); endOfYear(); } }
+        else if(day>=YEAR){ day=YEAR; stepDay(0.0001,false); if(!over){ syncHUD(); if(NET.on) netYearEnd(); else endOfYear(); } }
         else stepDay(dd,false);
         if(!over){
           stepHornet(dt);
@@ -4785,7 +5625,7 @@
         // `paused`, which the overlay stack keeps in sync with this).
         const modalOpen=anyOverlayOpen();
         if(view==='hive'){ if(!paused&&!over&&!frozen) stepInside(dt*Math.min(eff,1.6),(dt/DAY_LEN)*Math.min(eff,3));
-          if(!modalOpen) drawInside(); }
+          if(!modalOpen){ drawInside(); drawSectorOverlay(); } }
         else if(!modalOpen) drawMeadow(dt);
         if(!modalOpen){ syncHUD(); advise(); if(reportOpen) drawReport(); }
       } else if(storyMode){ drawStory(dt);

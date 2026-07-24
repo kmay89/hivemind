@@ -20,6 +20,7 @@ You guide a colony through a 360-day year across four seasons — Spring, Summer
 - **Survive the threats.** Hornet raids, cold snaps, late springs, lean blooms, and the long dark of winter all want your bees dead.
 - **Hit the season goals.** Each season sets a target — build-out in spring, honey banked by autumn, cells still capped at the midwinter check — and pays out royal jelly ✧ when you make it.
 - **Grow stronger between years.** Spend royal jelly on **Queen's Gifts** — roguelite upgrades like Hardy Stock, Wax Masters, Forager Lines, Prolific Queen, Guard Wall, and Insulated Hive — then face a harder year: The Founding, The Long Frost, Lean Blooms, and beyond.
+- **Play Together (2–8 keepers).** One hive, many hands: the host is the **Queen Keeper** (time, the forage dial, tie-breaking votes), everyone else tends their own **sector of comb**, and the big calls — forage patch, harvest, emergency syrup — go to a 25-second **hive vote**, the way real colonies decide (waggle-dance quorums). Serverless WebRTC: invites are AirDropped/pasted codes, no accounts, nothing leaves the room. See [docs/MULTIPLAYER.md](docs/MULTIPLAYER.md).
 
 ## Tech
 

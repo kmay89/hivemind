@@ -19,7 +19,10 @@
     X-Frame-Options = "SAMEORIGIN"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
-    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+    # camera=(self): Play Together's optional QR scanning reads the camera locally
+    # to link two devices in the same room — frames never leave the device and the
+    # stream stops the instant a code is found (see docs/MULTIPLAYER.md).
+    Permissions-Policy = "camera=(self), microphone=(), geolocation=(), payment=(), usb=()"
     Cross-Origin-Opener-Policy = "same-origin"
 
 # HTML caching is left to Netlify's default (public, max-age=0, must-revalidate),
