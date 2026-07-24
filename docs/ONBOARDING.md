@@ -53,6 +53,23 @@ The solo game already implements most of this (keep it that way):
   eight people reading eight coach bubbles is noise. The room + role cards +
   contextual denials carry it.
 
+## The "grandma bar" for joining (Play Together)
+
+The joining flow is held to a stricter standard than the rest of the game:
+**a first-time player who has never installed anything should get in within
+ten seconds, feel clever doing it, and never see a failure state that blames
+them.** Concretely:
+
+- Nobody types anything except a name (remembered afterwards). QR scan with
+  the camera app in; QR scan by the host out. Share links and copy/paste are
+  fallbacks behind a fold, not the main path.
+- Every waiting state says what's happening in warm, human words ("brewing a
+  fresh invite…", "one step left: show this to your host 📱→📷").
+- Every success celebrates: chime on scan, fanfare + "🎉 Pearl is in the
+  hive!" on link. Empowerment is the feeling of *the room cheering*.
+- Every failure is recoverable and never the player's fault ("that one's
+  gone stale — nothing broke; just ask for a fresh one").
+
 ## Candidate future work (solo)
 
 - A "skip ahead, I've kept bees before" fast-path on the founding coach.

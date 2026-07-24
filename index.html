@@ -997,7 +997,7 @@
   #mpPlayers,#mpPlayersJ{ display:flex; flex-direction:column; gap:5px; margin:9px 0 0; }
   .mpP{ display:flex; align-items:center; gap:8px; font:600 12.5px 'Bricolage Grotesque',sans-serif; background:rgba(0,0,0,0.25); border-radius:9px; padding:6px 10px; text-align:left; }
   .mpP i{ width:12px; height:12px; border-radius:50%; flex:none; display:inline-block; }
-  #mpName{ width:100%; font:600 14px 'Bricolage Grotesque',sans-serif; color:#f5e9c8; background:rgba(0,0,0,0.35); border:1px solid rgba(255,214,107,0.35); border-radius:9px; padding:9px 10px; margin:7px 0 2px; }
+  #mpName{ width:100%; font:600 14px 'Bricolage Grotesque',sans-serif; color:#f5e9c8; background:rgba(0,0,0,0.35); border:1px solid rgba(255,214,107,0.35); border-radius:9px; padding:9px 10px; margin:0; min-width:0; }
   .mpHow{ font:500 11px 'JetBrains Mono',monospace; color:var(--dim); line-height:1.55; margin-top:8px; text-align:left; }
   #voteBarWrap{ height:7px; border-radius:4px; background:rgba(255,255,255,0.14); overflow:hidden; margin-top:10px; }
   #voteBar{ height:100%; width:100%; background:linear-gradient(90deg,#ffd66b,#ff9d5a); }
@@ -1015,6 +1015,11 @@
   #mpOrder .ok{ font-family:'JetBrains Mono',monospace; font-weight:700; }
   #mpOrderBar{ height:4px; border-radius:2px; background:rgba(0,0,0,0.18); overflow:hidden; margin-top:5px; }
   #mpOrderBar i{ display:block; height:100%; background:#7a4d12; border-radius:2px; }
+  .qrWrap{ background:#fff; border-radius:14px; padding:10px; display:flex; justify-content:center; margin-top:9px; box-shadow:0 4px 14px rgba(0,0,0,0.35); }
+  .qrWrap canvas{ width:min(236px,62vw); height:auto; image-rendering:pixelated; }
+  .mpDetails{ margin-top:8px; text-align:left; }
+  .mpDetails summary{ font:600 11px 'JetBrains Mono',monospace; color:var(--dim); cursor:pointer; padding:3px 0; }
+  #scanVid{ width:100%; max-height:52vh; border-radius:12px; background:#000; margin-top:8px; }
 </style>
 </head>
 <body>
@@ -1390,7 +1395,10 @@
       <h1>PLAY TOGETHER</h1>
       <div class="sub">one hive · 2–8 keepers · same room or same Wi-Fi</div>
       <p style="margin:8px 0 2px">Everyone tends their own patch of comb. The big calls — where to forage, when to harvest — the hive <b>votes on</b>, the way real bees do.</p>
-      <input id="mpName" maxlength="12" placeholder="your keeper name" autocomplete="off">
+      <div class="mpRow" style="margin-top:7px">
+        <input id="mpName" maxlength="16" placeholder="what shall the bees call you?" autocomplete="off" style="flex:1">
+        <button class="btn" id="mpNameRoll" title="Roll a keeper name" style="flex:0 0 auto">🎲</button>
+      </div>
       <div class="mpRow">
         <button class="btn pulse" id="mpHostBtn">👑 Host a hive</button>
         <button class="btn" id="mpJoinBtn">🐝 Join a hive</button>
@@ -1401,38 +1409,54 @@
   <div class="ov hide" id="mpHost" role="dialog" aria-modal="true">
     <div class="card panel">
       <h1>YOUR HIVE</h1>
-      <div class="sub" id="mpHostState">share the invite — one keeper at a time</div>
-      <textarea class="mpCode" id="inviteCode" readonly aria-label="Invite code"></textarea>
+      <div class="sub" id="mpHostState">brewing your first invite…</div>
+      <div id="inviteQRWrap" class="qrWrap hide"><canvas id="inviteQR" aria-label="Invite code as a QR — scan with a phone camera"></canvas></div>
       <div class="mpRow">
-        <button class="btn" id="inviteCopy">📋 Copy invite</button>
-        <button class="btn" id="inviteShare">📤 Share</button>
+        <button class="btn" id="inviteShare">📤 Send invite</button>
+        <button class="btn" id="inviteScan">📷 Scan their reply</button>
       </div>
-      <textarea class="mpCode" id="answerIn" placeholder="paste their reply code here…" style="margin-top:9px" aria-label="Reply code from a joining keeper"></textarea>
-      <div class="mpRow"><button class="btn" id="answerAdd">＋ Welcome them in</button></div>
+      <details class="mpDetails"><summary>more ways (copy &amp; paste)</summary>
+        <textarea class="mpCode" id="inviteCode" readonly aria-label="Invite code"></textarea>
+        <div class="mpRow"><button class="btn" id="inviteCopy">📋 Copy invite</button></div>
+        <textarea class="mpCode" id="answerIn" placeholder="…or paste their reply here" style="margin-top:9px" aria-label="Reply code from a joining keeper"></textarea>
+        <div class="mpRow"><button class="btn" id="answerAdd">＋ Welcome them in</button></div>
+      </details>
       <div id="mpPlayers"></div>
       <div class="mpRow">
         <button class="btn ghost" id="mpHostBack">‹ Cancel</button>
         <button class="btn pulse" id="mpStart">Wake the hive ▶</button>
       </div>
-      <div class="mpHow">📤 Send the invite (AirDrop, message, paste). They send back a <b>reply code</b> — paste it above, welcome them in, repeat. Then wake the hive.</div>
+      <div class="mpHow">1&nbsp;· They <b>scan the honeycomb code</b> with their camera (or you send the link).<br>2&nbsp;· Their phone shows a reply — <b>scan their screen</b> (or they send it back).<br>3&nbsp;· 🎉 They’re in. Repeat for the next keeper, then wake the hive.</div>
     </div>
   </div>
   <div class="ov hide" id="mpJoin" role="dialog" aria-modal="true">
     <div class="card panel">
       <h1>JOIN A HIVE</h1>
-      <div class="sub" id="joinState">paste the invite your host sent you</div>
+      <div class="sub" id="joinState">paste the invite your host sent you — or scan their screen</div>
       <textarea class="mpCode" id="joinIn" placeholder="paste the invite code here…" aria-label="Invite code from the host"></textarea>
-      <div class="mpRow"><button class="btn pulse" id="joinGo">Answer the call 🐝</button></div>
+      <div class="mpRow">
+        <button class="btn pulse" id="joinGo">Answer the call 🐝</button>
+        <button class="btn" id="joinScan">📷 Scan invite</button>
+      </div>
       <div id="replyWrap" class="hide">
-        <textarea class="mpCode" id="replyCode" readonly style="margin-top:9px" aria-label="Your reply code"></textarea>
+        <div id="replyQRWrap" class="qrWrap hide"><canvas id="replyQR" aria-label="Your reply code as a QR — show it to the host"></canvas></div>
         <div class="mpRow">
-          <button class="btn" id="replyCopy">📋 Copy reply</button>
-          <button class="btn" id="replyShare">📤 Share</button>
+          <button class="btn" id="replyShare">📤 Send it back</button>
+          <button class="btn" id="replyCopy">📋 Copy</button>
         </div>
-        <div class="mpHow">Send this reply back to the host. When they welcome you in, the lobby appears here.</div>
+        <textarea class="mpCode" id="replyCode" readonly style="margin-top:9px" aria-label="Your reply code"></textarea>
+        <div class="mpHow">Show the code to your host to scan — or send it back any way you like. Nothing to get wrong: any path works.</div>
       </div>
       <div id="mpPlayersJ"></div>
       <button class="btn ghost" id="mpJoinBack" style="margin-top:8px">‹ Back</button>
+    </div>
+  </div>
+  <div class="ov hide" id="mpScan" role="dialog" aria-modal="true">
+    <div class="card panel">
+      <div class="mpBadge">📷 scanning</div>
+      <div class="sub" id="scanHint">point at the code</div>
+      <video id="scanVid" playsinline muted></video>
+      <button class="btn ghost" id="scanCancel" style="margin-top:9px">✕ Never mind</button>
     </div>
   </div>
   <div class="ov hide" id="mpRole" role="dialog" aria-modal="true">
@@ -4772,6 +4796,105 @@
     // quorum, which is the teachable moment baked into the vote cards.
     const NET={ on:false, host:false, started:false, endSent:false, myIx:-1, name:'',
       players:[], pend:null, snapT:0, vote:null, cVote:null, voteN:0, denyCool:0, hadHornet:false };
+    // ---- a tiny QR encoder (byte mode, error-correction level L) ----
+    // Exists so invites/replies can be *scanned* instead of pasted — the whole
+    // "grandma joins in ten seconds" flow. Ported from the public-domain
+    // qrcodegen algorithm (Project Nayuki); validated in tools/mp-smoke.js by
+    // decoding rendered symbols with an independent decoder across versions.
+    const QR_ECC_L=[-1,7,10,15,20,26,18,20,24,30,18,20,24,26,30,22,24,28,30,28,28,28,28,30,30,26,28,30,30,30,30,30,30,30,30,30,30,30,30,30,30];
+    const QR_NB_L=[-1,1,1,1,1,1,2,2,2,2,4,4,4,4,4,6,6,6,6,7,8,8,9,9,10,12,12,12,13,14,15,16,17,18,19,19,20,21,22,24,25];
+    const QR_EXP=new Uint8Array(512), QR_LOG=new Uint8Array(256);
+    (function(){ let x=1; for(let i=0;i<255;i++){ QR_EXP[i]=x; QR_LOG[x]=i; x<<=1; if(x&0x100) x^=0x11D; } for(let i=255;i<512;i++) QR_EXP[i]=QR_EXP[i-255]; })();
+    function qrMul(a,b){ return (a&&b)?QR_EXP[QR_LOG[a]+QR_LOG[b]]:0; }
+    function qrRawModules(v){ let r=(16*v+128)*v+64; if(v>=2){ const na=Math.floor(v/7)+2; r-=(25*na-10)*na-55; if(v>=7) r-=36; } return r; }
+    function qrDataCW(v){ return (qrRawModules(v)>>3)-QR_ECC_L[v]*QR_NB_L[v]; }
+    function qrDivisor(deg){ const res=new Uint8Array(deg); res[deg-1]=1; let root=1;
+      for(let i=0;i<deg;i++){ for(let j=0;j<deg;j++){ res[j]=qrMul(res[j],root)^(j+1<deg?res[j+1]:0); } root=qrMul(root,2); }
+      return res; }
+    function qrRemainder(data,div){ const res=new Uint8Array(div.length);
+      for(const b of data){ const f=b^res[0]; res.copyWithin(0,1); res[res.length-1]=0;
+        for(let j=0;j<div.length;j++) res[j]^=qrMul(div[j],f); }
+      return res; }
+    function qrEncode(text){ const bytes=new TextEncoder().encode(text);
+      let v=0; for(let t=1;t<=40;t++){ if(4+(t<10?8:16)+bytes.length*8<=qrDataCW(t)*8){ v=t; break; } }
+      if(!v) return null;
+      const cap=qrDataCW(v)*8, bits=[];
+      const push=(val,n)=>{ for(let i=n-1;i>=0;i--) bits.push((val>>>i)&1); };
+      push(4,4); push(bytes.length, v<10?8:16); for(const b of bytes) push(b,8);
+      push(0, Math.min(4, cap-bits.length)); if(bits.length%8) push(0, 8-bits.length%8);
+      for(let pad=0xEC; bits.length<cap; pad^=0xEC^0x11) push(pad,8);
+      const data=new Uint8Array(cap/8); for(let i=0;i<bits.length;i++) data[i>>3]|=bits[i]<<(7-(i&7));
+      // split into RS blocks (short blocks first), then interleave column-wise
+      const nb=QR_NB_L[v], ecl=QR_ECC_L[v], total=qrRawModules(v)>>3;
+      const shortData=Math.floor(total/nb)-ecl, numLong=total%nb, div=qrDivisor(ecl), blocks=[];
+      let off=0;
+      for(let i=0;i<nb;i++){ const len=shortData+(i>=nb-numLong?1:0);
+        const d=data.slice(off,off+len); off+=len; blocks.push({d, e:qrRemainder(d,div)}); }
+      const cw=[];
+      for(let i=0;i<=shortData;i++) for(const b of blocks){ if(i<b.d.length) cw.push(b.d[i]); }
+      for(let i=0;i<ecl;i++) for(const b of blocks) cw.push(b.e[i]);
+      // ---- build the matrix ----
+      const size=v*4+17, mod=new Uint8Array(size*size), fun=new Uint8Array(size*size);
+      const set=(x,y,dark)=>{ mod[y*size+x]=dark?1:0; fun[y*size+x]=1; };
+      const finder=(cx,cy)=>{ for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){ const x=cx+dx,y=cy+dy;
+        if(x<0||y<0||x>=size||y>=size) continue; const d=Math.max(Math.abs(dx),Math.abs(dy)); set(x,y,d!==2&&d!==4); } };
+      finder(3,3); finder(size-4,3); finder(3,size-4);
+      for(let i=0;i<size;i++){ if(!fun[6*size+i]) set(i,6,i%2===0); if(!fun[i*size+6]) set(6,i,i%2===0); }
+      if(v>=2){ const na=Math.floor(v/7)+2;
+        const step=(v===32)?26:Math.ceil((v*4+4)/(na*2-2))*2;
+        const pos=[6]; for(let p=size-7;pos.length<na;p-=step) pos.splice(1,0,p);
+        // skip only the three finder corners — edge patterns on the timing lines are required
+        for(let i=0;i<na;i++) for(let j=0;j<na;j++){
+          if((i===0&&j===0)||(i===0&&j===na-1)||(i===na-1&&j===0)) continue;
+          const cx=pos[j], cy=pos[i];
+          for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++) set(cx+dx,cy+dy,Math.max(Math.abs(dx),Math.abs(dy))!==1); } }
+      if(v>=7){ let rem=v; for(let i=0;i<12;i++) rem=(rem<<1)^((rem>>>11)*0x1F25);
+        const vb=(v<<12)|rem;
+        for(let i=0;i<18;i++){ const bit=(vb>>>i)&1, a=size-11+i%3, b=Math.floor(i/3); set(a,b,bit); set(b,a,bit); } }
+      // reserve format areas (values written per-mask below)
+      for(let i=0;i<=8;i++){ if(i!==6){ fun[8*size+i]=1; fun[i*size+8]=1; } }
+      for(let i=0;i<8;i++) fun[8*size+size-1-i]=1;
+      for(let i=0;i<7;i++) fun[(size-7+i)*size+8]=1;
+      set(8,size-8,true);
+      // zigzag data placement
+      const dataPos=[]; let up=true;
+      for(let right=size-1;right>=1;right-=2){ if(right===6) right=5;
+        for(let k=0;k<size;k++){ const y=up?size-1-k:k;
+          for(const x of [right,right-1]) if(!fun[y*size+x]) dataPos.push([x,y]); }
+        up=!up; }
+      for(let i=0;i<dataPos.length;i++){ const [x,y]=dataPos[i];
+        mod[y*size+x]=(i>>3)<cw.length ? (cw[i>>3]>>>(7-(i&7)))&1 : 0; }
+      const MASKS=[(x,y)=>(x+y)%2===0,(x,y)=>y%2===0,(x,y)=>x%3===0,(x,y)=>(x+y)%3===0,
+        (x,y)=>(Math.floor(x/3)+Math.floor(y/2))%2===0,(x,y)=>(x*y)%2+(x*y)%3===0,
+        (x,y)=>((x*y)%2+(x*y)%3)%2===0,(x,y)=>((x+y)%2+(x*y)%3)%2===0];
+      const writeFormat=(mask)=>{ let fb=(1<<3)|mask, rem=fb;   // 1 = EC level L
+        for(let i=0;i<10;i++) rem=(rem<<1)^((rem>>>9)*0x537);
+        const f=((fb<<10)|rem)^0x5412, bit=i=>(f>>>i)&1;
+        for(let i=0;i<=5;i++) mod[i*size+8]=bit(i);
+        mod[7*size+8]=bit(6); mod[8*size+8]=bit(7); mod[8*size+7]=bit(8);
+        for(let i=9;i<15;i++) mod[8*size+(14-i)]=bit(i);
+        for(let i=0;i<8;i++) mod[8*size+(size-1-i)]=bit(i);
+        for(let i=8;i<15;i++) mod[(size-15+i)*size+8]=bit(i); };
+      const applyMask=(mask)=>{ for(const [x,y] of dataPos) mod[y*size+x]^=MASKS[mask](x,y)?1:0; };
+      const penalty=()=>{ let p=0;
+        for(let y=0;y<size;y++){ let run=1; for(let x=1;x<size;x++){ if(mod[y*size+x]===mod[y*size+x-1]){ run++; if(x===size-1&&run>=5)p+=run-2; } else { if(run>=5)p+=run-2; run=1; } } }
+        for(let x=0;x<size;x++){ let run=1; for(let y=1;y<size;y++){ if(mod[y*size+x]===mod[(y-1)*size+x]){ run++; if(y===size-1&&run>=5)p+=run-2; } else { if(run>=5)p+=run-2; run=1; } } }
+        let dark=0; for(let i=0;i<size*size;i++) dark+=mod[i];
+        p+=10*Math.floor(Math.abs(dark*20-size*size*10)/(size*size));
+        return p; };
+      let best=0,bp=1e9;
+      for(let m=0;m<8;m++){ applyMask(m); writeFormat(m); const p=penalty(); if(p<bp){ bp=p; best=m; } applyMask(m); }
+      applyMask(best); writeFormat(best);
+      return {size, mod}; }
+    function drawQR(cv,text){ const q=qrEncode(text); if(!q||!cv) return false;
+      const quiet=4, n=q.size+quiet*2, scale=Math.max(2,Math.floor(560/n));
+      cv.width=n*scale; cv.height=n*scale;
+      const g=cv.getContext('2d'); g.fillStyle='#ffffff'; g.fillRect(0,0,cv.width,cv.height);
+      g.fillStyle='#1c1508';
+      for(let y=0;y<q.size;y++)for(let x=0;x<q.size;x++) if(q.mod[y*q.size+x]) g.fillRect((x+quiet)*scale,(y+quiet)*scale,scale,scale);
+      return true; }
+    window.__hmQR=(text)=>{ const cv=document.createElement('canvas'); if(!drawQR(cv,text)) return null;
+      return cv.getContext('2d').getImageData(0,0,cv.width,cv.height); };   // dev/test handle, like __hm
     const NET_MAX=8, NET_VOTE_SECS=25;
     const NETCOL=['#ffd66b','#8fc4ff','#a7e07c','#ff9d9d','#d9a7ff','#7fe2d3','#ffb063','#f0f0f0'];
     let netSector=null, netVoteUI=null, netVotedIx=[], netExec=false, netLastSI=-1;
@@ -4779,10 +4902,27 @@
     function netEsc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
     function netClient(){ return NET.on && !NET.host && NET.started; }
     // ---- signaling codes: base64url(JSON) with a magic prefix, whitespace-proof ----
-    function netEnc(o){ return 'HIVE1.'+btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_'); }
-    function netDec(t){ t=(t||'').replace(/\s+/g,'');   // codes survive URLs, messages, line wraps — find them anywhere
-      const m=t.match(/HIVE1\.([A-Za-z0-9_-]+)/); if(!m) return null;
-      try{ return JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,'+').replace(/_/g,'/'))))); }catch(e){ return null; } }
+    function netB64(bytes){ let s=''; for(let i=0;i<bytes.length;i++) s+=String.fromCharCode(bytes[i]);
+      return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''); }
+    function netUnB64(str){ const s=atob(str.replace(/-/g,'+').replace(/_/g,'/'));
+      const b=new Uint8Array(s.length); for(let i=0;i<s.length;i++) b[i]=s.charCodeAt(i); return b; }
+    // codes are deflated when the browser can (HIVE2 ≈ half the size — smaller QR,
+    // faster AirDrop); HIVE1 is the plain fallback and stays accepted forever
+    async function netEnc(o){ const json=JSON.stringify(o);
+      if(typeof CompressionStream==='function'){ try{
+        const cs=new CompressionStream('deflate-raw'), w=cs.writable.getWriter();
+        w.write(new TextEncoder().encode(json)); w.close();
+        return 'HIVE2.'+netB64(new Uint8Array(await new Response(cs.readable).arrayBuffer())); }catch(e){} }
+      return 'HIVE1.'+btoa(unescape(encodeURIComponent(json))).replace(/\+/g,'-').replace(/\//g,'_'); }
+    async function netDec(t){ t=(t||'').replace(/\s+/g,'');   // codes survive URLs, messages, line wraps — find them anywhere
+      const m=t.match(/HIVE(1|2)\.([A-Za-z0-9_-]+)/); if(!m) return null;
+      try{
+        if(m[1]==='2'){ if(typeof DecompressionStream!=='function') return null;
+          const ds=new DecompressionStream('deflate-raw'), w=ds.writable.getWriter();
+          w.write(netUnB64(m[2])); w.close();
+          return JSON.parse(new TextDecoder().decode(await new Response(ds.readable).arrayBuffer())); }
+        return JSON.parse(decodeURIComponent(escape(atob(m[2].replace(/-/g,'+').replace(/_/g,'/'))))); }
+      catch(e){ return null; } }
     // invite/reply travel as tappable links when we're on the web; raw codes on file://
     function netUrl(kind,code){ const web=(location.protocol==='https:'||location.protocol==='http:');
       return web?(location.origin+location.pathname+'#'+kind+'='+code):code; }
@@ -4937,8 +5077,10 @@
       dc.onopen=()=>hostPeerJoined(pc,dc);
       try{ const off=await pc.createOffer(); await pc.setLocalDescription(off); await netIceDone(pc); }
       catch(e){ st.textContent='couldn’t brew an invite — try again'; return; }
-      if(NET.pend&&NET.pend.pc===pc&&NET.host){ $('inviteCode').value=netUrl('hive',netEnc({o:pc.localDescription.sdp}));
-        st.textContent='invite ready — send it over (a tap on the link joins)'; } }
+      if(NET.pend&&NET.pend.pc===pc&&NET.host){ const url=netUrl('hive',await netEnc({o:pc.localDescription.sdp}));
+        $('inviteCode').value=url;
+        const ok=drawQR($('inviteQR'),url); $('inviteQRWrap').classList.toggle('hide',!ok);
+        st.innerHTML='ready! <b>have them scan this</b> with their camera — or send the link'; } }
     function hostPeerJoined(pc,dc){ if(NET.pend&&NET.pend.pc===pc) NET.pend=null;
       const p={ix:NET.players.length,name:'Keeper '+(NET.players.length+1),pc,dc,gone:false,propAt:-1e9,pendingStart:NET.started};
       NET.players.push(p);
@@ -4947,8 +5089,9 @@
       try{ chime(523,659); }catch(e){}
       netLobbySync(); hostNewInvite(); }
     function hostOnMsg(p,raw){ let m; try{ m=JSON.parse(raw); }catch(e){ return; }
-      if(m.t==='hi'){ p.name=netEsc(String(m.name||'').slice(0,12))||p.name;
+      if(m.t==='hi'){ p.name=netEsc(String(m.name||'').slice(0,16))||p.name;
         if(NET.started&&p.pendingStart){ p.pendingStart=false; hostAdmitMidGame(p); return; }
+        if(!p.hello){ p.hello=true; toast('🎉 <b>'+p.name+'</b> is in the hive!'); try{ fanfare(); }catch(e){} }
         netLobbySync(); netStripSync(); }
       else if(m.t==='p'&&NET.started&&!over){ netApplyPaint(m,p.ix); }
       else if(m.t==='prop'&&NET.started&&!over){ const now=performance.now();
@@ -5147,9 +5290,33 @@
       $('replyWrap').classList.add('hide'); $('inviteCode').value=''; $('answerIn').value=''; $('joinIn').value=''; $('replyCode').value='';
       $('mpPlayers').innerHTML=''; $('mpPlayersJ').innerHTML=''; netStripSync(); }
     // ---- UI wiring ----
-    function mpTakeName(){ let n=($('mpName').value||'').trim().slice(0,12); if(!n) n='Keeper'; NET.name=n; lsSet('hm_mpname',n); return n; }
+    // keeper names roll off the tongue — alliterative, meadow-sweet, the kind of
+    // nickname that survives the game night ("nice one, Bumbly Biscuit").
+    // Each row shares an initial: [adjectives..., '|', nouns...]. Add rows, keep ≤16 chars.
+    const NET_NAMES=[
+      ['Buzzy','Bumbly','Breezy','|','Biscuit','Beatrix','Bramble'],
+      ['Cozy','Clever','Curly','|','Clover','Crumpet','Cricket'],
+      ['Dandy','Dewy','Dozy','|','Dumpling','Dahlia','Drone'],
+      ['Fuzzy','Flitty','Fancy','|','Fig','Fern','Flora'],
+      ['Golden','Giddy','Gentle','|','Goose','Gus','Gloria'],
+      ['Honeyed','Humming','Happy','|','Hazel','Hugo','Hattie'],
+      ['Mellow','Merry','Mighty','|','Maple','Mabel','Morsel'],
+      ['Nifty','Nimble','Nutty','|','Nectar','Nell','Nugget'],
+      ['Plush','Perky','Pollen','|','Petal','Pip','Poppy'],
+      ['Silky','Sunny','Snug','|','Saffron','Sage','Sprout'],
+      ['Toasty','Tender','Tidy','|','Tulip','Truffle','Ted'],
+      ['Velvet','Vivid','Very','|','Viola','Vespa','Violet'],
+      ['Waggly','Warm','Wild','|','Willow','Wilma','Waffles'],
+      ['Zippy','Zesty','Zen','|','Zinnia','Ziggy','Zoe'],
+    ];
+    function netMakeName(){ const row=NET_NAMES[(Math.random()*NET_NAMES.length)|0], cut=row.indexOf('|');
+      for(let tries=0;tries<8;tries++){ const a=row[(Math.random()*cut)|0], n=row[cut+1+((Math.random()*(row.length-cut-1))|0)];
+        const full=a+' '+n; if(full.length<=16&&a!==n) return full; }
+      return 'Busy Bee'; }
+    function mpTakeName(){ let n=($('mpName').value||'').trim().slice(0,16); if(!n) n=netMakeName(); NET.name=n; lsSet('hm_mpname',n); return n; }
+    press($('mpNameRoll'),()=>{ $('mpName').value=netMakeName(); try{ chime(494,659); }catch(e){} });
     press($('startParty'),()=>{ if(!window.RTCPeerConnection){ toast('This browser can’t link hives (no WebRTC) — try Safari, Chrome or Firefox.'); return; }
-      try{ $('mpName').value=localStorage.getItem('hm_mpname')||''; }catch(e){}
+      try{ $('mpName').value=localStorage.getItem('hm_mpname')||netMakeName(); }catch(e){ $('mpName').value=netMakeName(); }
       $('intro').classList.add('hide'); openOverlay('mpHome'); });
     press($('mpHomeBack'),()=>{ closeOverlay('mpHome'); $('intro').classList.remove('hide'); });
     press($('mpHostBtn'),()=>{ mpTakeName(); closeOverlay('mpHome'); openOverlay('mpHost');
@@ -5171,13 +5338,14 @@
     press($('voteYes'),()=>netCastBallot(true));
     press($('voteNo'),()=>netCastBallot(false));
     press($('mpEndClose'),()=>{ location.reload(); });
-    press($('answerAdd'),async()=>{ const d=netDec($('answerIn').value);
-      if(!d||!d.a){ toast('That doesn’t look like a reply code — ask them to copy it again.'); return; }
-      if(!NET.pend){ toast('No invite is waiting — the newest invite pairs with the newest reply.'); return; }
+    async function hostTakeReply(text){ const d=await netDec(text);
+      if(!d||!d.a){ toast('That doesn’t look like a reply — ask them to show their screen or resend it.'); return false; }
+      if(!NET.pend){ toast('No invite is waiting — the newest invite pairs with the newest reply.'); return false; }
       try{ await NET.pend.pc.setRemoteDescription({type:'answer',sdp:d.a}); $('answerIn').value='';
-        $('mpHostState').textContent='linking… give it a breath'; }
-      catch(e){ toast('That reply didn’t match this invite — send them the newest invite code.'); } });
-    async function joinAnswer(){ const d=netDec($('joinIn').value);
+        $('mpHostState').textContent='linking… give it a breath 🐝'; return true; }
+      catch(e){ toast('That reply didn’t match this invite — have them scan the newest one.'); return false; } }
+    press($('answerAdd'),()=>hostTakeReply($('answerIn').value));
+    async function joinAnswer(){ const d=await netDec($('joinIn').value);
       if(!d||!d.o){ toast('That doesn’t look like an invite code — ask the host to copy it again.'); return; }
       if(joinPc){ try{ joinPc.close(); }catch(e){} joinPc=null; joinDc=null; }
       const pc=joinPc=netRtc();
@@ -5187,9 +5355,12 @@
       $('joinState').textContent='answering the call…';
       try{ await pc.setRemoteDescription({type:'offer',sdp:d.o});
         const an=await pc.createAnswer(); await pc.setLocalDescription(an); await netIceDone(pc);
-        $('replyCode').value=netUrl('reply',netEnc({a:pc.localDescription.sdp})); $('replyWrap').classList.remove('hide');
-        $('joinState').textContent='send the reply back to the host — then hold tight'; }
-      catch(e){ $('joinState').textContent='that invite didn’t take — ask for a fresh one'; } }
+        const url=netUrl('reply',await netEnc({a:pc.localDescription.sdp}));
+        $('replyCode').value=url;
+        const ok=drawQR($('replyQR'),url); $('replyQRWrap').classList.toggle('hide',!ok);
+        $('replyWrap').classList.remove('hide');
+        $('joinState').innerHTML='one step left: <b>show this to your host</b> 📱→📷 — or send it back'; }
+      catch(e){ $('joinState').textContent='that invite didn’t take — nothing broke; just ask for a fresh one'; } }
     press($('joinGo'),joinAnswer);
     // ---- invite links: tapping an AirDropped/messaged link skips the whole ritual ----
     (function(){ let h=''; try{ h=location.hash||''; }catch(e){}
@@ -5206,14 +5377,14 @@
         try{ history.replaceState(null,'',location.pathname); }catch(e){}
         const sp=$('splash'); if(sp) sp.remove(); const g=$('gsplash'); if(g) g.remove();
         const co=$('coldopen'); if(co) co.remove();
-        try{ $('mpName').value=localStorage.getItem('hm_mpname')||''; }catch(e){}
+        try{ $('mpName').value=localStorage.getItem('hm_mpname')||netMakeName(); }catch(e){ $('mpName').value=netMakeName(); }
         $('joinIn').value=decodeURIComponent(mi[1]);
         $('intro').classList.add('hide'); openOverlay('mpHome');
         toast('🐝 You’re invited to a hive — pick a name and tap <b>Join</b>.'); } })();
     // the host tab hears a courier tab deliver a reply and welcomes the keeper in
     addEventListener('storage',async e=>{ if(e.key!=='hm_reply'||!e.newValue) return;
       if(!NET.host||!NET.pend) return;
-      let d=null; try{ d=netDec(JSON.parse(e.newValue).c); }catch(err){}
+      let d=null; try{ d=await netDec(JSON.parse(e.newValue).c); }catch(err){}
       if(!d||!d.a) return;
       try{ await NET.pend.pc.setRemoteDescription({type:'answer',sdp:d.a});
         $('mpHostState').textContent='reply received — linking…'; toast('📨 Reply received — welcoming them in.'); }
@@ -5229,6 +5400,36 @@
       else toast('Sharing isn’t available here — use 📋 Copy instead.'); }); }
     netCopyBtn('inviteCopy','inviteCode'); netShareBtn('inviteShare','inviteCode','HIVEMIND — join my hive');
     netCopyBtn('replyCopy','replyCode'); netShareBtn('replyShare','replyCode','HIVEMIND — my reply code');
+    // ---- camera scanning: the "just show me your phone" flow ----
+    // Feature-gated on BarcodeDetector + getUserMedia (and Permissions-Policy
+    // allowing camera, see netlify.toml). The video never leaves the device —
+    // it's read locally for QR codes and stopped the moment one lands.
+    let scanStream=null, scanTimer=0;
+    function netCanScan(){ return ('BarcodeDetector' in window)&&!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia); }
+    function netScanStop(){ clearTimeout(scanTimer);
+      if(scanStream){ try{ scanStream.getTracks().forEach(t=>t.stop()); }catch(e){} scanStream=null; }
+      const vid=$('scanVid'); if(vid) vid.srcObject=null; closeOverlay('mpScan'); }
+    async function netScan(hint,onCode){ if(!netCanScan()) return;
+      let det; try{ det=new BarcodeDetector({formats:['qr_code']}); }catch(e){ toast('This browser can’t scan — the share buttons work just as well.'); return; }
+      try{ scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}); }
+      catch(e){ toast('Camera said no — no problem, the share buttons do the same job.'); return; }
+      $('scanHint').textContent=hint;
+      const vid=$('scanVid'); vid.srcObject=scanStream; try{ await vid.play(); }catch(e){}
+      openOverlay('mpScan');
+      let busy=false;
+      const loop=async()=>{ if(!scanStream) return;
+        if(!busy&&vid.readyState>=2){ busy=true;
+          try{ const codes=await det.detect(vid);
+            const hit=codes&&codes.find(c=>/HIVE(1|2)\./.test(c.rawValue||''));
+            if(hit){ netScanStop(); try{ chime(660,880); }catch(e){} onCode(hit.rawValue); return; } }
+          catch(e){}
+          busy=false; }
+        scanTimer=setTimeout(loop,180); };
+      loop(); }
+    press($('scanCancel'),netScanStop);
+    press($('inviteScan'),()=>netScan('Point at their reply code 📱',code=>hostTakeReply(code)));
+    press($('joinScan'),()=>netScan('Point at the Queen’s invite 📱',code=>{ $('joinIn').value=code; joinAnswer(); }));
+    if(!netCanScan()){ $('inviteScan').classList.add('hide'); $('joinScan').classList.add('hide'); }
 
     // ===================== boot =====================
     layout();

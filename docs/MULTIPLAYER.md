@@ -77,7 +77,42 @@ the host's sim, local screens keep the juice (shake, hitstop, puff).
 
 The repo rule is *no server, no dependencies* — so there is **no signaling
 server**. Connection is WebRTC `RTCDataChannel` with **manual signaling**,
-dressed up as links so the ritual disappears (the Roblox lesson):
+dressed up so completely that the ritual disappears (the Roblox lesson).
+
+**The "grandma flow"** (the target UX — nobody types anything but a name):
+
+1. Host's screen shows a big **QR invite**. The joiner points their **camera
+   app** at it (no in-game scanner needed, no permission prompts on their
+   side) → the game opens at the join door, name remembered from last time.
+2. One golden button later, the joiner's screen fills with a **reply QR**.
+3. The host taps **📷 Scan their reply** and points their device at the
+   joiner's screen → chime, confetti, "🎉 Pearl is in the hive!" The next
+   invite QR is already brewing.
+
+Every leg has a fallback that's just as valid — share/AirDrop the link,
+copy/paste the raw code (tucked behind a "more ways" fold) — and the copy
+never blames the player when something goes stale ("nothing broke; just ask
+for a fresh one").
+
+Implementation notes:
+
+- **QR codes** come from a ~120-line inline encoder (byte mode, EC level L;
+  ported from the public-domain qrcodegen algorithm). It is validated in
+  `tools/mp-smoke.js` by decoding rendered symbols with an independent
+  decoder (jsqr) across payload sizes, which sweeps the version/table space.
+  Don't touch the tables without re-running that sweep.
+- **Scanning** uses `BarcodeDetector` + `getUserMedia`, strictly
+  feature-gated (buttons hide where unsupported — e.g. some desktop Linux
+  browsers); frames are read locally and the stream stops the instant a code
+  lands. `netlify.toml` sets `Permissions-Policy: camera=(self)` for this —
+  the game still never records or transmits anything. Bonus: granting camera
+  makes Safari expose host ICE candidates, which *improves* LAN linking.
+- **Codes are deflated** when `CompressionStream` exists (`HIVE2.` prefix,
+  roughly half the size → smaller QRs, faster AirDrops); `HIVE1.` plain
+  base64url remains accepted forever, and `netDec` finds either prefix
+  inside any pasted text or URL.
+
+The link flow underneath:
 
 1. Host taps *Host a hive* → an **invite link**
    (`https://…/#hive=HIVE1.<base64url SDP>`) appears with Copy / Share

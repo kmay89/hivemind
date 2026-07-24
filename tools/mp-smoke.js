@@ -71,12 +71,38 @@ async function waitVal(page, sel, tries = 60) {
   const host = await mk('host');
   const join = await mk('join');
 
+  // --- QR encoder sweep: render QRs of many sizes, decode with an independent
+  // decoder (jsqr), so every version/table row we can emit is validated ---
+  let jsQR = null;
+  try { jsQR = require('jsqr'); } catch (e) { console.log('(jsqr not installed — skipping QR validation: npm i jsqr)'); }
+  if (jsQR) {
+    let allOk = true;
+    for (const len of [20, 80, 160, 300, 450, 600, 800, 1000]) {
+      const payload = 'HIVE2.' + 'Ab-_'.repeat(Math.ceil(len / 4)).slice(0, len);
+      const img = await host.evaluate(t => { const d = window.__hmQR(t); return d ? { data: Array.from(d.data), width: d.width, height: d.height } : null; }, payload);
+      if (!img) { console.log(`✗ QR encode failed at len=${len}`); allOk = false; continue; }
+      const res = jsQR(new Uint8ClampedArray(img.data), img.width, img.height);
+      if (!res || res.data !== payload) { console.log(`✗ QR decode mismatch at len=${len}: ${res ? 'wrong data' : 'no decode'}`); allOk = false; }
+    }
+    console.log(allOk ? '✓ QR encoder sweep: all payload sizes decode correctly (independent decoder)' : '✗ QR encoder sweep had failures');
+  }
+
   // --- host: title -> Play Together -> Host a hive ---
   await host.click('#startParty');
   await host.fill('#mpName', 'Queenie');
   await host.click('#mpHostBtn');
+  await host.$eval('#mpHost .mpDetails', d => { d.open = true; });   // paste boxes live behind a fold now
   const invite = await waitVal(host, '#inviteCode');
-  console.log('✓ invite code generated (' + invite.length + ' chars)');
+  console.log('✓ invite code generated (' + invite.length + ' chars' + (invite.includes('HIVE2.') ? ', deflated' : '') + ')');
+  if (jsQR) {
+    const shown = await host.evaluate(() => { const cv = document.getElementById('inviteQR');
+      if (!cv || !cv.width) return null; const d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height);
+      return { data: Array.from(d.data), width: d.width, height: d.height }; });
+    if (shown) {
+      const res = jsQR(new Uint8ClampedArray(shown.data), shown.width, shown.height);
+      console.log(res && res.data === invite ? '✓ on-screen invite QR decodes to the exact invite URL' : '✗ invite QR decode failed');
+    } else console.log('✗ invite QR canvas empty');
+  }
 
   // --- joiner: Play Together -> Join -> paste invite -> reply ---
   await join.click('#startParty');

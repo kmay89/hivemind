@@ -49,6 +49,10 @@ Game Center later if wanted (badges → achievements map cleanly).
       `privacy.html` — no accounts, no analytics, saves stay on device).
       Hive Link is peer-to-peer; no data leaves the room's devices except
       STUN address discovery — say so in the label notes.
+- [ ] Camera usage string (`NSCameraUsageDescription`): "Scans a QR code
+      from another player's screen to link your hives. Nothing is recorded
+      or uploaded." Camera is optional and feature-gated; the app works
+      fully without granting it.
 - [ ] Age rating: 4+.
 - [ ] Screenshots: 6.7", 6.1", iPad 12.9", Mac — capture the comb in summer,
       a hornet raid, the cellar, a Play Together vote.
