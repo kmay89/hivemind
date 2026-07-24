@@ -178,6 +178,14 @@ Star, host-authoritative:
   *Another year — same crew ▶*: one tap re-seeds and re-broadcasts `start`
   over the still-open channels. Joiners' end card says to hold on. This is
   the replay loop — short years, same room, again.
+- **The party ledger.** Every party year gets a generated name (*The Bumbly
+  Bramble Hive*) and the host autosaves it every ~6 s under its own key
+  (`hivemind.party.v1` — fully separate from the solo save, which parties
+  never touch; the Play Together screen says so out loud). If the Queen's
+  device dies mid-year, reopening *Host a hive* offers
+  *🕯 Resume — day N · your keepers*: fresh invites go out, **same names
+  re-claim the same combs**, and the year rekindles where the ledger left
+  it. A finished year (win or loss) clears its ledger.
 
 ## Invariants (keep these true)
 

@@ -288,6 +288,45 @@ async function waitVal(page, sel, tries = 60) {
     await linkCtx.close();
   } else console.log('✗ invite is not a URL: ' + invite5.slice(0, 40));
 
+  // --- party ledger: host dies (reload), resumes the year from autosave, crew re-links ---
+  const dayBefore = await host.evaluate(() => window.__hm().day);
+  const hostCtx = host.context();
+  await host.close();   // the Queen's phone "dies"
+  const host2 = await hostCtx.newPage();
+  await host2.goto(`http://localhost:${PORT}/`, { waitUntil: 'load' });
+  await host2.waitForTimeout(1200);
+  await host2.keyboard.press('Space');
+  await host2.waitForFunction(() => { const g = document.getElementById('gsplash'); return g && !g.classList.contains('hide'); }, null, { timeout: 15000 });
+  for (let i = 0; i < 30; i++) { if (await host2.evaluate(() => !document.getElementById('gsplash'))) break;
+    await host2.mouse.click(200, 200); await host2.waitForTimeout(400); }
+  await host2.click('#startParty');
+  await host2.fill('#mpName', 'Queenie');
+  await host2.click('#mpHostBtn');
+  const resumeVisible = await host2.$eval('#mpResume', el => !el.classList.contains('hide'));
+  console.log(resumeVisible ? '✓ ledger resume offered after host death' : '✗ no resume button after reload');
+  if (resumeVisible) {
+    await host2.$eval('#mpResume', el => el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 })));
+    const lbl = await host2.$eval('#mpStart', el => el.textContent);
+    console.log(/Rekindle/.test(lbl) ? '✓ resume armed (' + lbl.trim() + ')' : '✗ start label did not change: ' + lbl);
+    // one keeper re-links, then the year rekindles where the ledger left it
+    await host2.$eval('#mpHost .mpDetails', d => { d.open = true; });
+    const inviteR = await waitVal(host2, '#inviteCode');
+    const back = await mk('back');
+    await back.click('#startParty'); await back.fill('#mpName', 'Buzz'); await back.click('#mpJoinBtn');
+    await back.fill('#joinIn', inviteR); await back.click('#joinGo');
+    const replyR = await waitVal(back, '#replyCode');
+    await host2.fill('#answerIn', replyR); await host2.click('#answerAdd');
+    await host2.waitForFunction(() => window.__hm().net.players.length === 2, null, { timeout: 15000 });
+    await host2.click('#mpStart');
+    await host2.waitForFunction(() => window.__hm().net.started, null, { timeout: 5000 });
+    const dayAfter = await host2.evaluate(() => window.__hm().day);
+    console.log(dayAfter > 3 && dayAfter <= dayBefore + 5
+      ? `✓ year rekindled from the ledger (day ${dayAfter.toFixed(1)}, was ${dayBefore.toFixed(1)} at death)`
+      : `✗ resume day odd: ${dayAfter.toFixed(1)} vs ${dayBefore.toFixed(1)}`);
+    const backDay = await back.evaluate(() => window.__hm().day);
+    console.log(backDay > 3 ? '✓ re-linked keeper landed mid-year with the crew' : '✗ keeper day=' + backDay);
+  }
+
   await browser.close();
   srv.close();
   console.log('SMOKE TEST DONE');
