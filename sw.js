@@ -1,7 +1,7 @@
 /* HIVEMIND service worker — offline play + update notifications.
    Bump VERSION with every release: the changed byte triggers the browser's
    service-worker update check, which shows players the in-game update bar. */
-const VERSION = '2026.07.29.25';
+const VERSION = '2026.07.30.26';
 const CACHE = 'hivemind-' + VERSION;
 const FONT_CACHE = 'hivemind-fonts';
 const SHELL = [
