@@ -1008,6 +1008,13 @@
   .netc #undoBtn{ display:none !important; }
   .mpBadge{ font:700 11px 'JetBrains Mono',monospace; letter-spacing:1.5px; color:#ffd66b; text-transform:uppercase; }
   .mpSector{ font:800 24px 'Bricolage Grotesque',sans-serif; margin:5px 0 2px; }
+  #mpOrder{ position:fixed; left:50%; transform:translateX(-50%); top:calc(env(safe-area-inset-top,0px) + 82px); z-index:57;
+    font:600 12px 'Bricolage Grotesque',sans-serif; color:#1c1508; background:linear-gradient(180deg,#ffe9a8,#ffd66b);
+    border:1.5px solid rgba(0,0,0,0.3); border-radius:12px; padding:6px 12px 8px; box-shadow:0 3px 10px rgba(0,0,0,0.4);
+    max-width:88vw; text-align:center; pointer-events:none; }
+  #mpOrder .ok{ font-family:'JetBrains Mono',monospace; font-weight:700; }
+  #mpOrderBar{ height:4px; border-radius:2px; background:rgba(0,0,0,0.18); overflow:hidden; margin-top:5px; }
+  #mpOrderBar i{ display:block; height:100%; background:#7a4d12; border-radius:2px; }
 </style>
 </head>
 <body>
@@ -1453,10 +1460,12 @@
     <div class="card panel">
       <h1 id="mpEndTitle">THE YEAR TURNS</h1>
       <div id="mpEndBody" style="margin:8px 0"></div>
-      <button class="btn pulse" id="mpEndClose">Back to the meadow</button>
+      <button class="btn pulse hide" id="mpEndAgain">Another year — same crew ▶</button>
+      <button class="btn ghost" id="mpEndClose" style="margin-top:8px">Back to the meadow</button>
     </div>
   </div>
   <div id="mpStrip" class="hide" aria-hidden="true"></div>
+  <div id="mpOrder" class="hide" role="status"></div>
 
   <!-- cinematic intro -->
   <div class="ov hide" id="story">
@@ -2384,13 +2393,21 @@
           toast(raidLoss?('Your guards drove the hornet off — '+raidLoss+' bees were lost.'):'Your guards drove the hornet off.'); } }
       else { h.x+=h.vx*size*dt; mv(h.x>hiveCx?W+size*6:-size*6, -size*6, 6);
         if(h.y<-size*4||h.x<-size*5||h.x>W+size*5){ hornet=null; hornetCD=(year>=4?14+Math.random()*20:24+Math.random()*36); } } }
-    function hitHornet(p){ const h=hornet; if(!h||h.state==='flee') return false;
-      if(Math.hypot(p.x-h.x,p.y-h.y)>size*2.4) return false;
+    function hornetDamage(){ const h=hornet; if(!h||h.state==='flee') return;
       h.hp--; h.x+=(Math.random()-0.5)*size*1.5; h.y-=size*0.4; shake=Math.max(shake,0.22); hitstop=0.055;
       puff(h.x,h.y,'#ff9a7a',6,1.4); chime(220+(h.maxhp-h.hp)*130, 160);
       if(h.hp<=0){ h.state='flee'; grantBadge('guardian'); puff(h.x,h.y,'#ffd76b',18,1.8); chime(520,880);
         if(raidLoss===0){ rj++; burst(h.x,h.y,22); toast('Perfect defense — not one bee lost! +1 ✧ royal jelly 🛡'); fanfare(); }
-        else toast('Hornet driven off! The guard bees prevail. 🛡'); saveGame(); }
+        else toast('Hornet driven off! The guard bees prevail. 🛡');
+        if(NET.on&&NET.host) netBcast({t:'ev',msg:raidLoss===0?'🛡 Perfect defense — not one bee lost! +1 ✧':'🛡 Hornet driven off — the hive prevails.'});
+        saveGame(); } }
+    function hitHornet(p){ const h=hornet; if(!h||h.state==='flee') return false;
+      if(Math.hypot(p.x-h.x,p.y-h.y)>size*2.4) return false;
+      if(netClient()){ // the swat lands on the Queen's sim; keep the local juice immediate
+        netSend({t:'hh'}); shake=Math.max(shake,0.18); hitstop=0.045;
+        puff(h.x,h.y,'#ff9a7a',6,1.4); chime(220+(h.maxhp-Math.max(1,h.hp))*130,160); h.x+=(Math.random()-0.5)*size;
+        return true; }
+      hornetDamage();
       return true; }
     function drawHornet(){ const h=hornet; if(!h) return; const s=size*0.5;
       if(h.state==='raid'){ const pr=size*2.4*(1+0.08*Math.sin(gt*6));
@@ -4763,8 +4780,12 @@
     function netClient(){ return NET.on && !NET.host && NET.started; }
     // ---- signaling codes: base64url(JSON) with a magic prefix, whitespace-proof ----
     function netEnc(o){ return 'HIVE1.'+btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_'); }
-    function netDec(t){ t=(t||'').replace(/\s+/g,''); if(t.indexOf('HIVE1.')!==0) return null;
-      try{ return JSON.parse(decodeURIComponent(escape(atob(t.slice(6).replace(/-/g,'+').replace(/_/g,'/'))))); }catch(e){ return null; } }
+    function netDec(t){ t=(t||'').replace(/\s+/g,'');   // codes survive URLs, messages, line wraps — find them anywhere
+      const m=t.match(/HIVE1\.([A-Za-z0-9_-]+)/); if(!m) return null;
+      try{ return JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/-/g,'+').replace(/_/g,'/'))))); }catch(e){ return null; } }
+    // invite/reply travel as tappable links when we're on the web; raw codes on file://
+    function netUrl(kind,code){ const web=(location.protocol==='https:'||location.protocol==='http:');
+      return web?(location.origin+location.pathname+'#'+kind+'='+code):code; }
     function netRtc(){ return new RTCPeerConnection({iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']}]}); }
     // non-trickle: wait for the full candidate set so one code carries everything
     // (iOS Safari withholds host candidates without camera permission — the STUN
@@ -4778,7 +4799,10 @@
       for(const p of NET.players){ if(p.ix===0||p.gone||!p.dc) continue; try{ if(p.dc.readyState==='open') p.dc.send(s); }catch(e){} } }
     function netToastAll(msg){ toast(msg); netBcast({t:'ev',msg}); }
     function netRoster(){ return NET.players.map(p=>({ix:p.ix,n:p.name,g:p.gone?1:0})); }
-    function netSnapObj(){ return serialize(); }
+    function netSnapObj(){ const s=serialize();
+      if(hornet) s.hn={x:(hornet.x-hiveCx)/size, y:(hornet.y-hiveCy)/size, vx:hornet.vx, vy:hornet.vy,
+        hp:hornet.hp, mh:hornet.maxhp, st:hornet.state, wob:hornet.wob};
+      return s; }
     // ---- sectors: the Queen keeps the royal core; joiners get compass wedges ----
     function netAssignSectors(){ netSector=new Int8Array(cells.length); const nw=NET.players.length-1;
       const cx0=CCC+0.5*(CCR&1), TAU=Math.PI*2;
@@ -4830,6 +4854,12 @@
         if(v>>4&1){ if(!c.brood) c.brood={stage:'egg',t:0}; c.brood.stage=STN[(v>>5)&3]; c.brood.t=(s.bt[i]||0)/10; }
         else c.brood=null; }
       const si=seasonIdx(day); if(si!==netLastSI){ const prev=netLastSI; netLastSI=si; if(prev>=0&&started) seasonBanner(si); }
+      // the hornet fights on every screen: reconstruct the Queen's hornet as a local
+      // ghost (positions travel in comb units so different screen sizes agree)
+      if(s.hn){ const tx=hiveCx+s.hn.x*size, ty=hiveCy+s.hn.y*size;
+        if(!hornet||!hornet._net) hornet={x:tx,y:ty,vx:s.hn.vx,vy:s.hn.vy,hp:s.hn.hp,maxhp:s.hn.mh,t:0,atk:9,state:s.hn.st,wob:s.hn.wob,_net:true,_tx:tx,_ty:ty};
+        else{ hornet._tx=tx; hornet._ty=ty; hornet.vx=s.hn.vx; hornet.vy=s.hn.vy; hornet.hp=s.hn.hp; hornet.maxhp=s.hn.mh; hornet.state=s.hn.st; } }
+      else if(hornet&&hornet._net) hornet=null;
       syncBeePool(); syncForageUI(); }
     // ---- votes: one at a time, 25 seconds, majority rules, the Queen breaks ties ----
     function netValidProp(k,v){ if(k==='patch') return typeof v==='number'&&PATCHES[v]&&patchQuality(v,day)>0.02;
@@ -4851,15 +4881,18 @@
       else netSend({t:'prop',k,v}); }
     function hostStartVote(k,v,byIx){ if(NET.vote) return;
       const id=++NET.voteN; NET.vote={id,k,v,by:byIx,bal:{}};
+      NET.vote.bal[byIx]=true;   // proposing IS your dance — in a duo, only your partner needs to answer
       netBcast({t:'vote',id,k,v,by:byIx,secs:NET_VOTE_SECS});
-      netShowVote(k,v,byIx,NET_VOTE_SECS); }
+      netShowVote(k,v,byIx,NET_VOTE_SECS);
+      netBcast({t:'vst',id,voted:[byIx]}); netStripVoted([byIx]);
+      if(Object.keys(NET.vote.bal).length>=NET.players.filter(p=>!p.gone).length) hostEndVote(); }
     function hostBallot(ix,yes){ const V=NET.vote; if(!V||V.bal[ix]!==undefined) return; V.bal[ix]=!!yes;
       const voted=Object.keys(V.bal).map(Number);
       netBcast({t:'vst',id:V.id,voted}); netStripVoted(voted);
       if(voted.length>=NET.players.filter(p=>!p.gone).length) hostEndVote(); }
     function hostEndVote(){ const V=NET.vote; if(!V) return; NET.vote=null;
       let yes=0,no=0; for(const k2 in V.bal) V.bal[k2]?yes++:no++;
-      let pass=yes>no; if(yes===no) pass=V.bal[0]===true;   // the Queen's dance settles a tie
+      const pass=yes>no;   // a real quorum: a tie means the hive holds still
       netBcast({t:'tally',id:V.id,yes,no,pass,k:V.k,v:V.v});
       netVoteResult(V.k,V.v,yes,no,pass);
       if(pass) netApplyDecision(V.k,V.v); }
@@ -4871,13 +4904,15 @@
       else if(k==='feed'){ netExec=true; try{ feedSyrup(); }finally{ netExec=false; }
         netBcast({t:'ev',msg:'🥄 The hive votes to feed — a syrup feeder slides in. +10 cells.'}); } }
     function netShowVote(k,v,byIx,secs){ const by=NET.players[byIx], D=netVoteText(k,v);
-      $('voteQ').innerHTML=D.q; $('voteSub').innerHTML='proposed by <b>'+(by?netEsc(by.name):'a keeper')+'</b>'+(D.sub?' · '+D.sub:'');
-      $('voteTally').textContent=''; $('voteYes').disabled=false; $('voteNo').disabled=false;
-      netVoteUI={deadline:performance.now()+secs*1000, dur:secs*1000, cast:false};
+      const mine=(NET.host?0:NET.myIx)===byIx;
+      $('voteQ').innerHTML=D.q; $('voteSub').innerHTML='proposed by <b>'+(mine?'you':(by?netEsc(by.name):'a keeper'))+'</b>'+(D.sub?' · '+D.sub:'');
+      $('voteTally').textContent=mine?'proposing is your dance — 🐝 cast':'';
+      $('voteYes').disabled=mine; $('voteNo').disabled=mine;
+      netVoteUI={deadline:performance.now()+secs*1000, dur:secs*1000, cast:mine};
       netStripVoted([]); openOverlay('mpVote'); try{ chime(392,523); }catch(e){} }
     function netVoteResult(k,v,yes,no,pass){ netVoteUI=null; NET.cVote=null;
       const bees='🐝'.repeat(Math.min(8,yes))||'·', hands='✋'.repeat(Math.min(8,no));
-      $('voteTally').innerHTML=(pass?'✅ ':'🚫 ')+bees+(no?'  vs  '+hands:'')+((yes===no&&yes+no>0)?' — the Queen breaks the tie':'');
+      $('voteTally').innerHTML=(pass?'✅ ':'🚫 ')+bees+(no?'  vs  '+hands:'')+((yes===no&&yes+no>0)?' — a tie: the hive holds still':'');
       $('voteYes').disabled=true; $('voteNo').disabled=true;
       setTimeout(()=>{ closeOverlay('mpVote'); },1600);
       if(pass){ try{ fanfare(); }catch(e){} } else { const D=netVoteText(k,v); toast('✋ The hive says not yet — '+D.q); }
@@ -4889,36 +4924,59 @@
     // ---- the keeper strip: who's in the hive, who has danced their vote ----
     function netStripVoted(ixs){ netVotedIx=ixs||[]; netStripSync(); }
     function netStripSync(){ const el=$('mpStrip'); if(!el) return;
-      if(!NET.on||!NET.started){ el.classList.add('hide'); return; }
+      if(!NET.on||!NET.started){ el.classList.add('hide'); el.style.pointerEvents='none'; return; }
       el.classList.remove('hide');
-      el.innerHTML=NET.players.map(p=>'<span class="chip'+(p.gone?' gone':'')+'" style="background:'+NETCOL[p.ix]+'">'+(p.ix===0?'👑 ':'')+netEsc(p.name)+(netVotedIx.indexOf(p.ix)>=0?' ✓':'')+'</span>').join(''); }
+      el.style.pointerEvents=NET.host?'auto':'none';   // the Queen's crown chip doubles as the invite door
+      el.innerHTML=NET.players.map(p=>'<span class="chip'+(p.gone?' gone':'')+'" style="background:'+NETCOL[p.ix]+'">'+(p.ix===0?'👑 ':'')+netEsc(p.name)+(netVotedIx.indexOf(p.ix)>=0?' ✓':'')+'</span>').join('')
+        +(NET.stale?'<span class="chip" style="background:#3a2f1a;color:#ffd66b">🔗 re-linking…</span>':''); }
     // ---- host plumbing ----
     async function hostNewInvite(){ const st=$('mpHostState');
-      if(NET.players.length>=NET_MAX){ st.textContent='the hive is full — eight keepers is a crowd already'; $('inviteCode').value=''; NET.pend=null; return; }
+      if(NET.players.filter(p=>!p.gone).length>=NET_MAX){ st.textContent='the hive is full — eight keepers is a crowd already'; $('inviteCode').value=''; NET.pend=null; return; }
       const pc=netRtc(), dc=pc.createDataChannel('hive',{ordered:true});
       NET.pend={pc,dc}; st.textContent='brewing a fresh invite…'; $('inviteCode').value='';
       dc.onopen=()=>hostPeerJoined(pc,dc);
       try{ const off=await pc.createOffer(); await pc.setLocalDescription(off); await netIceDone(pc); }
       catch(e){ st.textContent='couldn’t brew an invite — try again'; return; }
-      if(NET.pend&&NET.pend.pc===pc&&NET.host){ $('inviteCode').value=netEnc({o:pc.localDescription.sdp});
-        st.textContent='invite ready for keeper #'+(NET.players.length+1)+' — send it over'; } }
+      if(NET.pend&&NET.pend.pc===pc&&NET.host){ $('inviteCode').value=netUrl('hive',netEnc({o:pc.localDescription.sdp}));
+        st.textContent='invite ready — send it over (a tap on the link joins)'; } }
     function hostPeerJoined(pc,dc){ if(NET.pend&&NET.pend.pc===pc) NET.pend=null;
-      const p={ix:NET.players.length,name:'Keeper '+(NET.players.length+1),pc,dc,gone:false,propAt:-1e9};
+      const p={ix:NET.players.length,name:'Keeper '+(NET.players.length+1),pc,dc,gone:false,propAt:-1e9,pendingStart:NET.started};
       NET.players.push(p);
       dc.onmessage=e=>hostOnMsg(p,e.data);
       dc.onclose=()=>netPeerGone(p);
       try{ chime(523,659); }catch(e){}
-      netLobbySync(); if(!NET.started) hostNewInvite(); }
+      netLobbySync(); hostNewInvite(); }
     function hostOnMsg(p,raw){ let m; try{ m=JSON.parse(raw); }catch(e){ return; }
-      if(m.t==='hi'){ p.name=netEsc(String(m.name||'').slice(0,12))||p.name; netLobbySync(); netStripSync(); }
+      if(m.t==='hi'){ p.name=netEsc(String(m.name||'').slice(0,12))||p.name;
+        if(NET.started&&p.pendingStart){ p.pendingStart=false; hostAdmitMidGame(p); return; }
+        netLobbySync(); netStripSync(); }
       else if(m.t==='p'&&NET.started&&!over){ netApplyPaint(m,p.ix); }
       else if(m.t==='prop'&&NET.started&&!over){ const now=performance.now();
         if(NET.vote||now-p.propAt<8000) return; p.propAt=now;
         if(netValidProp(m.k,m.v)) hostStartVote(m.k,m.v,p.ix); else netSendTo(p,{t:'ev',msg:netWhyNot(m.k)}); }
-      else if(m.t==='bal'&&NET.vote&&m.id===NET.vote.id){ hostBallot(p.ix,!!m.yes); } }
+      else if(m.t==='bal'&&NET.vote&&m.id===NET.vote.id){ hostBallot(p.ix,!!m.yes); }
+      else if(m.t==='hh'&&NET.started&&!over){ if(hornet&&!hornet._net) hornetDamage(); } }
+    // recompute wedges from the live roster, then free every departed keeper's cells —
+    // the ONE way sector ownership is derived, on every device, after any roster change
+    function netRecomputeSectors(){ netAssignSectors();
+      if(!netSector) return;
+      for(const q of NET.players){ if(q.gone){ for(let i=0;i<netSector.length;i++) if(netSector[i]===q.ix) netSector[i]=-2; } } }
+    // a keeper connecting after the hive woke: reclaim their old seat by name, or take a fresh wedge
+    function hostAdmitMidGame(p){
+      const seat=NET.players.find(q=>q!==p&&q.gone&&q.name.toLowerCase()===p.name.toLowerCase());
+      if(seat){ seat.pc=p.pc; seat.dc=p.dc; seat.gone=false; seat.propAt=-1e9;
+        p.dc.onmessage=e=>hostOnMsg(seat,e.data); p.dc.onclose=()=>netPeerGone(seat);
+        NET.players.splice(NET.players.indexOf(p),1);
+        netRecomputeSectors();
+        netSendTo(seat,{t:'start',s:netSnapObj(),ps:netRoster(),pace:'easy',you:seat.ix});
+        netToastAll('🐝 <b>'+netEsc(seat.name)+'</b> returns to the comb — their wedge was kept warm.'); }
+      else{ netRecomputeSectors();
+        netSendTo(p,{t:'start',s:netSnapObj(),ps:netRoster(),pace:'easy',you:p.ix});
+        netToastAll('🐝 <b>'+netEsc(p.name)+'</b> joins mid-season — the comb redraws its wedges.'); }
+      netLobbySync(); netStripSync(); }
     function netPeerGone(p){ if(p.gone) return; p.gone=true;
-      if(netSector){ for(let i=0;i<netSector.length;i++) if(netSector[i]===p.ix) netSector[i]=-2; }
-      if(NET.on&&NET.host){ if(NET.started) netToastAll('🍂 <b>'+netEsc(p.name)+'</b> drifted from the hive — their comb is anyone’s to tend.');
+      netRecomputeSectors();
+      if(NET.on&&NET.host){ if(NET.started) netToastAll('🍂 <b>'+netEsc(p.name)+'</b> drifted from the hive — their comb is anyone’s to tend. They can rejoin with a fresh invite (👑 tap your crown chip).');
         netLobbySync(); netStripSync();
         if(NET.vote) hostBallot(p.ix,false); } }
     function netLobbySync(){ if(!NET.host) return; const box=$('mpPlayers');
@@ -4927,40 +4985,54 @@
     // ---- joiner plumbing ----
     function clientLinked(){ NET.on=true; NET.host=false;
       $('joinState').textContent='🐝 linked! introducing yourself…';
-      netSend({t:'hi',name:NET.name||'Keeper'}); try{ fanfare(); }catch(e){} }
+      // 'hi' is idempotent on the host — say it thrice so a channel-open race can't eat the name
+      netSend({t:'hi',name:NET.name||'Keeper'});
+      setTimeout(()=>netSend({t:'hi',name:NET.name||'Keeper'}),800);
+      setTimeout(()=>netSend({t:'hi',name:NET.name||'Keeper'}),2200);
+      try{ fanfare(); }catch(e){} }
     function clientLobbyRender(){ const box=$('mpPlayersJ'); if(!box) return;
       box.innerHTML=NET.players.map(p=>'<div class="mpP"><i style="background:'+NETCOL[p.ix]+'"></i>'+(p.ix===0?'👑 ':'🐝 ')+netEsc(p.name)+(p.ix===NET.myIx?' (you)':'')+'</div>').join(''); }
     function clientOnMsg(raw){ let m; try{ m=JSON.parse(raw); }catch(e){ return; }
+      NET.lastSnap=performance.now();   // any word from the Queen's device means the link is alive
       if(m.t==='lob'){ NET.myIx=m.you; NET.players=m.ps.map(p=>({ix:p.ix,name:p.n,gone:!!p.g}));
-        $('joinState').textContent='🐝 in the lobby — waiting for the Queen to wake the hive'; clientLobbyRender(); }
+        if(NET.started){ netRecomputeSectors(); netStripSync(); }
+        else{ $('joinState').textContent='🐝 in the lobby — waiting for the Queen to wake the hive'; clientLobbyRender(); } }
       else if(m.t==='start'){ clientStartGame(m); }
       else if(m.t==='snap'&&NET.started){ netApplySnap(m.s); }
       else if(m.t==='vote'){ NET.cVote={id:m.id}; netShowVote(m.k,m.v,m.by,m.secs); }
       else if(m.t==='vst'){ netStripVoted(m.voted||[]); }
       else if(m.t==='tally'){ netVoteResult(m.k,m.v,m.yes,m.no,m.pass); }
       else if(m.t==='ev'){ toast(m.msg); }  // host-authored copy — same-room trust model
-      else if(m.t==='end'){ NET.endSent=true; over=true; setSpeed(0); netShowEnd(m.sum); } }
+      else if(m.t==='ord'){ NET.order={id:m.id,ic:m.ic,n:m.n,base:m.base,secs:m.secs,rem:m.secs,txt:m.txt}; try{ chime(440,587); }catch(e){} netOrderShow(); }
+      else if(m.t==='ordend'){ if(m.ok){ try{ fanfare(); }catch(e){} } NET.order=null; netOrderShow(); }
+      else if(m.t==='end'){ NET.endSent=true; over=true; setSpeed(0); NET.order=null; netOrderShow(); netShowEnd(m.sum); } }
     function clientHostGone(){ if(!NET.on) return;
       if(!NET.started){ NET.on=false; const js=$('joinState'); if(js) js.textContent='the link dropped — ask the host for a fresh invite'; return; }
       if(NET.endSent) return; NET.endSent=true; over=true; setSpeed(0);
       $('mpEndTitle').textContent='THE LINK DISSOLVED';
       $('mpEndBody').innerHTML='<p>The Queen’s device left the meadow — the hive can’t hear itself think. Gather again and re-link.</p>';
       openOverlay('mpEnd'); }
-    function clientStartGame(m){ NET.players=m.ps.map(p=>({ix:p.ix,name:p.n,gone:!!p.g})); NET.started=true; NET.endSent=false;
+    function clientStartGame(m){ NET.players=m.ps.map(p=>({ix:p.ix,name:p.n,gone:!!p.g}));
+      if(typeof m.you==='number') NET.myIx=m.you;   // mid-game admits (and seat reclaims) re-pin the seat
+      NET.started=true; NET.endSent=false; NET.lastSnap=performance.now();
       document.body.classList.add('netc');
-      closeOverlay('mpJoin'); $('intro').classList.add('hide');
+      closeOverlay('mpJoin'); closeOverlay('mpEnd'); $('intro').classList.add('hide');
       dailyMode=false; onboard=false; queenLine='meadow'; setPace('easy');
       tinyComb(); resetColonyIdentity(); goals=makeGoals(); netLastSI=-1; clearUndo();
       brush='brood'; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x.dataset.brush==='brood')); setReveal(false);
-      netAssignSectors(); netApplySnap(m.s);
+      netRecomputeSectors(); netApplySnap(m.s);
       over=false; beginCommon(); netLastSI=seasonIdx(day);
       netShowRole(); netStripSync(); }
     // ---- the party itself ----
     function netStartParty(){ if(!NET.host) return;
+      if(NET.started){ closeOverlay('mpHost'); return; }   // panel reopened mid-game via the crown chip
       if(NET.players.filter(p=>!p.gone).length<2){ toast('Invite at least one keeper first — the whole point is company.'); return; }
-      if(NET.pend){ try{ NET.pend.pc.close(); }catch(e){} NET.pend=null; }
-      NET.started=true; NET.endSent=false; NET.hadHornet=false;
-      closeOverlay('mpHost'); $('intro').classList.add('hide');
+      NET.started=true;
+      netSeedParty(); }
+    // seed (or re-seed, for "another year" replays) the shared colony and broadcast the start
+    function netSeedParty(){
+      NET.endSent=false; NET.hadHornet=false; NET.order=null; NET.orderCD=18; NET.ordersDone=0; netOrderShow();
+      closeOverlay('mpHost'); closeOverlay('mpEnd'); $('intro').classList.add('hide');
       dailyMode=false; setPace('easy'); tinyComb();
       for(const cell of cells){ if(!cell.built&&cellDist(cell.c,cell.r)<2.9){ cell.built=true; cell.zone='none'; } }   // a wider founding comb — every wedge gets cells
       seedStarterZones();
@@ -4969,7 +5041,7 @@
       rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=makeGoals(); lastSI=0; scoutShown=true; seenTips={}; lessonSeen={}; nudged={}; tipQ.length=0; tipCool=0; starveT=0; bankAtFrost=0; raidLoss=0;
       brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=true; coachStep=0; onboard=false; yearHist.length=0; histT=2.7; popMilo={}; queenLine='meadow'; netLastSI=0;
       brush='brood'; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x.dataset.brush==='brood')); setReveal(false); clearUndo();
-      netAssignSectors();
+      over=false; netRecomputeSectors();
       beginCommon();
       netBcast({t:'start',s:netSnapObj(),ps:netRoster(),pace:'easy'});
       netShowRole(); netStripSync();
@@ -4977,34 +5049,80 @@
     function netShowRole(){ const nw=NET.players.length-1;
       if(NET.host){ $('roleBadge').textContent='👑 you are the queen keeper';
         $('roleName').textContent='the Royal Core';
-        $('roleText').innerHTML='You hold <b>time</b> and the <b>forage dial</b>, and your vote breaks ties. Tend the core, watch the whole comb, keep everyone alive. No pressure.'; }
+        $('roleText').innerHTML='You hold <b>time</b> and the <b>forage dial</b>. Tend the core, watch the whole comb, keep everyone alive. Tap your 👑 chip any time to invite or re-invite keepers. No pressure.'; }
       else{ $('roleBadge').textContent='🐝 your post';
         $('roleName').textContent=netSectorName(NET.myIx-1,nw);
         $('roleName').style.color=NETCOL[NET.myIx]||'#ffd66b';
         $('roleText').innerHTML='Paint <b>your</b> comb — 🍼 nursery, 🍯 shelves, 🔨 fresh wax. When the hive calls a <b>vote</b>, dance your answer. The bees do the rest.'; }
       openOverlay('mpRole'); }
     function netYearEnd(){ if(!NET.host||NET.endSent) return; NET.endSent=true;
-      const sum={peak:Math.round(peakPop), jars, rj, goals:goals?goals.filter(g=>g.done).length:0, died:P<1||over&&day<YEAR, hands:NET.players.filter(p=>!p.gone).length};
-      over=true; setSpeed(0);
+      const sum={peak:Math.round(peakPop), jars, rj, goals:goals?goals.filter(g=>g.done).length:0, orders:NET.ordersDone||0, died:P<1||over&&day<YEAR, hands:NET.players.filter(p=>!p.gone).length};
+      over=true; setSpeed(0); NET.order=null; netOrderShow();
       netBcast({t:'end',sum}); netShowEnd(sum); }
     function netShowEnd(sum){ $('mpEndTitle').textContent=sum.died?'THE COMB FELL QUIET':'YOU WINTERED — TOGETHER';
       $('mpEndBody').innerHTML=(sum.died
         ?'<p>The colony didn’t reach spring. It happens to every keeper — the real ones too. Same crew, another go?</p>'
         :'<p>A whole year, kept by <b>'+(sum.hands||NET.players.filter(p=>!p.gone).length)+'</b> pairs of hands.</p>')
-        +'<div class="mpHow" style="text-align:center">🐝 peak '+(sum.peak||0)+' bees · 🫙 '+(sum.jars||0)+' jars · ✧ '+(sum.rj||0)+' royal jelly · '+(sum.goals||0)+'/4 season goals</div>';
+        +'<div class="mpHow" style="text-align:center">🐝 peak '+(sum.peak||0)+' bees · 🫙 '+(sum.jars||0)+' jars · ✧ '+(sum.rj||0)+' royal jelly · 📣 '+(sum.orders||0)+' orders filled · '+(sum.goals||0)+'/4 season goals</div>'
+        +(NET.host?'':'<div class="mpHow" style="text-align:center;opacity:0.75">…or hold on — the Queen can call <b>another year</b> and you’re all still linked.</div>');
+      $('mpEndAgain').classList.toggle('hide', !(NET.host&&NET.players.some(p=>p.ix>0&&!p.gone)));
       openOverlay('mpEnd'); if(!sum.died){ try{ fanfare(); }catch(e){} } }
-    // ---- per-frame housekeeping: vote clock, snapshots, event relay ----
+    // ---- hive orders: Overcooked-style micro-goals the whole hive fills together ----
+    // ("you take the wax, I'll steer forage" — short, loud, shared; the host runs
+    //  the clock, everyone's paints count, +1 ✧ on success, a shrug on a miss)
+    const NET_ORDERS=[
+      {id:'wax',  ic:'🔨', lo:5, hi:9, txt:n=>'Draw '+n+' fresh comb cells',   meas:()=>builtCells()},
+      {id:'brood',ic:'🍼', lo:4, hi:7, txt:n=>'Paint '+n+' new nursery cells', meas:()=>cells.reduce((a,c)=>a+((c.built&&c.zone==='brood')?1:0),0)},
+      {id:'shelf',ic:'🍯', lo:5, hi:9, txt:n=>'Zone '+n+' new honey shelves',  meas:()=>cells.reduce((a,c)=>a+((c.built&&c.zone==='honey')?1:0),0)},
+      {id:'bank', ic:'🏺', lo:3, hi:6, txt:n=>'Bank '+n+' cells of honey',     meas:()=>Math.round(honeyCellsStored())},
+    ];
+    function netOrderShow(){ const el=$('mpOrder'); if(!el) return; const O=NET.order;
+      if(!O){ el.classList.add('hide'); return; }
+      el.classList.remove('hide');
+      const k=Math.max(0,(NET_ORDERS.find(o=>o.id===O.id)||NET_ORDERS[0]).meas()-O.base);
+      el.innerHTML='<b>'+O.ic+' Hive order:</b> '+O.txt+' <span class="ok">'+Math.min(k,O.n)+'/'+O.n+'</span><div id="mpOrderBar"><i style="width:'+Math.max(0,Math.min(100,100*O.rem/O.secs))+'%"></i></div>'; }
+    function hostStartOrder(){ const t=NET_ORDERS[(Math.random()*NET_ORDERS.length)|0];
+      const n=t.lo+((Math.random()*(t.hi-t.lo+1))|0);
+      NET.order={id:t.id, ic:t.ic, n, base:t.meas(), secs:50, rem:50, txt:t.txt(n)};
+      netBcast({t:'ord',id:t.id,n,base:NET.order.base,secs:50,txt:NET.order.txt,ic:t.ic});
+      if(!NET.orderTaught){ NET.orderTaught=true; netToastAll('📣 <b>Hive order!</b> Anyone’s comb counts — call your jobs out loud.'); }
+      try{ chime(440,587); }catch(e){} netOrderShow(); }
+    function hostEndOrder(ok){ const O=NET.order; if(!O) return; NET.order=null; NET.orderCD=30+Math.random()*30;
+      netBcast({t:'ordend',ok:ok?1:0});
+      if(ok){ rj++; NET.ordersDone=(NET.ordersDone||0)+1; netToastAll('✨ Order filled — '+O.txt.toLowerCase()+'. +1 ✧ royal jelly.'); try{ fanfare(); }catch(e){} }
+      else toast('🌒 The dusk took that order — no harm done.');
+      netOrderShow(); }
+    // ---- per-frame housekeeping: vote clock, snapshots, orders, link health ----
     function netFrame(dt){ if(!NET.on) return;
       if(NET.denyCool>0) NET.denyCool-=dt;
       if(netVoteUI){ const rem=netVoteUI.deadline-performance.now();
         const bar=$('voteBar'); if(bar) bar.style.width=Math.max(0,Math.min(100,100*rem/netVoteUI.dur))+'%';
         if(rem<=0&&NET.host&&NET.vote) hostEndVote();
         if(rem<=-5000&&!NET.host){ netVoteUI=null; NET.cVote=null; closeOverlay('mpVote'); } }
-      if(!NET.host||!NET.started||NET.endSent) return;
+      if(!NET.host){ // joiner: keepalive out, staleness watch in, cosmetic hornet easing
+        if(NET.started&&!NET.endSent){
+          NET.kaT=(NET.kaT||0)+dt; if(NET.kaT>2){ NET.kaT=0; netSend({t:'ka'}); }
+          const quiet=performance.now()-(NET.lastSnap||0)>6000;
+          if(quiet!==NET.stale){ NET.stale=quiet; netStripSync();
+            toast(quiet?'🔗 The Queen’s device went quiet — holding the comb until it returns.':'🔗 Re-linked — the hive hums again.'); }
+          if(hornet&&hornet._net){ hornet.wob+=dt*26;
+            hornet.x+=(hornet._tx-hornet.x)*Math.min(1,dt*10); hornet.y+=(hornet._ty-hornet.y)*Math.min(1,dt*10); }
+          if(NET.order){ NET.order.rem=Math.max(0,NET.order.rem-dt);
+            NET.ordT=(NET.ordT||0)+dt; if(NET.ordT>0.2){ NET.ordT=0; netOrderShow(); } } }
+        return; }
+      if(!NET.started||NET.endSent) return;
       if(over){ netYearEnd(); return; }
       NET.snapT+=dt; if(NET.snapT>0.4){ NET.snapT=0; netBcast({t:'snap',s:netSnapObj()}); }
+      if(!paused){ // orders tick only while the hive is actually living
+        if(NET.order){ NET.order.rem-=dt;
+          NET.ordT=(NET.ordT||0)+dt; if(NET.ordT>0.2){ NET.ordT=0; netOrderShow(); }
+          const t=NET_ORDERS.find(o=>o.id===NET.order.id);
+          if(t&&t.meas()-NET.order.base>=NET.order.n) hostEndOrder(true);
+          else if(NET.order.rem<=0) hostEndOrder(false); }
+        else if(day>2&&currentTemp()>=WIN_TEMP&&!NET.vote){ NET.orderCD=(NET.orderCD===undefined?18:NET.orderCD)-dt;
+          if(NET.orderCD<=0) hostStartOrder(); } }
       const h=!!hornet; if(h!==NET.hadHornet){ NET.hadHornet=h;
-        if(h) netBcast({t:'ev',msg:'⚔️ A hornet is at the hive mouth — the Queen’s screen holds the door!'}); } }
+        if(h) netBcast({t:'ev',msg:'⚔️ A hornet is raiding the hive — <b>everyone</b>, tap it!'}); } }
     // ---- sector overlay: whose comb is whose, painted straight on the canvas ----
     function drawSectorOverlay(){ if(!NET.on||!NET.started||!netSector) return;
       const nw=NET.players.length-1; if(nw<1) return;
@@ -5024,6 +5142,7 @@
       try{ if(joinPc) joinPc.close(); }catch(e){}
       joinPc=null; joinDc=null; NET.on=false; NET.host=false; NET.started=false; NET.endSent=false;
       NET.players=[]; NET.pend=null; NET.vote=null; NET.cVote=null; NET.myIx=-1; netVoteUI=null; netSector=null; netVotedIx=[];
+      NET.order=null; NET.orderCD=undefined; NET.ordersDone=0; NET.stale=false; NET.orderTaught=false; netOrderShow();
       document.body.classList.remove('netc');
       $('replyWrap').classList.add('hide'); $('inviteCode').value=''; $('answerIn').value=''; $('joinIn').value=''; $('replyCode').value='';
       $('mpPlayers').innerHTML=''; $('mpPlayersJ').innerHTML=''; netStripSync(); }
@@ -5036,9 +5155,16 @@
     press($('mpHostBtn'),()=>{ mpTakeName(); closeOverlay('mpHome'); openOverlay('mpHost');
       NET.on=true; NET.host=true; NET.myIx=0; NET.started=false;
       NET.players=[{ix:0,name:NET.name,pc:null,dc:null,gone:false,propAt:-1e9}];
+      $('mpStart').textContent='Wake the hive ▶';
       netLobbySync(); hostNewInvite(); });
-    press($('mpJoinBtn'),()=>{ mpTakeName(); closeOverlay('mpHome'); openOverlay('mpJoin'); });
-    press($('mpHostBack'),()=>{ netTeardown(); closeOverlay('mpHost'); $('intro').classList.remove('hide'); });
+    press($('mpStrip'),()=>{ if(!NET.host||!NET.started) return;   // the crown chip is the mid-game invite door
+      $('mpStart').textContent='Back to the comb ▶'; openOverlay('mpHost');
+      if(!NET.pend) hostNewInvite(); });
+    press($('mpEndAgain'),()=>{ if(!NET.host) return; netSeedParty(); });
+    press($('mpJoinBtn'),()=>{ mpTakeName(); closeOverlay('mpHome'); openOverlay('mpJoin');
+      if($('joinIn').value.trim()) joinAnswer(); });   // arrived via an invite link — no extra taps
+    press($('mpHostBack'),()=>{ if(NET.started){ closeOverlay('mpHost'); return; }   // mid-game: just tuck the panel away
+      netTeardown(); closeOverlay('mpHost'); $('intro').classList.remove('hide'); });
     press($('mpJoinBack'),()=>{ netTeardown(); closeOverlay('mpJoin'); $('intro').classList.remove('hide'); });
     press($('mpStart'),netStartParty);
     press($('roleGo'),()=>closeOverlay('mpRole'));
@@ -5051,18 +5177,47 @@
       try{ await NET.pend.pc.setRemoteDescription({type:'answer',sdp:d.a}); $('answerIn').value='';
         $('mpHostState').textContent='linking… give it a breath'; }
       catch(e){ toast('That reply didn’t match this invite — send them the newest invite code.'); } });
-    press($('joinGo'),async()=>{ const d=netDec($('joinIn').value);
+    async function joinAnswer(){ const d=netDec($('joinIn').value);
       if(!d||!d.o){ toast('That doesn’t look like an invite code — ask the host to copy it again.'); return; }
       if(joinPc){ try{ joinPc.close(); }catch(e){} joinPc=null; joinDc=null; }
       const pc=joinPc=netRtc();
+      pc.addEventListener('iceconnectionstatechange',()=>{ if(pc.iceConnectionState==='failed') clientHostGone(); });   // 'disconnected' often self-heals — only 'failed' is final
       pc.ondatachannel=ev=>{ joinDc=ev.channel; joinDc.onopen=()=>clientLinked();
         joinDc.onmessage=e=>clientOnMsg(e.data); joinDc.onclose=()=>clientHostGone(); };
       $('joinState').textContent='answering the call…';
       try{ await pc.setRemoteDescription({type:'offer',sdp:d.o});
         const an=await pc.createAnswer(); await pc.setLocalDescription(an); await netIceDone(pc);
-        $('replyCode').value=netEnc({a:pc.localDescription.sdp}); $('replyWrap').classList.remove('hide');
+        $('replyCode').value=netUrl('reply',netEnc({a:pc.localDescription.sdp})); $('replyWrap').classList.remove('hide');
         $('joinState').textContent='send the reply back to the host — then hold tight'; }
-      catch(e){ $('joinState').textContent='that invite didn’t take — ask for a fresh one'; } });
+      catch(e){ $('joinState').textContent='that invite didn’t take — ask for a fresh one'; } }
+    press($('joinGo'),joinAnswer);
+    // ---- invite links: tapping an AirDropped/messaged link skips the whole ritual ----
+    (function(){ let h=''; try{ h=location.hash||''; }catch(e){}
+      const mi=h.match(/[#&]hive=([^&]+)/), mr=h.match(/[#&]reply=([^&]+)/);
+      if(mr){ // this tab is only a courier: hand the reply to the running host tab next door
+        lsSet('hm_reply', JSON.stringify({c:decodeURIComponent(mr[1]), t:Date.now()}));
+        try{ history.replaceState(null,'',location.pathname); }catch(e){}
+        const d=document.createElement('div');
+        d.style.cssText='position:fixed;inset:0;z-index:2147483647;background:#140e04;color:#f5e9c8;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;font:600 17px Bricolage Grotesque,sans-serif';
+        d.innerHTML='<div style="max-width:420px">🐝 <b>Reply delivered.</b><br><br>Hop back to your hive tab — your keeper is being welcomed in.<br><br><span style="opacity:0.6;font-size:13px">You can close this tab.</span></div>';
+        document.body.appendChild(d); }
+      else if(mi){ // an invite link: straight to the join door, no ceremony —
+        // not even the first-run cold open (invitees are often brand-new players)
+        try{ history.replaceState(null,'',location.pathname); }catch(e){}
+        const sp=$('splash'); if(sp) sp.remove(); const g=$('gsplash'); if(g) g.remove();
+        const co=$('coldopen'); if(co) co.remove();
+        try{ $('mpName').value=localStorage.getItem('hm_mpname')||''; }catch(e){}
+        $('joinIn').value=decodeURIComponent(mi[1]);
+        $('intro').classList.add('hide'); openOverlay('mpHome');
+        toast('🐝 You’re invited to a hive — pick a name and tap <b>Join</b>.'); } })();
+    // the host tab hears a courier tab deliver a reply and welcomes the keeper in
+    addEventListener('storage',async e=>{ if(e.key!=='hm_reply'||!e.newValue) return;
+      if(!NET.host||!NET.pend) return;
+      let d=null; try{ d=netDec(JSON.parse(e.newValue).c); }catch(err){}
+      if(!d||!d.a) return;
+      try{ await NET.pend.pc.setRemoteDescription({type:'answer',sdp:d.a});
+        $('mpHostState').textContent='reply received — linking…'; toast('📨 Reply received — welcoming them in.'); }
+      catch(err){} });
     function netCopyBtn(btnId,srcId){ const b=$(btnId), lbl=b.textContent;
       press(b,()=>{ const el=$(srcId), txt=el.value; if(!txt) return;
         const done=()=>{ b.textContent='✓ copied'; setTimeout(()=>{ b.textContent=lbl; },1300); };

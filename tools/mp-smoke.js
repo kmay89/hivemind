@@ -166,11 +166,87 @@ async function waitVal(page, sel, tries = 60) {
     console.log(apJoin === patch.i ? '✓ decision replicated to joiner via snapshot' : `✗ joiner activePatch=${apJoin}`);
   }
 
-  // --- disconnect: joiner leaves, host should keep running ---
+  // --- hive orders: an Overcooked-style micro-goal should appear on both screens ---
+  try {
+    await host.waitForFunction(() => !document.getElementById('mpOrder').classList.contains('hide'), null, { timeout: 40000 });
+    await join.waitForFunction(() => !document.getElementById('mpOrder').classList.contains('hide'), null, { timeout: 8000 });
+    const ordTxt = await host.$eval('#mpOrder', el => el.textContent);
+    console.log('✓ hive order broadcast to both screens: ' + ordTxt.slice(0, 60));
+  } catch (e) { console.log('✗ no hive order appeared: ' + e.message); }
+
+  // --- drop-in join: third keeper joins AFTER the party started, via the crown chip ---
+  const pd = el => el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 }));
+  await host.$eval('#mpStrip', pd);
+  const invite3 = await waitVal(host, '#inviteCode');
+  const trip = await mk('trip');
+  await trip.click('#startParty');
+  await trip.fill('#mpName', 'Trip');
+  await trip.click('#mpJoinBtn');
+  await trip.fill('#joinIn', invite3);
+  await trip.click('#joinGo');
+  const reply3 = await waitVal(trip, '#replyCode');
+  await host.fill('#answerIn', reply3);
+  await host.click('#answerAdd');
+  await trip.waitForFunction(() => window.__hm().net.started, null, { timeout: 15000 });
+  const tripIx = await trip.evaluate(() => window.__hm().net.ix);
+  console.log(`✓ drop-in join mid-game works (Trip seated at ix=${tripIx})`);
+  await host.$eval('#mpHostBack', pd);   // tuck the invite panel away, game continues
+  await join.waitForFunction(() => window.__hm().net.players.length === 3, null, { timeout: 8000 });
+  console.log('✓ roster update reached the original joiner (3 keepers)');
+
+  // --- disconnect + seat reclaim by name ---
   await join.close();
-  await host.waitForTimeout(2000);
-  const gone = await host.evaluate(() => window.__hm().net.players[1].g);
-  console.log(gone ? '✓ host marked the joiner gone' : '✗ disconnect not detected');
+  await host.waitForFunction(() => window.__hm().net.players[1].g, null, { timeout: 10000 });
+  console.log('✓ host marked Buzz gone');
+  await host.$eval('#mpStrip', pd);
+  const invite4 = await waitVal(host, '#inviteCode');
+  const buzz2 = await mk('buzz2');
+  await buzz2.click('#startParty');
+  await buzz2.fill('#mpName', 'Buzz');
+  await buzz2.click('#mpJoinBtn');
+  await buzz2.fill('#joinIn', invite4);
+  await buzz2.click('#joinGo');
+  const reply4 = await waitVal(buzz2, '#replyCode');
+  await host.fill('#answerIn', reply4);
+  await host.click('#answerAdd');
+  await buzz2.waitForFunction(() => window.__hm().net.started, null, { timeout: 15000 });
+  const b2 = await buzz2.evaluate(() => window.__hm().net);
+  const hostRoster = await host.evaluate(() => window.__hm().net.players);
+  console.log(b2.ix === 1 ? '✓ Buzz reclaimed their old seat (ix=1)' : `✗ reclaim failed — Buzz got ix=${b2.ix}`);
+  console.log(hostRoster.length === 3 && !hostRoster[1].g ? '✓ host roster healed (3 keepers, none gone)' : `✗ host roster odd: ${JSON.stringify(hostRoster)}`);
+
+  // --- invite links: a tapped #hive= URL should boot straight into the join flow ---
+  const invite5 = await waitVal(host, '#inviteCode');
+  if (/#hive=/.test(invite5)) {
+    const linkCtx = await browser.newContext();
+    const linkPage = await linkCtx.newPage();
+    await linkPage.goto(invite5.replace('http://localhost:' + PORT + '/', `http://localhost:${PORT}/`), { waitUntil: 'load' });
+    await linkPage.waitForTimeout(1500);
+    const state = await linkPage.evaluate(() => ({
+      home: !document.getElementById('mpHome').classList.contains('hide'),
+      splashGone: !document.getElementById('gsplash') && !document.getElementById('splash'),
+      prefilled: document.getElementById('joinIn').value.length > 50,
+    }));
+    console.log(state.home && state.splashGone && state.prefilled
+      ? '✓ invite URL boots straight to the join door (splash skipped, code prefilled)'
+      : '✗ invite URL boot odd: ' + JSON.stringify(state));
+    // finish the join via the link flow, name it Lin
+    await linkPage.fill('#mpName', 'Lin');
+    await linkPage.click('#mpJoinBtn');   // auto-answers since joinIn is prefilled
+    const reply5 = await waitVal(linkPage, '#replyCode');
+    // --- reply courier: opening the reply URL in another HOST-context tab must auto-welcome ---
+    if (/#reply=/.test(reply5)) {
+      const courier = await host.context().newPage();
+      await courier.goto(reply5, { waitUntil: 'load' });
+      await linkPage.waitForFunction(() => window.__hm().net.started, null, { timeout: 20000 });
+      const lin = await linkPage.evaluate(() => window.__hm().net);
+      console.log(`✓ reply URL courier tab auto-welcomed Lin (ix=${lin.ix}) — no paste needed`);
+      const courierMsg = await courier.evaluate(() => document.body.textContent.includes('Reply delivered'));
+      console.log(courierMsg ? '✓ courier tab shows the "reply delivered" card' : '✗ courier card missing');
+      await courier.close();
+    } else console.log('✗ reply was not a URL: ' + reply5.slice(0, 40));
+    await linkCtx.close();
+  } else console.log('✗ invite is not a URL: ' + invite5.slice(0, 40));
 
   await browser.close();
   srv.close();
