@@ -69,6 +69,7 @@ numbers drift as the file changes; re-grep `// =====` banners if they look off)
 | 3915-4017 | year-end review |
 | 4017-4030 | dance break minigame |
 | 4030-4157 | pause menu |
+| ~4640-4930 | **hive link** — same-room multiplayer (WebRTC, sectors, votes); see docs/MULTIPLAYER.md |
 | 4157-4230 | boot sequence |
 | 4230-4300 | **main loop** — `frame()` |
 | 4300-4328 | PWA: offline play, update banner |
@@ -104,6 +105,15 @@ numbers drift as the file changes; re-grep `// =====` banners if they look off)
   If a piece of state needs the guarantee "reset everywhere identity is,"
   fold it into `resetColonyIdentity()` itself instead of relying on the
   three call sites staying in sync.
+- `NET{}` / `netClient()` — the hive-link (multiplayer) switchboard. Rules
+  that MUST stay true: `saveGame()` no-ops while `NET.on` (a party never
+  touches the solo save); the sim block in `frame()` is gated on
+  `!netClient()` (joiners render, the host simulates); every paint — local or
+  remote — passes a `netPaintOk`/`netApplyPaint` sector check; snapshots are
+  `serialize()` itself, so any new field added to the save schema is
+  automatically shared (but `netApplySnap()` must be taught to *apply* it —
+  update both or the field silently stays host-only). Undo is disabled in a
+  linked hive. See docs/MULTIPLAYER.md.
 - `M{}` — the stat-modifier reducer over `GIFTS`(owned) + `QUEENS`(mods).
   A gift or queen mod that should affect gameplay must be wired through here
   (additive *or* multiplicative, see the function's own comment), not read
