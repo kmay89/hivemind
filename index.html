@@ -2400,7 +2400,9 @@
         popFx(el,kind); }, true); })();
 
     // ===================== hornet raids — telegraphed, juicy, defensible =====================
-    function hornetWindow(){ const early=year>=4; return {a:early?120:140, b:early?268:258}; }
+    function hornetWindow(){ const early=year>=4;
+      if(NET.on&&NET.started) return {a:55, b:268};   // parties meet their hornet inside the first minutes — the best shared moment shouldn't wait for summer
+      return {a:early?120:140, b:early?268:258}; }
     function scoutActive(){ const w=hornetWindow(); const T=currentTemp();
       return !hornet && !over && started && !onboard && T>=WIN_TEMP && day>w.a && day<w.b && P>40 && hornetCD<6; }
     function spawnHornet(){ const side=Math.random()<0.5?-1:1;
@@ -5166,7 +5168,8 @@
       else if(m.t==='vst'){ netStripVoted(m.voted||[]); }
       else if(m.t==='tally'){ netVoteResult(m.k,m.v,m.yes,m.no,m.pass); }
       else if(m.t==='ev'){ toast(m.msg); }  // host-authored copy — same-room trust model
-      else if(m.t==='ord'){ NET.order={id:m.id,ic:m.ic,n:m.n,who:(typeof m.who==='number'?m.who:null),duo:(Array.isArray(m.duo)?m.duo:null),base:m.base,baseB:m.baseB||0,secs:m.secs,rem:m.secs,txt:m.txt};
+      else if(m.t==='ord'){ NET.order=m.twin?{twin:m.twin,secs:m.secs,rem:m.secs}
+          :{id:m.id,ic:m.ic,n:m.n,who:(typeof m.who==='number'?m.who:null),duo:(Array.isArray(m.duo)?m.duo:null),base:m.base,baseB:m.baseB||0,secs:m.secs,rem:m.secs,txt:m.txt};
         try{ chime(440,587); }catch(e){} netOrderShow();
         if(NET.order.duo&&NET.order.duo.indexOf(NET.myIx)>=0){ const other=NET.players[NET.order.duo[0]===NET.myIx?NET.order.duo[1]:NET.order.duo[0]];
           try{ fanfare(); }catch(e){} toast('🤝 <b>You’re in a pact with '+netEsc(other?other.name:'a keeper')+'!</b> Pull together — both deliver or neither does.'); }
@@ -5265,8 +5268,14 @@
     function netOrderShow(){ const el=$('mpOrder'); if(!el) return; const O=NET.order;
       if(!O){ el.classList.add('hide'); return; }
       el.classList.remove('hide');
-      const t=NET_ORDERS.find(o=>o.id===O.id)||NET_ORDERS[0];
       let lead,prog;
+      if(O.twin){ const A=O.twin.a, B=O.twin.b;
+        const tA=NET_ORDERS.find(o=>o.id===A.id), tB=NET_ORDERS.find(o=>o.id===B.id);
+        const ka=tA?Math.max(0,tA.meas(null)-A.base):0, kb=tB?Math.max(0,tB.meas(null)-B.base):0;
+        el.innerHTML='<b style="color:#5a3a10">🤝 Twin order:</b> '+A.ic+' '+A.txt+' <span class="ok">'+Math.min(ka,A.n)+'/'+A.n+'</span> + '+B.ic+' '+B.txt+' <span class="ok">'+Math.min(kb,B.n)+'/'+B.n+'</span>'
+          +'<div id="mpOrderBar"><i style="width:'+Math.max(0,Math.min(100,100*O.rem/O.secs))+'%"></i></div>';
+        return; }
+      const t=NET_ORDERS.find(o=>o.id===O.id)||NET_ORDERS[0];
       if(O.duo){ const a=NET.players[O.duo[0]], b=NET.players[O.duo[1]];
         const ka=Math.max(0,t.meas(O.duo[0])-O.base), kb=Math.max(0,t.meas(O.duo[1])-(O.baseB||0));
         lead='<b style="color:#5a3a10">🤝 Pact — '+netEsc(a?a.name:'?')+' & '+netEsc(b?b.name:'?')+':</b> ';
@@ -5295,7 +5304,18 @@
       // pulling together the obviously rational choice.
       const workers=NET.players.filter(p=>p.ix>0&&!p.gone);
       const roll=Math.random();
-      const pact=workers.length>=2&&roll<0.30, targeted=!pact&&workers.length>=2&&roll<0.60;
+      if(roll<0.30){ // twin order: two jobs, one clock, split however the room likes —
+        // the duo-sized pact (division of labour needs no third player)
+        const sp=NET_ORDERS.filter(t=>t.sect);
+        const i=(Math.random()*sp.length)|0, j=(i+1+((Math.random()*(sp.length-1))|0))%sp.length;
+        const tA=sp[i], tB=sp[j];
+        const twin={a:{id:tA.id,ic:tA.ic,n:tA.lo,base:tA.meas(null),txt:tA.txt(tA.lo)},
+                    b:{id:tB.id,ic:tB.ic,n:tB.lo,base:tB.meas(null),txt:tB.txt(tB.lo)}};
+        NET.order={twin, secs:60, rem:60};
+        netBcast({t:'ord',twin,secs:60});
+        netToastAll('🤝 <b>Twin order!</b> Two jobs, one clock — split them however you like. Worth double.');
+        try{ chime(440,587); }catch(e){} netOrderShow(); return; }
+      const pact=workers.length>=2&&roll<0.48, targeted=!pact&&workers.length>=2&&roll<0.72;
       const pool=(pact||targeted)?NET_ORDERS.filter(t=>t.sect):NET_ORDERS;
       const t=pool[(Math.random()*pool.length)|0];
       const full=t.lo+((Math.random()*(t.hi-t.lo+1))|0);
@@ -5315,14 +5335,16 @@
     function hostEndOrder(ok){ const O=NET.order; if(!O) return; NET.order=null; NET.orderCD=30+Math.random()*30;
       netBcast({t:'ordend',ok:ok?1:0});
       if(ok){ NET.ordersDone=(NET.ordersDone||0)+1;
-        if(O.duo){ rj+=2; meritAdd(O.duo[0],'pact'); meritAdd(O.duo[1],'pact');
+        if(O.twin){ rj+=2; NET.players.forEach(p=>{ if(!p.gone) meritAdd(p.ix,'pact'); });
+          netToastAll('🤝✨ <b>Twin order delivered</b> — '+O.twin.a.txt+' and '+O.twin.b.txt+'. <b>+2 ✧!</b> Many hands, one hive.'); }
+        else if(O.duo){ rj+=2; meritAdd(O.duo[0],'pact'); meritAdd(O.duo[1],'pact');
           const a=NET.players[O.duo[0]], b=NET.players[O.duo[1]];
           netToastAll('🤝✨ <b>'+netEsc(a?a.name:'?')+' & '+netEsc(b?b.name:'?')+'</b> kept the pact — '+O.txt+' each. <b>+2 ✧!</b> That’s the hive way.'); }
         else{ rj++; const p=(O.who!=null)?NET.players[O.who]:null;
           if(O.who!=null) meritAdd(O.who,'post');
           netToastAll('✨ '+(p?('<b>'+netEsc(p.name)+'</b> delivered'):'Order filled')+' — '+O.txt+'. +1 ✧ royal jelly.'); }
         try{ fanfare(); }catch(e){} }
-      else toast(O.duo?'🌒 The pact slipped away — no harm done; the next one will come.':'🌒 The dusk took that order — no harm done.');
+      else toast((O.duo||O.twin)?'🌒 The pact slipped away — no harm done; the next one will come.':'🌒 The dusk took that order — no harm done.');
       netOrderShow(); }
     // ---- per-frame housekeeping: vote clock, snapshots, orders, link health ----
     function netFrame(dt){ if(!NET.on) return;
@@ -5346,13 +5368,18 @@
       if(over){ netYearEnd(); return; }
       NET.snapT+=dt; if(NET.snapT>0.4){ NET.snapT=0; netBcast({t:'snap',s:netSnapObj()}); }
       NET.ledgerT=(NET.ledgerT||0)+dt; if(NET.ledgerT>6){ NET.ledgerT=0; partyWrite(); }
+      if(!NET.voteTaught&&day>14&&NET.voteN===0&&!NET.vote){ NET.voteTaught=true;
+        netToastAll('💃 The meadow is waking — open <b>☀ Meadow</b> and tap a bloom. Anyone can call the hive’s first vote.'); }
       if(!paused){ // orders tick only while the hive is actually living
         if(NET.order){ NET.order.rem-=dt;
           NET.ordT=(NET.ordT||0)+dt; if(NET.ordT>0.2){ NET.ordT=0; netOrderShow(); }
-          const O=NET.order, t=NET_ORDERS.find(o=>o.id===O.id);
-          const done=t&&(O.duo
-            ? (t.meas(O.duo[0])-O.base>=O.n && t.meas(O.duo[1])-(O.baseB||0)>=O.n)
-            : (t.meas(O.who==null?null:O.who)-O.base>=O.n));
+          const O=NET.order; let done=false;
+          if(O.twin){ const tA=NET_ORDERS.find(o=>o.id===O.twin.a.id), tB=NET_ORDERS.find(o=>o.id===O.twin.b.id);
+            done=tA&&tB&&tA.meas(null)-O.twin.a.base>=O.twin.a.n&&tB.meas(null)-O.twin.b.base>=O.twin.b.n; }
+          else{ const t=NET_ORDERS.find(o=>o.id===O.id);
+            done=t&&(O.duo
+              ? (t.meas(O.duo[0])-O.base>=O.n && t.meas(O.duo[1])-(O.baseB||0)>=O.n)
+              : (t.meas(O.who==null?null:O.who)-O.base>=O.n)); }
           if(done) hostEndOrder(true);
           else if(O.rem<=0) hostEndOrder(false); }
         else if(day>2&&currentTemp()>=WIN_TEMP&&!NET.vote){ NET.orderCD=(NET.orderCD===undefined?18:NET.orderCD)-dt;
@@ -5378,7 +5405,7 @@
       try{ if(joinPc) joinPc.close(); }catch(e){}
       joinPc=null; joinDc=null; NET.on=false; NET.host=false; NET.started=false; NET.endSent=false;
       NET.players=[]; NET.pend=null; NET.vote=null; NET.cVote=null; NET.myIx=-1; netVoteUI=null; netSector=null; netVotedIx=[];
-      NET.order=null; NET.orderCD=undefined; NET.ordersDone=0; NET.stale=false; NET.orderTaught=false; NET.resume=null; NET.hiveName=''; NET.merit={}; netOrderShow();
+      NET.order=null; NET.orderCD=undefined; NET.ordersDone=0; NET.stale=false; NET.orderTaught=false; NET.voteTaught=false; NET.resume=null; NET.hiveName=''; NET.merit={}; netOrderShow();
       document.body.classList.remove('netc');
       $('replyWrap').classList.add('hide'); $('inviteCode').value=''; $('answerIn').value=''; $('joinIn').value=''; $('replyCode').value='';
       $('mpPlayers').innerHTML=''; $('mpPlayersJ').innerHTML=''; netStripSync(); }
