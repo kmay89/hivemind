@@ -1024,6 +1024,21 @@
   .mpWait{ display:flex; align-items:center; gap:9px; font:600 12px 'Bricolage Grotesque',sans-serif; color:var(--dim); background:rgba(0,0,0,0.18); border:1.5px dashed rgba(255,214,107,0.3); border-radius:9px; padding:8px 11px; margin-top:5px; text-align:left; }
   .mpWait .dot{ width:10px; height:10px; border-radius:50%; background:#ffd66b; flex:none; animation:mpPulse 1.6s ease-in-out infinite; }
   @keyframes mpPulse{ 0%,100%{ opacity:0.25; transform:scale(0.8); } 50%{ opacity:1; transform:scale(1.15); } }
+  /* entrance springs & feedback beats — hive-link surfaces only */
+  #mpHome .card,#mpHost .card,#mpJoin .card,#mpVote .card,#mpRole .card,#mpEnd .card,#mpScan .card{ animation:mpCardIn .34s cubic-bezier(.3,1.45,.55,1) both; }
+  @keyframes mpCardIn{ 0%{ opacity:0; transform:translateY(18px) scale(.94); } 100%{ opacity:1; transform:none; } }
+  #mpStrip .chip{ animation:chipIn .3s cubic-bezier(.3,1.5,.6,1) both; }
+  @keyframes chipIn{ 0%{ opacity:0; transform:translateY(-9px) scale(.75); } 100%{ opacity:0.94; transform:none; } }
+  #mpOrder.pop{ animation:ordDrop .42s cubic-bezier(.3,1.5,.55,1); }
+  @keyframes ordDrop{ 0%{ opacity:0; transform:translateX(-50%) translateY(-16px) scale(.88); } 100%{ opacity:1; transform:translateX(-50%) translateY(0) scale(1); } }
+  #mpOrder.won{ background:linear-gradient(180deg,#e2ffbe,#a8e470); animation:ordWin .5s cubic-bezier(.3,1.5,.55,1); }
+  #mpOrder.lost{ opacity:0.72; filter:saturate(0.55); }
+  @keyframes ordWin{ 0%{ transform:translateX(-50%) scale(1.14); } 100%{ transform:translateX(-50%) scale(1); } }
+  #voteBar{ transition:background .3s; }
+  #voteBar.low{ background:linear-gradient(90deg,#ff9d5a,#ff5a3a); }
+  .qrBrew{ display:flex; align-items:center; justify-content:center; gap:10px; min-height:110px; font:600 12.5px 'Bricolage Grotesque',sans-serif; color:#6a4d1e; }
+  .qrBrew .bee{ display:inline-block; font-size:20px; animation:brewOrbit 1.3s linear infinite; }
+  @keyframes brewOrbit{ 0%{ transform:rotate(0deg) translateX(13px) rotate(0deg); } 100%{ transform:rotate(360deg) translateX(13px) rotate(-360deg); } }
   .mpDetails{ margin-top:8px; text-align:left; }
   .mpDetails summary{ font:600 11px 'JetBrains Mono',monospace; color:var(--dim); cursor:pointer; padding:3px 0; }
   #scanVid{ width:100%; max-height:52vh; border-radius:12px; background:#000; margin-top:8px; }
@@ -1419,7 +1434,7 @@
       <h1>YOUR HIVE</h1>
       <div class="sub" id="mpHostState">brewing your first invite…</div>
       <div class="mpSec">① invite a keeper</div>
-      <div id="inviteQRWrap" class="qrWrap hide"><canvas id="inviteQR" aria-label="Invite code as a QR — scan with a phone camera"></canvas><div class="qrCap">🐝 they scan this with their camera — that’s the whole trick</div></div>
+      <div id="inviteQRWrap" class="qrWrap hide"><div id="inviteBrew" class="qrBrew hide"><span class="bee">🐝</span> brewing a fresh invite…</div><canvas id="inviteQR" aria-label="Invite code as a QR — scan with a phone camera"></canvas><div class="qrCap" id="inviteCap">🐝 they scan this with their camera — that’s the whole trick</div></div>
       <div class="mpRow">
         <button class="btn sm" id="inviteShare">📤 Send invite</button>
         <button class="btn sm" id="inviteScan">📷 Scan their reply</button>
@@ -1552,7 +1567,7 @@
     // / non-https, where no service worker runs) — the real source of truth is sw.js's
     // VERSION; syncGameVer() below asks the running worker and corrects this label
     // live, so the two only ever drift cosmetically for a moment, never permanently.
-    let GAME_VER='2026.07.30.27';
+    let GAME_VER='2026.07.30.28';
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -5084,16 +5099,18 @@
       $('voteTally').textContent=mine?'proposing is your dance — 🐝 cast':'';
       $('voteYes').disabled=mine; $('voteNo').disabled=mine;
       netVoteUI={deadline:performance.now()+secs*1000, dur:secs*1000, cast:mine};
-      netStripVoted([]); openOverlay('mpVote'); try{ chime(392,523); }catch(e){} }
+      NET.tickSec=null; const vb=$('voteBar'); if(vb) vb.classList.remove('low');
+      netStripVoted([]); openOverlay('mpVote'); try{ chime(392,523); }catch(e){} hpt(15); }
     function netVoteResult(k,v,yes,no,pass){ netVoteUI=null; NET.cVote=null;
       const bees='🐝'.repeat(Math.min(8,yes))||'·', hands='✋'.repeat(Math.min(8,no));
       $('voteTally').innerHTML=(pass?'✅ ':'🚫 ')+bees+(no?'  vs  '+hands:'')+((yes===no&&yes+no>0)?' — a tie: the hive holds still':'');
       $('voteYes').disabled=true; $('voteNo').disabled=true;
       setTimeout(()=>{ closeOverlay('mpVote'); },1600);
-      if(pass){ try{ fanfare(); }catch(e){} } else { const D=netVoteText(k,v); toast('✋ The hive says not yet — '+D.q); }
+      if(pass){ try{ fanfare(); }catch(e){} hpt(20); }
+      else { try{ chime(233,165); }catch(e){} const D=netVoteText(k,v); toast('✋ The hive says not yet — '+D.q); }
       netStripVoted([]); }
     function netCastBallot(yes){ if(!netVoteUI||netVoteUI.cast) return; netVoteUI.cast=true;
-      $('voteYes').disabled=true; $('voteNo').disabled=true;
+      $('voteYes').disabled=true; $('voteNo').disabled=true; hpt(12);
       $('voteTally').textContent=yes?'your dance says go 🐝':'your dance says wait ✋';
       if(NET.host) hostBallot(0,yes); else netSend({t:'bal',id:NET.cVote?NET.cVote.id:0,yes}); }
     // ---- the keeper strip: who's in the hive, who has danced their vote ----
@@ -5109,12 +5126,17 @@
       if(NET.players.filter(p=>!p.gone).length>=NET_MAX){ st.textContent='the hive is full — eight keepers is a crowd already'; $('inviteCode').value=''; NET.pend=null; return; }
       const pc=netRtc(), dc=pc.createDataChannel('hive',{ordered:true});
       NET.pend={pc,dc}; st.textContent='brewing a fresh invite…'; $('inviteCode').value='';
+      $('inviteQRWrap').classList.remove('hide'); $('inviteBrew').classList.remove('hide');
+      $('inviteQR').style.display='none'; $('inviteCap').style.display='none';
       dc.onopen=()=>hostPeerJoined(pc,dc);
       try{ const off=await pc.createOffer(); await pc.setLocalDescription(off); await netIceDone(pc); }
-      catch(e){ st.textContent='couldn’t brew an invite — try again'; return; }
+      catch(e){ st.textContent='that one didn’t take — no matter, tap Host again for a fresh brew'; $('inviteBrew').classList.add('hide'); return; }
       if(NET.pend&&NET.pend.pc===pc&&NET.host){ const url=netUrl('hive',await netEnc({o:pc.localDescription.sdp}));
         $('inviteCode').value=url;
-        const ok=drawQR($('inviteQR'),url); $('inviteQRWrap').classList.toggle('hide',!ok);
+        const ok=drawQR($('inviteQR'),url);
+        $('inviteBrew').classList.add('hide'); $('inviteQR').style.display=ok?'':'none'; $('inviteCap').style.display=ok?'':'none';
+        $('inviteQRWrap').classList.toggle('hide',!ok);
+        try{ chime(587,784); }catch(e){}
         st.innerHTML='ready! <b>have them scan this</b> with their camera — or send the link'; } }
     function hostPeerJoined(pc,dc){ if(NET.pend&&NET.pend.pc===pc) NET.pend=null;
       const p={ix:NET.players.length,name:'Keeper '+(NET.players.length+1),pc,dc,gone:false,propAt:-1e9,pendingStart:NET.started};
@@ -5126,7 +5148,7 @@
     function hostOnMsg(p,raw){ let m; try{ m=JSON.parse(raw); }catch(e){ return; }
       if(m.t==='hi'){ p.name=netEsc(String(m.name||'').slice(0,16))||p.name;
         if(NET.started&&p.pendingStart){ p.pendingStart=false; hostAdmitMidGame(p); return; }
-        if(!p.hello){ p.hello=true; toast('🎉 <b>'+p.name+'</b> is in the hive!'); try{ fanfare(); }catch(e){} }
+        if(!p.hello){ p.hello=true; toast('🎉 <b>'+p.name+'</b> is in the hive!'); try{ fanfare(); }catch(e){} hpt(20); }
         netLobbySync(); netStripSync(); }
       else if(m.t==='p'&&NET.started&&!over){ netApplyPaint(m,p.ix); }
       else if(m.t==='prop'&&NET.started&&!over){ const now=performance.now();
@@ -5197,7 +5219,7 @@
         if(NET.order.duo&&NET.order.duo.indexOf(NET.myIx)>=0){ const other=NET.players[NET.order.duo[0]===NET.myIx?NET.order.duo[1]:NET.order.duo[0]];
           try{ fanfare(); }catch(e){} toast('🤝 <b>You’re in a pact with '+netEsc(other?other.name:'a keeper')+'!</b> Pull together — both deliver or neither does.'); }
         else if(NET.order.who===NET.myIx){ try{ fanfare(); }catch(e){} toast('📣 <b>That one’s yours!</b> Your comb, your moment — the hive is watching.'); } }
-      else if(m.t==='ordend'){ if(m.ok){ try{ fanfare(); }catch(e){} } NET.order=null; netOrderShow(); }
+      else if(m.t==='ordend'){ if(m.ok){ try{ fanfare(); }catch(e){} } NET.order=null; netOrderFlash(!!m.ok); }
       else if(m.t==='end'){ NET.endSent=true; over=true; setSpeed(0); NET.order=null; netOrderShow(); netShowEnd(m.sum); } }
     function clientHostGone(){ if(!NET.on) return;
       if(!NET.started){ NET.on=false; const js=$('joinState'); if(js) js.textContent='the link dropped — ask the host for a fresh invite'; return; }
@@ -5298,9 +5320,17 @@
       {id:'bank', ic:'🏺', lo:3, hi:6, sect:0, txt:n=>'bank '+n+' cells of honey',
         meas:()=>Math.round(honeyCellsStored())},
     ];
+    function hpt(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }   // a tiny thump where the platform allows it
+    let ordFlashT=0;
+    function netOrderFlash(ok){ const el=$('mpOrder'); if(!el) return; clearTimeout(ordFlashT);
+      el.classList.remove('hide','pop'); el.classList.toggle('won',!!ok); el.classList.toggle('lost',!ok);
+      el.innerHTML=ok?'<b>✓ Delivered!</b> the hive hums a little brighter':'🌒 slipped away — no harm done';
+      if(ok) hpt(25);
+      ordFlashT=setTimeout(()=>{ el.classList.remove('won','lost'); netOrderShow(); },1500); }
     function netOrderShow(){ const el=$('mpOrder'); if(!el) return; const O=NET.order;
-      if(!O){ el.classList.add('hide'); return; }
-      el.classList.remove('hide');
+      if(!O){ el.classList.add('hide'); el.classList.remove('won','lost'); return; }
+      if(el.classList.contains('hide')){ el.classList.add('pop'); setTimeout(()=>el.classList.remove('pop'),520); hpt(12); }
+      el.classList.remove('hide','won','lost');
       let lead,prog;
       if(O.twin){ const A=O.twin.a, B=O.twin.b;
         const tA=NET_ORDERS.find(o=>o.id===A.id), tB=NET_ORDERS.find(o=>o.id===B.id);
@@ -5367,6 +5397,7 @@
       try{ chime(440,587); }catch(e){} netOrderShow(); }
     function hostEndOrder(ok){ const O=NET.order; if(!O) return; NET.order=null; NET.orderCD=30+Math.random()*30;
       netBcast({t:'ordend',ok:ok?1:0});
+      netOrderFlash(ok);
       if(ok){ NET.ordersDone=(NET.ordersDone||0)+1;
         if(O.twin){ rj+=2; NET.players.forEach(p=>{ if(!p.gone) meritAdd(p.ix,'pact'); });
           netToastAll('🤝✨ <b>Twin order delivered</b> — '+O.twin.a.txt+' and '+O.twin.b.txt+'. <b>+2 ✧!</b> Many hands, one hive.'); }
@@ -5377,13 +5408,15 @@
           if(O.who!=null) meritAdd(O.who,'post');
           netToastAll('✨ '+(p?('<b>'+netEsc(p.name)+'</b> delivered'):'Order filled')+' — '+O.txt+'. +1 ✧ royal jelly.'); }
         try{ fanfare(); }catch(e){} }
-      else toast((O.duo||O.twin)?'🌒 The pact slipped away — no harm done; the next one will come.':'🌒 The dusk took that order — no harm done.');
-      netOrderShow(); }
+      else toast((O.duo||O.twin)?'🌒 The pact slipped away — no harm done; the next one will come.':'🌒 The dusk took that order — no harm done.'); }
     // ---- per-frame housekeeping: vote clock, snapshots, orders, link health ----
     function netFrame(dt){ if(!NET.on) return;
       if(NET.denyCool>0) NET.denyCool-=dt;
       if(netVoteUI){ const rem=netVoteUI.deadline-performance.now();
-        const bar=$('voteBar'); if(bar) bar.style.width=Math.max(0,Math.min(100,100*rem/netVoteUI.dur))+'%';
+        const bar=$('voteBar'); if(bar){ bar.style.width=Math.max(0,Math.min(100,100*rem/netVoteUI.dur))+'%';
+          bar.classList.toggle('low',rem>0&&rem<=6000); }
+        const sec=Math.ceil(rem/1000);   // the last five seconds tick — an Among Us heartbeat
+        if(rem>0&&rem<=5000&&sec!==NET.tickSec){ NET.tickSec=sec; try{ chime(700,700); }catch(e){} hpt(8); }
         if(rem<=0&&NET.host&&NET.vote) hostEndVote();
         if(rem<=-5000&&!NET.host){ netVoteUI=null; NET.cVote=null; closeOverlay('mpVote'); } }
       if(!NET.host){ // joiner: keepalive out, staleness watch in, cosmetic hornet easing
@@ -5555,7 +5588,7 @@
       catch(err){} });
     function netCopyBtn(btnId,srcId){ const b=$(btnId), lbl=b.textContent;
       press(b,()=>{ const el=$(srcId), txt=el.value; if(!txt) return;
-        const done=()=>{ b.textContent='✓ copied'; setTimeout(()=>{ b.textContent=lbl; },1300); };
+        const done=()=>{ b.textContent='✓ copied'; try{ clink(); }catch(e){} hpt(10); setTimeout(()=>{ b.textContent=lbl; },1300); };
         const manual=()=>{ try{ el.focus(); el.select(); document.execCommand('copy');
           el.blur(); try{ getSelection().removeAllRanges(); }catch(e2){} done(); }catch(e){ toast('Select the code and copy it by hand.'); } };
         if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done).catch(manual);
@@ -5565,6 +5598,11 @@
       else toast('Sharing isn’t available here — use 📋 Copy instead.'); }); }
     netCopyBtn('inviteCopy','inviteCode'); netShareBtn('inviteShare','inviteCode','HIVEMIND — join my hive');
     netCopyBtn('replyCopy','replyCode'); netShareBtn('replyShare','replyCode','HIVEMIND — my reply code');
+    // every hive-link button answers back — a soft wax dab under the finger
+    document.addEventListener('pointerdown',e=>{ if(!e.target||!e.target.closest) return;
+      if(!e.target.closest('#mpHome,#mpHost,#mpJoin,#mpVote,#mpRole,#mpEnd,#mpScan')) return;
+      const b=e.target.closest('.btn'); if(!b||b.disabled) return;
+      try{ paintDab('brood'); }catch(err){} },{passive:true});
     // ---- camera scanning: the "just show me your phone" flow ----
     // Feature-gated on BarcodeDetector + getUserMedia (and Permissions-Policy
     // allowing camera, see netlify.toml). The video never leaves the device —
