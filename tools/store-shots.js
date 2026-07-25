@@ -60,6 +60,17 @@ function serve() {
     await page.waitForTimeout(22000);   // ~60+ game days: zoned comb, stores, capped honey
     await page.evaluate(() => { const b = document.querySelector('[data-sp="1"]'); if (b) b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 })); });
     await page.waitForTimeout(800);
+    // the scouts may have interrupted mid-fast-forward (they do that) — clear the floor
+    for (let i = 0; i < 3; i++) {
+      const closed = await page.evaluate(() => {
+        const dc = document.getElementById('danceCall');
+        if (dc && !dc.classList.contains('hide')) { document.getElementById('dcSkip').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 })); return false; }
+        return true;
+      });
+      if (closed) break;
+      await page.waitForTimeout(400);
+    }
+    await page.waitForTimeout(400);
     await shot('2-comb');
     await page.$eval('#reportBtn', el => el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 })));
     await page.waitForTimeout(700);
