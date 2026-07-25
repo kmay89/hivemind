@@ -57,8 +57,11 @@ Game Center later if wanted (badges → achievements map cleanly).
 - [ ] Screenshots: 6.7", 6.1", iPad 12.9", Mac — capture the comb in summer,
       a hornet raid, the cellar, a Play Together vote.
       `tools/store-shots.js` drafts the core set headlessly at store
-      resolutions (title / living comb / report long view / scouts' dance);
-      raid, cellar, and vote frames are best captured by hand mid-play.
+      resolutions (title / early comb / report long view / scouts' dance).
+      The title, report, and dance frames are store-ready drafts; the comb
+      hero shot — like the raid, cellar, and vote frames — is best captured
+      by hand from a real mid-summer colony, where capped honey and a full
+      pantry do the talking.
 - [ ] App name/subtitle: "HIVEMIND — a beekeeping story"; keywords: bees,
       beekeeping, cozy, survival, sim, co-op, party.
 - [ ] Export compliance: uses only standard TLS/WebRTC (exempt).

@@ -70,14 +70,14 @@ function serve() {
     // painting arms the keeper's-page lessons (LESSON_AT) — thank them and move on
     for (let i = 0; i < 5; i++) { await page.keyboard.press('Escape'); await page.waitForTimeout(350); }
     await page.evaluate(() => { const b = document.querySelector('[data-sp="3"]'); if (b) b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 })); });
-    await page.waitForTimeout(22000);   // ~60+ game days: zoned comb, stores, capped honey
+    await page.waitForTimeout(6500);   // ~18 game days: peak spring — stores golden, brood capped, wax fresh
     await page.evaluate(() => { const b = document.querySelector('[data-sp="1"]'); if (b) b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 })); });
     await page.waitForTimeout(800);
     // the scouts may have interrupted mid-fast-forward (they do that) — clear the floor
     for (let i = 0; i < 3; i++) {
       const closed = await page.evaluate(() => {
         const dc = document.getElementById('danceCall');
-        if (dc && !dc.classList.contains('hide')) { document.getElementById('dcSkip').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 })); return false; }
+        if (dc && !dc.classList.contains('hide')) { document.getElementById('dcLet').dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 })); return false; }
         return true;
       });
       if (closed) break;
