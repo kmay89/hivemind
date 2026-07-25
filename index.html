@@ -5163,7 +5163,11 @@
       const lab=$('mpLobbyLab'); if(lab) lab.textContent=active+'/'+NET_MAX;
       const w=$('mpWaiting'); if(w){ w.classList.toggle('hide', NET.started||active>=NET_MAX);
         const tx=$('mpWaitTx'); if(tx) tx.textContent=active<2?'waiting for keepers to arrive — send that invite ✨':'room for more — or begin whenever you’re ready'; }
-      if(NET.armStart) mpStartDisarm();   // the room changed — re-confirm the head-count
+      // disarm the begin-confirm only when the roster truly changes (duplicate
+      // 'hi' re-sends and quiet syncs must not eat the second tap)
+      const sig=NET.players.map(p=>p.ix+':'+p.name+':'+(p.gone?1:0)).join('|');
+      if(NET.armStart&&sig!==NET.lobbySig) mpStartDisarm();
+      NET.lobbySig=sig;
       for(const p of NET.players){ if(p.ix===0||p.gone) continue; netSendTo(p,{t:'lob',ps:netRoster(),you:p.ix}); } }
     // ---- joiner plumbing ----
     function clientLinked(){ NET.on=true; NET.host=false;
