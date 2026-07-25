@@ -53,9 +53,20 @@ function serve() {
     await page.waitForTimeout(600);
     const shot = n => page.screenshot({ path: path.join(OUT, `${dev.name}-${n}.png`) });
     await shot('1-title');
-    // a living comb: run the daily a while at fast-forward so stores and brood fill in
+    // a living comb: actually keep bees for a minute — zone a nursery ring and
+    // honey shelves (blind taps snap to cells via the game's own hit-testing),
+    // then fast-forward so brood, stores, and capped honey fill in
     await page.click('#startDaily');
     await page.waitForTimeout(2500);
+    const v = await page.evaluate(() => window.__hm().view);
+    const tap = async (x, y) => { await page.mouse.click(x, y); await page.waitForTimeout(45); };
+    await tap(v.hiveCx, v.hiveCy);   // brood brush is the default
+    for (let k = 0; k < 12; k++) { const a = k * Math.PI / 6;
+      await tap(v.hiveCx + Math.cos(a) * v.size * 1.73, v.hiveCy + Math.sin(a) * v.size * 1.73); }
+    await page.evaluate(() => { const b = document.querySelector('[data-brush="honey"]'); if (b) b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 })); });
+    await page.waitForTimeout(250);
+    for (const rr of [2.9, 3.5]) for (let k = 0; k < 12; k++) { const a = k * Math.PI / 6 + (rr > 3 ? Math.PI / 12 : 0);
+      await tap(v.hiveCx + Math.cos(a) * v.size * rr, v.hiveCy + Math.sin(a) * v.size * rr); }
     await page.evaluate(() => { const b = document.querySelector('[data-sp="3"]'); if (b) b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 })); });
     await page.waitForTimeout(22000);   // ~60+ game days: zoned comb, stores, capped honey
     await page.evaluate(() => { const b = document.querySelector('[data-sp="1"]'); if (b) b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 })); });
