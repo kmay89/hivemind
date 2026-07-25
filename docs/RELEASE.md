@@ -56,6 +56,9 @@ Game Center later if wanted (badges → achievements map cleanly).
 - [ ] Age rating: 4+.
 - [ ] Screenshots: 6.7", 6.1", iPad 12.9", Mac — capture the comb in summer,
       a hornet raid, the cellar, a Play Together vote.
+      `tools/store-shots.js` drafts the core set headlessly at store
+      resolutions (title / living comb / report long view / scouts' dance);
+      raid, cellar, and vote frames are best captured by hand mid-play.
 - [ ] App name/subtitle: "HIVEMIND — a beekeeping story"; keywords: bees,
       beekeeping, cozy, survival, sim, co-op, party.
 - [ ] Export compliance: uses only standard TLS/WebRTC (exempt).

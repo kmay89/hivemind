@@ -114,6 +114,15 @@ numbers drift as the file changes; re-grep `// =====` banners if they look off)
   automatically shared (but `netApplySnap()` must be taught to *apply* it —
   update both or the field silently stays host-only). Undo is disabled in a
   linked hive. See docs/MULTIPLAYER.md.
+- Newer solo-UX systems (all `// ----`-commented near their wiring): the
+  **comb blueprint** (`showCombPlan`/`drawCombPlan`, one-shot `hm_combplan`
+  flag, shown from `endCoach`), the **dawn ramp** (`dawnRamp` — five
+  turn-based sunrises after the coach; released in `frame()`'s sim block),
+  the **scouts' dance call** (`openDanceCall`/`danceCallCheck`, solo-only,
+  cooldown in days via `danceCallCD`), the **report long view**
+  (`buildReportFull`, opened from the mini report's `⤢`), and **Hazel's
+  almanac** (`buildHazelBook` over `MSGLOG`). Debug handles follow the
+  `window.__hm*` family (`__hmQR`, `__hmDance`, `__hmPlan`, `__hmDawn`).
 - `M{}` — the stat-modifier reducer over `GIFTS`(owned) + `QUEENS`(mods).
   A gift or queen mod that should affect gameplay must be wired through here
   (additive *or* multiplicative, see the function's own comment), not read
