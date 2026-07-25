@@ -66,7 +66,44 @@ appears on every screen, **anyone's comb counts toward it**, and filling it
 pays +1 ✧ with a fanfare. Misses are a shrug, not a punishment ("the dusk
 took that one"). Orders pause while a vote is live or the host has a modal
 open. Filled orders land on the end-of-year scorecard. Add new orders as
-table rows (id/lo/hi/txt/meas), not branches.
+table rows (id/lo/hi/sect/txt/meas), not branches.
+
+### The game-theory layer (why helping is the winning strategy)
+
+The design goal is a **Stag Hunt, never a Prisoner's Dilemma**: in a cozy
+co-op party game, defection must never be the better unilateral move — but
+cooperation should still be a *choice* that feels strategic, not automatic.
+Three mechanisms:
+
+- **Pact orders** (~30% of orders with 3+ keepers): two keepers are named,
+  each with an equal target measured *only in their own wedge*, 60 seconds,
+  **both-or-nothing for a doubled reward** (+2 ✧). That's the stag. The hare
+  (ignore the pact, tend your own comb) is safe but pays nothing. What
+  selects the cooperative equilibrium is **common knowledge**: the order
+  chip shows both keepers' live progress on every screen ("Buzz 2/4 ·
+  Trip 3/4"), so neither partner faces the uncertainty that makes the hare
+  rational. Aumann would approve; so would the bees.
+- **Keeper merit** — the individual payoff channel — is earned almost
+  entirely through *pro-social* acts: tending abandoned comb (**aid**),
+  landed hornet swats (**guard**), proposals the hive ratifies (**voice** —
+  you're rewarded for reading the quorum, not for proposing noise), pacts
+  kept (**pact**), called posts delivered (**post**). Helping is the
+  merit-dominant strategy *by construction*: there is no selfish action
+  that outearns an equivalent helpful one.
+- **Titles, not rankings**: the scorecard gives every keeper their *best*
+  title (🤝 Pact-Keeper, 🛡 Guardian of the Gate, 🌾 The Good Neighbor,
+  💬 Voice of the Meadow, 🍯 Steady Hands; 🕯 Kept the Watch as the kind
+  default). Recognition sharpens the incentive; a leaderboard would turn
+  the Stag Hunt back into a race.
+
+Merit lives in the host's `NET.merit`, persists through the party ledger,
+and travels in the `end` summary.
+
+With **3+ keepers**, half the orders **call a specific post** — "🍼 Buzz's
+post: paint 4 nursery cells" — measured only inside that keeper's wedge
+(`meas(who)`), with a smaller target and a personal fanfare on their device
+("That one's yours!"). Everyone else's chip says whose moment it is. Duos
+keep hive-wide orders only (a called post is meaningless with one wedge).
 
 Hornet raids are also a shared moment: the hornet is mirrored to every
 screen (position travels in comb units, so screen sizes don't matter) and
@@ -222,6 +259,3 @@ can't see.
   proper) would be a season-2 feature; co-op first.
 - Invite codes could compress (`CompressionStream`) or ride QR codes; both
   sides must feature-detect, so plain base64url ships for now.
-- Orders are hive-wide; per-sector orders ("East Comb: 3 nursery cells")
-  would sharpen the Overcooked role-friction further once the base loop is
-  playtested.

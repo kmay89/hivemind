@@ -1539,7 +1539,7 @@
     // / non-https, where no service worker runs) — the real source of truth is sw.js's
     // VERSION; syncGameVer() below asks the running worker and corrects this label
     // live, so the two only ever drift cosmetically for a moment, never permanently.
-    let GAME_VER='2026.07.29.25';
+    let GAME_VER='2026.07.30.26';
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2400,7 +2400,9 @@
         popFx(el,kind); }, true); })();
 
     // ===================== hornet raids — telegraphed, juicy, defensible =====================
-    function hornetWindow(){ const early=year>=4; return {a:early?120:140, b:early?268:258}; }
+    function hornetWindow(){ const early=year>=4;
+      if(NET.on&&NET.started) return {a:55, b:268};   // parties meet their hornet inside the first minutes — the best shared moment shouldn't wait for summer
+      return {a:early?120:140, b:early?268:258}; }
     function scoutActive(){ const w=hornetWindow(); const T=currentTemp();
       return !hornet && !over && started && !onboard && T>=WIN_TEMP && day>w.a && day<w.b && P>40 && hornetCD<6; }
     function spawnHornet(){ const side=Math.random()<0.5?-1:1;
@@ -2434,6 +2436,7 @@
         netSend({t:'hh'}); shake=Math.max(shake,0.18); hitstop=0.045;
         puff(h.x,h.y,'#ff9a7a',6,1.4); chime(220+(h.maxhp-Math.max(1,h.hp))*130,160); h.x+=(Math.random()-0.5)*size;
         return true; }
+      if(NET.on&&NET.host&&NET.started) meritAdd(0,'guard');
       hornetDamage();
       return true; }
     function drawHornet(){ const h=hornet; if(!h) return; const s=size*0.5;
@@ -4798,7 +4801,7 @@
     // to a hive vote — real colonies decide the same way, by waggle-dance
     // quorum, which is the teachable moment baked into the vote cards.
     const NET={ on:false, host:false, started:false, endSent:false, myIx:-1, name:'',
-      players:[], pend:null, snapT:0, vote:null, cVote:null, voteN:0, denyCool:0, hadHornet:false };
+      players:[], pend:null, snapT:0, vote:null, cVote:null, voteN:0, denyCool:0, hadHornet:false, merit:{} };
     // ---- a tiny QR encoder (byte mode, error-correction level L) ----
     // Exists so invites/replies can be *scanned* instead of pasted — the whole
     // "grandma joins in ten seconds" flow. Ported from the public-domain
@@ -4947,7 +4950,7 @@
     // Completely separate from the solo save; resuming re-seats keepers by name.
     const PARTY_KEY='hivemind.party.v1';
     function partyWrite(){ if(!NET.host||!NET.started||NET.endSent) return;
-      lsSet(PARTY_KEY,JSON.stringify({v:1,t:Date.now(),name:NET.hiveName||'',od:NET.ordersDone||0,
+      lsSet(PARTY_KEY,JSON.stringify({v:1,t:Date.now(),name:NET.hiveName||'',od:NET.ordersDone||0,merit:NET.merit||{},
         s:serialize(), ps:NET.players.map(p=>p.name)})); }
     function partyRead(){ try{ const raw=localStorage.getItem(PARTY_KEY); if(!raw) return null;
       const sv=JSON.parse(raw); return (sv&&sv.v===1&&sv.s&&Array.isArray(sv.s.cb)&&sv.s.cb.length===cells.length)?sv:null; }catch(e){ return null; } }
@@ -4984,13 +4987,18 @@
       netSend({t:'p', i:idx(cell.c,cell.r), z:cell.zone, f:cell.flagExpand?1:0}); }
     function netApplyPaint(m,pix){ const cell=cells[m.i]; if(!cell||!netSector) return;
       const s=netSector[m.i]; const owner=NET.players[s];
+      const helping=(s===-2||(s>=0&&s!==pix&&owner&&owner.gone));   // tending comb that isn't yours
       if(!(s===-2||s===pix||(s>=0&&owner&&owner.gone))) return;
+      let changed=false;
       if(!cell.built){ const f=!!m.f;
         if(f&&!neighbors(cell.c,cell.r).some(([c2,r2])=>cells[idx(c2,r2)].built)) return;
-        if(cell.flagExpand!==f){ cell.flagExpand=f; if(!f) cell.bp=0; paintFx(cell,f?'expand':'erase'); } return; }
-      const z=(m.z==='brood'||m.z==='honey')?m.z:'none';
-      if(z==='none'&&cell.zone==='brood'&&cell.brood) return;
-      if(z!==cell.zone){ cell.zone=z; if(z==='honey') cell.brood=null; paintFx(cell,z==='none'?'erase':z); } }
+        if(cell.flagExpand!==f){ cell.flagExpand=f; if(!f) cell.bp=0; changed=true; paintFx(cell,f?'expand':'erase'); } }
+      else{ const z=(m.z==='brood'||m.z==='honey')?m.z:'none';
+        if(z==='none'&&cell.zone==='brood'&&cell.brood) return;
+        if(z!==cell.zone){ cell.zone=z; if(z==='honey') cell.brood=null; changed=true; paintFx(cell,z==='none'?'erase':z); } }
+      if(changed&&helping){ meritAdd(pix,'aid');
+        const P2=NET.players[pix];
+        if(P2&&!P2.aidSeen){ P2.aidSeen=true; netToastAll('🌾 <b>'+netEsc(P2.name)+'</b> tends the untended comb — the hive remembers a good neighbor.'); } } }
     // ---- snapshots: the host's serialize() is already the state schema — reuse it ----
     function netApplySnap(s){ if(!s||!Array.isArray(s.cb)||s.cb.length!==cells.length) return;
       const ZN=['none','brood','honey'], STN=['egg','larva','pupa'];
@@ -5049,7 +5057,7 @@
       const pass=yes>no;   // a real quorum: a tie means the hive holds still
       netBcast({t:'tally',id:V.id,yes,no,pass,k:V.k,v:V.v});
       netVoteResult(V.k,V.v,yes,no,pass);
-      if(pass) netApplyDecision(V.k,V.v); }
+      if(pass){ meritAdd(V.by,'voice'); netApplyDecision(V.k,V.v); } }
     function netApplyDecision(k,v){ // host only — state flows back out on the next snapshot
       if(k==='patch'){ if(v!=null&&PATCHES[v]){ activePatch=v; grantBadge('waggler'); forecastCache=forecastToSpring();
         netToastAll('💃 The dance is decided — foragers fly to the <b>'+FLOWERS[PATCHES[v].f].n.toLowerCase()+'</b>.'); } }
@@ -5112,7 +5120,7 @@
         if(NET.vote||now-p.propAt<8000) return; p.propAt=now;
         if(netValidProp(m.k,m.v)) hostStartVote(m.k,m.v,p.ix); else netSendTo(p,{t:'ev',msg:netWhyNot(m.k)}); }
       else if(m.t==='bal'&&NET.vote&&m.id===NET.vote.id){ hostBallot(p.ix,!!m.yes); }
-      else if(m.t==='hh'&&NET.started&&!over){ if(hornet&&!hornet._net) hornetDamage(); } }
+      else if(m.t==='hh'&&NET.started&&!over){ if(hornet&&!hornet._net&&hornet.state!=='flee'){ meritAdd(p.ix,'guard'); hornetDamage(); } } }
     // recompute wedges from the live roster, then free every departed keeper's cells —
     // the ONE way sector ownership is derived, on every device, after any roster change
     function netRecomputeSectors(){ netAssignSectors();
@@ -5160,7 +5168,12 @@
       else if(m.t==='vst'){ netStripVoted(m.voted||[]); }
       else if(m.t==='tally'){ netVoteResult(m.k,m.v,m.yes,m.no,m.pass); }
       else if(m.t==='ev'){ toast(m.msg); }  // host-authored copy — same-room trust model
-      else if(m.t==='ord'){ NET.order={id:m.id,ic:m.ic,n:m.n,base:m.base,secs:m.secs,rem:m.secs,txt:m.txt}; try{ chime(440,587); }catch(e){} netOrderShow(); }
+      else if(m.t==='ord'){ NET.order=m.twin?{twin:m.twin,secs:m.secs,rem:m.secs}
+          :{id:m.id,ic:m.ic,n:m.n,who:(typeof m.who==='number'?m.who:null),duo:(Array.isArray(m.duo)?m.duo:null),base:m.base,baseB:m.baseB||0,secs:m.secs,rem:m.secs,txt:m.txt};
+        try{ chime(440,587); }catch(e){} netOrderShow();
+        if(NET.order.duo&&NET.order.duo.indexOf(NET.myIx)>=0){ const other=NET.players[NET.order.duo[0]===NET.myIx?NET.order.duo[1]:NET.order.duo[0]];
+          try{ fanfare(); }catch(e){} toast('🤝 <b>You’re in a pact with '+netEsc(other?other.name:'a keeper')+'!</b> Pull together — both deliver or neither does.'); }
+        else if(NET.order.who===NET.myIx){ try{ fanfare(); }catch(e){} toast('📣 <b>That one’s yours!</b> Your comb, your moment — the hive is watching.'); } }
       else if(m.t==='ordend'){ if(m.ok){ try{ fanfare(); }catch(e){} } NET.order=null; netOrderShow(); }
       else if(m.t==='end'){ NET.endSent=true; over=true; setSpeed(0); NET.order=null; netOrderShow(); netShowEnd(m.sum); } }
     function clientHostGone(){ if(!NET.on) return;
@@ -5192,6 +5205,7 @@
     function netSeedParty(){
       const resume=NET.resume; NET.resume=null;
       NET.endSent=false; NET.hadHornet=false; NET.order=null; NET.orderCD=18; NET.ordersDone=0; netOrderShow();
+      NET.merit=resume?(resume.merit||{}):{};
       NET.hiveName=resume?(resume.name||netHiveName()):netHiveName();
       if(!resume) partyClear();
       closeOverlay('mpHost'); closeOverlay('mpEnd'); $('intro').classList.add('hide');
@@ -5224,7 +5238,7 @@
         $('roleText').innerHTML='Paint <b>your</b> comb — 🍼 nursery, 🍯 shelves, 🔨 fresh wax. When the hive calls a <b>vote</b>, dance your answer. The bees do the rest.'; }
       openOverlay('mpRole'); }
     function netYearEnd(){ if(!NET.host||NET.endSent) return; NET.endSent=true;
-      const sum={peak:Math.round(peakPop), jars, rj, goals:goals?goals.filter(g=>g.done).length:0, orders:NET.ordersDone||0, died:P<1||over&&day<YEAR, hands:NET.players.filter(p=>!p.gone).length, name:NET.hiveName};
+      const sum={peak:Math.round(peakPop), jars, rj, goals:goals?goals.filter(g=>g.done).length:0, orders:NET.ordersDone||0, died:P<1||over&&day<YEAR, hands:NET.players.filter(p=>!p.gone).length, name:NET.hiveName, merit:NET.merit||{}};
       over=true; setSpeed(0); NET.order=null; netOrderShow(); partyClear();   // the ledger's year is finished either way
       netBcast({t:'end',sum}); netShowEnd(sum); }
     function netShowEnd(sum){ $('mpEndTitle').textContent=sum.died?'THE COMB FELL QUIET':'YOU WINTERED — TOGETHER';
@@ -5232,33 +5246,105 @@
         ?'<p>The colony didn’t reach spring. It happens to every keeper — the real ones too. Same crew, another go?</p>'
         :'<p>A whole year, kept by <b>'+(sum.hands||NET.players.filter(p=>!p.gone).length)+'</b> pairs of hands.</p>')
         +'<div class="mpHow" style="text-align:center">🐝 peak '+(sum.peak||0)+' bees · 🫙 '+(sum.jars||0)+' jars · ✧ '+(sum.rj||0)+' royal jelly · 📣 '+(sum.orders||0)+' orders filled · '+(sum.goals||0)+'/4 season goals</div>'
+        +'<div style="margin-top:8px">'+netMeritLines(sum.merit)+'</div>'
         +(NET.host?'':'<div class="mpHow" style="text-align:center;opacity:0.75">…or hold on — the Queen can call <b>another year</b> and you’re all still linked.</div>');
       $('mpEndAgain').classList.toggle('hide', !(NET.host&&NET.players.some(p=>p.ix>0&&!p.gone)));
       openOverlay('mpEnd'); if(!sum.died){ try{ fanfare(); }catch(e){} } }
     // ---- hive orders: Overcooked-style micro-goals the whole hive fills together ----
     // ("you take the wax, I'll steer forage" — short, loud, shared; the host runs
     //  the clock, everyone's paints count, +1 ✧ on success, a shrug on a miss)
+    // meas(who): who==null counts the whole comb; a player index counts only that
+    // keeper's wedge — the fuel for called-post orders ("Buzz's post: …")
     const NET_ORDERS=[
-      {id:'wax',  ic:'🔨', lo:5, hi:9, txt:n=>'Draw '+n+' fresh comb cells',   meas:()=>builtCells()},
-      {id:'brood',ic:'🍼', lo:4, hi:7, txt:n=>'Paint '+n+' new nursery cells', meas:()=>cells.reduce((a,c)=>a+((c.built&&c.zone==='brood')?1:0),0)},
-      {id:'shelf',ic:'🍯', lo:5, hi:9, txt:n=>'Zone '+n+' new honey shelves',  meas:()=>cells.reduce((a,c)=>a+((c.built&&c.zone==='honey')?1:0),0)},
-      {id:'bank', ic:'🏺', lo:3, hi:6, txt:n=>'Bank '+n+' cells of honey',     meas:()=>Math.round(honeyCellsStored())},
+      {id:'wax',  ic:'🔨', lo:5, hi:9, sect:1, txt:n=>'draw '+n+' fresh comb cells',
+        meas:w=>cells.reduce((a,c,i)=>a+((c.built&&(w==null||(netSector&&netSector[i]===w)))?1:0),0)},
+      {id:'brood',ic:'🍼', lo:4, hi:7, sect:1, txt:n=>'paint '+n+' new nursery cells',
+        meas:w=>cells.reduce((a,c,i)=>a+((c.built&&c.zone==='brood'&&(w==null||(netSector&&netSector[i]===w)))?1:0),0)},
+      {id:'shelf',ic:'🍯', lo:5, hi:9, sect:1, txt:n=>'zone '+n+' new honey shelves',
+        meas:w=>cells.reduce((a,c,i)=>a+((c.built&&c.zone==='honey'&&(w==null||(netSector&&netSector[i]===w)))?1:0),0)},
+      {id:'bank', ic:'🏺', lo:3, hi:6, sect:0, txt:n=>'bank '+n+' cells of honey',
+        meas:()=>Math.round(honeyCellsStored())},
     ];
     function netOrderShow(){ const el=$('mpOrder'); if(!el) return; const O=NET.order;
       if(!O){ el.classList.add('hide'); return; }
       el.classList.remove('hide');
-      const k=Math.max(0,(NET_ORDERS.find(o=>o.id===O.id)||NET_ORDERS[0]).meas()-O.base);
-      el.innerHTML='<b>'+O.ic+' Hive order:</b> '+O.txt+' <span class="ok">'+Math.min(k,O.n)+'/'+O.n+'</span><div id="mpOrderBar"><i style="width:'+Math.max(0,Math.min(100,100*O.rem/O.secs))+'%"></i></div>'; }
-    function hostStartOrder(){ const t=NET_ORDERS[(Math.random()*NET_ORDERS.length)|0];
-      const n=t.lo+((Math.random()*(t.hi-t.lo+1))|0);
-      NET.order={id:t.id, ic:t.ic, n, base:t.meas(), secs:50, rem:50, txt:t.txt(n)};
-      netBcast({t:'ord',id:t.id,n,base:NET.order.base,secs:50,txt:NET.order.txt,ic:t.ic});
-      if(!NET.orderTaught){ NET.orderTaught=true; netToastAll('📣 <b>Hive order!</b> Anyone’s comb counts — call your jobs out loud.'); }
+      let lead,prog;
+      if(O.twin){ const A=O.twin.a, B=O.twin.b;
+        const tA=NET_ORDERS.find(o=>o.id===A.id), tB=NET_ORDERS.find(o=>o.id===B.id);
+        const ka=tA?Math.max(0,tA.meas(null)-A.base):0, kb=tB?Math.max(0,tB.meas(null)-B.base):0;
+        el.innerHTML='<b style="color:#5a3a10">🤝 Twin order:</b> '+A.ic+' '+A.txt+' <span class="ok">'+Math.min(ka,A.n)+'/'+A.n+'</span> + '+B.ic+' '+B.txt+' <span class="ok">'+Math.min(kb,B.n)+'/'+B.n+'</span>'
+          +'<div id="mpOrderBar"><i style="width:'+Math.max(0,Math.min(100,100*O.rem/O.secs))+'%"></i></div>';
+        return; }
+      const t=NET_ORDERS.find(o=>o.id===O.id)||NET_ORDERS[0];
+      if(O.duo){ const a=NET.players[O.duo[0]], b=NET.players[O.duo[1]];
+        const ka=Math.max(0,t.meas(O.duo[0])-O.base), kb=Math.max(0,t.meas(O.duo[1])-(O.baseB||0));
+        lead='<b style="color:#5a3a10">🤝 Pact — '+netEsc(a?a.name:'?')+' & '+netEsc(b?b.name:'?')+':</b> ';
+        prog=O.txt+' each <span class="ok">'+Math.min(ka,O.n)+'/'+O.n+' · '+Math.min(kb,O.n)+'/'+O.n+'</span>'; }
+      else{ const k=Math.max(0,t.meas(O.who==null?null:O.who)-O.base);
+        const p=(O.who!=null)?NET.players[O.who]:null;
+        lead=p?('<b style="color:#5a3a10">'+O.ic+' '+netEsc(p.name)+'’s post'+((O.who===NET.myIx)?' (you!)':'')+':</b> ')
+              :('<b>'+O.ic+' Hive order:</b> ');
+        prog=O.txt+' <span class="ok">'+Math.min(k,O.n)+'/'+O.n+'</span>'; }
+      el.innerHTML=lead+prog+'<div id="mpOrderBar"><i style="width:'+Math.max(0,Math.min(100,100*O.rem/O.secs))+'%"></i></div>'; }
+    // ---- keeper merit: the individual payoff channel, earned almost entirely
+    // through pro-social play (game-theory note in docs/MULTIPLAYER.md: helping
+    // is the merit-dominant strategy by construction — a Stag Hunt, never a
+    // Prisoner's Dilemma; defection is never the better unilateral move)
+    function meritAdd(ix,k){ if(!NET.host) return;
+      const m=NET.merit[ix]||(NET.merit[ix]={aid:0,guard:0,voice:0,pact:0,post:0}); m[k]=(m[k]||0)+1; }
+    const MERIT_TITLES=[['pact','🤝 Pact-Keeper'],['guard','🛡 Guardian of the Gate'],['aid','🌾 The Good Neighbor'],['voice','💬 Voice of the Meadow'],['post','🍯 Steady Hands']];
+    function netMeritLines(mer){ return NET.players.map(p=>{ const m=(mer&&mer[p.ix])||null; let best=null,bv=0;
+      if(m) for(const [k,label] of MERIT_TITLES){ if((m[k]||0)>bv){ bv=m[k]; best=label; } }
+      return '<div class="mpP"><i style="background:'+NETCOL[p.ix]+'"></i>'+(p.ix===0?'👑 ':'🐝 ')+netEsc(p.name)+'<span style="margin-left:auto;opacity:0.9">'+(best||'🕯 Kept the Watch')+'</span></div>'; }).join(''); }
+    function hostStartOrder(){
+      // with 3+ keepers the order table opens up: some call a specific post
+      // (Overcooked role friction), some are PACTS — two keepers, equal targets
+      // in their own wedges, both-or-nothing for a doubled reward. A stag hunt:
+      // the live shared progress chip is the common knowledge that makes
+      // pulling together the obviously rational choice.
+      const workers=NET.players.filter(p=>p.ix>0&&!p.gone);
+      const roll=Math.random();
+      if(roll<0.30){ // twin order: two jobs, one clock, split however the room likes —
+        // the duo-sized pact (division of labour needs no third player)
+        const sp=NET_ORDERS.filter(t=>t.sect);
+        const i=(Math.random()*sp.length)|0, j=(i+1+((Math.random()*(sp.length-1))|0))%sp.length;
+        const tA=sp[i], tB=sp[j];
+        const twin={a:{id:tA.id,ic:tA.ic,n:tA.lo,base:tA.meas(null),txt:tA.txt(tA.lo)},
+                    b:{id:tB.id,ic:tB.ic,n:tB.lo,base:tB.meas(null),txt:tB.txt(tB.lo)}};
+        NET.order={twin, secs:60, rem:60};
+        netBcast({t:'ord',twin,secs:60});
+        netToastAll('🤝 <b>Twin order!</b> Two jobs, one clock — split them however you like. Worth double.');
+        try{ chime(440,587); }catch(e){} netOrderShow(); return; }
+      const pact=workers.length>=2&&roll<0.48, targeted=!pact&&workers.length>=2&&roll<0.72;
+      const pool=(pact||targeted)?NET_ORDERS.filter(t=>t.sect):NET_ORDERS;
+      const t=pool[(Math.random()*pool.length)|0];
+      const full=t.lo+((Math.random()*(t.hi-t.lo+1))|0);
+      const n=Math.max(2,(pact||targeted)?Math.ceil(full/2):full);
+      if(pact){ const i=(Math.random()*workers.length)|0; let j=(i+1+((Math.random()*(workers.length-1))|0))%workers.length;
+        const duo=[workers[i].ix,workers[j].ix];
+        NET.order={id:t.id, ic:t.ic, n, duo, base:t.meas(duo[0]), baseB:t.meas(duo[1]), secs:60, rem:60, txt:t.txt(n)};
+        netBcast({t:'ord',id:t.id,n,duo,base:NET.order.base,baseB:NET.order.baseB,secs:60,txt:NET.order.txt,ic:t.ic});
+        const a=NET.players[duo[0]], b=NET.players[duo[1]];
+        netToastAll('🤝 <b>A pact!</b> '+netEsc(a?a.name:'?')+' & '+netEsc(b?b.name:'?')+' — '+t.txt(n)+' <b>each</b>. Both deliver or neither does. Worth double.'); }
+      else{ const who=targeted?workers[(Math.random()*workers.length)|0].ix:null;
+        NET.order={id:t.id, ic:t.ic, n, who, base:t.meas(who), secs:50, rem:50, txt:t.txt(n)};
+        netBcast({t:'ord',id:t.id,n,who,base:NET.order.base,secs:50,txt:NET.order.txt,ic:t.ic});
+        if(!NET.orderTaught){ NET.orderTaught=true; netToastAll('📣 <b>Hive order!</b> Anyone’s comb counts — call your jobs out loud.'); }
+        else if(who!=null){ const p=NET.players[who]; netToastAll('📣 The hive calls on <b>'+netEsc(p?p.name:'a keeper')+'</b> — everyone else, hold the fort.'); } }
       try{ chime(440,587); }catch(e){} netOrderShow(); }
     function hostEndOrder(ok){ const O=NET.order; if(!O) return; NET.order=null; NET.orderCD=30+Math.random()*30;
       netBcast({t:'ordend',ok:ok?1:0});
-      if(ok){ rj++; NET.ordersDone=(NET.ordersDone||0)+1; netToastAll('✨ Order filled — '+O.txt.toLowerCase()+'. +1 ✧ royal jelly.'); try{ fanfare(); }catch(e){} }
-      else toast('🌒 The dusk took that order — no harm done.');
+      if(ok){ NET.ordersDone=(NET.ordersDone||0)+1;
+        if(O.twin){ rj+=2; NET.players.forEach(p=>{ if(!p.gone) meritAdd(p.ix,'pact'); });
+          netToastAll('🤝✨ <b>Twin order delivered</b> — '+O.twin.a.txt+' and '+O.twin.b.txt+'. <b>+2 ✧!</b> Many hands, one hive.'); }
+        else if(O.duo){ rj+=2; meritAdd(O.duo[0],'pact'); meritAdd(O.duo[1],'pact');
+          const a=NET.players[O.duo[0]], b=NET.players[O.duo[1]];
+          netToastAll('🤝✨ <b>'+netEsc(a?a.name:'?')+' & '+netEsc(b?b.name:'?')+'</b> kept the pact — '+O.txt+' each. <b>+2 ✧!</b> That’s the hive way.'); }
+        else{ rj++; const p=(O.who!=null)?NET.players[O.who]:null;
+          if(O.who!=null) meritAdd(O.who,'post');
+          netToastAll('✨ '+(p?('<b>'+netEsc(p.name)+'</b> delivered'):'Order filled')+' — '+O.txt+'. +1 ✧ royal jelly.'); }
+        try{ fanfare(); }catch(e){} }
+      else toast((O.duo||O.twin)?'🌒 The pact slipped away — no harm done; the next one will come.':'🌒 The dusk took that order — no harm done.');
       netOrderShow(); }
     // ---- per-frame housekeeping: vote clock, snapshots, orders, link health ----
     function netFrame(dt){ if(!NET.on) return;
@@ -5282,12 +5368,20 @@
       if(over){ netYearEnd(); return; }
       NET.snapT+=dt; if(NET.snapT>0.4){ NET.snapT=0; netBcast({t:'snap',s:netSnapObj()}); }
       NET.ledgerT=(NET.ledgerT||0)+dt; if(NET.ledgerT>6){ NET.ledgerT=0; partyWrite(); }
+      if(!NET.voteTaught&&day>14&&NET.voteN===0&&!NET.vote){ NET.voteTaught=true;
+        netToastAll('💃 The meadow is waking — open <b>☀ Meadow</b> and tap a bloom. Anyone can call the hive’s first vote.'); }
       if(!paused){ // orders tick only while the hive is actually living
         if(NET.order){ NET.order.rem-=dt;
           NET.ordT=(NET.ordT||0)+dt; if(NET.ordT>0.2){ NET.ordT=0; netOrderShow(); }
-          const t=NET_ORDERS.find(o=>o.id===NET.order.id);
-          if(t&&t.meas()-NET.order.base>=NET.order.n) hostEndOrder(true);
-          else if(NET.order.rem<=0) hostEndOrder(false); }
+          const O=NET.order; let done=false;
+          if(O.twin){ const tA=NET_ORDERS.find(o=>o.id===O.twin.a.id), tB=NET_ORDERS.find(o=>o.id===O.twin.b.id);
+            done=tA&&tB&&tA.meas(null)-O.twin.a.base>=O.twin.a.n&&tB.meas(null)-O.twin.b.base>=O.twin.b.n; }
+          else{ const t=NET_ORDERS.find(o=>o.id===O.id);
+            done=t&&(O.duo
+              ? (t.meas(O.duo[0])-O.base>=O.n && t.meas(O.duo[1])-(O.baseB||0)>=O.n)
+              : (t.meas(O.who==null?null:O.who)-O.base>=O.n)); }
+          if(done) hostEndOrder(true);
+          else if(O.rem<=0) hostEndOrder(false); }
         else if(day>2&&currentTemp()>=WIN_TEMP&&!NET.vote){ NET.orderCD=(NET.orderCD===undefined?18:NET.orderCD)-dt;
           if(NET.orderCD<=0) hostStartOrder(); } }
       const h=!!hornet; if(h!==NET.hadHornet){ NET.hadHornet=h;
@@ -5311,7 +5405,7 @@
       try{ if(joinPc) joinPc.close(); }catch(e){}
       joinPc=null; joinDc=null; NET.on=false; NET.host=false; NET.started=false; NET.endSent=false;
       NET.players=[]; NET.pend=null; NET.vote=null; NET.cVote=null; NET.myIx=-1; netVoteUI=null; netSector=null; netVotedIx=[];
-      NET.order=null; NET.orderCD=undefined; NET.ordersDone=0; NET.stale=false; NET.orderTaught=false; NET.resume=null; NET.hiveName=''; netOrderShow();
+      NET.order=null; NET.orderCD=undefined; NET.ordersDone=0; NET.stale=false; NET.orderTaught=false; NET.voteTaught=false; NET.resume=null; NET.hiveName=''; NET.merit={}; netOrderShow();
       document.body.classList.remove('netc');
       $('replyWrap').classList.add('hide'); $('inviteCode').value=''; $('answerIn').value=''; $('joinIn').value=''; $('replyCode').value='';
       $('mpPlayers').innerHTML=''; $('mpPlayersJ').innerHTML=''; netStripSync(); }
