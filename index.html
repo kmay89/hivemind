@@ -1083,6 +1083,11 @@
   .hbRow .ic{ flex:none; font-size:15px; line-height:1.45; }
   .hbRow .bd{ flex:1; min-width:0; font:500 12.5px 'Bricolage Grotesque',sans-serif; line-height:1.5; overflow-wrap:break-word; }
   .hbRow .dy{ flex:none; font:500 9.5px 'JetBrains Mono',monospace; color:var(--dim); padding-top:3px; }
+  #combPlanC{ width:min(232px,64vw); height:auto; display:block; margin:10px auto 4px; }
+  .cpLines{ display:flex; flex-direction:column; gap:7px; margin-top:8px; text-align:left; }
+  .cpLines>div{ display:flex; gap:10px; align-items:baseline; font:500 13px 'Bricolage Grotesque',sans-serif; line-height:1.45; }
+  .cpLines>div>span:first-child{ flex:none; font-size:17px; }
+  .cpLines b{ color:var(--gold); }
   /* the dance floor: each option waggles at its own conviction */
   #dcOpts{ display:flex; flex-direction:column; gap:8px; margin-top:10px; }
   .dcOpt{ display:flex; align-items:center; gap:11px; text-align:left; padding:10px 12px; font-size:14px;
@@ -1605,6 +1610,20 @@
       </div>
     </div>
   </div>
+  <!-- the good comb: layout strategy as one picture, three lines -->
+  <div class="ov hide" id="combPlan" role="dialog" aria-modal="true">
+    <div class="card panel">
+      <div class="mpBadge">🗺 the good comb</div>
+      <h1 style="font-size:21px">WARM HEART, SWEET WALLS</h1>
+      <canvas id="combPlanC" aria-label="The ideal comb layout — nursery centre, honey ring, room at the rim"></canvas>
+      <div class="cpLines">
+        <div><span>🍼</span><span><b>Nursery in the middle</b> — babies need the warm heart.</span></div>
+        <div><span>🍯</span><span><b>Shelves around it</b> — pantry and blanket in one.</span></div>
+        <div><span>🔨</span><span><b>Build one step ahead</b> — wax costs honey, so don’t sprawl.</span></div>
+      </div>
+      <button class="btn pulse" id="combPlanGo" style="margin-top:11px">Got it — to the comb ▶</button>
+    </div>
+  </div>
   <!-- the scouts return: a waggle-dance quorum, interrupting play the way real scouts do -->
   <div class="ov hide" id="danceCall" role="dialog" aria-modal="true">
     <div class="card panel">
@@ -1674,7 +1693,7 @@
     // / non-https, where no service worker runs) — the real source of truth is sw.js's
     // VERSION; syncGameVer() below asks the running worker and corrects this label
     // live, so the two only ever drift cosmetically for a moment, never permanently.
-    let GAME_VER='2026.07.30.28';
+    let GAME_VER='2026.07.30.29';
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -4518,9 +4537,32 @@
     function coachContinue(){ if(!coachWait) return; coachWait=false;
       $('coach').classList.remove('show'); if(!onboard) return;
       if(coachStep>=COACH.length){ endCoach(); } else showCoach(); }
+    // the blueprint: comb strategy as one picture — concentric truth, three lines.
+    // The pattern mirrors a real frame: brood nest at the warm centre, a band of
+    // stores wrapped around it, empty fresh wax at the working rim.
+    function drawCombPlan(){ const cv=$('combPlanC'); if(!cv) return;
+      const s=15, W2=290, H2=250; cv.width=W2*DPR; cv.height=H2*DPR;
+      const g=cv.getContext('2d'); g.setTransform(DPR,0,0,DPR,0,0); g.clearRect(0,0,W2,H2);
+      const cx=W2/2, cy=H2/2;
+      for(let q=-3;q<=3;q++) for(let r=-3;r<=3;r++){ const sq=-q-r; if(Math.abs(sq)>3) continue;
+        const d=Math.max(Math.abs(q),Math.abs(r),Math.abs(sq));
+        const x=cx+s*SQ3*(q+r/2), y=cy+s*1.5*r;
+        hexPathOn(g,x,y,s*0.92);
+        if(d<=1){ g.fillStyle='rgba(127,182,242,0.85)'; g.fill(); g.strokeStyle='#3d6ea8'; g.lineWidth=1.5; g.stroke(); }
+        else if(d===2){ g.fillStyle='rgba(255,208,102,0.9)'; g.fill(); g.strokeStyle='#9a6d1c'; g.lineWidth=1.5; g.stroke(); }
+        else { g.strokeStyle='rgba(255,214,107,0.45)'; g.lineWidth=1.2; g.setLineDash([4,4]); g.stroke(); g.setLineDash([]); } }
+      g.font='17px sans-serif'; g.textAlign='center'; g.textBaseline='middle';
+      g.fillText('🍼',cx,cy);
+      g.fillText('🍯',cx+s*SQ3*2,cy);
+      g.fillText('🔨',cx+s*SQ3*1.5,cy-s*4.5); }
+    press($('combPlanGo'),()=>closeOverlay('combPlan'));
+    function showCombPlan(){ let seen=false; try{ seen=localStorage.getItem('hm_combplan')==='1'; }catch(e){}
+      if(seen) return false; lsSet('hm_combplan','1');
+      drawCombPlan(); openOverlay('combPlan'); try{ chime(440,587); }catch(e){} return true; }
+    window.__hmPlan=()=>{ drawCombPlan(); openOverlay('combPlan'); };   // dev/test handle, like __hm
     function endCoach(){ onboard=false; finishType(false); clearSpots(); $('coach').classList.remove('show'); setReveal(false); forecastCache=forecastToSpring();
       goals=makeGoals(); lastSI=seasonIdx(day); setSpeed(1); saveGame();
-      setTimeout(()=>{ tip('notes','Hazel: Nothing here is a secret — the <b>?</b> up top keeps all of it. Read any of it again whenever you like, and take your time. The bees aren\u2019t going anywhere.'); }, 1500); }
+      setTimeout(()=>{ if(!showCombPlan()) tip('notes','Hazel: The <b>?</b> up top keeps every note. Take your time — the bees aren’t going anywhere.'); }, 1200); }
     press($('coachBtn'),()=>{ if(coachWait){ if(twActive){ finishType(); } else coachContinue(); return; } const s=COACH[coachStep]; if(s&&!s.until) advanceCoach(); });
     press($('coachSkip'),()=>{ coachWait=false; seedStarterZones(); endCoach(); });
     press($('coach'),e=>{ if(e.target&&e.target.closest&&(e.target.closest('#coachBtn')||e.target.closest('#coachSkip'))) return; if(twActive) finishType(); });
