@@ -67,6 +67,8 @@ function serve() {
     await page.waitForTimeout(250);
     for (const rr of [2.9, 3.5]) for (let k = 0; k < 12; k++) { const a = k * Math.PI / 6 + (rr > 3 ? Math.PI / 12 : 0);
       await tap(v.hiveCx + Math.cos(a) * v.size * rr, v.hiveCy + Math.sin(a) * v.size * rr); }
+    // painting arms the keeper's-page lessons (LESSON_AT) — thank them and move on
+    for (let i = 0; i < 5; i++) { await page.keyboard.press('Escape'); await page.waitForTimeout(350); }
     await page.evaluate(() => { const b = document.querySelector('[data-sp="3"]'); if (b) b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 })); });
     await page.waitForTimeout(22000);   // ~60+ game days: zoned comb, stores, capped honey
     await page.evaluate(() => { const b = document.querySelector('[data-sp="1"]'); if (b) b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 })); });
