@@ -1036,6 +1036,65 @@
   @keyframes ordWin{ 0%{ transform:translateX(-50%) scale(1.14); } 100%{ transform:translateX(-50%) scale(1); } }
   #voteBar{ transition:background .3s; }
   #voteBar.low{ background:linear-gradient(90deg,#ff9d5a,#ff5a3a); }
+  /* ===== title screen: one loud door, two quiet side doors, prefs at the edges ===== */
+  .modeCap{ display:flex; align-items:center; justify-content:center; gap:9px; margin:14px 0 7px;
+    font:700 10px 'JetBrains Mono',monospace; letter-spacing:2px; color:var(--dim); text-transform:uppercase; }
+  .modeCap::before{ content:''; flex:0 0 36px; height:1px; background:linear-gradient(90deg,transparent,rgba(255,214,107,.35)); }
+  .modeCap::after{ content:''; flex:0 0 36px; height:1px; background:linear-gradient(90deg,rgba(255,214,107,.35),transparent); }
+  .modeRow{ display:flex; gap:9px; align-items:stretch; }
+  .btn.mode{ flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; gap:3px; padding:11px 8px 9px;
+    font-size:13.5px; font-weight:800; letter-spacing:0; color:var(--text);
+    background:linear-gradient(180deg, rgba(255,214,107,.14), rgba(255,214,107,.05));
+    border:1.5px solid rgba(255,214,107,.35);
+    box-shadow:0 3px 0 rgba(0,0,0,.35), 0 8px 16px rgba(0,0,0,.28); }
+  .btn.mode::before{ display:none; }
+  /* the Daily button's loud ID styling steps back when it lives in the mode row */
+  #startDaily.mode{ background:linear-gradient(180deg, rgba(255,214,107,.14), rgba(255,214,107,.05)); color:var(--text);
+    border:1.5px solid rgba(255,214,107,.35); box-shadow:0 3px 0 rgba(0,0,0,.35), 0 8px 16px rgba(0,0,0,.28); }
+  #startDaily.mode::after{ display:none; }
+  #startDaily.mode:hover{ transform:translateY(-2px); filter:brightness(1.1); }
+  #startDaily.mode:active{ transform:translateY(3px); box-shadow:0 1px 0 rgba(0,0,0,.3); }
+  .btn.mode .mSub b{ color:var(--gold); font-weight:700; }
+  .btn.mode .mIc{ font-size:19px; line-height:1; }
+  .btn.mode .mSub{ font:500 9.5px 'JetBrains Mono',monospace; color:var(--dim); line-height:1.4; max-width:100%;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .prefRow{ display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; margin-top:13px; }
+  .prefRow #sndInvite{ margin:0; padding:7px 12px; font-size:11.5px; }
+  .prefRow .paceMini{ display:flex; align-items:center; gap:8px; }
+  .prefRow .paceCap{ margin:0; }
+  .prefRow #paceRow{ display:flex; gap:5px; margin:0; }
+  .prefRow .pseg{ flex:0 0 auto; }
+  /* ===== the long view & the almanac: reading cards ===== */
+  .card.rf{ text-align:left; max-width:min(94vw,540px); max-height:88vh; overflow-y:auto; }
+  .card.rf h1,.card.rf .sub{ text-align:center; }
+  .rfRow{ display:flex; justify-content:space-between; align-items:baseline; gap:10px; font:600 13px 'Bricolage Grotesque',sans-serif; padding:3px 0; }
+  .rfRow b{ font-family:'JetBrains Mono',monospace; font-size:12.5px; white-space:nowrap; }
+  .rfWhy{ font:500 11px 'JetBrains Mono',monospace; color:var(--dim); line-height:1.6; margin:2px 0 9px; }
+  .rfWhy b{ color:var(--gold); }
+  .rfAdj{ display:inline-block; font:700 10px 'JetBrains Mono',monospace; color:#1c1508; background:linear-gradient(180deg,#ffe9a8,#ffd66b); border-radius:8px; padding:2px 8px; margin:3px 5px 0 0; }
+  .rfCap{ font:500 11px 'JetBrains Mono',monospace; color:var(--dim); margin-top:6px; line-height:1.55; }
+  .rfCap b,.rfCap .good2{ color:var(--gold); }
+  #rfChart{ width:100%; height:120px; border-radius:9px; background:rgba(0,0,0,0.22); display:block; }
+  .good2{ color:var(--good); } .bad2{ color:var(--bad); }
+  #reportFullBtn,#hazelBookBtn{ cursor:pointer; color:var(--gold); font:700 9.5px 'JetBrains Mono',monospace; letter-spacing:.08em; margin-right:12px; opacity:.85; text-transform:uppercase; }
+  #reportFullBtn:hover,#hazelBookBtn:hover{ opacity:1; }
+  .hbSeason{ margin:14px 0 4px; font:800 13.5px 'Bricolage Grotesque',sans-serif; color:var(--gold); letter-spacing:.03em; }
+  .hbRow{ display:flex; gap:9px; padding:6px 2px; border-bottom:1px dashed rgba(255,214,107,0.14); }
+  .hbRow .ic{ flex:none; font-size:15px; line-height:1.45; }
+  .hbRow .bd{ flex:1; min-width:0; font:500 12.5px 'Bricolage Grotesque',sans-serif; line-height:1.5; overflow-wrap:break-word; }
+  .hbRow .dy{ flex:none; font:500 9.5px 'JetBrains Mono',monospace; color:var(--dim); padding-top:3px; }
+  /* the dance floor: each option waggles at its own conviction */
+  #dcOpts{ display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+  .dcOpt{ display:flex; align-items:center; gap:11px; text-align:left; padding:10px 12px; font-size:14px;
+    background:linear-gradient(180deg, rgba(255,214,107,.13), rgba(255,214,107,.05)); color:var(--text);
+    border:1.5px solid rgba(255,214,107,.35); box-shadow:0 3px 0 rgba(0,0,0,.35); }
+  .dcOpt::before{ display:none; }
+  .dcBee{ display:inline-block; font-size:21px; flex:none; animation:dcWag 1s ease-in-out infinite; transform-origin:55% 60%; }
+  .dcTx{ flex:1; min-width:0; } .dcTx b{ display:block; }
+  .dcTx i{ display:block; font:500 10px 'JetBrains Mono',monospace; color:var(--dim); font-style:normal; margin-top:1px; }
+  .dcCur{ font:600 9.5px 'JetBrains Mono',monospace; color:var(--gold); }
+  .dcQ{ flex:none; font:700 12px 'JetBrains Mono',monospace; color:var(--gold); letter-spacing:1px; }
+  @keyframes dcWag{ 0%,100%{ transform:rotate(-16deg) translateX(-2px); } 50%{ transform:rotate(16deg) translateX(2px); } }
   .qrBrew{ display:flex; align-items:center; justify-content:center; gap:10px; min-height:110px; font:600 12.5px 'Bricolage Grotesque',sans-serif; color:#6a4d1e; }
   .qrBrew .bee{ display:inline-block; font-size:20px; animation:brewOrbit 1.3s linear infinite; }
   @keyframes brewOrbit{ 0%{ transform:rotate(0deg) translateX(13px) rotate(0deg); } 100%{ transform:rotate(360deg) translateX(13px) rotate(-360deg); } }
@@ -1242,7 +1301,7 @@
     </div>
   </div>
   <div id="chatlog" class="panel hide">
-    <div class="rHead"><span>HAZEL’S LOG</span><span id="chatClear">clear</span><span id="chatX">✕</span></div>
+    <div class="rHead"><span>HAZEL’S LOG</span><span id="hazelBookBtn" title="The almanac — every word, season by season">📖 almanac</span><span id="chatClear">clear</span><span id="chatX">✕</span></div>
     <div id="chatRows"></div>
   </div>
   <div id="unlockChip" class="panel hide"><span class="uc1">✦ keeper’s page unlocked</span><span class="uc2" id="unlockName">BROOD</span><span class="uc3">+1 ✧ royal jelly</span></div>
@@ -1266,7 +1325,7 @@
   </div>
 
   <div id="report" class="panel hide">
-    <div class="rHead"><span>Hive report</span><span id="reportX">✕</span></div>
+    <div class="rHead"><span>Hive report</span><span id="reportFullBtn" title="The long view — what matters and which dial moves it">⤢ the long view</span><span id="reportX">✕</span></div>
     <div class="sec" id="planSec">
       <h3>This season's plan</h3>
       <div class="cap" id="planFocus" style="color:var(--gold);font-weight:600">—</div>
@@ -1306,7 +1365,7 @@
         <div class="hexrow"><span>cells built</span><b id="hxCells">0</b></div>
         <div class="hexrow"><span>complete rings</span><b id="hxRings">0</b><i id="hxSeq"></i></div>
         <div class="hexrow"><span>wax saved vs. square cells</span><b id="hxSave" class="good">—</b></div>
-        <div class="hexrow"><span>wax saved vs. triangles</span><b id="hxSaveSq">—</b></div>
+        <div class="hexrow"><span>wax saved vs. triangle cells</span><b id="hxSaveSq">—</b></div>
       </div>
       <div class="cap" id="hexNote">A hexagon holds a given area with the shortest wall of any tile — the least wax. Bees have built this since long before it was a theorem.</div>
     </div>
@@ -1374,23 +1433,29 @@
       <h1>HIVEMIND</h1>
       <div class="sub">a beekeeping story</div>
       <p>After forty years, a beekeeper is hanging up her veil — and her hillside of hives needs a new pair of hands. Yours.</p>
-      <button class="colink" id="whyBees" type="button">🌸 why bees matter →</button>
-      <div id="sndInvite" class="on" tabindex="0" role="checkbox" aria-checked="true">
-        <span class="box"><i>✓</i></span><span>🎧 Play with sound<span class="sub2"> — music &amp; the hive</span></span>
-      </div>
-      <div class="paceCap" id="paceLabel">how fast should the seasons turn?</div>
-      <div id="paceRow" role="radiogroup" aria-labelledby="paceLabel">
-        <div class="pseg" data-pace="easy" tabindex="0" role="radio" aria-checked="false">Easy<i>gentle days</i></div>
-        <div class="pseg" data-pace="medium" tabindex="0" role="radio" aria-checked="false">Medium<i>keeper’s pace</i></div>
-        <div class="pseg" data-pace="hard" tabindex="0" role="radio" aria-checked="false">Hard<i>seasons rush</i></div>
-      </div>
       <div id="startBtns">
         <button class="btn ghost hide" id="startCont">Continue</button>
         <button class="btn pulse" id="startNew">Found a new colony</button>
       </div>
-      <button class="btn" id="startDaily" style="margin-top:8px"><span class="dsun">☀</span> Daily Challenge</button>
-      <button class="btn" id="startParty" style="margin-top:8px">🐝 Play Together <span style="opacity:0.7;font-size:11px">· 2–8 keepers, one hive</span></button>
-      <div id="dailyCap" style="font:500 11px 'JetBrains Mono',monospace; color:var(--dim); margin-top:5px"></div>
+      <div class="modeCap">more ways to keep</div>
+      <div class="modeRow">
+        <button class="btn mode" id="startDaily"><span class="mIc"><span class="dsun">☀</span></span><b>Daily Challenge</b><span class="mSub" id="dailyCap"></span></button>
+        <button class="btn mode" id="startParty"><span class="mIc">🐝</span><b>Play Together</b><span class="mSub">2–8 keepers, one hive · same room</span></button>
+      </div>
+      <div class="prefRow">
+        <div id="sndInvite" class="on" tabindex="0" role="checkbox" aria-checked="true">
+          <span class="box"><i>✓</i></span><span>🎧 Sound<span class="sub2"> — music &amp; the hive</span></span>
+        </div>
+        <div class="paceMini">
+          <div class="paceCap" id="paceLabel">seasons</div>
+          <div id="paceRow" role="radiogroup" aria-labelledby="paceLabel">
+            <div class="pseg" data-pace="easy" tabindex="0" role="radio" aria-checked="false">Easy<i>gentle days</i></div>
+            <div class="pseg" data-pace="medium" tabindex="0" role="radio" aria-checked="false">Medium<i>keeper’s pace</i></div>
+            <div class="pseg" data-pace="hard" tabindex="0" role="radio" aria-checked="false">Hard<i>seasons rush</i></div>
+          </div>
+        </div>
+      </div>
+      <button class="colink" id="whyBees" type="button">🌸 why bees matter →</button>
       <div class="cardLinks">
         <a href="about.html" target="_blank" rel="noopener">About</a><a href="privacy.html" target="_blank" rel="noopener">Privacy</a><a href="terms.html" target="_blank" rel="noopener">Terms</a>
       </div>
@@ -1521,6 +1586,48 @@
   </div>
   <div id="mpStrip" class="hide" aria-hidden="true"></div>
   <div id="mpOrder" class="hide" role="status"></div>
+
+  <!-- the long view: the hive report, explained — every number with its lever -->
+  <div class="ov hide" id="reportFull" role="dialog" aria-modal="true">
+    <div class="card panel rf">
+      <h1>HIVE REPORT</h1>
+      <div class="sub">the long view — what matters, and which dial moves it</div>
+      <div class="mpSec">this season</div><div id="rfPlan"></div>
+      <div class="mpSec">the honey ledger</div><div id="rfLedger"></div>
+      <div class="mpSec">the year ahead</div>
+      <canvas id="rfChart" aria-label="Projected honey through the year"></canvas>
+      <div class="rfCap" id="rfChartCap"></div>
+      <div class="mpSec">the colony at work</div><div id="rfWork"></div>
+      <div class="mpSec">geometry of the comb</div><div id="rfGeom"></div>
+      <div class="mpRow" style="margin-top:12px">
+        <button class="btn ghost sm" id="reportFullX">‹ Back to the comb</button>
+        <button class="btn sm" id="rfMeadow">🌼 Open the Meadow</button>
+      </div>
+    </div>
+  </div>
+  <!-- the scouts return: a waggle-dance quorum, interrupting play the way real scouts do -->
+  <div class="ov hide" id="danceCall" role="dialog" aria-modal="true">
+    <div class="card panel">
+      <div class="mpBadge">💃 the scouts return</div>
+      <h1 style="font-size:21px">THE COMB FLOOR IS BUZZING</h1>
+      <div class="sub">each dance argues for a patch — the longer the waggle, the richer the find</div>
+      <div id="dcOpts"></div>
+      <div class="mpRow" style="margin-top:10px">
+        <button class="btn ghost sm" id="dcSkip">Not now</button>
+        <button class="btn sm" id="dcLet">Let the hive decide 🐝</button>
+      </div>
+      <div class="mpHow" style="text-align:center">Real colonies choose exactly this way — dances compete, followers join, a quorum tips the hive. <i>(Seeley, “Honeybee Democracy.”)</i></div>
+    </div>
+  </div>
+  <!-- Hazel's almanac: her whole log, kept like a keeper's journal -->
+  <div class="ov hide" id="hazelBook" role="dialog" aria-modal="true">
+    <div class="card panel rf">
+      <h1>HAZEL’S ALMANAC</h1>
+      <div class="sub" id="hbSub">every word, kept — the seasons in her voice</div>
+      <div id="hbRows"></div>
+      <button class="btn ghost sm" id="hazelBookX" style="margin-top:12px">‹ Back to the comb</button>
+    </div>
+  </div>
 
   <!-- cinematic intro -->
   <div class="ov hide" id="story">
@@ -2130,7 +2237,7 @@
       return {id:type.id, ic:type.ic, name:type.name, metric:type.metric, tgt}; }
     function syncDailyCap(){ const el=$('dailyCap'); if(!el) return;
       const c=pickTodayChallenge(), doneToday=(DAILY.lastDone===todayKey()), streak=DAILY.streak||0;
-      const line = doneToday ? ('✓ done today · '+c.ic+' '+c.name(c.tgt)) : ('☀ today · '+c.ic+' <b>'+c.name(c.tgt)+'</b>');
+      const line = doneToday ? ('✓ done · '+c.ic+' '+c.name(c.tgt)) : ('today · '+c.ic+' <b>'+c.name(c.tgt)+'</b>');   // lives inside the Daily card now — no need to re-announce the sun
       el.innerHTML = line + (streak>0?(' · 🔥 '+streak+'-day streak'):'') + ((DAILY.bestDate===todayKey()&&DAILY.best)?(' · best '+DAILY.best.toLocaleString()):''); }
     function dailyComplete(){ if(dailyDone) return; dailyDone=true; const tk=todayKey();
       if(DAILY.lastDone!==tk){ const streak=(DAILY.lastDone===yesterKey())?((DAILY.streak||0)+1):1;
@@ -3195,7 +3302,7 @@
       for(const s of flagged){ if(budget<=0)break; if(honeyU<reserve){ buildStall='lean'; break; }
         const step=Math.min(1-(s.bp||0), budget); s.bp=(s.bp||0)+step; budget-=step;
         if(s.bp<1) continue; // still drawing — the rising fill shows the progress
-        honeyU-=cost; waxAccum+=cost; s.built=true; s.flagExpand=false; s.bp=0;
+        honeyU-=cost; waxAccum+=cost; s.built=true; s.flagExpand=false; s.bp=0; s.bday=year*YEAR+day;
         let b=0,h=0; for(const[c,r]of neighbors(s.c,s.r)){const nb=cells[idx(c,r)]; if(nb.zone==='brood')b++; else if(nb.zone==='honey')h++;}
         s.zone=(b>h && cellDist(s.c,s.r)<2.2)?'brood':'honey';
         const bn=cells.reduce((a,cc)=>a+(cc.built?1:0),0);
@@ -3394,12 +3501,25 @@
         gr.addColorStop(surfT,L.hi); gr.addColorStop(Math.min(1,surfT+0.06),L.mid); gr.addColorStop(Math.min(1,surfT+0.34),L.mid); gr.addColorStop(1,L.lo); return gr; });
       ctx.save(); ctx.translate(x,y);
       hexPathOn(ctx,0,0,s2*0.94); ctx.fillStyle=g; ctx.fill();
-      if(frac>0.02){ const sh=0.5+0.5*Math.sin(gt*1.6+x*0.05+y*0.07);   // shimmering meniscus
+      hexPathOn(ctx,0,0,s2*0.94); ctx.clip();   // liquid stays inside its wax — near the top vertex the cell narrows, and an unclipped meniscus used to float free
+      if(kind==='honey'&&frac>=0.95){
+        // ripe and CAPPED: once honey dries to ~18% water the bees seal it under an
+        // airtight ivory wax lid — opaque, faintly domed, nothing like open nectar
+        ctx.fillStyle=gradFor('hcap',()=>{ const r=ctx.createRadialGradient(-s2*0.25,-s2*0.32,s2*0.08,0,0,s2*1.02);
+          r.addColorStop(0,'#f8ecd2'); r.addColorStop(0.55,'#efdaae'); r.addColorStop(1,'#d8bb82'); return r; });
+        hexPathOn(ctx,0,0,s2*0.94); ctx.fill();
+        ctx.strokeStyle='rgba(122,88,36,0.45)'; ctx.lineWidth=Math.max(1,s2*0.09);
+        hexPathOn(ctx,0,0,s2*0.78); ctx.stroke();   // the seam where lid meets wall
+        const hsh=((x*13+y*7)|0)%7;   // a few matte dimples, steady per cell
+        ctx.fillStyle='rgba(150,112,52,0.16)';
+        for(let k=0;k<3;k++){ const a=(k*2.09)+hsh*0.6;
+          ctx.beginPath(); ctx.arc(Math.cos(a)*s2*0.33,Math.sin(a)*s2*0.3,s2*0.09,0,6.28); ctx.fill(); } }
+      else if(frac>0.02){ const sh=0.5+0.5*Math.sin(gt*1.6+x*0.05+y*0.07);   // shimmering meniscus
         ctx.fillStyle=L.spec+(0.20+0.18*sh*L.gloss).toFixed(3)+')';
         ctx.beginPath(); ctx.ellipse(0,surfLocal,s2*0.8,Math.max(0.8,s2*0.11),0,0,6.28); ctx.fill();
         if(L.gloss>0.4){ ctx.fillStyle=L.spec+(0.42*L.gloss).toFixed(3)+')';   // wet specular catch
           ctx.beginPath(); ctx.ellipse(-s2*0.3,surfLocal+s2*0.2,s2*0.2,s2*0.08,-0.4,0,6.28); ctx.fill(); } }
-      if(kind==='pollen'){ ctx.fillStyle='rgba(120,58,8,0.16)';   // packed grains, matte not wet
+      if(kind==='pollen'){ ctx.fillStyle='rgba(120,58,8,0.16)';   // packed grains, matte not wet — bee bread pressed in layers
         for(let k=0;k<5;k++){ const px=-s2*0.5+((k*53)%100)/100*s2, py=surfLocal+s2*0.3+((k*37)%100)/100*s2*0.9;
           ctx.beginPath(); ctx.arc(px,py,s2*0.055,0,6.28); ctx.fill(); } }
       ctx.restore();
@@ -3450,6 +3570,10 @@
           hexPathOn(ctx,0,0,s2); ctx.fill(); ctx.restore(); hexPathOn(ctx,x,y,s2); }
         else { ctx.fillStyle=COL.wallEmpty; ctx.fill(); }
         if(cell.zone==='brood'){ ctx.fillStyle=COL.broodZone; ctx.fill(); } else if(cell.zone==='honey'){ ctx.fillStyle=COL.honeyZone; ctx.fill(); }
+        // virgin wax is nearly white and ambers with age and ten thousand feet —
+        // fresh-drawn cells glow pale for their first weeks, then join the old comb
+        if(!heatView&&cell.bday!==undefined){ const wage=year*YEAR+day-cell.bday;
+          if(wage<45){ ctx.fillStyle='rgba(255,247,222,'+(0.22*(1-wage/45)).toFixed(3)+')'; ctx.fill(); } }
         const hw=cell.heat-AMB(T);
         if(heatView){ const h=Math.max(0,Math.min(1,cell.heat));
           ctx.fillStyle=heatColor(h,0.82*(0.92+0.06*Math.sin(gt*0.8))); ctx.fill();
@@ -3502,8 +3626,8 @@
         if(pol>0){kind='pollen';frac=Math.min(1,pol/HC);pol-=HC;} else if(nec>0){kind='nectar';frac=Math.min(1,nec/HC);nec-=HC;} else if(hon>0){kind='honey';frac=Math.min(1,hon/HC);hon-=HC;} else break;
         const {x,y}=cellCenter(cell.c,cell.r);
         fillCellLiquid(x,y,s2,kind,frac);
-        // capped stores catch the light: a thin wax cap glint over a near-full cell
-        if(frac>0.6 && kind!=='pollen'){ ctx.save(); hexPathOn(ctx,x,y,s2*0.94); ctx.clip();
+        // ripening stores catch the light (fully capped honey has its own lid now)
+        if(frac>0.6 && (kind==='nectar' || (kind==='honey'&&frac<0.95))){ ctx.save(); hexPathOn(ctx,x,y,s2*0.94); ctx.clip();
           ctx.fillStyle='rgba(255,240,205,0.10)'; ctx.beginPath(); ctx.ellipse(x,y-s2*0.1,s2*0.7,s2*0.5,0,0,6.28); ctx.fill(); ctx.restore(); }
         hexPathOn(ctx,x,y,s2); ctx.strokeStyle=COL.wallRim; ctx.lineWidth=1; ctx.stroke();
         if(!heatView && frac>0.12) glowPts.push({x,y,k:kind,a:Math.min(1,frac)*(kind==='pollen'?0.5:1)});
@@ -4173,7 +4297,7 @@
       const HEX=1.861, SQUARE=2.000, TRI=2.632;
       $('hxSave').textContent='−'+Math.round((SQUARE-HEX)/SQUARE*100)+'% wax';
       $('hxSave').className='good';
-      $('hxSaveSq').innerHTML='<span style="color:var(--dim)">−'+Math.round((TRI-HEX)/TRI*100)+'% vs. triangular cells</span>';
+      $('hxSaveSq').innerHTML='<span style="color:var(--dim)">−'+Math.round((TRI-HEX)/TRI*100)+'% wax</span>';
       if(ring>=1){ const nextN=3*(ring+1)*(ring+2)+1;
         $('hexNote').innerHTML='Your nest is '+ring+' full ring'+(ring>1?'s':'')+' of comb — the centred hexagonal numbers. The next complete ring lands at <b style="color:var(--gold)">'+nextN+'</b> cells. Varro guessed hexagons were best in 36 BC; it wasn\u2019t proven until 1999.'; }
       else { $('hexNote').innerHTML='A hexagon walls off its area with the shortest perimeter of any tile that leaves no gaps. The saving looks small per cell, but wax is dear \u2014 bees eat roughly 8 spoons of honey to make one of wax \u2014 so across a whole comb it is enormous. And it is not merely good: it is <b>provably the best possible</b>, which no one showed until 1999.'; }
@@ -4196,6 +4320,114 @@
       $('fcCap').innerHTML = fc.starve!==null ? ('Honey runs out around <b style="color:var(--bad)">day '+fc.starve+'</b> if nothing changes.')
         : ('Projected winter low: <b style="color:var(--good)">'+Math.round(fc.minW)+'</b> cells. White line = today; blue band = winter.');
     }
+
+    // ---- the long view: the same report, explained — every number with its lever ----
+    function rfChip(t){ return '<span class="rfAdj">'+t+'</span>'; }
+    function rfDrawChart(fc){ const cv=$('rfChart'); if(!cv) return;
+      const r=cv.getBoundingClientRect(); const w=Math.max(240,r.width||440), h=120;
+      cv.width=w*DPR; cv.height=h*DPR; const g=cv.getContext('2d'); g.setTransform(DPR,0,0,DPR,0,0); g.clearRect(0,0,w,h);
+      const ser=fc.series; if(!ser||ser.length<2){ g.fillStyle='rgba(255,255,255,0.4)'; g.font='11px JetBrains Mono'; g.fillText('the forecast is still warming up…',10,20); return; }
+      const maxH=Math.max(10,...ser.map(s=>s.h));
+      const X=d=>((d-ser[0].d)/Math.max(1,(ser[ser.length-1].d-ser[0].d)))*(w-16)+8, Y=v=>h-16-(Math.max(0,v)/maxH)*(h-34);
+      const wx0=Math.max(8,X(270)); g.fillStyle='rgba(140,170,210,0.12)'; g.fillRect(wx0,0,w-wx0,h);
+      g.strokeStyle='rgba(255,90,60,0.5)'; g.lineWidth=1; g.beginPath(); g.moveTo(8,Y(0)); g.lineTo(w-8,Y(0)); g.stroke();
+      g.beginPath(); ser.forEach((s,i)=>{ const x=X(s.d),y=Y(s.h); i?g.lineTo(x,y):g.moveTo(x,y); });
+      g.lineTo(X(ser[ser.length-1].d),Y(0)); g.lineTo(X(ser[0].d),Y(0)); g.closePath();
+      g.fillStyle=fc.starve!==null?'rgba(255,122,90,0.13)':'rgba(247,183,51,0.14)'; g.fill();
+      g.strokeStyle=fc.starve!==null?'#ff7a5a':'#f7b733'; g.lineWidth=2; g.beginPath(); ser.forEach((s,i)=>{ const x=X(s.d),y=Y(s.h); i?g.lineTo(x,y):g.moveTo(x,y); }); g.stroke();
+      const tx=X(Math.floor(day)); g.strokeStyle='rgba(255,255,255,0.75)'; g.lineWidth=1; g.beginPath(); g.moveTo(tx,4); g.lineTo(tx,h-4); g.stroke();
+      g.fillStyle='rgba(255,255,255,0.78)'; g.font='600 9px JetBrains Mono'; g.fillText('today',Math.min(w-38,tx+4),12);
+      g.fillStyle='rgba(160,190,230,0.9)'; g.fillText('winter',wx0+5,h-6); }
+    function buildReportFull(){ const L=ledger(), sp=seasonPlan(), fc=forecastCache||forecastToSpring();
+      $('rfPlan').innerHTML='<div class="rfRow"><span><b style="color:var(--gold)">'+sp.season+'</b> — '+sp.focus+'</span></div>'
+        +sp.rows.map(r=>'<div class="rfRow"><span>'+r.label+'</span><b class="'+(r.ok?'good2':'')+'">'+r.cur+' / '+r.goal+(r.unit?' '+r.unit:'')+(r.ok?' ✓':'')+'</b></div>').join('')
+        +'<div class="rfWhy">'+sp.tip+' Meet the season’s marks before it turns — each one pays <b>✧ royal jelly</b> for the gifts between years.</div>';
+      $('rfLedger').innerHTML=
+        '<div class="rfRow"><span>nectar → honey</span><b class="good2">'+(L.full?'storage full':('+'+L.income.toFixed(1)+(L.mult!==1?' ×'+L.mult.toFixed(2):'')+' /day'))+'</b></div>'
+        +'<div class="rfWhy">Foragers haul nectar; house bees fan it dry into honey. The ×multiplier is your <b>bloom</b> — richer patches pay better.<br>'+rfChip('🎚 the Nectar↔Pollen dial')+rfChip('🌼 chase a richer patch')+'</div>'
+        +'<div class="rfRow"><span>bees eating</span><b class="bad2">−'+L.eaten.toFixed(1)+' /day</b></div>'
+        +'<div class="rfWhy">Every bee sips a little daily — more in the cold. A big colony is power <b>and</b> appetite; grow it with a purpose.</div>'
+        +'<div class="rfRow"><span>feeding brood</span><b class="bad2">−'+L.brood.toFixed(1)+' /day</b></div>'
+        +'<div class="rfWhy">Larvae drink honey while they grow — the nursery is an investment that pays out as foragers in about three weeks.<br>'+rfChip('🍼 the size of your Brood patch')+'</div>'
+        +'<div class="rfRow"><span>building comb</span><b class="bad2">−'+L.wax.toFixed(1)+' /day</b></div>'
+        +'<div class="rfWhy">Wax is dear — bees eat roughly <b>8 spoons of honey to sweat out 1 of wax</b>. Build just ahead of the crowd, never far past it.<br>'+rfChip('🔨 Expand flags')+'</div>'
+        +'<div class="rfRow" style="border-top:1px solid rgba(255,214,107,0.3); padding-top:7px; margin-top:4px"><span><b>net, today</b></span><b class="'+(L.net>=0?'good2':'bad2')+'">'+(L.net>=0?'+':'−')+Math.abs(L.net).toFixed(1)+' /day</b></div>'
+        +'<div class="rfWhy">'+(L.net>=0
+          ?'<b>Uphill.</b> Bank it while the sun holds — winter always comes, and it only ever spends.'
+          :'<b>Downhill.</b> Three levers, gentlest first: lean the dial toward Nectar · let the nursery breathe a little smaller · rest the builders for a few days.')+'</div>';
+      rfDrawChart(fc);
+      $('rfChartCap').innerHTML=(fc.starve!==null
+        ? 'On today’s course the pantry empties around <b class="bad2" style="color:var(--bad)">day '+fc.starve+'</b>. Fixable: more nectar now, no harvests, and if deep winter still bites, the <b>one syrup feed</b> is honest keeping.'
+        : 'Projected winter low: <b>'+Math.round(fc.minW)+' cells</b>. The white line is today; the blue band is winter — when nothing blooms and everything eats.');
+      const fr2=Math.round(P*FOR_FRAC),nu2=Math.round(P*NURSE_FRAC),bu2=Math.round(P*BUILD_FRAC),ho2=Math.max(0,Math.round(P)-fr2-nu2-bu2);
+      $('rfWork').innerHTML='<div class="rfRow"><span>🟠 foragers <b>'+fr2+'</b> · 🔵 nurses <b>'+nu2+'</b> · 🟢 builders <b>'+bu2+'</b> · ⚪ house <b>'+ho2+'</b></span></div>'
+        +'<div class="rfWhy">You never assign jobs — bees <b>age through them</b>: house → nurse → builder → forager. Shape the workforce with what you build and brood, and the ages sort themselves.</div>'
+        +'<div class="rfRow"><span>the queen</span><b>year '+queenAge+' · vigour '+Math.round(queenVigour()*100)+'%</b></div>'
+        +'<div class="rfWhy">Her lay rate sets the colony’s ceiling, and it eases each year'+(queenAge>=3?' — <b>she is aging</b>; expect the hive to raise a successor come spring':'')+'.'
+        +((year>=MITE_YEAR&&mite>0.12)?('<br><b'+(mite>0.85?' class="bad2" style="color:var(--bad)"':'')+'>Varroa mites: '+(mite>0.85?'heavy':mite>0.5?'building':'light')+'</b> — they breed inside capped brood and thin the winter cluster. Hardy, hygienic lines resist them.'):'')+'</div>';
+      const nb2=cells.reduce((a,c)=>a+(c.built?1:0),0);
+      let ring2=0; while(3*(ring2+1)*(ring2+2)+1<=nb2) ring2++;
+      $('rfGeom').innerHTML='<div class="rfRow"><span>cells built · complete rings</span><b>'+nb2+' · '+ring2+'</b></div>'
+        +'<div class="rfRow"><span>wax saved vs. squares · vs. triangles</span><b class="good2">−7% · −29%</b></div>'
+        +'<div class="rfWhy">A hexagon fences its floor with the least wall of any tile that leaves no gaps — bees built on it for millions of years; mathematics only proved it best in 1999. Every completed ring compounds the saving.</div>'; }
+    press($('reportFullBtn'),()=>{ buildReportFull(); openOverlay('reportFull'); });
+    press($('reportFullX'),()=>closeOverlay('reportFull'));
+    press($('rfMeadow'),()=>{ closeOverlay('reportFull');
+      const t=$('tabMeadow'); if(t){ try{ t.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,button:0})); }catch(e){} } });
+
+    // ---- Hazel's almanac: her whole log, kept like a keeper's journal ----
+    function buildHazelBook(){ const rows=$('hbRows');
+      if(!MSGLOG.length){ rows.innerHTML='<div class="rfWhy" style="text-align:center">Nothing yet — Hazel will speak as the seasons turn. She always does.</div>';
+        $('hbSub').textContent='every word, kept — the seasons in her voice'; return; }
+      let h='', lastKey='';
+      for(const m of MSGLOG){ const key='Y'+m.year+'·'+seasonName(m.day);
+        if(key!==lastKey){ lastKey=key;
+          h+='<div class="hbSeason">'+(['🌸','☀️','🍂','❄️'][seasonIdx(m.day)]||'🐝')+' Year '+m.year+' — '+seasonName(m.day)+'</div>'; }
+        h+='<div class="hbRow"><span class="ic">'+m.ic+'</span><div class="bd">'+m.html+'</div><span class="dy">d'+(m.day+1)+'</span></div>'; }
+      rows.innerHTML=h;
+      $('hbSub').textContent=MSGLOG.length+' entr'+(MSGLOG.length===1?'y':'ies')+' — the seasons in her voice'; }
+    press($('hazelBookBtn'),()=>{ buildHazelBook(); openOverlay('hazelBook');
+      const c=$('hazelBook').querySelector('.card'); if(c) c.scrollTop=c.scrollHeight; });   // open on today, like a journal falls open at the ribbon
+    press($('hazelBookX'),()=>closeOverlay('hazelBook'));
+
+    // ---- the scouts return: a waggle-dance quorum that interrupts play the way
+    // real scouts do — dances compete on the comb floor, the keeper (or the hive
+    // itself) follows the strongest one. Solo only; linked hives vote instead. ----
+    let danceCallCD=8;   // days until the scouts may call again (first call waits for the meadow to mean something)
+    function dcApply(i,how){ closeOverlay('danceCall');
+      if(i==null||!PATCHES[i]){ toast('The dancers disperse — the meadow will call again.'); return; }
+      activePatch=i; grantBadge('waggler'); forecastCache=forecastToSpring(); danceCallCD=22+Math.random()*10;
+      try{ chime(523,659); }catch(e){} hpt(12);
+      const F=FLOWERS[PATCHES[i].f];
+      toast(how==='hive'
+        ? '🐝 The quorum settles it — the hive follows its strongest dance to the <b>'+F.n.toLowerCase()+'</b>.'
+        : '💃 You follow the dance — foragers recruited to the <b>'+F.n.toLowerCase()+'</b>.'); }
+    function openDanceCall(){
+      const opts=PATCHES.map((p,i)=>({i,q:patchQuality(i,day),f:FLOWERS[p.f],d:p.dist}))
+        .filter(o=>o.q>0.05).sort((a,b)=>b.q-a.q).slice(0,3);
+      if(opts.length<2) return false;
+      $('dcOpts').innerHTML=opts.map(o=>{
+        const bl=o.q>0.6?'a rich bloom':o.q>0.25?'a modest bloom':'a thin bloom';
+        const fl=o.d<0.35?'a short flight':o.d<0.65?'a fair flight':'a long flight';
+        return '<button class="btn dcOpt" data-p="'+o.i+'">'
+          +'<span class="dcBee" style="animation-duration:'+Math.max(0.35,1.5-o.q).toFixed(2)+'s">🐝</span>'
+          +'<span class="dcTx"><b>'+o.f.ic+' '+o.f.n+(o.i===activePatch?' <span class="dcCur">— dancing for home</span>':'')+'</b><i>'+bl+' · '+fl+'</i></span>'
+          +'<span class="dcQ">'+'▮'.repeat(Math.max(1,Math.round(o.q*5)))+'</span></button>'; }).join('');
+      $('dcOpts').querySelectorAll('.dcOpt').forEach(el=>press(el,()=>dcApply(+el.dataset.p,'you')));
+      openOverlay('danceCall'); try{ chime(440,554); }catch(e){} hpt(10);
+      if(!seenTips['dancecall']){ seenTips['dancecall']=1; }
+      return true; }
+    press($('dcSkip'),()=>{ danceCallCD=12; closeOverlay('danceCall'); toast('The dancers disperse — the meadow will call again.'); });
+    press($('dcLet'),()=>{ const best=PATCHES.map((p,i)=>({i,q:patchQuality(i,day)})).sort((a,b)=>b.q-a.q)[0];
+      dcApply(best&&best.q>0.05?best.i:null,'hive'); });
+    function danceCallCheck(){ if(danceCallCD>0||!started||over||paused||onboard||storyMode||danceMode||NET.on) return;
+      if(view!=='hive'||anyOverlayOpen()||currentTemp()<WIN_TEMP||day<10) return;
+      let best=-1,bq=0; for(let i=0;i<PATCHES.length;i++){ const q=patchQuality(i,day); if(q>bq){ bq=q; best=i; } }
+      if(best<0||bq<0.5) return;
+      if(activePatch!=null&&patchEff(activePatch,day)>=bq-0.18) return;   // home patch still argues well enough
+      if(openDanceCall()) danceCallCD=25;   // opened — quiet spell either way
+      else danceCallCD=8; }
+    window.__hmDance=()=>openDanceCall();   // dev/test handle, like __hm
 
     // ===================== founding coach (progressive onboarding) =====================
     const PREVEAL=['res','clockWrap','reportBtn','advisor','forageGrp'];
@@ -5185,9 +5417,10 @@
       const lab=$('mpLobbyLab'); if(lab) lab.textContent=active+'/'+NET_MAX;
       const w=$('mpWaiting'); if(w){ w.classList.toggle('hide', NET.started||active>=NET_MAX);
         const tx=$('mpWaitTx'); if(tx) tx.textContent=active<2?'waiting for keepers to arrive — send that invite ✨':'room for more — or begin whenever you’re ready'; }
-      // disarm the begin-confirm only when the roster truly changes (duplicate
-      // 'hi' re-sends and quiet syncs must not eat the second tap)
-      const sig=NET.players.map(p=>p.ix+':'+p.name+':'+(p.gone?1:0)).join('|');
+      // the confirm's promise is the HEADCOUNT ("Begin with N keepers?") — so only
+      // a change in that number disarms it. Renames (a late 'hi') and duplicate
+      // re-sends must never eat the second tap.
+      const sig=String(active);
       if(NET.armStart&&sig!==NET.lobbySig) mpStartDisarm();
       NET.lobbySig=sig;
       for(const p of NET.players){ if(p.ix===0||p.gone) continue; netSendTo(p,{t:'lob',ps:netRoster(),you:p.ix}); } }
@@ -5727,7 +5960,7 @@
       gt+=dt; lastDt=dt; shake=Math.max(0,shake-dt*1.2);
       netFrame(dt);   // hive link housekeeping: vote clock, snapshots, event relay
       const frozen=hitstop>0; if(frozen) hitstop-=dt;
-      relayoutT+=dt; if(relayoutT>1){ relayoutT=0; checkBadges(); const t=$('hud-top'),b=$('hud-bottom');
+      relayoutT+=dt; if(relayoutT>1){ relayoutT=0; checkBadges(); danceCallCheck(); const t=$('hud-top'),b=$('hud-bottom');
         if(Math.abs((t.offsetHeight+8)-topH)>6 || Math.abs((b.offsetHeight+8)-botH)>6) layout(); }
       // the view eases out as the comb grows — intimate when small, whole-hive when large
       fitT+=dt; if(fitT>0.3){ fitT=0; fitComb(false); }
@@ -5754,6 +5987,7 @@
           rate.b+=(((P-prevv.b)/dd)-rate.b)*0.06; rate.br+=(((brc-prevv.br)/dd)-rate.br)*0.06;
           prevv.h=honeyU; prevv.p=pollenU; prevv.b=P; prevv.br=brc;
           waxRateEMA+=((waxAccum/dd)-waxRateEMA)*0.12; waxAccum=0;
+          if(danceCallCD>0) danceCallCD-=dd;
           fcTimer+=dt; if(fcTimer>0.6){ fcTimer=0; forecastCache=forecastToSpring(); }
           syncBeePool();
           saveTimer+=dt; if(saveTimer>5){ saveTimer=0; saveGame(); }
