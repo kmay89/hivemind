@@ -70,6 +70,18 @@ them.** Concretely:
 - Every failure is recoverable and never the player's fault ("that one's
   gone stale — nothing broke; just ask for a fresh one").
 
+## The solo arc as shipped (keep this shape)
+
+The first session now runs: **cold open** (touch a cell, a bee wakes) →
+**terse coach** (one brush per step, tap-here hints, no paragraphs) →
+**"Warm heart, sweet walls"** (comb strategy as one drawn picture, three
+icon-lines, shown once at `endCoach`) → **the turn-based first week**
+(five dawns that each stop the clock — "▶ Begin the day" / "⏩ let the days
+flow" — graduating with a small ceremony to real time) → **the scouts'
+dance call** (the first interrupt-and-choose event, ~when a rich bloom
+appears). Decisions first, clock later; pictures before prose; biology as
+the tutorial voice throughout.
+
 ## Candidate future work (solo)
 
 - A "skip ahead, I've kept bees before" fast-path on the founding coach.
