@@ -135,7 +135,11 @@ async function waitVal(page, sel, tries = 60) {
   await join.waitForFunction(() => window.__hm().net.on && window.__hm().net.ix === 1, null, { timeout: 5000 });
   console.log('✓ joiner got lobby roster, ix=1');
 
-  // --- start the party ---
+  // --- start the party (two-tap confirm: "Begin with N keepers? Tap again") ---
+  await host.click('#mpStart');
+  const armed = await host.$eval('#mpStart', el => el.textContent);
+  console.log(/Tap again/.test(armed) ? '✓ begin is confirm-armed (' + armed.trim() + ')' : '✗ no begin confirm: ' + armed);
+  await host.waitForTimeout(250);
   await host.click('#mpStart');
   await host.waitForFunction(() => window.__hm().net.started, null, { timeout: 5000 });
   await join.waitForFunction(() => window.__hm().net.started, null, { timeout: 5000 });
@@ -317,6 +321,8 @@ async function waitVal(page, sel, tries = 60) {
     const replyR = await waitVal(back, '#replyCode');
     await host2.fill('#answerIn', replyR); await host2.click('#answerAdd');
     await host2.waitForFunction(() => window.__hm().net.players.length === 2, null, { timeout: 15000 });
+    await host2.click('#mpStart');
+    await host2.waitForTimeout(250);
     await host2.click('#mpStart');
     await host2.waitForFunction(() => window.__hm().net.started, null, { timeout: 5000 });
     const dayAfter = await host2.evaluate(() => window.__hm().day);

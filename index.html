@@ -94,9 +94,9 @@
   #startCont .contWhere{ display:block; font-family:'JetBrains Mono',monospace; font-weight:600; font-size:11px; letter-spacing:.02em; opacity:.72; margin-top:3px; text-transform:none; }
   .card.hasSave #paceRow, .card.hasSave #paceLabel{ display:none; }   /* pace is a founding choice — hide it when continuing */
   .card.hasSave #startNew{ font-size:13px; padding:9px 16px; }        /* new colony steps back to a quieter secondary */
-  #startNew.danger{ background:linear-gradient(180deg,#ff9a6a,#e0592f 60%,#b83c1c); color:#2a0f06;
+  #startNew.danger, .btn.danger{ background:linear-gradient(180deg,#ff9a6a,#e0592f 60%,#b83c1c); color:#2a0f06;
     box-shadow:0 2px 0 rgba(255,255,255,.4) inset, 0 6px 0 #7c2814, 0 12px 18px rgba(150,40,15,.45); }
-  #startNew.danger:active{ transform:translateY(6px); box-shadow:0 2px 0 rgba(255,255,255,.4) inset, 0 0 0 #7c2814, 0 3px 8px rgba(150,40,15,.45); }
+  #startNew.danger:active, .btn.danger:active{ transform:translateY(6px); box-shadow:0 2px 0 rgba(255,255,255,.4) inset, 0 0 0 #7c2814, 0 3px 8px rgba(150,40,15,.45); }
   .tab,.tb,.btn,.cbtn,.gift{ -webkit-tap-highlight-color:transparent; }
   /* touch-action does NOT inherit from body, so every control defaults to `auto`,
      which makes mobile browsers stall ~300ms per touch for double-tap-zoom and can
@@ -1015,8 +1015,15 @@
   #mpOrder .ok{ font-family:'JetBrains Mono',monospace; font-weight:700; }
   #mpOrderBar{ height:4px; border-radius:2px; background:rgba(0,0,0,0.18); overflow:hidden; margin-top:5px; }
   #mpOrderBar i{ display:block; height:100%; background:#7a4d12; border-radius:2px; }
-  .qrWrap{ background:#fff; border-radius:14px; padding:10px; display:flex; justify-content:center; margin-top:9px; box-shadow:0 4px 14px rgba(0,0,0,0.35); }
-  .qrWrap canvas{ width:min(236px,62vw); height:auto; image-rendering:pixelated; }
+  .qrWrap{ background:#fff; border-radius:14px; padding:10px 10px 8px; display:flex; flex-direction:column; align-items:center; gap:5px; margin-top:9px; box-shadow:0 4px 14px rgba(0,0,0,0.35), 0 0 0 1.5px rgba(255,214,107,0.35); }
+  .qrWrap canvas{ width:min(196px,54vw); height:auto; image-rendering:pixelated; }
+  .qrCap{ font:700 11.5px 'Bricolage Grotesque',sans-serif; color:#6a4d1e; }
+  .mpSec{ display:flex; align-items:center; gap:8px; margin:13px 0 6px; font:700 10px 'JetBrains Mono',monospace; letter-spacing:2px; color:var(--dim); text-transform:uppercase; text-align:left; }
+  .mpSec::after{ content:''; flex:1; height:1px; background:linear-gradient(90deg, rgba(255,214,107,0.4), transparent); }
+  .btn.sm{ font-size:13px; padding:9px 12px; font-weight:700; }
+  .mpWait{ display:flex; align-items:center; gap:9px; font:600 12px 'Bricolage Grotesque',sans-serif; color:var(--dim); background:rgba(0,0,0,0.18); border:1.5px dashed rgba(255,214,107,0.3); border-radius:9px; padding:8px 11px; margin-top:5px; text-align:left; }
+  .mpWait .dot{ width:10px; height:10px; border-radius:50%; background:#ffd66b; flex:none; animation:mpPulse 1.6s ease-in-out infinite; }
+  @keyframes mpPulse{ 0%,100%{ opacity:0.25; transform:scale(0.8); } 50%{ opacity:1; transform:scale(1.15); } }
   .mpDetails{ margin-top:8px; text-align:left; }
   .mpDetails summary{ font:600 11px 'JetBrains Mono',monospace; color:var(--dim); cursor:pointer; padding:3px 0; }
   #scanVid{ width:100%; max-height:52vh; border-radius:12px; background:#000; margin-top:8px; }
@@ -1411,24 +1418,28 @@
     <div class="card panel">
       <h1>YOUR HIVE</h1>
       <div class="sub" id="mpHostState">brewing your first invite…</div>
-      <div id="inviteQRWrap" class="qrWrap hide"><canvas id="inviteQR" aria-label="Invite code as a QR — scan with a phone camera"></canvas></div>
+      <div class="mpSec">① invite a keeper</div>
+      <div id="inviteQRWrap" class="qrWrap hide"><canvas id="inviteQR" aria-label="Invite code as a QR — scan with a phone camera"></canvas><div class="qrCap">🐝 they scan this with their camera — that’s the whole trick</div></div>
       <div class="mpRow">
-        <button class="btn" id="inviteShare">📤 Send invite</button>
-        <button class="btn" id="inviteScan">📷 Scan their reply</button>
+        <button class="btn sm" id="inviteShare">📤 Send invite</button>
+        <button class="btn sm" id="inviteScan">📷 Scan their reply</button>
       </div>
       <details class="mpDetails"><summary>more ways (copy &amp; paste)</summary>
         <textarea class="mpCode" id="inviteCode" readonly aria-label="Invite code"></textarea>
-        <div class="mpRow"><button class="btn" id="inviteCopy">📋 Copy invite</button></div>
+        <div class="mpRow"><button class="btn sm" id="inviteCopy">📋 Copy invite</button></div>
         <textarea class="mpCode" id="answerIn" placeholder="…or paste their reply here" style="margin-top:9px" aria-label="Reply code from a joining keeper"></textarea>
-        <div class="mpRow"><button class="btn" id="answerAdd">＋ Welcome them in</button></div>
+        <div class="mpRow"><button class="btn sm" id="answerAdd">＋ Welcome them in</button></div>
       </details>
-      <button class="btn hide" id="mpResume" style="margin-top:8px"></button>
+      <div class="mpSec">② the lobby · <span id="mpLobbyLab">1/8</span></div>
       <div id="mpPlayers"></div>
+      <div id="mpWaiting" class="mpWait"><span class="dot"></span><span id="mpWaitTx">waiting for keepers to arrive — send that invite ✨</span></div>
+      <button class="btn sm hide" id="mpResume" style="margin-top:8px"></button>
+      <div class="mpSec">③ begin</div>
       <div class="mpRow">
-        <button class="btn ghost" id="mpHostBack">‹ Cancel</button>
+        <button class="btn ghost sm" id="mpHostBack">‹ Cancel</button>
         <button class="btn pulse" id="mpStart">Wake the hive ▶</button>
       </div>
-      <div class="mpHow">1&nbsp;· They <b>scan the honeycomb code</b> with their camera (or you send the link).<br>2&nbsp;· Their phone shows a reply — <b>scan their screen</b> (or they send it back).<br>3&nbsp;· 🎉 They’re in. Repeat for the next keeper, then wake the hive.</div>
+      <div class="mpHow">Latecomers are welcome — keepers can join <b>mid-game</b> from your 👑 chip.</div>
     </div>
   </div>
   <div class="ov hide" id="mpJoin" role="dialog" aria-modal="true">
@@ -1438,16 +1449,18 @@
       <textarea class="mpCode" id="joinIn" placeholder="paste the invite code here…" aria-label="Invite code from the host"></textarea>
       <div class="mpRow">
         <button class="btn pulse" id="joinGo">Answer the call 🐝</button>
-        <button class="btn" id="joinScan">📷 Scan invite</button>
+        <button class="btn sm" id="joinScan">📷 Scan invite</button>
       </div>
       <div id="replyWrap" class="hide">
-        <div id="replyQRWrap" class="qrWrap hide"><canvas id="replyQR" aria-label="Your reply code as a QR — show it to the host"></canvas></div>
+        <div id="replyQRWrap" class="qrWrap hide"><canvas id="replyQR" aria-label="Your reply code as a QR — show it to the host"></canvas><div class="qrCap">📱→📷 show this to your host</div></div>
         <div class="mpRow">
-          <button class="btn" id="replyShare">📤 Send it back</button>
-          <button class="btn" id="replyCopy">📋 Copy</button>
+          <button class="btn sm" id="replyShare">📤 Send it back</button>
+          <button class="btn sm" id="replyCopy">📋 Copy</button>
         </div>
-        <textarea class="mpCode" id="replyCode" readonly style="margin-top:9px" aria-label="Your reply code"></textarea>
-        <div class="mpHow">Show the code to your host to scan — or send it back any way you like. Nothing to get wrong: any path works.</div>
+        <div id="joinWaiting" class="mpWait hide"><span class="dot"></span>waiting for the Queen to welcome you in — hold tight 🐝</div>
+        <details class="mpDetails"><summary>the raw reply code</summary>
+          <textarea class="mpCode" id="replyCode" readonly style="margin-top:6px" aria-label="Your reply code"></textarea>
+        </details>
       </div>
       <div id="mpPlayersJ"></div>
       <button class="btn ghost" id="mpJoinBack" style="margin-top:8px">‹ Back</button>
@@ -1539,7 +1552,7 @@
     // / non-https, where no service worker runs) — the real source of truth is sw.js's
     // VERSION; syncGameVer() below asks the running worker and corrects this label
     // live, so the two only ever drift cosmetically for a moment, never permanently.
-    let GAME_VER='2026.07.30.26';
+    let GAME_VER='2026.07.30.27';
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -5146,9 +5159,19 @@
         if(NET.vote) hostBallot(p.ix,false); } }
     function netLobbySync(){ if(!NET.host) return; const box=$('mpPlayers');
       if(box) box.innerHTML=NET.players.map(p=>'<div class="mpP"><i style="background:'+NETCOL[p.ix]+'"></i>'+(p.ix===0?'👑 ':'🐝 ')+netEsc(p.name)+(p.ix===0?' (you)':'')+(p.gone?' · gone':'')+'</div>').join('');
+      const active=NET.players.filter(p=>!p.gone).length;
+      const lab=$('mpLobbyLab'); if(lab) lab.textContent=active+'/'+NET_MAX;
+      const w=$('mpWaiting'); if(w){ w.classList.toggle('hide', NET.started||active>=NET_MAX);
+        const tx=$('mpWaitTx'); if(tx) tx.textContent=active<2?'waiting for keepers to arrive — send that invite ✨':'room for more — or begin whenever you’re ready'; }
+      // disarm the begin-confirm only when the roster truly changes (duplicate
+      // 'hi' re-sends and quiet syncs must not eat the second tap)
+      const sig=NET.players.map(p=>p.ix+':'+p.name+':'+(p.gone?1:0)).join('|');
+      if(NET.armStart&&sig!==NET.lobbySig) mpStartDisarm();
+      NET.lobbySig=sig;
       for(const p of NET.players){ if(p.ix===0||p.gone) continue; netSendTo(p,{t:'lob',ps:netRoster(),you:p.ix}); } }
     // ---- joiner plumbing ----
     function clientLinked(){ NET.on=true; NET.host=false;
+      $('joinWaiting').classList.add('hide');
       $('joinState').textContent='🐝 linked! introducing yourself…';
       // 'hi' is idempotent on the host — say it thrice so a channel-open race can't eat the name
       netSend({t:'hi',name:NET.name||'Keeper'});
@@ -5195,9 +5218,19 @@
       over=false; beginCommon(); netLastSI=seasonIdx(day);
       netShowRole(); netStripSync(); }
     // ---- the party itself ----
+    let mpArmT=0;
+    function mpStartDisarm(){ NET.armStart=false; clearTimeout(mpArmT); const b=$('mpStart'); if(!b) return;
+      b.classList.remove('danger');
+      b.textContent=NET.resume?('Rekindle '+((NET.resume.name||'the hive').replace(/^The /,''))+' ▶'):'Wake the hive ▶'; }
     function netStartParty(){ if(!NET.host) return;
       if(NET.started){ closeOverlay('mpHost'); return; }   // panel reopened mid-game via the crown chip
-      if(NET.players.filter(p=>!p.gone).length<2){ toast('Invite at least one keeper first — the whole point is company.'); return; }
+      const n=NET.players.filter(p=>!p.gone).length;
+      if(n<2){ toast('Invite at least one keeper first — the whole point is company.'); return; }
+      // "are we all here?" — a two-tap confirm, like every good couch game
+      if(!NET.armStart){ NET.armStart=true; const b=$('mpStart'); b.classList.add('danger');
+        b.textContent='Begin with '+n+' keepers? Tap again';
+        clearTimeout(mpArmT); mpArmT=setTimeout(mpStartDisarm,3800); return; }
+      mpStartDisarm();
       NET.started=true;
       netSeedParty(); }
     // seed (or re-seed, for "another year" replays / ledger resumes) the shared
@@ -5407,7 +5440,8 @@
       NET.players=[]; NET.pend=null; NET.vote=null; NET.cVote=null; NET.myIx=-1; netVoteUI=null; netSector=null; netVotedIx=[];
       NET.order=null; NET.orderCD=undefined; NET.ordersDone=0; NET.stale=false; NET.orderTaught=false; NET.voteTaught=false; NET.resume=null; NET.hiveName=''; NET.merit={}; netOrderShow();
       document.body.classList.remove('netc');
-      $('replyWrap').classList.add('hide'); $('inviteCode').value=''; $('answerIn').value=''; $('joinIn').value=''; $('replyCode').value='';
+      NET.armStart=false; clearTimeout(mpArmT);
+      $('replyWrap').classList.add('hide'); $('joinWaiting').classList.add('hide'); $('inviteCode').value=''; $('answerIn').value=''; $('joinIn').value=''; $('replyCode').value='';
       $('mpPlayers').innerHTML=''; $('mpPlayersJ').innerHTML=''; netStripSync(); }
     // ---- UI wiring ----
     // keeper names roll off the tongue — alliterative, meadow-sweet, the kind of
@@ -5443,17 +5477,15 @@
     press($('mpHostBtn'),()=>{ mpTakeName(); closeOverlay('mpHome'); openOverlay('mpHost');
       NET.on=true; NET.host=true; NET.myIx=0; NET.started=false; NET.resume=null;
       NET.players=[{ix:0,name:NET.name,pc:null,dc:null,gone:false,propAt:-1e9}];
-      $('mpStart').textContent='Wake the hive ▶';
+      mpStartDisarm();
       const sv=partyRead(); const rb=$('mpResume');
       if(sv){ rb.classList.remove('hide');
         rb.innerHTML='🕯 Resume <b>'+netEsc(sv.name||'the last party')+'</b> — day '+Math.floor((sv.s.day||0)+1)+' · '+netEsc((sv.ps||[]).slice(1).join(', ')||'your keepers'); }
       else rb.classList.add('hide');
       netLobbySync(); hostNewInvite(); });
     press($('mpResume'),()=>{ const sv=partyRead(); if(!sv) return; const rb=$('mpResume');
-      if(NET.resume){ NET.resume=null; rb.style.opacity='';
-        $('mpStart').textContent='Wake the hive ▶'; toast('Fresh spring it is.'); return; }
-      NET.resume=sv; rb.style.opacity='0.55';
-      $('mpStart').textContent='Rekindle '+((sv.name||'the hive').replace(/^The /,''))+' ▶';
+      if(NET.resume){ NET.resume=null; rb.style.opacity=''; mpStartDisarm(); toast('Fresh spring it is.'); return; }
+      NET.resume=sv; rb.style.opacity='0.55'; mpStartDisarm();
       toast('🕯 The ledger is open — invite your keepers back. <b>Same names re-claim their combs.</b>'); });
     press($('mpStrip'),()=>{ if(!NET.host||!NET.started) return;   // the crown chip is the mid-game invite door
       $('mpStart').textContent='Back to the comb ▶'; openOverlay('mpHost');
@@ -5489,7 +5521,7 @@
         const url=netUrl('reply',await netEnc({a:pc.localDescription.sdp}));
         $('replyCode').value=url;
         const ok=drawQR($('replyQR'),url); $('replyQRWrap').classList.toggle('hide',!ok);
-        $('replyWrap').classList.remove('hide');
+        $('replyWrap').classList.remove('hide'); $('joinWaiting').classList.remove('hide');
         $('joinState').innerHTML='one step left: <b>show this to your host</b> 📱→📷 — or send it back'; }
       catch(e){ $('joinState').textContent='that invite didn’t take — nothing broke; just ask for a fresh one'; } }
     press($('joinGo'),joinAnswer);
@@ -5524,7 +5556,8 @@
     function netCopyBtn(btnId,srcId){ const b=$(btnId), lbl=b.textContent;
       press(b,()=>{ const el=$(srcId), txt=el.value; if(!txt) return;
         const done=()=>{ b.textContent='✓ copied'; setTimeout(()=>{ b.textContent=lbl; },1300); };
-        const manual=()=>{ try{ el.focus(); el.select(); document.execCommand('copy'); done(); }catch(e){ toast('Select the code and copy it by hand.'); } };
+        const manual=()=>{ try{ el.focus(); el.select(); document.execCommand('copy');
+          el.blur(); try{ getSelection().removeAllRanges(); }catch(e2){} done(); }catch(e){ toast('Select the code and copy it by hand.'); } };
         if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done).catch(manual);
         else manual(); }); }
     function netShareBtn(btnId,srcId,title){ press($(btnId),async()=>{ const txt=$(srcId).value; if(!txt) return;
