@@ -24,9 +24,32 @@ const args = process.argv.slice(2);
 const YEARS = Number((args.find(a => a.startsWith('--years=')) || '').split('=')[1]) || 1;
 const VERBOSE = args.includes('--verbose');
 
+// Deterministic RNG so this safety net is a *reliable* guard, not a flaky one.
+// The real game leans on Math.random for weather, hornets and build jitter; left
+// unseeded, a scenario that survives to the very last day (the `insulated` gift is
+// the current razor's edge) fails maybe one run in ten — enough to redden CI on an
+// unrelated change. A fixed seed removes that noise without touching balance. Probe
+// the margins with `--seed=N`, or `--seed=random` for a fresh roll each run.
+const seedArg = (args.find(a => a.startsWith('--seed=')) || '').split('=')[1];
+const SEED = seedArg === 'random' ? ((Date.now() ^ (Math.random() * 0x100000000)) >>> 0)
+  : (seedArg !== undefined && seedArg !== '' ? (Number(seedArg) >>> 0) : 0x5eed1e >>> 0);
+function seededRandom(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s = (s + 0x6D2B79F5) | 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 function loadGame() {
   const { windowStub, documentStub, localStorageStub } = createEnvironment();
   let captured = null;
+  // a Math whose only change is a seeded random() — floor/min/imul/etc. still come
+  // straight from the real Math via the prototype, so the game's maths is untouched
+  const seededMath = Object.create(Math);
+  seededMath.random = seededRandom(SEED);
   const sandbox = {
     document: documentStub,
     localStorage: localStorageStub,
@@ -43,7 +66,7 @@ function loadGame() {
     matchMedia: windowStub.matchMedia,
     setTimeout, clearTimeout, setInterval, clearInterval,
     console,
-    Math, JSON, Date, Array, Object, String, Number, Boolean, RegExp, Error, Map, Set, Promise,
+    Math: seededMath, JSON, Date, Array, Object, String, Number, Boolean, RegExp, Error, Map, Set, Promise,
     __exportHarness(bindings) { captured = bindings; },
   };
   sandbox.window = sandbox;

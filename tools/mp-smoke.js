@@ -162,9 +162,17 @@ async function waitVal(page, sel, tries = 60) {
   if (dJoin > d0 && Math.abs(dHost - dJoin) < 2) console.log('✓ snapshots flow — joiner tracks the Queen\'s clock');
   else console.log('✗ snapshot drift problem');
 
-  // strip visible on both
-  const chips = await join.$eval('#mpStrip', el => el.children.length);
-  console.log(chips === 2 ? '✓ keeper strip shows 2 chips' : '✗ strip chips: ' + chips);
+  // strip visible on both: post chip + connection legend + one chip per keeper
+  const strip = await join.$eval('#mpStrip', el => ({
+    post: !!el.querySelector('.post'),
+    link: !!el.querySelector('.chip.link'),
+    linkTxt: ((el.querySelector('.chip.link') || {}).textContent || '').trim(),
+    keepers: el.querySelectorAll('.chip:not(.link)').length,
+    dots: el.querySelectorAll('.chip:not(.link) .cdot').length,
+    me: !!el.querySelector('.chip.me') }));
+  console.log(strip.post && strip.link && strip.me && strip.keepers === 2 && strip.dots === 2
+    ? `✓ keeper strip: post chip + "${strip.linkTxt}" legend + 2 keepers (lit dots), (you) marked`
+    : '✗ strip odd: ' + JSON.stringify(strip));
 
   // --- vote flow: host proposes a patch via selectPatch path is canvas-bound;
   // instead simulate joiner proposing an invalid harvest -> host replies whyNot;
@@ -194,6 +202,10 @@ async function waitVal(page, sel, tries = 60) {
   const patch = await join.evaluate(() => window.__hm().patches.filter(p => p.q > 0.05).sort((a, b) => b.q - a.q)[0]);
   if (!patch) console.log('✗ no bloomable patch found');
   else {
+    // a bloom must be tappable, not hidden behind the control tray
+    const covered = await join.evaluate(p => { const el = document.elementFromPoint(p.x, p.y);
+      return el && el.id !== 'c' ? (el.tagName + '#' + el.id) : null; }, { x: patch.x, y: patch.y });
+    console.log(covered ? '✗ bloom is covered by ' + covered : '✓ blooms sit clear of the HUD — tappable');
     await join.mouse.click(patch.x, patch.y);
     await join.waitForFunction(() => !document.getElementById('mpVote').classList.contains('hide'), null, { timeout: 5000 });
     await host.waitForFunction(() => !document.getElementById('mpVote').classList.contains('hide'), null, { timeout: 5000 });
@@ -219,7 +231,10 @@ async function waitVal(page, sel, tries = 60) {
 
   // --- drop-in join: third keeper joins AFTER the party started, via the crown chip ---
   const pd = el => el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 }));
-  await host.$eval('#mpStrip', pd);
+  await host.$eval('#mpStrip', pd);          // your post card…
+  await host.waitForTimeout(400);
+  await host.$eval('#roleInvite', pd);      // …and the invite door lives inside it
+  await host.waitForTimeout(400);
   const invite3 = await waitVal(host, '#inviteCode');
   const trip = await mk('trip');
   await trip.click('#startParty');
@@ -241,7 +256,10 @@ async function waitVal(page, sel, tries = 60) {
   await join.close();
   await host.waitForFunction(() => window.__hm().net.players[1].g, null, { timeout: 10000 });
   console.log('✓ host marked Buzz gone');
-  await host.$eval('#mpStrip', pd);
+  await host.$eval('#mpStrip', pd);          // your post card…
+  await host.waitForTimeout(400);
+  await host.$eval('#roleInvite', pd);      // …and the invite door lives inside it
+  await host.waitForTimeout(400);
   const invite4 = await waitVal(host, '#inviteCode');
   const buzz2 = await mk('buzz2');
   await buzz2.click('#startParty');
