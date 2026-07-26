@@ -279,9 +279,15 @@
   @media (prefers-reduced-motion: reduce){ #syrupPack.needed{ animation:none; } }
 
   /* ---------- controls ---------- */
-  #ctl{ padding:7px; display:flex; gap:7px; align-items:center; flex-wrap:wrap; justify-content:center; }
-  .grp{ display:flex; gap:4px; align-items:center; padding:4px; border-radius:12px; background:rgba(255,255,255,0.035); }
-  .grp .gl{ font-size:7.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); padding:0 3px 0 5px; align-self:center; font-weight:600; }
+  /* a locked-width, centred control card on the web — it no longer stretches the full
+     stage and sprawls; the groups pack together in the middle */
+  #ctl{ padding:9px 12px 10px; display:flex; gap:9px; align-items:stretch; flex-wrap:wrap; justify-content:center;
+    max-width:940px; margin-inline:auto; row-gap:8px; }
+  /* each control group is a little raised card, so the tray reads as a tidy console */
+  .grp{ display:flex; gap:4px; align-items:center; padding:5px 7px; border-radius:13px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018));
+    border:1px solid rgba(255,255,255,0.07); box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 1px 3px rgba(0,0,0,0.28); }
+  .grp .gl{ font-size:7.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); padding:0 3px 0 5px; align-self:center; font-weight:700; }
   .grp.dim{ opacity:.4; pointer-events:none; }
   .tb{ font-family:'Bricolage Grotesque'; font-weight:600; font-size:11.5px; padding:7px 10px; border-radius:9px; cursor:pointer; color:var(--dim); min-height:36px;
     display:flex; align-items:center; gap:4px; border:1px solid transparent; background:rgba(255,255,255,0.03);
@@ -353,13 +359,19 @@
   .fxTicks i.on{ background:var(--gold); height:8px; }
   .fxTicks i.rec::after{ content:'★'; position:absolute; left:50%; top:-12px; transform:translateX(-50%); font-size:8px; color:#a7e07c; text-shadow:0 0 5px rgba(167,224,124,.7); animation:recBob 2s ease-in-out infinite; }
   @keyframes recBob{ 0%,100%{ top:-12px; } 50%{ top:-14px; } }
-  .fxNote{ font:500 9.5px 'JetBrains Mono',monospace; color:var(--dim); line-height:1.42; text-align:center; }
+  /* reserve two lines so the note NEVER changes the tray's height as you slide (yield
+     numbers, "comb full", and the ★ Hazel line all vary in length) — the panel stays put */
+  .fxNote{ font:500 9.5px 'JetBrains Mono',monospace; color:var(--dim); line-height:1.42; text-align:center;
+    min-height:28px; display:flex; align-items:center; justify-content:center; }
+  .fxNote>span{ display:block; width:100%; }   /* one flex child so the text keeps its spaces + wrapping */
   .fxNote b{ color:#f7eed9; font-weight:700; } .fxNote .fxY{ color:#ffd76b; } .fxNote .fxRec{ color:#a7e07c; font-weight:700; }
   /* ---- brush cost/gain strip: what each placement spends and returns ---- */
-  #brushHelp{ width:100%; order:-1; font:500 10px 'JetBrains Mono',monospace; color:var(--dim); text-align:center; padding:1px 6px 4px; line-height:1.4; }
+  #brushHelp{ width:100%; order:-1; font:500 10px 'JetBrains Mono',monospace; color:var(--dim); text-align:center; padding:1px 6px; line-height:1.4;
+    min-height:24px; display:flex; align-items:center; justify-content:center; }
+  #brushHelp>span{ display:block; width:100%; }
   #brushHelp b{ color:#f7eed9; } #brushHelp .gain{ color:#a7e07c; } #brushHelp .cost{ color:#e6a86a; }
   /* ---- wax bank: the build queue as physical tokens you watch the bees spend down ---- */
-  #waxBank{ order:-2; width:100%; display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;
+  #waxBank{ order:-2; width:100%; min-height:24px; display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;
     padding:2px 8px 4px; font:600 10px 'JetBrains Mono',monospace; color:var(--dim); transition:transform .18s ease; }
   #waxBank.hide{ display:none; }
   #waxBank .wbHead{ color:#e6c98a; letter-spacing:.04em; white-space:nowrap; }
@@ -1857,7 +1869,7 @@
     // / non-https, where no service worker runs) — the real source of truth is sw.js's
     // VERSION; syncGameVer() below asks the running worker and corrects this label
     // live, so the two only ever drift cosmetically for a moment, never permanently.
-    let GAME_VER='2026.07.31.34';
+    let GAME_VER='2026.07.31.35';
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -4456,13 +4468,13 @@
       if(forage!==FORAGE_STEPS[ci]) forage=FORAGE_STEPS[ci]; // snap a legacy continuous value onto the notch
       const ri=(started&&!onboard)?recForageIdx():-1, tk=$('fxTicks');
       if(tk){ const ii=tk.children; for(let i=0;i<ii.length;i++){ ii[i].classList.toggle('on',i===ci); ii[i].classList.toggle('rec',i===ri); } }
-      const n=$('fxNote'); if(n){ const note=forageNote(); if(n.innerHTML!==note) n.innerHTML=note; } }
+      const n=$('fxNote'); if(n){ const note='<span>'+forageNote()+'</span>'; if(n.innerHTML!==note) n.innerHTML=note; } }
     const BRUSHHELP={
       brood:'\ud83c\udf7c <b>Brood</b> cradle \u2014 <span class="gain">gain: more bees</span> <span class="cost">\u00b7 cost: nurses &amp; warmth</span>',
       honey:'\ud83c\udf6f <b>Honey</b> shelf \u2014 <span class="gain">gain: +1 pantry cell</span> <span class="cost">\u00b7 cost: wax, drawn from honey</span>',
       expand:'\ud83d\udd28 <b>Expand</b> wax \u2014 <span class="gain">gain: room to grow</span> <span class="cost">\u00b7 cost: wax &amp; a builder\u2019s time \u2014 watch the bank</span>'
     };
-    function syncBrushHelp(){ const el=$('brushHelp'); if(el) el.innerHTML=BRUSHHELP[brush]||''; syncWaxBank(); }
+    function syncBrushHelp(){ const el=$('brushHelp'); if(el) el.innerHTML='<span>'+(BRUSHHELP[brush]||'')+'</span>'; syncWaxBank(); }
     // ---- comb key: a collapsible legend that decodes every cell + brood phase. One row
     // per kind (a data table, not a branch); each swatch is drawn to match the comb itself ----
     const COMBKEY=[
