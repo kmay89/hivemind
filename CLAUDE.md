@@ -205,7 +205,12 @@ row, that's a sign the table needs a field instead.
 
 - `tools/economy-sim.js` — headless multi-year economy simulation used to
   validate CONFIG/QUEENS/GIFTS balance changes before they ship. Run it
-  manually before retuning the economy: `node tools/economy-sim.js`.
+  manually before retuning the economy: `node tools/economy-sim.js`. Its
+  `Math.random` is **seeded** (fixed default) so CI is a reliable guard rather
+  than a flaky one — a borderline scenario like the `insulated` gift survives
+  to the last day and used to fail ~1 run in 10 unseeded. Probe balance margins
+  with `--seed=N` or `--seed=random`; don't read one seed's pass as proof a
+  marginal scenario is comfortable.
 - `.github/workflows/ci.yml` — pre-merge checks only (syntax check, DOM-id
   integrity, manifest validation). Does not touch `netlify.toml` or the
   deploy pipeline.
