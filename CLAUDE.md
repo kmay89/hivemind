@@ -137,7 +137,32 @@ numbers drift as the file changes; re-grep `// =====` banners if they look off)
   cooldown in days via `danceCallCD`), the **report long view**
   (`buildReportFull`, opened from the mini report's `⤢`), and **Hazel's
   almanac** (`buildHazelBook` over `MSGLOG`). Debug handles follow the
-  `window.__hm*` family (`__hmQR`, `__hmDance`, `__hmPlan`, `__hmDawn`).
+  `window.__hm*` family (`__hmQR`, `__hmDance`, `__hmPlan`, `__hmDawn`);
+  `window.__hm()` also exposes `speed`/`brush`/`bank` for the smoke tests.
+- **Time control is ONE toggle now.** `#playToggle` (play↔pause) + a secondary
+  `#fastToggle` replaced the three `data-sp` segments. `setSpeed(s)` →
+  `syncTimeBtns()` paints both; `lastPlaySpeed` remembers 1× vs 3× across a
+  pause. The joiner-lock CSS is `.netc #timeGrp .timeBtn` (was `.netc [data-sp]`);
+  `clearSpots()` and `store-shots.js` target `.timeBtn`/`#fastToggle`. There is
+  no `data-sp` attribute anywhere anymore — don't reintroduce one.
+- `buildBank()` — the ONE source of truth for "what new comb can the pantry
+  fund right now" (the builders' honey→wax rule + the stores buffer). Both the
+  sim (`buildFromFlags`) and the on-screen **wax bank** (`syncWaxBank`,
+  `#waxBank`) read it, so the token pips can never promise comb the bees won't
+  draw. The wax bank is the build *queue* made physical (one pip per flagged
+  cell, filling by `cell.bp`, spent into comb), not a honey meter — building is
+  labour-and-time-bound, not honey-bound, at the scales that matter.
+- `meadowGroundY()` — the horizon. Portrait keeps 72%; short/landscape screens
+  lift it (else the 72% line falls behind the tall control tray and the meadow
+  renders as all sky — the "no grass on iPad" bug). `fitComb` hugs tighter and
+  allows larger cells on big screens (was: *more* padding + a 50px cap, which
+  marooned the comb in the middle of an iPad).
+- **comb key** (`#combKey`, `buildCombKey`/`drawKeySwatch`/`syncCombKey`, one
+  `COMBKEY[]` row per cell/phase) — the collapsible left-edge legend; swatches
+  are drawn with the real `COL`/`LIQ`/`heatColor` so they match the comb.
+  Open-state persists in `hm_combkey`. **party connection legend** — the
+  keeper strip (`netStripSync`) leads with a `🔗 N/M linked` chip and a
+  lit/hollow `.cdot` per keeper.
 - `M{}` — the stat-modifier reducer over `GIFTS`(owned) + `QUEENS`(mods).
   A gift or queen mod that should affect gameplay must be wired through here
   (additive *or* multiplicative, see the function's own comment), not read

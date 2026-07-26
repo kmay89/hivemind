@@ -305,7 +305,7 @@
   .stat.honey{ --ac:#ffb42b; } .stat.pollen{ --ac:#f5a24a; } .stat.pop{ --ac:#ffd76b; } .stat.brood{ --ac:#8fc4ff; } .stat.keeper{ --ac:#c6a2ff; }
   .tb.brood{ --ac:#8fc4ff; } .tb.honeyb{ --ac:#ffc65a; } .tb.expand{ --ac:#a7e07c; }
   [data-f="nectar"]{ --ac:#ffd36a; } [data-f="balanced"]{ --ac:#74e2d3; } [data-f="pollen"]{ --ac:#f5a24a; }
-  [data-sp="0"]{ --ac:#cbb489; } [data-sp="1"]{ --ac:#8ad66a; } [data-sp="3"]{ --ac:#8fc4ff; }
+  #playToggle{ --ac:#8ad66a; } #fastToggle{ --ac:#8fc4ff; }
   #inspectBtn{ --ac:#74e2d3; } #heatBtn{ --ac:#ff9d5a; } #harvestBtn{ --ac:#ffd97a; } #undoBtn{ --ac:#d9b48a; }
 
   /* resting: accent-tinted label/icon, a faint colour wash, and a colour footline */
@@ -320,13 +320,24 @@
   .stat{ background:color-mix(in srgb, var(--ac,#ffd97a) 8%, rgba(255,255,255,0.022)); box-shadow:inset 0 -2px 0 color-mix(in srgb, var(--ac,#ffd97a) 36%, transparent); }
   .stat .lab{ color:color-mix(in srgb, var(--ac,#ffd97a) 64%, var(--dim)); }
 
-  /* bold, meaningful active states so the time tray reads at a glance */
-  .tb[data-sp="1"].on{ background:linear-gradient(180deg,#bff0a0,#74bf59); color:#0e2408; box-shadow:0 1px 0 rgba(255,255,255,.45) inset, 0 3px 15px rgba(120,200,90,.45); }
-  .tb[data-sp="3"].on{ background:linear-gradient(180deg,#bcdcff,#6aa2e2); color:#0a1a2c; box-shadow:0 1px 0 rgba(255,255,255,.45) inset, 0 3px 15px rgba(110,160,230,.45); }
-  .tb[data-sp="0"].on{ background:linear-gradient(180deg,#e8dcc4,#b7a684); color:#241503; }
+  /* ---- one play/pause toggle: the icon is the tap-action, the pill's colour + word are the state ---- */
+  .timeBtn .ico{ width:18px; height:18px; }
+  #playToggle{ min-width:98px; justify-content:center; gap:7px; }
+  #playToggle .tState,#fastToggle .tState{ font:800 9.5px 'JetBrains Mono',monospace; letter-spacing:.13em; text-transform:uppercase; }
+  #playToggle .icoPause{ display:none; } #playToggle .icoPlay{ display:block; }
+  #playToggle.on .icoPause{ display:block; } #playToggle.on .icoPlay{ display:none; }
+  /* running: green, settled */
+  #playToggle.on{ background:linear-gradient(180deg,#bff0a0,#74bf59); color:#0e2408; box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 3px 0 #4e7d38, 0 5px 12px rgba(120,200,90,.42); }
+  /* paused: amber, and softly breathing so the eye knows where "go" lives */
+  #playToggle:not(.on){ background:linear-gradient(180deg,#ffe0a0,#e2a840); color:#2a1803; box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 3px 0 #a8721c, 0 5px 12px rgba(220,150,40,.34); animation:ppBreathe 2.6s ease-in-out infinite; }
+  @keyframes ppBreathe{ 0%,100%{ filter:brightness(1); } 50%{ filter:brightness(1.13); } }
+  /* fast is a modifier, not a peer — dim until it's doing something */
+  #fastToggle{ min-width:56px; justify-content:center; gap:6px; opacity:.66; }
+  #fastToggle:hover{ opacity:.9; }
+  #fastToggle.on{ opacity:1; background:linear-gradient(180deg,#bcdcff,#6aa2e2); color:#0a1a2c; box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 3px 0 #3f6ea3, 0 5px 10px rgba(110,160,230,.42); }
   /* forage dials, each its own flavour (out-specify the shared .tb.on.cyan) */
   /* ---- forager crossfader: a DJ mixer for nectar vs pollen ---- */
-  #forageMix{ display:flex; flex-direction:column; gap:3px; flex:1; min-width:170px; padding:3px 6px; }
+  #forageMix{ display:flex; flex-direction:column; gap:3px; flex:1; min-width:170px; max-width:340px; padding:3px 6px; }
   .fxRow{ display:flex; justify-content:space-between; align-items:baseline; font:700 10.5px 'Bricolage Grotesque',sans-serif; }
   .fxRow .fxP{ color:#f5a24a; } .fxRow .fxN{ color:#ffd36a; }
   .fxRow i{ font-style:normal; font-weight:400; color:var(--dim); font-size:8.5px; margin:0 4px; }
@@ -347,6 +358,49 @@
   /* ---- brush cost/gain strip: what each placement spends and returns ---- */
   #brushHelp{ width:100%; order:-1; font:500 10px 'JetBrains Mono',monospace; color:var(--dim); text-align:center; padding:1px 6px 4px; line-height:1.4; }
   #brushHelp b{ color:#f7eed9; } #brushHelp .gain{ color:#a7e07c; } #brushHelp .cost{ color:#e6a86a; }
+  /* ---- wax bank: the build queue as physical tokens you watch the bees spend down ---- */
+  #waxBank{ order:-2; width:100%; display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;
+    padding:2px 8px 4px; font:600 10px 'JetBrains Mono',monospace; color:var(--dim); transition:transform .18s ease; }
+  #waxBank.hide{ display:none; }
+  #waxBank .wbHead{ color:#e6c98a; letter-spacing:.04em; white-space:nowrap; }
+  #waxBank .wbPips{ display:inline-flex; gap:3px; align-items:center; flex-wrap:wrap; }
+  #waxBank .wbPips i{ position:relative; width:13px; height:14px; display:inline-block; overflow:hidden;
+    clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
+    background:rgba(255,255,255,.10); box-shadow:0 1px 2px rgba(0,0,0,.28); transition:width .18s ease,height .18s ease; }
+  #waxBank .wbPips i::after{ content:''; position:absolute; left:0; right:0; bottom:0; height:var(--bp,0%);
+    background:linear-gradient(180deg,#c4f2ad,#77b25c); transition:height .3s ease; }
+  #waxBank .wbPips i.queued::after{ height:14%; }                                   /* placed, bees not yet on it */
+  #waxBank .wbPips i.stall::after{ background:linear-gradient(180deg,#ffcf87,#d98a2e); }
+  #waxBank .wbPips i.empty{ background:rgba(255,255,255,.06); box-shadow:none; }
+  #waxBank .wbNote{ color:#c2a97e; }
+  #waxBank .wbNote .gain{ color:#a7e07c; } #waxBank .wbNote .cost{ color:#e6a86a; } #waxBank .wbNote b{ color:#f7eed9; }
+  #waxBank.wbHot{ transform:scale(1.04); }
+  #waxBank.wbHot .wbHead{ color:#a7e07c; }
+  #waxBank.wbHot .wbPips i{ width:16px; height:17px; }
+  #waxBank.wbLean .wbHead,#waxBank.wbSmall .wbHead{ color:#e6a86a; }
+  /* ---- comb key: a collapsible left-edge legend decoding every cell + brood phase ---- */
+  #combKey{ position:fixed; left:0; top:50%; transform:translateY(-50%); z-index:44; display:flex; align-items:center;
+    transition:transform .3s cubic-bezier(.3,1,.5,1); }
+  #combKey.hide{ display:none; }
+  #combKey.closed{ transform:translate(calc(-100% + 30px), -50%); }
+  #ckPanel{ width:214px; max-height:80vh; overflow-y:auto; -webkit-overflow-scrolling:touch;
+    background:linear-gradient(180deg,rgba(30,22,9,.96),rgba(20,14,5,.96)); border:1px solid rgba(255,214,107,.28);
+    border-left:none; border-radius:0 15px 15px 0; padding:11px 11px 12px; box-shadow:6px 0 22px rgba(0,0,0,.45); }
+  .ckTitle{ font:800 12px 'Bricolage Grotesque',sans-serif; color:var(--gold); letter-spacing:.04em; margin-bottom:9px; }
+  .ckRow{ display:flex; gap:9px; align-items:center; padding:4px 2px; border-top:1px solid rgba(255,255,255,.05); }
+  .ckRow:first-of-type{ border-top:none; }
+  .ckRow canvas{ width:26px; height:26px; flex:none; }
+  .ckRow .ckText{ min-width:0; }
+  .ckRow .ckName{ font:700 11.5px 'Bricolage Grotesque',sans-serif; color:#f5e9c8; line-height:1.15; }
+  .ckRow .ckDesc{ font:500 9.5px 'JetBrains Mono',monospace; color:var(--dim); line-height:1.3; }
+  #ckHandle{ flex:none; width:30px; min-height:96px; cursor:pointer; border:1px solid rgba(255,214,107,.3); border-left:none;
+    background:linear-gradient(180deg,rgba(40,30,12,.96),rgba(26,18,7,.96)); border-radius:0 12px 12px 0; color:var(--gold);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:8px 0; box-shadow:4px 0 14px rgba(0,0,0,.4); }
+  #ckHandle:hover{ background:linear-gradient(180deg,rgba(52,38,15,.98),rgba(34,24,9,.98)); }
+  #ckHandle .ckIco{ font-size:15px; line-height:1; }
+  #ckHandle .ckWord{ font:800 8.5px 'JetBrains Mono',monospace; letter-spacing:.12em; writing-mode:vertical-rl; text-orientation:mixed; }
+  #combKey:not(.closed) #ckHandle .ckWord{ color:var(--good); }
+  @media (max-width:520px){ #ckPanel{ width:190px; } }
   .tb.on[data-f="nectar"]{ background:linear-gradient(180deg,#ffe08a,#f0a72a); color:#241503; }
   .tb.on[data-f="balanced"]{ background:linear-gradient(180deg,#a9ebe0,#3bbcae); color:#06120f; }
   .tb.on[data-f="pollen"]{ background:linear-gradient(180deg,#ffc078,#e0791f); color:#241503; }
@@ -991,8 +1045,15 @@
   #mpStrip{ display:flex; gap:5px; flex-wrap:wrap; justify-content:center; margin-top:6px; cursor:pointer; }
   #mpStrip.hide{ display:none; }
   #mpStrip .chip{ font:600 10.5px 'JetBrains Mono',monospace; color:#1c1508; border-radius:20px; padding:3px 9px; box-shadow:0 2px 6px rgba(0,0,0,0.35); border:1.5px solid rgba(0,0,0,0.28); opacity:0.94; }
-  #mpStrip .chip.gone{ opacity:0.35; text-decoration:line-through; }
+  #mpStrip .chip.gone{ opacity:0.4; text-decoration:line-through; }
   #mpStrip .chip.me{ box-shadow:0 0 0 2px rgba(255,255,255,.85), 0 2px 6px rgba(0,0,0,.35); }
+  /* connection legend: a live "N/M linked" readout + a lit/hollow dot on each keeper */
+  #mpStrip .chip.link{ display:inline-flex; align-items:center; gap:4px; }
+  #mpStrip .chip.link.ok{ background:linear-gradient(180deg,#bff0a0,#7bc35e); color:#12280a; }
+  #mpStrip .chip.link.warn{ background:linear-gradient(180deg,#ffdc8e,#e0a63f); color:#2a1803; }
+  #mpStrip .chip .cdot{ width:7px; height:7px; border-radius:50%; display:inline-block; margin-right:1px; background:#1c3a12;
+    box-shadow:0 0 0 1.5px rgba(0,0,0,.28), 0 0 5px rgba(120,230,110,.9); }
+  #mpStrip .chip .cdot.off{ background:transparent; box-shadow:0 0 0 1.5px rgba(0,0,0,.4); }
   .mpCode{ width:100%; min-height:72px; max-height:104px; resize:none; font:500 9.5px 'JetBrains Mono',monospace; color:#f5e9c8; background:rgba(0,0,0,0.35); border:1px solid rgba(255,214,107,0.35); border-radius:9px; padding:7px; word-break:break-all; }
   .mpRow{ display:flex; gap:7px; margin-top:7px; }
   .mpRow .btn{ flex:1; }
@@ -1008,7 +1069,7 @@
   .voteBtns .btn{ flex:1; font-size:16px; padding:13px 8px; }
   /* a joiner's Queen-only controls are LOCKED, not hidden — hiding them answers
      "why can't I?" with silence; a crown answers it before they even tap */
-  .netc [data-sp]{ display:none !important; }
+  .netc #timeGrp .timeBtn{ display:none !important; }
   .netc #timeGrp{ position:relative; cursor:help; }
   .netc #timeGrp::before{ content:'👑 her clock'; display:block; align-self:center;
     font:700 10px 'JetBrains Mono',monospace; color:var(--dim); background:rgba(255,214,107,.09);
@@ -1221,6 +1282,11 @@
   <div id="hud-bottom">
     <div id="advisor" class="panel preveal" title="Hazel’s log — every word she’s said"><canvas class="ic" id="hazelC" width="46" height="46" aria-label="Hazel"></canvas><div class="tx"><span id="advTx" role="status" aria-live="polite">Welcome home, keeper.</span><button id="feedBtn" class="hide">Feed syrup — once</button></div><span class="hist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.3c-1.3 0-2.6-.3-3.7-.8L3 20l1.2-4.4a8.1 8.1 0 0 1-1.2-4.1A8.4 8.4 0 0 1 11.5 3.2 8.4 8.4 0 0 1 21 11.5z"/></svg></span><span class="fold" title="Tuck Hazel away">⌄</span></div>
     <div id="ctl" class="panel">
+      <div id="waxBank" class="hide" aria-hidden="true">
+        <span class="wbHead">🔨 Wax bank</span>
+        <span class="wbPips" id="wbPips"></span>
+        <span class="wbNote" id="wbNote">—</span>
+      </div>
       <div id="brushHelp"></div>
       <div class="grp preveal" id="forageGrp">
         <div id="forageMix">
@@ -1249,12 +1315,29 @@
       </div>
       <div class="grp" id="timeGrp">
         <span class="gl">Time</span>
-        <div class="tb" data-sp="0" tabindex="0" title="Pause &amp; plan (space)"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4.2" height="14" rx="1.4"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.4"/></svg></div>
-        <div class="tb on" data-sp="1" tabindex="0" title="Play"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7.5 5.2v13.6a.8.8 0 0 0 1.2.7l11-6.8a.8.8 0 0 0 0-1.4l-11-6.8a.8.8 0 0 0-1.2.7z"/></svg></div>
-        <div class="tb" data-sp="3" tabindex="0" title="Fast"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.8 5.6v12.8a.7.7 0 0 0 1.1.6l8-6.4a.7.7 0 0 0 0-1.2l-8-6.4a.7.7 0 0 0-1.1.6z"/><path d="M12.6 5.6v12.8a.7.7 0 0 0 1.1.6l8-6.4a.7.7 0 0 0 0-1.2l-8-6.4a.7.7 0 0 0-1.1.6z"/></svg></div>
-        <span id="fastW" class="hide">❄ fast</span>
+        <!-- one toggle: the icon is the tap-action, the colour + word tell you the state you're in -->
+        <div class="tb timeBtn" id="playToggle" tabindex="0" role="button" aria-pressed="false" aria-label="Play or pause — spacebar" title="Play / Pause · space">
+          <svg class="ico icoPlay" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7.5 5.2v13.6a.8.8 0 0 0 1.2.7l11-6.8a.8.8 0 0 0 0-1.4l-11-6.8a.8.8 0 0 0-1.2.7z"/></svg>
+          <svg class="ico icoPause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4.2" height="14" rx="1.4"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.4"/></svg>
+          <span class="tState">paused</span>
+        </div>
+        <div class="tb timeBtn fastBtn" id="fastToggle" tabindex="0" role="button" aria-pressed="false" aria-label="Fast-forward the days" title="Fast-forward the days">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.8 5.6v12.8a.7.7 0 0 0 1.1.6l8-6.4a.7.7 0 0 0 0-1.2l-8-6.4a.7.7 0 0 0-1.1.6z"/><path d="M12.6 5.6v12.8a.7.7 0 0 0 1.1.6l8-6.4a.7.7 0 0 0 0-1.2l-8-6.4a.7.7 0 0 0-1.1.6z"/></svg>
+          <span class="tState">fast</span>
+        </div>
+        <span id="fastW" class="hide">❄ winter skip</span>
       </div>
     </div>
+  </div>
+
+  <!-- comb key: a collapsible legend that decodes every cell + brood phase. Lives on the
+       left edge (where a wide screen has room to spare); tap the 🔑 handle to slide it out. -->
+  <div id="combKey" class="hide closed" aria-hidden="true">
+    <div id="ckPanel" role="region" aria-label="Comb key — what each cell means">
+      <div class="ckTitle">🔑 Comb key</div>
+      <div id="ckBody"></div>
+    </div>
+    <button id="ckHandle" tabindex="0" aria-expanded="false" aria-controls="ckPanel" title="Comb key — what each cell means"><span class="ckIco">🔑</span><span class="ckWord">KEY</span></button>
   </div>
 
   <div class="ov hide" id="menu" role="dialog" aria-modal="true">
@@ -1774,7 +1857,7 @@
     // / non-https, where no service worker runs) — the real source of truth is sw.js's
     // VERSION; syncGameVer() below asks the running worker and corrects this label
     // live, so the two only ever drift cosmetically for a moment, never permanently.
-    let GAME_VER='2026.07.31.33';
+    let GAME_VER='2026.07.31.34';
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2755,6 +2838,13 @@
     function tempAt(d){ return lerpM(tempM,d)+difficulty().temp+M.temp(); }
     function currentTemp(){ return tempAt(day)+(coldSnap>0?M.snap():0); }
     function honeyCellsStored(){ return honeyU/HC; }
+    // ONE source of truth for "what can the colony afford to build right now" — the
+    // builders' honey→wax rule and the stores buffer they refuse to spend below. Both
+    // the sim (buildFromFlags) and the on-screen wax bank read this, so the pips can
+    // never promise comb the bees won't actually draw.
+    function buildBank(){ const perCell=WAX_H*M.wax();
+      const cp=caps(); const reserve=perCell + Math.min(cp.total*0.3, (rate.h<-0.05?500:200));
+      return { perCell, reserve, affordable:Math.max(0, Math.floor((honeyU-reserve)/perCell)) }; }
 
     // ===================== cosmetic bees =====================
     const bees=[]; let hiveCx=0, hiveCy=0;
@@ -2794,11 +2884,14 @@
       if(!any) return {c0:ccx-2.5,c1:ccx+2.5,r0:ccy-2.5,r1:ccy+2.5};
       return {c0,c1,r0,r1}; }
     function fitComb(hard){
-      // phones: hug the comb tighter so it fills the little space between the HUDs
-      const b=combBounds(), pad=Math.min(W,Hh)<640?1.4:2.6;
+      // hug the comb so it fills the space between the HUDs. Big screens used to get MORE
+      // padding and a low cap, which left the comb marooned in the middle of an iPad —
+      // now tablets/desktop hug tighter and may draw larger cells, so the comb reads close.
+      const small=Math.min(W,Hh)<640;
+      const b=combBounds(), pad=small?1.4:1.2;
       const needW=((b.c1-b.c0)+1.5+pad*2)*SQ3, needH=(b.r1-b.r0)*1.5+2+pad*2;
       const availW=Math.min(W, STAGE_W)*0.96, availH=Math.max(120, Hh-topH-botH);
-      const s=Math.max(7, Math.min(50, Math.min(availW/needW, availH/needH)));
+      const s=Math.max(7, Math.min(small?50:76, Math.min(availW/needW, availH/needH)));
       const midC=(b.c0+b.c1)/2, midR=(b.r0+b.r1)/2;
       tSize=s; tOx=W/2 - s*SQ3*(midC+0.25); tOy=topH+availH/2 - s*1.5*midR;
       if(hard){ size=tSize; ox=tOx; oy=tOy; syncHiveCentre(); } }
@@ -2838,8 +2931,15 @@
     ];
     function mkBfly(gy){ const b=BFLY[(Math.random()*BFLY.length)|0];
       return {x:Math.random()*W, y:Hh*(0.5+Math.random()*0.42), ph:Math.random()*6.28, vx:(Math.random()-0.5)*22, col:b, tx:0,ty:0, rt:0, sc:0.8+Math.random()*0.7}; }
+    // where the sky meets the field. Tall portrait screens keep the classic 72% (grass
+    // fills the lower third). Short/landscape screens are the problem: 72% falls *behind*
+    // the control tray and the meadow reads as all sky ("no grass, white" on an iPad in
+    // landscape) — so there we lift the horizon to keep a real band of grass in view.
+    function meadowGroundY(){
+      if(W>=Hh){ const trayTop=Hh-botH; return Math.round(Math.max(Hh*0.42, Math.min(Hh*0.66, trayTop-Hh*0.16))); }
+      return Math.round(Hh*0.72); }
     function seedMeadow(){
-      const groundY=Hh*0.72;
+      const groundY=meadowGroundY();
       blades=[]; const nb=Math.floor(W/4);
       const GBLADE=['#5aa84a','#69b854','#4f9e46','#7cc65e','#8fce6a'];
       for(let i=0;i<nb;i++){ const fy=Math.random(); blades.push({x:Math.random()*W, y:groundY+fy*(Hh-groundY)*0.92, len:mSize*(0.7+fy*1.5), ph:Math.random()*6.28, bend:(Math.random()-0.5)*0.4, col:GBLADE[(Math.random()*GBLADE.length)|0], fy}); }
@@ -2861,12 +2961,12 @@
     // is a broken meadow, so the band is measured against botH, not the raw height.
     function patchPos(i){ const p=PATCHES[i];
       const bot=Hh-botH-size*1.1;                    // never below the tray, whatever it holds
-      const top=Math.min(Hh*0.72, bot-size*1.4);     // the horizon, or higher if the tray is tall
+      const top=Math.min(meadowGroundY(), bot-size*1.4);     // the horizon, or higher if the tray is tall
       return {x:p.fx*W, y:top+(bot-top)*(0.06+0.9*p.fy)}; }
     // the dance is a map: its axis is the true bearing from the hive to the
     // flowers, and the length of the waggle run is the distance. Real bees, real math.
     function danceAngle(){ const i=activePatch!=null?activePatch:bestPatch(day).i;
-      const pp=patchPos(i), hx=W*0.85, hy=Hh*0.72; return Math.atan2(pp.y-hy, pp.x-hx); }
+      const pp=patchPos(i), hx=W*0.85, hy=meadowGroundY(); return Math.atan2(pp.y-hy, pp.x-hx); }
 
     // ===================== overlay stack =====================
     // every .ov modal opens/closes through openOverlay()/closeOverlay() so `paused`
@@ -2902,9 +3002,12 @@
     // and a soft pitched tick (throttled so a dragged stroke stays pleasant, not rattly) ----
     let paintSndCool=0;
     const PAINTCOL={brood:'#8fc4ff', honey:'#ffd66b', expand:'#a7e07c', erase:'#c9b48a'};
-    function paintFx(cell,kind){ cell.pf=1;                       // per-cell "just placed" flash, decayed in the render
+    // the flash is tinted by the choice, so a placed cell announces WHAT it became, not
+    // just that something happened — brood blues, honey golds, fresh wax greens
+    const PAINTGLOW={brood:'150,200,255', honey:'255,224,140', expand:'176,232,140', erase:'206,186,142'};
+    function paintFx(cell,kind){ cell.pf=1; cell.pfk=kind;             // per-cell "just placed" flash, decayed in the render
       const p=cellCenter(cell.c,cell.r);
-      if(!RM) puff(p.x,p.y,PAINTCOL[kind]||'#ffd66b', kind==='erase'?3:5, 0.7);
+      if(!RM) puff(p.x,p.y,PAINTCOL[kind]||'#ffd66b', kind==='erase'?4:7, 0.85);
       netPaintChanged(cell);   // hive link: a joiner reports the cell's new state to the Queen's device
       if(paintSndCool<=0){ paintDab(kind); paintSndCool=0.05; } }
     function applyBrush(cell){ if(!cell)return; if(!netPaintOk(cell))return; let changed=false, kind=brush;
@@ -2922,6 +3025,7 @@
     function commitStroke(){ if(!strokeSnap) return; let ch=false;
       for(let i=0;i<cells.length;i++){ const c=cells[i],v=strokeSnap[i]; if(c.zone!==v.z||c.flagExpand!==v.f||c.brood!==v.b){ ch=true; break; } }
       if(ch&&!(NET.on&&NET.started)){ undoStack.push(strokeSnap); if(undoStack.length>24) undoStack.shift(); syncUndoBtn(); } strokeSnap=null;
+      if(ch) syncWaxBank();   // a fresh flag joins the queue the instant you lift your finger
       if(pendingLesson && !onboard){ const k=pendingLesson; pendingLesson=null; showLesson(k); } } // second-pass card, after the stroke
     function doUndo(){ if(!undoStack.length||onboard) return; combRestore(undoStack.pop()); syncUndoBtn();
       forecastCache=forecastToSpring(); syncHUD(); toast('\u21a9 Last comb change undone.'); }
@@ -3036,7 +3140,7 @@
         else if(adj){ t='Empty space'; s='your comb reaches here'; }
         else { t='Out of reach'; s='wax can only grow from wax'; }
         if(brush==='expand'){ if(cell.flagExpand){ a='Click to unmark'; cls='no'; }
-          else if(adj){ a='→ Draw wax here'; d='builders spend honey to build it'; }
+          else if(adj){ a='→ Draw wax here'; const bk=buildBank(); d=bk.affordable>0?('joins the build queue · pantry funds '+(bk.affordable>12?'plenty':bk.affordable)+' more'):'stores lean — bees will draw it once honey comes in'; }
           else { a='Too far from the comb'; cls='bad'; } }
         else { a='Switch to Expand to build here'; cls='no'; }
         return '<div class="it">'+t+'</div><div class="is">'+s+'</div><div class="ia '+cls+'">'+a+'</div>'+(d?'<div class="id2">'+d+'</div>':'');
@@ -3088,11 +3192,20 @@
     press($('timeGrp'),()=>{ if(!netClient()) return;
       if(NET.denyCool<=0){ NET.denyCool=4; const q=NET.players[0];
         toast('👑 <b>'+netEsc(q?q.name:'the Queen')+'</b> holds the clock — pausing and speed are hers. Tap your 🐝 chip to see what <i>is</i> yours.'); } });
-    document.querySelectorAll('[data-sp]').forEach(b=>press(b,()=>{
-      if(netClient()){ if(NET.denyCool<=0){ NET.denyCool=4;
-        const q=NET.players[0]; toast('👑 Time is the Queen’s — <b>'+netEsc(q?q.name:'she')+'</b> holds the clock. Tap your 🐝 post badge to see everything that <i>is</i> yours.'); } return; }
-      hideDawnChip(); setSpeed(+b.dataset.sp); }));
-    function setSpeed(s){ speed=s; document.querySelectorAll('[data-sp]').forEach(x=>x.classList.toggle('on',+x.dataset.sp===s)); }
+    // one toggle for go/stop, one for fast — no more three-way segment where "which is on?" is a puzzle
+    let lastPlaySpeed=1;   // remember 1× vs 3× across a pause so ▶ resumes where you left off
+    function timeIsQueens(){ if(!netClient()) return false;
+      if(NET.denyCool<=0){ NET.denyCool=4; const q=NET.players[0];
+        toast('👑 Time is the Queen’s — <b>'+netEsc(q?q.name:'she')+'</b> holds the clock. Tap your 🐝 post badge to see everything that <i>is</i> yours.'); }
+      return true; }
+    press($('playToggle'),()=>{ if(timeIsQueens()) return; hideDawnChip(); setSpeed(speed>0?0:lastPlaySpeed); });
+    press($('fastToggle'),()=>{ if(timeIsQueens()) return; hideDawnChip(); setSpeed(speed===3?1:3); });
+    function setSpeed(s){ speed=s; if(s>0) lastPlaySpeed=s; syncTimeBtns(); }
+    function syncTimeBtns(){ const playing=speed>0;
+      const pt=$('playToggle'); if(pt){ pt.classList.toggle('on',playing); pt.setAttribute('aria-pressed',playing?'true':'false');
+        const st=pt.querySelector('.tState'); if(st) st.textContent=playing?'running':'paused'; }
+      const ft=$('fastToggle'); if(ft){ ft.classList.toggle('on',speed===3); ft.setAttribute('aria-pressed',speed===3?'true':'false'); } }
+    syncTimeBtns();
     press($('tabHive'),()=>setView('hive'));
     press($('tabMeadow'),()=>setView('meadow'));
     press($('reportBtn'),()=>toggleReport());
@@ -3100,7 +3213,7 @@
     function toggleReport(v){ reportOpen=(v===undefined)?!reportOpen:v; $('reportBtn').classList.toggle('on',reportOpen); $('report').classList.toggle('hide',!reportOpen); }
     function applyViewCls(){ $('tabHive').classList.toggle('on',view==='hive'); $('tabMeadow').classList.toggle('on',view==='meadow'); $('brushGrp').classList.toggle('dim',view!=='hive'); hoveredCell=null;
       const zb=$('zenBtn'); if(zb) zb.classList.toggle('hide', view!=='meadow'||onboard||!started||over);
-      if(view!=='meadow' && zen) toggleZen(false); }
+      if(view!=='meadow' && zen) toggleZen(false); syncWaxBank(); syncCombKey(); }
     // zen view: let the keeper just watch the meadow — the panels breathe away
     function toggleZen(force){ zen=(force!==undefined)?force:!zen; document.body.classList.toggle('zen',zen);
       const zb=$('zenBtn'); if(zb){ zb.textContent=zen?'✕':'🪷'; zb.setAttribute('aria-label', zen?'Show the panels':'Zen view — hide the panels'); }
@@ -3112,7 +3225,7 @@
       if(RM){ view=v; applyViewCls(); return; }
       const w=$('wipe'); w.style.opacity=1; setTimeout(()=>{ view=v; applyViewCls(); w.style.opacity=0; },300); }
     addEventListener('keydown',e=>{ if(anyOverlayOpen()) return;   // a modal's open — let Tab/keys behave normally, not hijack gameplay shortcuts underneath it
-      if(e.key===' '){e.preventDefault(); hideDawnChip(); setSpeed(speed===0?1:0);} if(e.key==='1')pickBrush('brood'); if(e.key==='2')pickBrush('honey'); if(e.key==='3')pickBrush('expand'); if(e.key==='h'||e.key==='H')harvestSurplus(); if(e.key==='Tab'){e.preventDefault(); setView(view==='hive'?'meadow':'hive');} });
+      if(e.key===' '){e.preventDefault(); hideDawnChip(); if(!timeIsQueens()) setSpeed(speed===0?lastPlaySpeed:0);} if(e.key==='1')pickBrush('brood'); if(e.key==='2')pickBrush('honey'); if(e.key==='3')pickBrush('expand'); if(e.key==='h'||e.key==='H')harvestSurplus(); if(e.key==='Tab'){e.preventDefault(); setView(view==='hive'?'meadow':'hive');} });
     function pickBrush(b){ brush=b; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x.dataset.brush===b)); syncBrushHelp(); }
 
     // ===================== harvest (push-your-luck legacy score) =====================
@@ -3412,11 +3525,10 @@
       const flagged=cells.filter(c=>!c.built&&c.flagExpand);
       if(!flagged.length){ buildStall=''; return; }
       let budget=(P*BUILD_FRAC*1.4 + Math.random()*0.15)*dd; // cells-worth of progress this step (dd-scaled → frame-rate independent)
-      const cost=WAX_H*M.wax();
+      const bank=buildBank(), cost=bank.perCell, reserve=bank.reserve;   // shared with the on-screen wax bank so the pips obey the same rule
       const builtN=cells.reduce((a,c)=>a+(c.built?1:0),0);
       if(builtN >= P*2.4+14){ buildStall='small'; toast('The colony is too small to tend more comb — grow the brood nest first.','buildscale'); return; }
       tip('wax','Hazel: Wax is dear. The old rule is eight ounces of honey burned for every ounce of wax drawn \u2014 that\u2019s why the builders hang back when the pantry runs thin.');
-      const cpB=caps(); const reserve = cost + Math.min(cpB.total*0.3, rate.h < -0.05 ? 500 : 200); // scale the buffer to what the comb can even hold
       if(honeyU<reserve){ buildStall='lean'; toast('Builders wait — stores are too lean to draw wax.','buildwait'); return; }
       buildStall='';
       flagged.sort((a,b)=>cellDist(a.c,a.r)-cellDist(b.c,b.r)); // finish the nearest cell first
@@ -3764,10 +3876,12 @@
         ctx.globalAlpha=1; ctx.restore(); }
       // freshly-painted cells flash bright and settle — the wax "takes" under your hand
       if(!heatView) for(const cell of cells){ if(!cell.pf||cell.pf<=0) continue;
-        const {x,y}=cellCenter(cell.c,cell.r), pf=cell.pf;
+        const {x,y}=cellCenter(cell.c,cell.r), pf=cell.pf, glow=PAINTGLOW[cell.pfk]||'255,245,216';
         ctx.save(); ctx.globalCompositeOperation='lighter';
-        hexPathOn(ctx,x,y,s2*(0.9+0.45*(1-pf))); ctx.fillStyle='rgba(255,245,216,'+(0.55*pf).toFixed(3)+')'; ctx.fill();
-        ctx.restore(); cell.pf-=lastDt*3.4; if(cell.pf<0)cell.pf=0; }
+        // a soft white core that the eye reads as "placed", ringed by the choice's own colour
+        hexPathOn(ctx,x,y,s2*(0.86+0.30*(1-pf))); ctx.fillStyle='rgba(255,248,228,'+(0.42*pf).toFixed(3)+')'; ctx.fill();
+        hexPathOn(ctx,x,y,s2*(0.92+0.62*(1-pf))); ctx.strokeStyle='rgba('+glow+','+(0.72*pf).toFixed(3)+')'; ctx.lineWidth=1.6+2.2*pf; ctx.stroke();
+        ctx.restore(); cell.pf-=lastDt*3.0; if(cell.pf<0)cell.pf=0; }
       const dA=danceAngle(), dcx=hiveCx, dcy=hiveCy-size*4, dco=Math.cos(dA), dsn=Math.sin(dA);
       for(const b of bees){ if(b.state==='waggle'){ ctx.strokeStyle='rgba(255,210,120,0.35)'; ctx.lineWidth=1.5; ctx.beginPath(); let first=true; for(let t=0;t<6.3;t+=0.3){ const u=Math.sin(t)*size*2.2, v=Math.sin(t*2)*size*1.1; const xx=dcx+u*dco-v*dsn, yy=dcy+u*dsn+v*dco; if(first){ctx.moveTo(xx,yy);first=false;} else ctx.lineTo(xx,yy);} ctx.stroke(); }
         let bx=b.x, by=b.y;
@@ -3964,7 +4078,7 @@
       ctx.fillStyle=h.col; ctx.beginPath(); ctx.arc(s*0.48,-s*0.04,s*0.16,0,6.28); ctx.fill();
       ctx.strokeStyle='rgba(40,30,20,0.85)'; ctx.lineWidth=Math.max(0.6,s*0.05); ctx.beginPath(); ctx.moveTo(s*0.6,-s*0.04); ctx.lineTo(s*1.15,0); ctx.stroke();
       ctx.restore(); }
-    function drawDragonfly(d,dt){ d.hold-=dt; if(d.hold<=0){ d.tx=size*2+Math.random()*Math.max(1,W-size*4); d.ty=Hh*0.72+size*(0.3+Math.random()*1.6); d.hold=0.8+Math.random()*1.6; }
+    function drawDragonfly(d,dt){ d.hold-=dt; if(d.hold<=0){ d.tx=size*2+Math.random()*Math.max(1,W-size*4); d.ty=meadowGroundY()+size*(0.3+Math.random()*1.6); d.hold=0.8+Math.random()*1.6; }
       const dx=d.tx-d.x,dy=d.ty-d.y,L=Math.hypot(dx,dy)||1,sp=size*7*dt; d.x+=dx/L*Math.min(L,sp); d.y+=dy/L*Math.min(L,sp);
       const s=size*0.5, dir=dx<-0.5?-1:1, wf=0.4+0.6*Math.abs(Math.sin(mt*32+d.ph));
       ctx.save(); ctx.translate(d.x,d.y); if(dir<0)ctx.scale(-1,1);
@@ -3994,7 +4108,7 @@
       ctx.restore(); }
     function drawMeadowBody(dt){
       mt+=dt; const dif=difficulty(); const T=currentTemp(), Na=lerpM(nectarM,day)*dif.flow, Pa=lerpM(pollenM,day)*dif.flow;
-      const winter=T<WIN_TEMP, bloom=Math.max(Na,Pa), groundY=Hh*0.72;
+      const winter=T<WIN_TEMP, bloom=Math.max(Na,Pa), groundY=meadowGroundY();
       // ambient weather: a slow dry → shower → rainbow → dry cycle (cosmetic; no rain in winter)
       if(!RM){ sky.phaseT-=dt;
         if(sky.phaseT<=0){ if(sky.phase==='rain'){ sky.phase='bow'; sky.phaseT=9+Math.random()*6; }
@@ -4168,7 +4282,7 @@
       const T=currentTemp(), Na=lerpM(nectarM,day)*difficulty().flow;
       $('yearLab').textContent='Year '+year; $('seasonLab').textContent=seasonName(day)+' · day '+(Math.floor(day)+1); $('tlNow').style.left=(day/YEAR*100)+'%';
       $('wxFlow').textContent=Math.round(Na*100)+'%'; $('wxTemp').textContent=Math.round(T)+'°';
-      goalHUD(); checkGoals(); syncYields();
+      goalHUD(); checkGoals(); syncYields(); syncWaxBank(); syncCombKey();
       const hs=harvestState(); $('apiaryGrp').classList.toggle('hidden', !hs.inWin || onboard);
       $('harvestBtn').classList.toggle('off',!hs.ok);
       $('harvestBtn').title=hs.ok?('Seal a jar (8 cells of surplus) — '+Math.floor(hs.sur)+' spare'):'No safe surplus yet — the bees\u2019 winter share comes first';
@@ -4346,9 +4460,87 @@
     const BRUSHHELP={
       brood:'\ud83c\udf7c <b>Brood</b> cradle \u2014 <span class="gain">gain: more bees</span> <span class="cost">\u00b7 cost: nurses &amp; warmth</span>',
       honey:'\ud83c\udf6f <b>Honey</b> shelf \u2014 <span class="gain">gain: +1 pantry cell</span> <span class="cost">\u00b7 cost: wax, drawn from honey</span>',
-      expand:'\ud83d\udd28 <b>Expand</b> wax \u2014 <span class="gain">gain: room to grow</span> <span class="cost">\u00b7 cost: ~8 honey per cell</span>'
+      expand:'\ud83d\udd28 <b>Expand</b> wax \u2014 <span class="gain">gain: room to grow</span> <span class="cost">\u00b7 cost: wax &amp; a builder\u2019s time \u2014 watch the bank</span>'
     };
-    function syncBrushHelp(){ const el=$('brushHelp'); if(el) el.innerHTML=BRUSHHELP[brush]||''; }
+    function syncBrushHelp(){ const el=$('brushHelp'); if(el) el.innerHTML=BRUSHHELP[brush]||''; syncWaxBank(); }
+    // ---- comb key: a collapsible legend that decodes every cell + brood phase. One row
+    // per kind (a data table, not a branch); each swatch is drawn to match the comb itself ----
+    const COMBKEY=[
+      {k:'egg',    n:'Egg',          d:'day 1–3 · a pearl, just laid'},
+      {k:'larva',  n:'Larva',        d:'day 4–8 · a grub, well fed'},
+      {k:'capped', n:'Capped brood', d:'day 9–20 · sealed, a bee forming'},
+      {k:'brood',  n:'Nursery',      d:'blue cells — where the queen lays'},
+      {k:'honey',  n:'Honey',        d:'ripe stores · the winter blanket'},
+      {k:'nectar', n:'Nectar',       d:'fresh — still ripening to honey'},
+      {k:'pollen', n:'Pollen',       d:'bee bread · protein for the young'},
+      {k:'bare',   n:'Bare wax',     d:'built &amp; empty · awaiting a job'},
+      {k:'expand', n:'Building',     d:'flagged wax the builders draw'},
+      {k:'heat',   n:'Warmth',       d:'heat lens · where the nest holds heat'},
+    ];
+    function drawKeySwatch(cv,k){ const g=cv.getContext('2d'); const D=cv.width, c=D/2, s=D*0.46;
+      g.clearRect(0,0,D,D);
+      hexPathOn(g,c,c,s);
+      if(k==='heat'){ let hg=g.createRadialGradient(c,c,1,c,c,s); hg.addColorStop(0,heatColor(0.95,1)); hg.addColorStop(1,heatColor(0.5,1)); g.fillStyle=hg; g.fill(); }
+      else if(k==='honey'||k==='nectar'||k==='pollen'){ const L=LIQ[k]; let lg=g.createLinearGradient(0,c-s,0,c+s);
+        lg.addColorStop(0,L.hi); lg.addColorStop(0.5,L.mid); lg.addColorStop(1,L.lo); g.fillStyle=lg; g.fill();
+        g.fillStyle=L.spec+'0.5)'; g.beginPath(); g.ellipse(c,c-s*0.24,s*0.55,s*0.26,0,0,6.28); g.fill(); }
+      else if(k==='expand'){ g.fillStyle=COL.frontier; g.fill(); }
+      else { let cg=g.createRadialGradient(c-s*0.2,c-s*0.25,1,c,c,s*1.05); cg.addColorStop(0,'#4a3719'); cg.addColorStop(0.6,COL.wallEmpty); cg.addColorStop(1,'#241906'); g.fillStyle=cg; g.fill();
+        if(k==='brood'){ g.fillStyle='rgba(120,170,235,0.42)'; hexPathOn(g,c,c,s); g.fill(); } }
+      hexPathOn(g,c,c,s); g.strokeStyle=(k==='expand')?'rgba(150,214,110,0.9)':COL.wallRim; g.lineWidth=D*0.05;
+      if(k==='expand'&&g.setLineDash) g.setLineDash([D*0.09,D*0.07]); g.stroke(); if(g.setLineDash) g.setLineDash([]);
+      if(k==='egg'){ g.fillStyle=COL.egg; g.beginPath(); g.ellipse(c,c,s*0.13,s*0.30,0.5,0,6.28); g.fill(); }
+      else if(k==='larva'){ const lr=s*0.5; let lg=g.createRadialGradient(c-lr*0.3,c-lr*0.35,1,c,c,lr); lg.addColorStop(0,'#fdf3d8'); lg.addColorStop(0.7,COL.larva); lg.addColorStop(1,'#d8bd86'); g.fillStyle=lg; g.beginPath(); g.arc(c,c,lr,0,6.28); g.fill(); }
+      else if(k==='capped'){ let pg=g.createRadialGradient(c-s*0.22,c-s*0.26,1,c,c,s*0.82); pg.addColorStop(0,'#e3c58c'); pg.addColorStop(0.65,COL.pupa); pg.addColorStop(1,'#9c8049'); g.fillStyle=pg; hexPathOn(g,c,c,s*0.82); g.fill(); } }
+    function buildCombKey(){ const body=$('ckBody'); if(!body||body.dataset.built) return; body.dataset.built='1';
+      body.innerHTML=COMBKEY.map(r=>'<div class="ckRow"><canvas width="40" height="40" data-k="'+r.k+'"></canvas><div class="ckText"><div class="ckName">'+r.n+'</div><div class="ckDesc">'+r.d+'</div></div></div>').join('');
+      body.querySelectorAll('canvas').forEach(cv=>drawKeySwatch(cv,cv.dataset.k)); }
+    let combKeyOpen=false; try{ combKeyOpen=localStorage.getItem('hm_combkey')==='1'; }catch(e){}
+    function setCombKey(open){ combKeyOpen=open; const el=$('combKey'); if(!el) return;
+      el.classList.toggle('closed',!open); const h=$('ckHandle'); if(h) h.setAttribute('aria-expanded',open?'true':'false');
+      try{ lsSet('hm_combkey',open?'1':'0'); }catch(e){} }
+    let _ckSig='';
+    function syncCombKey(){ const el=$('combKey'); if(!el) return;
+      const show = started && !over && !onboard && !storyMode && view==='hive';
+      const sig=(show?1:0)+'|'+(combKeyOpen?1:0);   // per-frame hot path — only touch the DOM on a real change
+      if(sig===_ckSig) return; _ckSig=sig;
+      el.classList.toggle('hide',!show); el.setAttribute('aria-hidden',show?'false':'true');
+      if(show){ buildCombKey(); el.classList.toggle('closed',!combKeyOpen); } }
+    press($('ckHandle'), ()=>setCombKey(!combKeyOpen));
+    // the wax bank: the build queue as physical tokens. Each flagged cell is a token
+    // the bees fill (its --bp rises as the wax is drawn) and then spend into real comb,
+    // so "building costs, and takes time" is something you watch happen, not read about.
+    let _wbSig='';
+    function syncWaxBank(){ const el=$('waxBank'); if(!el) return;
+      const show = started && !over && !onboard && view==='hive';
+      // syncHUD is the per-frame hot path — skip the DOM rebuild unless something the
+      // bank actually shows has changed (flagged count, draw progress, stall, brush, view).
+      let n=0, sumBp=0; for(const c of cells){ if(!c.built&&c.flagExpand){ n++; sumBp+=(c.bp||0); } }
+      const sig=(show?1:0)+'|'+view+'|'+brush+'|'+n+'|'+buildStall+'|'+Math.round(sumBp*3);
+      if(sig===_wbSig) return; _wbSig=sig;
+      el.classList.toggle('hide', !show); el.setAttribute('aria-hidden', show?'false':'true');
+      if(!show){ el.classList.remove('wbHot','wbLean','wbSmall'); return; }
+      el.classList.toggle('wbHot', brush==='expand');
+      const flagged=cells.filter(c=>!c.built&&c.flagExpand), CAP=16, pips=$('wbPips');
+      el.classList.toggle('wbLean', n>0&&buildStall==='lean'); el.classList.toggle('wbSmall', n>0&&buildStall==='small');
+      if(n===0){ const b=buildBank();
+        pips.innerHTML='<i class="empty"></i><i class="empty"></i><i class="empty"></i>';
+        $('wbNote').innerHTML = brush==='expand'
+          ? 'tap bare edges to <span class="gain">queue new comb</span> — bees draw it from stores, a little at a time'
+          : (b.affordable>0 ? 'ready to build — pick <b>🔨 Expand</b> and tap the comb’s edge'
+                            : '<span class="cost">stores lean</span> — let honey come in before building');
+        return; }
+      const sorted=flagged.slice().sort((a,b)=>cellDist(a.c,a.r)-cellDist(b.c,b.r));
+      const shown=Math.min(CAP,n); let html='';
+      for(let i=0;i<shown;i++){ const bp=Math.max(0,Math.min(1,sorted[i].bp||0));
+        const cls=buildStall?'stall':(bp>0.02?'':'queued');
+        html+='<i class="'+cls+'" style="--bp:'+(bp*100).toFixed(0)+'%"></i>'; }
+      pips.innerHTML=html + (n>CAP?'<span style="margin-left:4px;color:#e6c98a">+'+(n-CAP)+'</span>':'');
+      let note;
+      if(buildStall==='lean') note='<span class="cost">stores too lean</span> — builders pause until the pantry recovers';
+      else if(buildStall==='small') note='<span class="cost">too few builders</span> — grow the colony to raise more comb at once';
+      else note='<span class="gain">'+n+' cell'+(n>1?'s':'')+' drawing</span> · bees finish the nearest first, then spend the next';
+      $('wbNote').innerHTML=note; }
     function syncYields(){
       const cpY=caps(), fullY=(honeyU+pollenU+nectarU)>=cpY.total-2;
       syncForageUI();
@@ -4554,7 +4746,7 @@
     const PREVEAL=['res','clockWrap','reportBtn','advisor','forageGrp'];
     function setReveal(on){ PREVEAL.forEach(id=>{ const el=$(id); if(el) el.classList.toggle('hidden', on); }); }
     function spot(id,on){ const el=$(id); if(el) el.classList.toggle('spotlight',on); }
-    function clearSpots(){ ['forageGrp','brushGrp','timeGrp','tabMeadow','reportBtn'].forEach(id=>spot(id,false)); document.querySelectorAll('[data-brush],[data-sp],[data-f]').forEach(e=>e.classList.remove('tapHere')); }
+    function clearSpots(){ ['forageGrp','brushGrp','timeGrp','tabMeadow','reportBtn'].forEach(id=>spot(id,false)); document.querySelectorAll('[data-brush],.timeBtn,[data-f]').forEach(e=>e.classList.remove('tapHere')); }
     // `bridge` is Hazel's congratulation line after a step's unlock fires (steps
     // with no unlock -- "pick up a brush" steps -- have none); `target` is the
     // cell coachTarget() ripples toward, for steps that have one specific cell
@@ -5511,8 +5703,12 @@
     function netStripSync(){ const el=$('mpStrip'); if(!el) return;
       if(!NET.on||!NET.started){ el.classList.add('hide'); return; }
       el.classList.remove('hide');
-      el.innerHTML=netPostChip()+NET.players.map(p=>'<span class="chip'+(p.gone?' gone':'')+(p.ix===NET.myIx?' me':'')+'" style="background:'+NETCOL[p.ix]+'">'+(p.ix===0?'👑 ':'')+netEsc(p.name)+(p.ix===NET.myIx?' (you)':'')+(netVotedIx.indexOf(p.ix)>=0?' ✓':'')+'</span>').join('')
-        +(NET.stale?'<span class="chip" style="background:#3a2f1a;color:#ffd66b">🔗 re-linking…</span>':''); }
+      // connection legend: how many keepers are actually linked right now, at a glance
+      const total=NET.players.length, here=NET.players.filter(p=>!p.gone).length, allHere=(here===total&&!NET.stale);
+      const linkChip='<span class="chip link '+(allHere?'ok':'warn')+'" title="keepers linked to the hive right now">'+(NET.stale?'🔗…':'🔗')+' '+here+'/'+total+' linked</span>';
+      // each keeper wears a live dot: lit = in the hive, hollow = dropped (their comb is held for them)
+      el.innerHTML=netPostChip()+linkChip+NET.players.map(p=>'<span class="chip'+(p.gone?' gone':'')+(p.ix===NET.myIx?' me':'')+'" style="background:'+NETCOL[p.ix]+'"><i class="cdot'+(p.gone?' off':'')+'"></i>'+(p.ix===0?'👑 ':'')+netEsc(p.name)+(p.ix===NET.myIx?' (you)':'')+(netVotedIx.indexOf(p.ix)>=0?' ✓':'')+'</span>').join('')
+        +(NET.stale?'<span class="chip warn" style="background:#3a2f1a;color:#ffd66b">reconnecting…</span>':''); }
     // ---- host plumbing ----
     async function hostNewInvite(){ const st=$('mpHostState');
       if(NET.players.filter(p=>!p.gone).length>=NET_MAX){ st.textContent='the hive is full — eight keepers is a crowd already'; $('inviteCode').value=''; NET.pend=null; return; }
@@ -6279,7 +6475,7 @@
     syncHUD();
 
     // debug/testing handle
-    window.__hm=()=>({day,year,P,honeyU,pollenU,nectarU,honeyCells:honeyCells(),broodCells:broodCells(),ap:activePatch,
+    window.__hm=()=>({day,year,P,honeyU,pollenU,nectarU,honeyCells:honeyCells(),broodCells:broodCells(),ap:activePatch,speed,brush,bank:buildBank(),
       story:{on:storyMode, ix:storyIx, sc:((curBeats||STORY)[storyIx]||{}).sc, camX, camS, hiveX:W*camX, W, horizon:storyHorizon(), Hh},
       view:{W,Hh,size,mSize,tSize,ox,oy,hiveCx,hiveCy,topH,botH,stage:Math.min(W,STAGE_W),bounds:combBounds()},
       therm:{warmth:nestWarmth(), amb:AMB(currentTemp()),

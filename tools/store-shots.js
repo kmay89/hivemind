@@ -69,9 +69,9 @@ function serve() {
       await tap(v.hiveCx + Math.cos(a) * v.size * rr, v.hiveCy + Math.sin(a) * v.size * rr); }
     // painting arms the keeper's-page lessons (LESSON_AT) — thank them and move on
     for (let i = 0; i < 5; i++) { await page.keyboard.press('Escape'); await page.waitForTimeout(350); }
-    await page.evaluate(() => { const b = document.querySelector('[data-sp="3"]'); if (b) b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 })); });
+    await page.evaluate(() => { const b = document.getElementById('fastToggle'); if (b) b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 })); });
     await page.waitForTimeout(6500);   // ~18 game days: peak spring — stores golden, brood capped, wax fresh
-    await page.evaluate(() => { const b = document.querySelector('[data-sp="1"]'); if (b) b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 })); });
+    await page.evaluate(() => { const b = document.getElementById('fastToggle'); if (b) b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 })); });   // 3× → back to 1×
     await page.waitForTimeout(800);
     // the scouts may have interrupted mid-fast-forward (they do that) — clear the floor
     for (let i = 0; i < 3; i++) {

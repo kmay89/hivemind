@@ -162,10 +162,16 @@ async function waitVal(page, sel, tries = 60) {
   if (dJoin > d0 && Math.abs(dHost - dJoin) < 2) console.log('✓ snapshots flow — joiner tracks the Queen\'s clock');
   else console.log('✗ snapshot drift problem');
 
-  // strip visible on both
-  const strip = await join.$eval('#mpStrip', el => ({ n: el.children.length, post: !!el.querySelector('.post'), me: !!el.querySelector('.chip.me') }));
-  console.log(strip.n === 3 && strip.post && strip.me
-    ? '✓ keeper strip: your post chip + 2 keepers, with (you) marked'
+  // strip visible on both: post chip + connection legend + one chip per keeper
+  const strip = await join.$eval('#mpStrip', el => ({
+    post: !!el.querySelector('.post'),
+    link: !!el.querySelector('.chip.link'),
+    linkTxt: ((el.querySelector('.chip.link') || {}).textContent || '').trim(),
+    keepers: el.querySelectorAll('.chip:not(.link)').length,
+    dots: el.querySelectorAll('.chip:not(.link) .cdot').length,
+    me: !!el.querySelector('.chip.me') }));
+  console.log(strip.post && strip.link && strip.me && strip.keepers === 2 && strip.dots === 2
+    ? `✓ keeper strip: post chip + "${strip.linkTxt}" legend + 2 keepers (lit dots), (you) marked`
     : '✗ strip odd: ' + JSON.stringify(strip));
 
   // --- vote flow: host proposes a patch via selectPatch path is canvas-bound;
