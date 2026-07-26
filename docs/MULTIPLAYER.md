@@ -39,6 +39,27 @@ the games that do couch play best:
   and lobby in the room; new players can't break anyone else's comb, which is
   what makes mixed-skill groups work.
 
+### Making the split legible (the two questions)
+
+A party only works if every screen answers **"what am I?"** and **"why is that
+locked?"** without anyone asking out loud:
+
+- **The post chip** leads the keeper strip on every device — `👑 QUEEN · TIME &
+  DIAL` or `🐝 THE EAST COMB · TAP ME` — and your own name chip wears a white
+  ring and "(you)". Tapping the strip opens your **post card** at any time
+  (not just at the start): what is yours alone, and what the hive decides
+  together. The Queen's card carries the *＋ Invite keepers* door inside it.
+- **Queen-only controls are shown locked, never hidden.** A joiner sees the
+  forage dial dimmed with a 👑, and where the time buttons would be, a single
+  dashed `👑 her clock` chip. Tapping either names the Queen and points at the
+  post chip. (Hiding them answered "why can't I?" with silence — and the three
+  extra buttons wrapped the control tray, which pushed the meadow's blooms
+  underneath it. `patchPos` now measures its band against `botH` so a bloom is
+  always tappable, whatever the tray grows into.)
+- **The card scales.** With one worker it says "the Queen keeps the warm heart,
+  everything around it is yours"; with more it says "your wedge is yours alone
+  — no one paints it but you." The worker's card counts their actual cells.
+
 ## Decisions
 
 | Action | Who | How |

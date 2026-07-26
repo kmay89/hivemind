@@ -988,9 +988,11 @@
     *,*::before,*::after{ animation-duration:.001s !important; transition-duration:.05s !important; }
   }
   /* ===== hive link (same-room multiplayer) ===== */
-  #mpStrip{ position:fixed; left:50%; transform:translateX(-50%); top:calc(env(safe-area-inset-top,0px) + 50px); z-index:58; display:flex; gap:5px; flex-wrap:wrap; justify-content:center; max-width:92vw; pointer-events:none; }
+  #mpStrip{ display:flex; gap:5px; flex-wrap:wrap; justify-content:center; margin-top:6px; cursor:pointer; }
+  #mpStrip.hide{ display:none; }
   #mpStrip .chip{ font:600 10.5px 'JetBrains Mono',monospace; color:#1c1508; border-radius:20px; padding:3px 9px; box-shadow:0 2px 6px rgba(0,0,0,0.35); border:1.5px solid rgba(0,0,0,0.28); opacity:0.94; }
   #mpStrip .chip.gone{ opacity:0.35; text-decoration:line-through; }
+  #mpStrip .chip.me{ box-shadow:0 0 0 2px rgba(255,255,255,.85), 0 2px 6px rgba(0,0,0,.35); }
   .mpCode{ width:100%; min-height:72px; max-height:104px; resize:none; font:500 9.5px 'JetBrains Mono',monospace; color:#f5e9c8; background:rgba(0,0,0,0.35); border:1px solid rgba(255,214,107,0.35); border-radius:9px; padding:7px; word-break:break-all; }
   .mpRow{ display:flex; gap:7px; margin-top:7px; }
   .mpRow .btn{ flex:1; }
@@ -1004,11 +1006,33 @@
   #voteTally{ font:600 14.5px 'Bricolage Grotesque',sans-serif; margin-top:9px; min-height:22px; letter-spacing:1px; }
   .voteBtns{ display:flex; gap:9px; margin-top:11px; }
   .voteBtns .btn{ flex:1; font-size:16px; padding:13px 8px; }
+  /* a joiner's Queen-only controls are LOCKED, not hidden — hiding them answers
+     "why can't I?" with silence; a crown answers it before they even tap */
   .netc [data-sp]{ display:none !important; }
+  .netc #timeGrp{ position:relative; cursor:help; }
+  .netc #timeGrp::before{ content:'👑 her clock'; display:block; align-self:center;
+    font:700 10px 'JetBrains Mono',monospace; color:var(--dim); background:rgba(255,214,107,.09);
+    border:1px dashed rgba(255,214,107,.32); border-radius:9px; padding:6px 9px; white-space:nowrap; }
+  .netc #forageGrp{ position:relative; }
+  .netc #forageGrp::after{ content:'👑'; position:absolute; top:-7px; right:-4px;
+    font-size:13px; line-height:1; filter:drop-shadow(0 1px 2px rgba(0,0,0,.8)); pointer-events:none; }
+  .netc #forageSlider{ opacity:.42; filter:grayscale(.6); }
   .netc #undoBtn{ display:none !important; }
+  /* the always-there answer to "what am I?" */
+  #mpStrip .post{ font:700 10px 'JetBrains Mono',monospace; letter-spacing:.08em; color:#1c1508;
+    border-radius:20px; padding:4px 10px; border:1.5px solid rgba(0,0,0,.35);
+    box-shadow:0 2px 7px rgba(0,0,0,.45), 0 0 0 2px rgba(255,255,255,.55); text-transform:uppercase; }
+  .roleGrid{ display:flex; flex-direction:column; gap:6px; margin:4px 0 2px; text-align:left; }
+  .roleGrid .rg{ display:flex; gap:9px; align-items:baseline; font:500 12.5px 'Bricolage Grotesque',sans-serif; line-height:1.45; }
+  .roleGrid .rg span:first-child{ flex:none; font-size:15px; width:19px; text-align:center; }
+  .roleGrid b{ color:var(--gold); }
+  .roleHead{ font:700 9.5px 'JetBrains Mono',monospace; letter-spacing:1.8px; text-transform:uppercase; color:var(--dim);
+    margin:11px 0 2px; display:flex; align-items:center; gap:8px; text-align:left; }
+  .roleHead::after{ content:''; flex:1; height:1px; background:linear-gradient(90deg,rgba(255,214,107,.35),transparent); }
+  .roleHead.mine{ color:var(--gold); }
   .mpBadge{ font:700 11px 'JetBrains Mono',monospace; letter-spacing:1.5px; color:#ffd66b; text-transform:uppercase; }
   .mpSector{ font:800 24px 'Bricolage Grotesque',sans-serif; margin:5px 0 2px; }
-  #mpOrder{ position:fixed; left:50%; transform:translateX(-50%); top:calc(env(safe-area-inset-top,0px) + 82px); z-index:57;
+  #mpOrder{ position:fixed; left:50%; transform:translateX(-50%); top:calc(env(safe-area-inset-top,0px) + 52px); z-index:57;
     font:600 12px 'Bricolage Grotesque',sans-serif; color:#1c1508; background:linear-gradient(180deg,#ffe9a8,#ffd66b);
     border:1.5px solid rgba(0,0,0,0.3); border-radius:12px; padding:6px 12px 8px; box-shadow:0 3px 10px rgba(0,0,0,0.4);
     max-width:88vw; text-align:center; pointer-events:none; }
@@ -1168,6 +1192,7 @@
       <div id="yearLine"><span id="yearLab">Year 1</span><span id="seasonLab">Spring · day 1</span></div>
       <div id="tl"><div id="tlBloom"></div><div id="tlHarv"></div><div id="tlFrost"></div><div id="tlNow" style="left:0%"></div></div>
       <div id="wx"><span>flow <b id="wxFlow">—</b></span><span><b id="wxTemp">—</b></span></div>
+      <div id="mpStrip" class="hide" aria-hidden="true"></div>
       <div id="goal"><span id="goalIc">🧭</span><div id="goalBody"><div id="goalTx">Found the colony</div><div id="goalBar"><i id="goalFill"></i></div></div><span id="goalN"></span></div>
       <div id="wr"><div id="wrTop"><span>Winter pantry</span><span id="wrPct"></span></div><div id="wrBar"><div id="wrFill"></div></div><div id="wrLab">—</div></div>
     </div>
@@ -1614,7 +1639,11 @@
       <div class="mpBadge" id="roleBadge">your post</div>
       <div class="mpSector" id="roleName"></div>
       <p id="roleText" style="margin:6px 0 2px"></p>
-      <button class="btn pulse" id="roleGo" style="margin-top:10px">To the comb ▶</button>
+      <div id="roleBody"></div>
+      <div class="mpRow" style="margin-top:11px">
+        <button class="btn sm hide" id="roleInvite">＋ Invite keepers</button>
+        <button class="btn pulse" id="roleGo">To the comb ▶</button>
+      </div>
     </div>
   </div>
   <div class="ov hide" id="mpVote" role="dialog" aria-modal="true">
@@ -1638,7 +1667,6 @@
       <button class="btn ghost" id="mpEndClose" style="margin-top:8px">Back to the meadow</button>
     </div>
   </div>
-  <div id="mpStrip" class="hide" aria-hidden="true"></div>
   <div id="mpOrder" class="hide" role="status"></div>
   <div id="dawnChip" class="hide" role="status">
     <span id="dawnTx"><b>🌅 Day 2.</b> Look around, paint, plan — time waits for you.</span>
@@ -1749,7 +1777,7 @@
     // / non-https, where no service worker runs) — the real source of truth is sw.js's
     // VERSION; syncGameVer() below asks the running worker and corrects this label
     // live, so the two only ever drift cosmetically for a moment, never permanently.
-    let GAME_VER='2026.07.31.31';
+    let GAME_VER='2026.07.31.32';
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2823,7 +2851,14 @@
       dflies=[]; const dc=['#3fd0c0','#ff6f9a']; for(let i=0;i<2;i++) dflies.push({x:Math.random()*W, y:groundY+mSize*(0.5+Math.random()), tx:Math.random()*W, ty:groundY+mSize, ph:Math.random()*6.28, col:dc[i], hold:0});
       rabbit={x:W*(0.1+Math.random()*0.22), base:groundY+(Hh-groundY)*0.34, tx:0, state:'sit', t:3+Math.random()*4, dir:1, hop:0, ear:0};
     }
-    function patchPos(i){ const p=PATCHES[i], gy=Hh*0.72; return {x:p.fx*W, y:gy+(Hh-gy)*(0.03+0.25*p.fy)}; }
+    // blooms live in the band between the horizon and the top of the control tray.
+    // Anchoring them to Hh alone put flowers *behind* the tray whenever it grew
+    // (a locked-controls row, a longer brush hint) — and a bloom you cannot tap
+    // is a broken meadow, so the band is measured against botH, not the raw height.
+    function patchPos(i){ const p=PATCHES[i];
+      const bot=Hh-botH-size*1.1;                    // never below the tray, whatever it holds
+      const top=Math.min(Hh*0.72, bot-size*1.4);     // the horizon, or higher if the tray is tall
+      return {x:p.fx*W, y:top+(bot-top)*(0.06+0.9*p.fy)}; }
     // the dance is a map: its axis is the true bearing from the hive to the
     // flowers, and the length of the waggle run is the distance. Real bees, real math.
     function danceAngle(){ const i=activePatch!=null?activePatch:bestPatch(day).i;
@@ -3037,7 +3072,8 @@
     canvas.addEventListener('contextmenu',e=>e.preventDefault());
 
     { const sl=$('forageSlider'); if(sl) sl.addEventListener('input',()=>{
-      if(netClient()){ syncForageUI(); if(NET.denyCool<=0){ NET.denyCool=4; toast('👑 The forage balance is the Queen’s call — lean over and talk her into it!'); } return; }
+      if(netClient()){ syncForageUI(); if(NET.denyCool<=0){ NET.denyCool=4;
+        const q=NET.players[0]; toast('👑 The forage dial is <b>'+netEsc(q?q.name:'the Queen')+'</b>’s call — lean over and talk her into it!'); } return; }
       forage=FORAGE_STEPS[Math.max(0,Math.min(4,+sl.value))]; forageTouched=true; forecastCache=forecastToSpring(); syncForageUI(); checkCoachProgress(); }); }
     document.querySelectorAll('[data-brush]').forEach(b=>press(b,()=>{brush=b.dataset.brush;document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x===b)); syncBrushHelp(); checkCoachProgress();}));
     press($('undoBtn'), doUndo);
@@ -3045,7 +3081,13 @@
     press($('confNo'), ()=>closeConfirm());
     press($('confChk'), ()=>{ confDismiss=!confDismiss; $('confChk').classList.toggle('on',confDismiss); $('confChk').setAttribute('aria-checked',confDismiss?'true':'false'); });
     addEventListener('keydown',e=>{ if((e.key==='z'||e.key==='Z')&&!e.metaKey&&!e.ctrlKey&&!e.altKey&&started&&!over){ e.preventDefault(); doUndo(); } });
-    document.querySelectorAll('[data-sp]').forEach(b=>press(b,()=>setSpeed(+b.dataset.sp)));
+    press($('timeGrp'),()=>{ if(!netClient()) return;
+      if(NET.denyCool<=0){ NET.denyCool=4; const q=NET.players[0];
+        toast('👑 <b>'+netEsc(q?q.name:'the Queen')+'</b> holds the clock — pausing and speed are hers. Tap your 🐝 chip to see what <i>is</i> yours.'); } });
+    document.querySelectorAll('[data-sp]').forEach(b=>press(b,()=>{
+      if(netClient()){ if(NET.denyCool<=0){ NET.denyCool=4;
+        const q=NET.players[0]; toast('👑 Time is the Queen’s — <b>'+netEsc(q?q.name:'she')+'</b> holds the clock. Tap your 🐝 post badge to see everything that <i>is</i> yours.'); } return; }
+      setSpeed(+b.dataset.sp); }));
     function setSpeed(s){ speed=s; document.querySelectorAll('[data-sp]').forEach(x=>x.classList.toggle('on',+x.dataset.sp===s)); }
     press($('tabHive'),()=>setView('hive'));
     press($('tabMeadow'),()=>setView('meadow'));
@@ -5354,7 +5396,7 @@
       if(s===-2||s===NET.myIx) return true;
       if(s>=0&&NET.players[s]&&NET.players[s].gone) return true;
       if(NET.denyCool<=0){ NET.denyCool=3; const p=NET.players[s];
-        toast('🚧 That’s '+(s===0?'the Queen’s royal core':(p?netEsc(p.name)+'’s comb':'another keeper’s comb'))+' — yours is <b>'+netSectorName(NET.myIx-1,NET.players.length-1)+'</b>.'); }
+        toast('🚧 That’s '+(s===0?'the Queen’s royal core':(p?netEsc(p.name)+'’s comb':'another keeper’s comb'))+'. Yours is <b>'+netSectorName(NET.myIx-1,NET.players.filter(q=>q.ix>0&&!q.gone).length)+'</b> — the patch tinted your colour.'); }
       return false; }
     // joiner → host: the changed cell's resulting state (idempotent, order-safe)
     function netPaintChanged(cell){ if(!netClient()) return;
@@ -5462,10 +5504,9 @@
     // ---- the keeper strip: who's in the hive, who has danced their vote ----
     function netStripVoted(ixs){ netVotedIx=ixs||[]; netStripSync(); }
     function netStripSync(){ const el=$('mpStrip'); if(!el) return;
-      if(!NET.on||!NET.started){ el.classList.add('hide'); el.style.pointerEvents='none'; return; }
+      if(!NET.on||!NET.started){ el.classList.add('hide'); return; }
       el.classList.remove('hide');
-      el.style.pointerEvents=NET.host?'auto':'none';   // the Queen's crown chip doubles as the invite door
-      el.innerHTML=NET.players.map(p=>'<span class="chip'+(p.gone?' gone':'')+'" style="background:'+NETCOL[p.ix]+'">'+(p.ix===0?'👑 ':'')+netEsc(p.name)+(netVotedIx.indexOf(p.ix)>=0?' ✓':'')+'</span>').join('')
+      el.innerHTML=netPostChip()+NET.players.map(p=>'<span class="chip'+(p.gone?' gone':'')+(p.ix===NET.myIx?' me':'')+'" style="background:'+NETCOL[p.ix]+'">'+(p.ix===0?'👑 ':'')+netEsc(p.name)+(p.ix===NET.myIx?' (you)':'')+(netVotedIx.indexOf(p.ix)>=0?' ✓':'')+'</span>').join('')
         +(NET.stale?'<span class="chip" style="background:#3a2f1a;color:#ffd66b">🔗 re-linking…</span>':''); }
     // ---- host plumbing ----
     async function hostNewInvite(){ const st=$('mpHostState');
@@ -5501,8 +5542,11 @@
         netLobbySync(); netStripSync(); }
       else if(m.t==='p'&&NET.started&&!over){ netApplyPaint(m,p.ix); }
       else if(m.t==='prop'&&NET.started&&!over){ const now=performance.now();
-        if(NET.vote||now-p.propAt<8000) return; p.propAt=now;
-        if(netValidProp(m.k,m.v)) hostStartVote(m.k,m.v,p.ix); else netSendTo(p,{t:'ev',msg:netWhyNot(m.k)}); }
+        if(NET.vote||now-p.propAt<8000) return;
+        // only a proposal that actually reaches the floor spends the cooldown —
+        // being told "not yet, that's an autumn job" must not eat your next idea
+        if(netValidProp(m.k,m.v)){ p.propAt=now; hostStartVote(m.k,m.v,p.ix); }
+        else netSendTo(p,{t:'ev',msg:netWhyNot(m.k)}); }
       else if(m.t==='bal'&&NET.vote&&m.id===NET.vote.id){ hostBallot(p.ix,!!m.yes); }
       else if(m.t==='hh'&&NET.started&&!over){ if(hornet&&!hornet._net&&hornet.state!=='flee'){ meritAdd(p.ix,'guard'); hornetDamage(); } } }
     // recompute wedges from the live roster, then free every departed keeper's cells —
@@ -5631,15 +5675,48 @@
       toast(resume
         ?('🕯 <b>'+netEsc(NET.hiveName)+'</b> stirs again — day '+Math.floor(day+1)+', right where the ledger left it.')
         :('🐝 <b>'+netEsc(NET.hiveName)+'</b> wakes — '+NET.players.filter(p=>!p.gone).length+' keepers, one colony. Bring it to spring together.')); }
-    function netShowRole(){ const nw=NET.players.length-1;
+    // ---- "what am I, and why is that locked?" — the two questions a party has to
+    // answer on every screen. The little post badge is always there; tapping it
+    // (or your chip in the keeper strip) reopens the full card, any time. ----
+    function myCells(){ if(!netSector) return 0;
+      let n=0; for(let i=0;i<cells.length;i++) if(netSector[i]===NET.myIx&&cells[i].built) n++; return n; }
+    function netPostChip(){   // the standing answer to "what am I?", first in the strip
+      const nw=NET.players.filter(p=>p.ix>0&&!p.gone).length;
+      const label=NET.host?'👑 queen · time &amp; dial'
+        :('🐝 '+netEsc(netSectorName(NET.myIx-1,nw))+' · tap me');
+      return '<span class="post" style="background:linear-gradient(180deg,'+(NETCOL[NET.myIx]||'#ffd66b')+',rgba(0,0,0,0.14))">'+label+'</span>'; }
+    function netShowRole(){ const nw=NET.players.filter(p=>p.ix>0&&!p.gone).length, duo=(nw<=1);
       $('roleHive').textContent=NET.hiveName||'';
+      const G=rows=>'<div class="roleGrid">'+rows.map(r=>'<div class="rg"><span>'+r[0]+'</span><span>'+r[1]+'</span></div>').join('')+'</div>';
       if(NET.host){ $('roleBadge').textContent='👑 you are the queen keeper';
-        $('roleName').textContent='the Royal Core';
-        $('roleText').innerHTML='You hold <b>time</b> and the <b>forage dial</b>. Tend the core, watch the whole comb, keep everyone alive. Tap your 👑 chip any time to invite or re-invite keepers. No pressure.'; }
+        $('roleName').textContent='the Royal Core'; $('roleName').style.color='#ffd66b';
+        $('roleText').innerHTML=duo
+          ? 'Just the two of you: <b>you keep the heart warm</b>, they build everything around it.'
+          : 'You hold the middle. '+nw+' keepers hold a wedge each around you.';
+        $('roleBody').innerHTML=
+          '<div class="roleHead mine">yours alone — nobody else can</div>'
+          +G([['⏱','<b>Time.</b> Pause, play, fast-forward — the whole clock is your hand.'],
+              ['🎚','<b>The forage dial.</b> Nectar ↔ pollen. Honey or more bees; you choose.'],
+              ['🖌','<b>Any cell on the comb.</b> Everyone else is fenced to their wedge — you can rescue anyone.']])
+          +'<div class="roleHead">the hive decides together</div>'
+          +G([['🗳','🌼 which bloom · 🫙 harvesting a jar · 🥄 the syrup feed. Anyone proposes, everyone dances. <b>A tie means no.</b>'],
+              ['⚔️','Hornet raids — <b>every screen</b> can tap the hornet.']]); }
       else{ $('roleBadge').textContent='🐝 your post';
         $('roleName').textContent=netSectorName(NET.myIx-1,nw);
         $('roleName').style.color=NETCOL[NET.myIx]||'#ffd66b';
-        $('roleText').innerHTML='Paint <b>your</b> comb — 🍼 nursery, 🍯 shelves, 🔨 fresh wax. When the hive calls a <b>vote</b>, dance your answer. The bees do the rest.'; }
+        const mine=myCells();
+        $('roleText').innerHTML=duo
+          ? 'The Queen keeps the warm heart — <b>everything around it is yours</b>.'
+          : 'Your wedge is yours alone. No one paints it but you, and you can’t paint theirs.';
+        $('roleBody').innerHTML=
+          '<div class="roleHead mine">yours</div>'
+          +G([['🖌','<b>'+mine+' cells</b> of comb — 🍼 nursery, 🍯 shelves, 🔨 fresh wax.'],
+              ['🗳','<b>Call a vote.</b> Tap a bloom in the ☀ Meadow, or ask for a 🫙 harvest or 🥄 syrup.'],
+              ['⚔️','<b>Tap hornets.</b> Defence is everyone’s.']])
+          +'<div class="roleHead">the Queen holds</div>'
+          +G([['⏱','<b>Time</b> — that’s why your play buttons wear a 👑.'],
+              ['🎚','<b>The forage dial</b> — lean over and talk her into it.']]); }
+      $('roleInvite').classList.toggle('hide',!NET.host);
       openOverlay('mpRole'); }
     function netYearEnd(){ if(!NET.host||NET.endSent) return; NET.endSent=true;
       const sum={peak:Math.round(peakPop), jars, rj, goals:goals?goals.filter(g=>g.done).length:0, orders:NET.ordersDone||0, died:P<1||over&&day<YEAR, hands:NET.players.filter(p=>!p.gone).length, name:NET.hiveName, merit:NET.merit||{}};
@@ -6002,11 +6079,13 @@
       if(NET.resume){ NET.resume=null; rb.style.opacity=''; mpStartDisarm(); toast('Fresh spring it is.'); return; }
       NET.resume=sv; rb.style.opacity='0.55'; mpStartDisarm();
       toast('🕯 The ledger is open — invite your keepers back. <b>Same names re-claim their combs.</b>'); });
-    press($('mpStrip'),()=>{ if(!NET.host||!NET.started) return;   // the crown chip is the mid-game invite door
+    press($('roleInvite'),()=>{ closeOverlay('mpRole'); if(NET.host&&NET.started) hostReopenInvite(); });
+    press($('mpStrip'),()=>{ if(NET.on&&NET.started) netShowRole(); });   // always: "what am I, what can I do"
+    function hostReopenInvite(){ if(!NET.host||!NET.started) return;   // the crown chip is the mid-game invite door
       $('mpStart').textContent='Back to the comb ▶'; openOverlay('mpHost');
       if(NET.room&&NET.mailbox){ netShowRoom(NET.room); if(!NET.pollT) NET.pollT=setInterval(hostPollMailbox,2000);
         if(!NET.slots.size) hostPublishOffer(false); }
-      else if(!NET.pend) hostNewInvite(); });
+      else if(!NET.pend) hostNewInvite(); }
     press($('mpEndAgain'),()=>{ if(!NET.host) return; netSeedParty(); });
     press($('mpJoinBtn'),()=>{ mpTakeName(); closeOverlay('mpHome'); openOverlay('mpJoin');
       if($('joinIn').value.trim()){ netJoinFallback(); joinAnswer(); return; }   // arrived via an invite link — no extra taps
