@@ -1015,6 +1015,28 @@
   #mpOrder .ok{ font-family:'JetBrains Mono',monospace; font-weight:700; }
   #mpOrderBar{ height:4px; border-radius:2px; background:rgba(0,0,0,0.18); overflow:hidden; margin-top:5px; }
   #mpOrderBar i{ display:block; height:100%; background:#7a4d12; border-radius:2px; }
+  /* ===== room codes & the waiting-hives list: the magic join ===== */
+  .roomCap{ font:600 10.5px 'JetBrains Mono',monospace; letter-spacing:1.6px; color:var(--dim); text-transform:uppercase; margin:12px 0 4px; }
+  #roomCode{ font:800 54px 'Bricolage Grotesque',sans-serif; letter-spacing:11px; text-indent:11px; line-height:1.05;
+    color:#1c1508; background:linear-gradient(180deg,#ffe9a8,#ffd66b 62%,#f0b93f);
+    border-radius:16px; padding:12px 10px 14px; box-shadow:0 4px 0 rgba(0,0,0,.34), 0 10px 26px rgba(255,190,60,.28), 0 1px 0 rgba(255,255,255,.7) inset; }
+  .roomHint{ font:500 11.5px 'Bricolage Grotesque',sans-serif; color:var(--dim); line-height:1.5; margin-top:7px; }
+  .roomHint b{ color:var(--gold); }
+  #lobbyList{ display:flex; flex-direction:column; gap:7px; margin-top:10px; min-height:52px; }
+  .btn.lobbyRow{ display:flex; align-items:center; gap:11px; text-align:left; padding:9px 12px; font-size:14px; color:var(--text);
+    background:linear-gradient(180deg, rgba(255,214,107,.14), rgba(255,214,107,.05));
+    border:1.5px solid rgba(255,214,107,.35); box-shadow:0 3px 0 rgba(0,0,0,.32); animation:chipIn .3s cubic-bezier(.3,1.5,.6,1) both; }
+  .btn.lobbyRow::before{ display:none; }
+  .lrCode{ flex:none; font:800 17px 'JetBrains Mono',monospace; letter-spacing:2px; color:#1c1508;
+    background:linear-gradient(180deg,#ffe9a8,#ffd66b); border-radius:9px; padding:5px 9px; }
+  .lrTx{ flex:1; min-width:0; } .lrTx b{ display:block; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .lrTx i{ display:block; font:500 10px 'JetBrains Mono',monospace; color:var(--dim); font-style:normal; margin-top:1px; }
+  .lrGo{ flex:none; font:700 11px 'JetBrains Mono',monospace; color:var(--gold); }
+  #roomIn{ flex:1; min-width:0; font:800 26px 'JetBrains Mono',monospace; letter-spacing:7px; text-align:center; text-transform:uppercase;
+    color:#ffe9a8; background:rgba(0,0,0,0.4); border:1.5px solid rgba(255,214,107,0.4); border-radius:11px; padding:9px 6px; }
+  #roomIn::placeholder{ color:rgba(255,233,168,0.25); letter-spacing:7px; }
+  #roomIn:focus{ outline:none; border-color:var(--gold); box-shadow:0 0 0 3px rgba(255,214,107,0.18); }
+  #roomEntry{ margin-top:12px; }
   .qrWrap{ background:#fff; border-radius:14px; padding:10px 10px 8px; display:flex; flex-direction:column; align-items:center; gap:5px; margin-top:9px; box-shadow:0 4px 14px rgba(0,0,0,0.35), 0 0 0 1.5px rgba(255,214,107,0.35); }
   .qrWrap canvas{ width:min(196px,54vw); height:auto; image-rendering:pixelated; }
   .qrCap{ font:700 11.5px 'Bricolage Grotesque',sans-serif; color:#6a4d1e; }
@@ -1512,25 +1534,31 @@
   <div class="ov hide" id="mpHost" role="dialog" aria-modal="true">
     <div class="card panel">
       <h1>YOUR HIVE</h1>
-      <div class="sub" id="mpHostState">brewing your first invite…</div>
-      <div class="mpSec">① invite a keeper</div>
-      <div id="inviteQRWrap" class="qrWrap hide"><div id="inviteBrew" class="qrBrew hide"><span class="bee">🐝</span> brewing a fresh invite…</div><canvas id="inviteQR" aria-label="Invite code as a QR — scan with a phone camera"></canvas><div class="qrCap" id="inviteCap">🐝 they scan this with their camera — that’s the whole trick</div></div>
-      <div class="mpRow">
-        <button class="btn sm" id="inviteShare">📤 Send invite</button>
-        <button class="btn sm" id="inviteScan">📷 Scan their reply</button>
+      <div class="sub" id="mpHostState">opening the hive…</div>
+      <div id="roomWrap" class="hide">
+        <div class="roomCap">your keepers type this</div>
+        <div id="roomCode">····</div>
+        <div class="roomHint">they tap <b>Play Together → Join</b> — your hive is already waiting in their list</div>
       </div>
-      <details class="mpDetails"><summary>more ways (copy &amp; paste)</summary>
-        <textarea class="mpCode" id="inviteCode" readonly aria-label="Invite code"></textarea>
-        <div class="mpRow"><button class="btn sm" id="inviteCopy">📋 Copy invite</button></div>
-        <textarea class="mpCode" id="answerIn" placeholder="…or paste their reply here" style="margin-top:9px" aria-label="Reply code from a joining keeper"></textarea>
-        <div class="mpRow"><button class="btn sm" id="answerAdd">＋ Welcome them in</button></div>
-      </details>
-      <div class="mpSec">② the lobby · <span id="mpLobbyLab">1/8</span></div>
+      <div id="handshakeWrap" class="hide">
+        <div class="mpSec">① invite a keeper</div>
+        <div id="inviteQRWrap" class="qrWrap hide"><div id="inviteBrew" class="qrBrew hide"><span class="bee">🐝</span> brewing a fresh invite…</div><canvas id="inviteQR" aria-label="Invite code as a QR — scan with a phone camera"></canvas><div class="qrCap" id="inviteCap">🐝 they scan this with their camera — that’s the whole trick</div></div>
+        <div class="mpRow">
+          <button class="btn sm" id="inviteShare">📤 Send invite</button>
+          <button class="btn sm" id="inviteScan">📷 Scan their reply</button>
+        </div>
+        <details class="mpDetails"><summary>more ways (copy &amp; paste)</summary>
+          <textarea class="mpCode" id="inviteCode" readonly aria-label="Invite code"></textarea>
+          <div class="mpRow"><button class="btn sm" id="inviteCopy">📋 Copy invite</button></div>
+          <textarea class="mpCode" id="answerIn" placeholder="…or paste their reply here" style="margin-top:9px" aria-label="Reply code from a joining keeper"></textarea>
+          <div class="mpRow"><button class="btn sm" id="answerAdd">＋ Welcome them in</button></div>
+        </details>
+      </div>
+      <div class="mpSec">the lobby · <span id="mpLobbyLab">1/8</span></div>
       <div id="mpPlayers"></div>
       <div id="mpWaiting" class="mpWait"><span class="dot"></span><span id="mpWaitTx">waiting for keepers to arrive — send that invite ✨</span></div>
       <button class="btn sm hide" id="mpResume" style="margin-top:8px"></button>
-      <div class="mpSec">③ begin</div>
-      <div class="mpRow">
+      <div class="mpRow" style="margin-top:12px">
         <button class="btn ghost sm" id="mpHostBack">‹ Cancel</button>
         <button class="btn pulse" id="mpStart">Wake the hive ▶</button>
       </div>
@@ -1540,11 +1568,22 @@
   <div class="ov hide" id="mpJoin" role="dialog" aria-modal="true">
     <div class="card panel">
       <h1>JOIN A HIVE</h1>
-      <div class="sub" id="joinState">paste the invite your host sent you — or scan their screen</div>
-      <textarea class="mpCode" id="joinIn" placeholder="paste the invite code here…" aria-label="Invite code from the host"></textarea>
-      <div class="mpRow">
-        <button class="btn pulse" id="joinGo">Answer the call 🐝</button>
-        <button class="btn sm" id="joinScan">📷 Scan invite</button>
+      <div class="sub" id="joinState">looking for hives…</div>
+      <div id="lobbyList"></div>
+      <div id="roomEntry">
+        <div class="roomCap">or type the code your host reads out</div>
+        <div class="mpRow">
+          <input id="roomIn" maxlength="4" placeholder="CODE" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Four-letter hive code">
+          <button class="btn pulse" id="roomGo">Join 🐝</button>
+        </div>
+      </div>
+      <div id="joinFallback" class="hide">
+        <div class="mpSec">by hand</div>
+        <textarea class="mpCode" id="joinIn" placeholder="paste the invite code here…" aria-label="Invite code from the host"></textarea>
+        <div class="mpRow">
+          <button class="btn pulse" id="joinGo">Answer the call 🐝</button>
+          <button class="btn sm" id="joinScan">📷 Scan invite</button>
+        </div>
       </div>
       <div id="replyWrap" class="hide">
         <div id="replyQRWrap" class="qrWrap hide"><canvas id="replyQR" aria-label="Your reply code as a QR — show it to the host"></canvas><div class="qrCap">📱→📷 show this to your host</div></div>
@@ -1710,7 +1749,7 @@
     // / non-https, where no service worker runs) — the real source of truth is sw.js's
     // VERSION; syncGameVer() below asks the running worker and corrects this label
     // live, so the two only ever drift cosmetically for a moment, never permanently.
-    let GAME_VER='2026.07.30.30';
+    let GAME_VER='2026.07.31.31';
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -5135,7 +5174,8 @@
     // to a hive vote — real colonies decide the same way, by waggle-dance
     // quorum, which is the teachable moment baked into the vote cards.
     const NET={ on:false, host:false, started:false, endSent:false, myIx:-1, name:'',
-      players:[], pend:null, snapT:0, vote:null, cVote:null, voteN:0, denyCool:0, hadHornet:false, merit:{} };
+      players:[], pend:null, snapT:0, vote:null, cVote:null, voteN:0, denyCool:0, hadHornet:false, merit:{},
+      mailbox:null, room:null, slots:new Map(), pollT:null, listT:null };
     // ---- a tiny QR encoder (byte mode, error-correction level L) ----
     // Exists so invites/replies can be *scanned* instead of pasted — the whole
     // "grandma joins in ten seconds" flow. Ported from the public-domain
@@ -5450,7 +5490,10 @@
       dc.onmessage=e=>hostOnMsg(p,e.data);
       dc.onclose=()=>netPeerGone(p);
       try{ chime(523,659); }catch(e){}
-      netLobbySync(); hostNewInvite(); }
+      netLobbySync();
+      // top up a spare pigeonhole. With the mailbox that's a fresh offer under the
+      // same code; without it, the old brew-a-new-invite handshake.
+      if(NET.room&&NET.mailbox) hostPublishOffer(false); else hostNewInvite(); }
     function hostOnMsg(p,raw){ let m; try{ m=JSON.parse(raw); }catch(e){ return; }
       if(m.t==='hi'){ p.name=netEsc(String(m.name||'').slice(0,16))||p.name;
         if(NET.started&&p.pendingStart){ p.pendingStart=false; hostAdmitMidGame(p); return; }
@@ -5555,11 +5598,8 @@
       if(NET.started){ closeOverlay('mpHost'); return; }   // panel reopened mid-game via the crown chip
       const n=NET.players.filter(p=>!p.gone).length;
       if(n<2){ toast('Invite at least one keeper first — the whole point is company.'); return; }
-      // "are we all here?" — a two-tap confirm, like every good couch game
-      if(!NET.armStart){ NET.armStart=true; const b=$('mpStart'); b.classList.add('danger');
-        b.textContent='Begin with '+n+' keepers? Tap again';
-        clearTimeout(mpArmT); mpArmT=setTimeout(mpStartDisarm,3800); return; }
-      mpStartDisarm();
+      // one tap starts the hive. Latecomers join mid-game from the 👑 chip, so a
+      // "are we all here?" confirm was friction guarding against nothing.
       NET.started=true;
       netSeedParty(); }
     // seed (or re-seed, for "another year" replays / ledger resumes) the shared
@@ -5585,6 +5625,8 @@
       netRecomputeSectors();
       beginCommon();
       netBcast({t:'start',s:netSnapObj(),ps:netRoster(),pace:'easy',name:NET.hiveName});
+      hostCloseRoom(true);   // off the public list, still reachable by code for latecomers
+      if(NET.room&&NET.mailbox){ NET.pollT=setInterval(hostPollMailbox,2500); if(!NET.slots.size) hostPublishOffer(false); }
       netShowRole(); netStripSync();
       toast(resume
         ?('🕯 <b>'+netEsc(NET.hiveName)+'</b> stirs again — day '+Math.floor(day+1)+', right where the ledger left it.')
@@ -5773,7 +5815,10 @@
         ctx.fillStyle=NETCOL[w+1];
         ctx.fillText((p2.ix===NET.myIx?'★ ':'')+p2.name, hiveCx+Math.cos(A)*size*SQ3*7.2, hiveCy+Math.sin(A)*size*SQ3*6.2); }
       ctx.textAlign='left'; ctx.globalAlpha=1; ctx.restore(); }
-    function netTeardown(){ try{ if(NET.pend&&NET.pend.pc) NET.pend.pc.close(); }catch(e){}
+    function netTeardown(){ clearInterval(NET.listT); NET.listT=null;
+      if(NET.host) hostCloseRoom(false);
+      for(const s of NET.slots.values()){ try{ s.pc.close(); }catch(e){} } NET.slots.clear();
+      try{ if(NET.pend&&NET.pend.pc) NET.pend.pc.close(); }catch(e){}
       for(const p of NET.players){ try{ if(p.pc) p.pc.close(); }catch(e){} }
       try{ if(joinPc) joinPc.close(); }catch(e){}
       joinPc=null; joinDc=null; NET.on=false; NET.host=false; NET.started=false; NET.endSent=false;
@@ -5807,6 +5852,134 @@
       for(let tries=0;tries<8;tries++){ const a=row[(Math.random()*cut)|0], n=row[cut+1+((Math.random()*(row.length-cut-1))|0)];
         const full=a+' '+n; if(full.length<=16&&a!==n) return full; }
       return 'Busy Bee'; }
+    // ---- the hive mailbox: four-letter room codes and a list of waiting hives ----
+    // A tiny same-origin function (netlify/functions/hive.js) holds WebRTC
+    // handshakes in a pigeonhole under a code, because a handshake is ~600
+    // characters and can never be typed, and browsers cannot see the local
+    // network. If it is unreachable — offline, file://, a fork without it —
+    // NET.mailbox latches false and the whole party falls back to the
+    // paste/QR handshake, which still works exactly as before.
+    const HIVE_API='/api/hive';
+    async function hiveApi(a,body,qs){
+      if(NET.mailbox===false) return null;
+      try{
+        const r=await fetch(HIVE_API+'?a='+a+(qs?'&'+qs:'')+'&_='+(Date.now()+Math.random()), body
+          ? {method:'POST',cache:'no-store',headers:{'content-type':'application/json'},body:JSON.stringify(body)}
+          : {cache:'no-store'});
+        // a plain static host (a fork on Pages, `python -m http.server`) answers
+        // 404 HTML here — that is NOT a live mailbox, and mistaking it for one
+        // would strand the joiner at an empty lobby instead of the paste flow
+        if(!(r.headers.get('content-type')||'').includes('application/json')){
+          if(NET.mailbox===null) NET.mailbox=false; return null; }
+        NET.mailbox=true;
+        const j=await r.json().catch(()=>({}));
+        return r.ok ? j : {error:j.error||'that didn’t take'};
+      }catch(e){ if(NET.mailbox===null) NET.mailbox=false; return null; }
+    }
+    // the host keeps spare pigeonholes open so several keepers can arrive at once
+    async function hostPublishOffer(first){
+      if(!NET.host) return null;
+      const pc=netRtc(), dc=pc.createDataChannel('hive',{ordered:true});
+      dc.onopen=()=>hostPeerJoined(pc,dc);
+      try{ const off=await pc.createOffer(); await pc.setLocalDescription(off); await netIceDone(pc); }
+      catch(e){ try{ pc.close(); }catch(e2){} return null; }
+      const sdp=pc.localDescription.sdp;
+      const res=first
+        ? await hiveApi('host',{offer:sdp,host:NET.name,name:NET.hiveName||(NET.hiveName=netHiveName())})
+        : await hiveApi('offer',{code:NET.room,offer:sdp});
+      if(!res||res.error||(first&&!res.code)||(!first&&!res.slot)){ try{ pc.close(); }catch(e){} return null; }
+      if(first) NET.room=res.code;
+      NET.slots.set(first?1:res.slot,{pc,dc});
+      return NET.room;
+    }
+    function netShowRoom(code){
+      $('roomCode').textContent=code;
+      $('roomWrap').classList.remove('hide');
+      $('handshakeWrap').classList.add('hide');
+      $('mpHostState').innerHTML='<b>'+netEsc(NET.hiveName||'your hive')+'</b> is open — read the code aloud';
+      try{ chime(587,784); }catch(e){}
+    }
+    async function hostOpenRoom(){
+      const st=$('mpHostState'); st.textContent='opening the hive…';
+      const code=await hostPublishOffer(true);
+      if(!code) return false;
+      netShowRoom(code);
+      hostPublishOffer(false); hostPublishOffer(false);   // spares, so several can arrive at once
+      clearInterval(NET.pollT);
+      NET.pollT=setInterval(hostPollMailbox,2000);
+      return true;
+    }
+    async function hostPollMailbox(){
+      if(!NET.host||!NET.room||NET.mailbox===false) return;
+      const r=await hiveApi('poll',null,'code='+NET.room);
+      if(!r||r.error) return;
+      if(typeof r.free==='number' && r.free<2 && NET.players.filter(p=>!p.gone).length<NET_MAX) hostPublishOffer(false);
+      for(const ans of (r.answers||[])){
+        const slot=NET.slots.get(ans.slot); if(!slot) continue;
+        NET.slots.delete(ans.slot);
+        try{ await slot.pc.setRemoteDescription({type:'answer',sdp:ans.answer}); }
+        catch(e){ try{ slot.pc.close(); }catch(e2){} }
+        hostPublishOffer(false);          // top the pigeonholes back up
+      }
+    }
+    function hostCloseRoom(started){
+      clearInterval(NET.pollT); NET.pollT=null;
+      if(NET.room&&NET.mailbox) hiveApi('close',{code:NET.room,started:started?1:0});
+      if(!started) NET.room=null;
+    }
+    // ---- the joiner's side: a live list of hives, one tap in ----
+    function renderLobby(rooms){ const el=$('lobbyList'); if(!el) return;
+      if(!rooms||!rooms.length){
+        el.innerHTML='<div class="mpWait"><span class="dot"></span>no hives waiting yet — when your host taps <b>Host a hive</b>, it appears here</div>'; return; }
+      el.innerHTML=rooms.map(r=>'<button class="btn lobbyRow" data-code="'+netEsc(r.code)+'">'
+        +'<span class="lrCode">'+netEsc(r.code)+'</span>'
+        +'<span class="lrTx"><b>'+netEsc(r.name||'A hive')+'</b><i>'+netEsc(r.host||'a keeper')+' · '+(r.keepers||1)+' keeper'+((r.keepers||1)>1?'s':'')+' · '+(r.age<60?'just now':(Math.round(r.age/60)+'m ago'))+'</i></span>'
+        +'<span class="lrGo">join ▸</span></button>').join('');
+      el.querySelectorAll('.lobbyRow').forEach(b=>press(b,()=>joinByCode(b.dataset.code)));
+    }
+    async function lobbyRefresh(){
+      if(!NET.on&&$('mpJoin').classList.contains('hide')) return;
+      const r=await hiveApi('list');
+      if(r===null){ netJoinFallback(); return; }
+      renderLobby(r.rooms);
+      const n=(r.rooms||[]).length;
+      $('joinState').textContent=n?('tap a hive to join — or type the code'):'looking for hives…';
+    }
+    function netJoinFallback(){   // no mailbox: the paste/QR handshake carries on
+      $('lobbyList').innerHTML=''; $('roomEntry').classList.add('hide');
+      $('joinFallback').classList.remove('hide');
+      $('joinState').textContent='paste the invite your host sent you — or scan their screen';
+      clearInterval(NET.listT); NET.listT=null;
+    }
+    async function joinByCode(code,retry){
+      code=String(code||'').trim().toUpperCase();
+      if(!/^[A-Z]{4}$/.test(code)){ toast('A hive code is four letters — like <b>BUZZ</b>.'); return; }
+      clearInterval(NET.listT); NET.listT=null;
+      $('joinState').textContent='knocking on '+code+'…';
+      const r=await hiveApi('join',{code,name:NET.name});
+      if(!r){ netJoinFallback(); return; }
+      if(r.error){
+        if(/full/i.test(r.error)&&!retry){ $('joinState').textContent='the hive is making room for you…';
+          setTimeout(()=>joinByCode(code,true),1600); return; }   // a spare is always on its way
+        $('joinState').textContent=r.error;
+        NET.listT=setInterval(lobbyRefresh,3500); return; }
+      if(joinPc){ try{ joinPc.close(); }catch(e){} joinPc=null; joinDc=null; }
+      const pc=joinPc=netRtc();
+      pc.addEventListener('iceconnectionstatechange',()=>{ if(pc.iceConnectionState==='failed') clientHostGone(); });
+      pc.ondatachannel=ev=>{ joinDc=ev.channel; joinDc.onopen=()=>clientLinked();
+        joinDc.onmessage=e=>clientOnMsg(e.data); joinDc.onclose=()=>clientHostGone(); };
+      try{
+        await pc.setRemoteDescription({type:'offer',sdp:r.offer});
+        const an=await pc.createAnswer(); await pc.setLocalDescription(an); await netIceDone(pc);
+        const post=await hiveApi('answer',{code,slot:r.slot,answer:pc.localDescription.sdp});
+        if(!post||post.error){ $('joinState').textContent='the hive stopped listening — try again';
+          NET.listT=setInterval(lobbyRefresh,3500); return; }
+        $('lobbyList').innerHTML=''; $('roomEntry').classList.add('hide');
+        $('joinWaiting').classList.remove('hide'); $('replyWrap').classList.remove('hide');
+        $('joinState').innerHTML='joining <b>'+netEsc(r.name||code)+'</b>…';
+      }catch(e){ $('joinState').textContent='that hive didn’t answer — try another';
+        NET.listT=setInterval(lobbyRefresh,3500); }
+    }
     function mpTakeName(){ let n=($('mpName').value||'').trim().slice(0,16); if(!n) n=netMakeName(); NET.name=n; lsSet('hm_mpname',n); return n; }
     press($('mpNameRoll'),()=>{ $('mpName').value=netMakeName(); try{ chime(494,659); }catch(e){} });
     press($('startParty'),()=>{ if(!window.RTCPeerConnection){ toast('This browser can’t link hives (no WebRTC) — try Safari, Chrome or Firefox.'); return; }
@@ -5822,17 +5995,27 @@
       if(sv){ rb.classList.remove('hide');
         rb.innerHTML='🕯 Resume <b>'+netEsc(sv.name||'the last party')+'</b> — day '+Math.floor((sv.s.day||0)+1)+' · '+netEsc((sv.ps||[]).slice(1).join(', ')||'your keepers'); }
       else rb.classList.add('hide');
-      netLobbySync(); hostNewInvite(); });
+      NET.hiveName=netHiveName(); netLobbySync();
+      $('roomWrap').classList.add('hide'); $('handshakeWrap').classList.add('hide');
+      hostOpenRoom().then(ok=>{ if(!ok){ $('handshakeWrap').classList.remove('hide'); hostNewInvite(); } }); });
     press($('mpResume'),()=>{ const sv=partyRead(); if(!sv) return; const rb=$('mpResume');
       if(NET.resume){ NET.resume=null; rb.style.opacity=''; mpStartDisarm(); toast('Fresh spring it is.'); return; }
       NET.resume=sv; rb.style.opacity='0.55'; mpStartDisarm();
       toast('🕯 The ledger is open — invite your keepers back. <b>Same names re-claim their combs.</b>'); });
     press($('mpStrip'),()=>{ if(!NET.host||!NET.started) return;   // the crown chip is the mid-game invite door
       $('mpStart').textContent='Back to the comb ▶'; openOverlay('mpHost');
-      if(!NET.pend) hostNewInvite(); });
+      if(NET.room&&NET.mailbox){ netShowRoom(NET.room); if(!NET.pollT) NET.pollT=setInterval(hostPollMailbox,2000);
+        if(!NET.slots.size) hostPublishOffer(false); }
+      else if(!NET.pend) hostNewInvite(); });
     press($('mpEndAgain'),()=>{ if(!NET.host) return; netSeedParty(); });
     press($('mpJoinBtn'),()=>{ mpTakeName(); closeOverlay('mpHome'); openOverlay('mpJoin');
-      if($('joinIn').value.trim()) joinAnswer(); });   // arrived via an invite link — no extra taps
+      if($('joinIn').value.trim()){ netJoinFallback(); joinAnswer(); return; }   // arrived via an invite link — no extra taps
+      $('joinFallback').classList.add('hide'); $('roomEntry').classList.remove('hide'); $('roomIn').value='';
+      lobbyRefresh(); clearInterval(NET.listT); NET.listT=setInterval(lobbyRefresh,3500); });
+    press($('roomGo'),()=>joinByCode($('roomIn').value));
+    $('roomIn').addEventListener('input',e=>{ const v=e.target.value.toUpperCase().replace(/[^A-Z]/g,'');
+      e.target.value=v; if(v.length===4) joinByCode(v); });   // four letters in and you're off — no extra tap
+    $('roomIn').addEventListener('keydown',e=>{ if(e.key==='Enter') joinByCode($('roomIn').value); });
     press($('mpHostBack'),()=>{ if(NET.started){ closeOverlay('mpHost'); return; }   // mid-game: just tuck the panel away
       netTeardown(); closeOverlay('mpHost'); $('intro').classList.remove('hide'); });
     press($('mpJoinBack'),()=>{ netTeardown(); closeOverlay('mpJoin'); $('intro').classList.remove('hide'); });
@@ -6021,7 +6204,7 @@
       built:cells.filter(c=>c.built).length, flagged:cells.filter(c=>!c.built&&c.flagExpand).length,
       zones:{brood:cells.filter(c=>c.built&&c.zone==='brood').length,honey:cells.filter(c=>c.built&&c.zone==='honey').length,none:cells.filter(c=>c.built&&c.zone==='none').length},
       rateH:rate.h, rj, jars, goals:goals?goals.map(g=>({l:g.label,d:g.done})):null,
-      net:{on:NET.on,host:NET.host,started:NET.started,ix:NET.myIx,players:NET.players.map(p=>({ix:p.ix,n:p.name,g:p.gone})),vote:!!(NET.vote||NET.cVote),
+      net:{on:NET.on,host:NET.host,started:NET.started,ix:NET.myIx,players:NET.players.map(p=>({ix:p.ix,n:p.name,g:p.gone})),vote:!!(NET.vote||NET.cVote), room:NET.room, mailbox:NET.mailbox, slots:[...NET.slots.keys()],
         ownBuilt:(netSector?cells.reduce((a,c,i)=>a+((c.built&&netSector[i]===NET.myIx)?1:0),0):0),
         ownCellPx:(()=>{ if(!netSector) return null; for(let i=0;i<cells.length;i++){ if(cells[i].built&&netSector[i]===NET.myIx&&cells[i].zone!=='brood'){ const p=cellCenter(cells[i].c,cells[i].r); return {x:p.x,y:p.y}; } } return null; })()},
       patches:PATCHES.map((pt,i)=>{ const pp=patchPos(i); return {i,x:pp.x,y:pp.y,q:patchQuality(i,day)}; })});
