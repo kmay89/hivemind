@@ -279,9 +279,15 @@
   @media (prefers-reduced-motion: reduce){ #syrupPack.needed{ animation:none; } }
 
   /* ---------- controls ---------- */
-  #ctl{ padding:7px; display:flex; gap:7px; align-items:center; flex-wrap:wrap; justify-content:center; }
-  .grp{ display:flex; gap:4px; align-items:center; padding:4px; border-radius:12px; background:rgba(255,255,255,0.035); }
-  .grp .gl{ font-size:7.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); padding:0 3px 0 5px; align-self:center; font-weight:600; }
+  /* a locked-width, centred control card on the web — it no longer stretches the full
+     stage and sprawls; the groups pack together in the middle */
+  #ctl{ padding:9px 12px 10px; display:flex; gap:9px; align-items:stretch; flex-wrap:wrap; justify-content:center;
+    max-width:940px; margin-inline:auto; row-gap:8px; }
+  /* each control group is a little raised card, so the tray reads as a tidy console */
+  .grp{ display:flex; gap:4px; align-items:center; padding:5px 7px; border-radius:13px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018));
+    border:1px solid rgba(255,255,255,0.07); box-shadow:inset 0 1px 0 rgba(255,255,255,0.05), 0 1px 3px rgba(0,0,0,0.28); }
+  .grp .gl{ font-size:7.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); padding:0 3px 0 5px; align-self:center; font-weight:700; }
   .grp.dim{ opacity:.4; pointer-events:none; }
   .tb{ font-family:'Bricolage Grotesque'; font-weight:600; font-size:11.5px; padding:7px 10px; border-radius:9px; cursor:pointer; color:var(--dim); min-height:36px;
     display:flex; align-items:center; gap:4px; border:1px solid transparent; background:rgba(255,255,255,0.03);
@@ -353,13 +359,19 @@
   .fxTicks i.on{ background:var(--gold); height:8px; }
   .fxTicks i.rec::after{ content:'★'; position:absolute; left:50%; top:-12px; transform:translateX(-50%); font-size:8px; color:#a7e07c; text-shadow:0 0 5px rgba(167,224,124,.7); animation:recBob 2s ease-in-out infinite; }
   @keyframes recBob{ 0%,100%{ top:-12px; } 50%{ top:-14px; } }
-  .fxNote{ font:500 9.5px 'JetBrains Mono',monospace; color:var(--dim); line-height:1.42; text-align:center; }
+  /* reserve two lines so the note NEVER changes the tray's height as you slide (yield
+     numbers, "comb full", and the ★ Hazel line all vary in length) — the panel stays put */
+  .fxNote{ font:500 9.5px 'JetBrains Mono',monospace; color:var(--dim); line-height:1.42; text-align:center;
+    min-height:28px; display:flex; align-items:center; justify-content:center; }
+  .fxNote>span{ display:block; width:100%; }   /* one flex child so the text keeps its spaces + wrapping */
   .fxNote b{ color:#f7eed9; font-weight:700; } .fxNote .fxY{ color:#ffd76b; } .fxNote .fxRec{ color:#a7e07c; font-weight:700; }
   /* ---- brush cost/gain strip: what each placement spends and returns ---- */
-  #brushHelp{ width:100%; order:-1; font:500 10px 'JetBrains Mono',monospace; color:var(--dim); text-align:center; padding:1px 6px 4px; line-height:1.4; }
+  #brushHelp{ width:100%; order:-1; font:500 10px 'JetBrains Mono',monospace; color:var(--dim); text-align:center; padding:1px 6px; line-height:1.4;
+    min-height:24px; display:flex; align-items:center; justify-content:center; }
+  #brushHelp>span{ display:block; width:100%; }
   #brushHelp b{ color:#f7eed9; } #brushHelp .gain{ color:#a7e07c; } #brushHelp .cost{ color:#e6a86a; }
   /* ---- wax bank: the build queue as physical tokens you watch the bees spend down ---- */
-  #waxBank{ order:-2; width:100%; display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;
+  #waxBank{ order:-2; width:100%; min-height:24px; display:flex; align-items:center; justify-content:center; gap:8px; flex-wrap:wrap;
     padding:2px 8px 4px; font:600 10px 'JetBrains Mono',monospace; color:var(--dim); transition:transform .18s ease; }
   #waxBank.hide{ display:none; }
   #waxBank .wbHead{ color:#e6c98a; letter-spacing:.04em; white-space:nowrap; }
@@ -393,6 +405,32 @@
   .ckRow .ckText{ min-width:0; }
   .ckRow .ckName{ font:700 11.5px 'Bricolage Grotesque',sans-serif; color:#f5e9c8; line-height:1.15; }
   .ckRow .ckDesc{ font:500 9.5px 'JetBrains Mono',monospace; color:var(--dim); line-height:1.3; }
+  /* the plain-English "brood" headline + the keeper's-words glossary */
+  .ckIntro{ font:500 10.5px 'Bricolage Grotesque',sans-serif; color:#e8dcc4; line-height:1.5;
+    background:rgba(143,196,255,.09); border:1px solid rgba(143,196,255,.22); border-radius:9px; padding:8px 9px; margin-bottom:9px; }
+  .ckIntro b{ color:#bcd8ff; } .ckIntro i{ font-style:italic; color:#f5e9c8; }
+  .ckWordsHead{ font:800 8.5px 'JetBrains Mono',monospace; letter-spacing:1.6px; text-transform:uppercase; color:var(--dim); margin:12px 0 5px; }
+  .ckWord{ font:500 10px 'Bricolage Grotesque',sans-serif; color:var(--dim); line-height:1.5; padding:3px 0; border-top:1px solid rgba(255,255,255,.05); }
+  .ckWord:first-of-type{ border-top:none; }
+  .ckWord b{ color:#f5e9c8; }
+  /* ---- deliberate first-placement preview card ---- */
+  #placeConfirm{ position:fixed; left:50%; bottom:180px; transform:translate(-50%,14px); z-index:46; width:min(93vw,368px);
+    background:linear-gradient(180deg,rgba(36,26,11,.985),rgba(22,15,6,.985)); border:1px solid rgba(255,214,107,.36);
+    border-radius:17px; padding:13px 14px 14px; box-shadow:0 12px 38px rgba(0,0,0,.55);
+    opacity:0; pointer-events:none; transition:opacity .22s ease, transform .28s cubic-bezier(.3,1.25,.5,1); }
+  #placeConfirm.show{ opacity:1; transform:translate(-50%,0); pointer-events:auto; }
+  #placeConfirm.hide{ display:none; }
+  .pcArt{ display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:9px; }
+  .pcArt canvas{ width:54px; height:54px; }
+  .pcArrow{ font:800 22px 'Bricolage Grotesque',sans-serif; color:var(--gold); }
+  .pcName{ font:800 15.5px 'Bricolage Grotesque',sans-serif; color:#fff2cf; text-align:center; margin-bottom:8px; }
+  .pcRow{ display:flex; gap:9px; align-items:baseline; font:500 12.5px 'Bricolage Grotesque',sans-serif; line-height:1.42; color:#e8dcc4; padding:2px 2px; }
+  .pcRow>span:first-child{ flex:none; width:15px; text-align:center; font-size:12.5px; }
+  .pcRow.pcGain>span:first-child{ color:#a7e07c; } .pcRow.pcCost>span:first-child{ color:#e6a86a; } .pcRow.pcBest>span:first-child{ color:var(--gold); }
+  .pcRow b{ color:#fff2cf; }
+  .pcNote{ font:500 10.5px 'JetBrains Mono',monospace; color:var(--frost); text-align:center; margin:7px 0 1px; min-height:14px; line-height:1.4; }
+  .pcBtns{ display:flex; gap:9px; margin-top:10px; align-items:center; }
+  #pcPlace{ flex:1; }
   #ckHandle{ flex:none; width:30px; min-height:96px; cursor:pointer; border:1px solid rgba(255,214,107,.3); border-left:none;
     background:linear-gradient(180deg,rgba(40,30,12,.96),rgba(26,18,7,.96)); border-radius:0 12px 12px 0; color:var(--gold);
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:8px 0; box-shadow:4px 0 14px rgba(0,0,0,.4); }
@@ -1334,7 +1372,7 @@
        left edge (where a wide screen has room to spare); tap the 🔑 handle to slide it out. -->
   <div id="combKey" class="hide closed" aria-hidden="true">
     <div id="ckPanel" role="region" aria-label="Comb key — what each cell means">
-      <div class="ckTitle">🔑 Comb key</div>
+      <div class="ckTitle">🔑 Comb key &amp; words</div>
       <div id="ckBody"></div>
     </div>
     <button id="ckHandle" tabindex="0" aria-expanded="false" aria-controls="ckPanel" title="Comb key — what each cell means"><span class="ckIco">🔑</span><span class="ckWord">KEY</span></button>
@@ -1464,6 +1502,26 @@
       <div class="cprog" id="coachProg"></div>
       <div class="ct" id="coachTx"></div>
       <div class="cgo"><button class="cbtn" id="coachBtn">Got it</button><span class="cskip" id="coachSkip">skip intro</span></div>
+    </div>
+  </div>
+
+  <!-- deliberate first placements: on the founding coach's three comb taps, the game
+       is paused and this card shows before→after, what it costs, what it does, and where
+       the best spot is — so the keeper learns to weigh each cell before committing. -->
+  <div id="placeConfirm" class="hide" role="dialog" aria-live="polite">
+    <div class="pcArt">
+      <canvas id="pcBefore" width="54" height="54" aria-hidden="true"></canvas>
+      <span class="pcArrow">→</span>
+      <canvas id="pcAfter" width="54" height="54" aria-hidden="true"></canvas>
+    </div>
+    <div class="pcName" id="pcName">—</div>
+    <div class="pcRow pcGain"><span>✓</span><span id="pcEffect">—</span></div>
+    <div class="pcRow pcCost"><span>◆</span><span id="pcCost">—</span></div>
+    <div class="pcRow pcBest"><span>★</span><span id="pcBest">—</span></div>
+    <div class="pcNote" id="pcNote"></div>
+    <div class="pcBtns">
+      <button class="btn ghost sm" id="pcCancel">Pick another</button>
+      <button class="btn pulse" id="pcPlace">Place it here ▸</button>
     </div>
   </div>
 
@@ -1857,7 +1915,7 @@
     // / non-https, where no service worker runs) — the real source of truth is sw.js's
     // VERSION; syncGameVer() below asks the running worker and corrects this label
     // live, so the two only ever drift cosmetically for a moment, never permanently.
-    let GAME_VER='2026.07.31.34';
+    let GAME_VER='2026.07.31.38';
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2095,7 +2153,14 @@
     const OFFLINE_SEC_PER_DAY=900, OFFLINE_CAP=3, OFFLINE_FLOOR=8*HC;
     const HARV0=172, HARV1=262, GIFT_COST=3;
 
-    const nectarM=[0.25,0.55,0.85,1.0,0.9,0.7,0.45,0.2,0.05,0,0,0];
+    // nectar comes in TWO flows with a gap between, the way a real year does: a spring
+    // bloom (peak ~day 90), a mid-summer DEARTH (~day 150–195 — the famous June gap), then
+    // the autumn goldenrod (~day 210–240) before winter. The dearth makes "bank while the
+    // flow is on" a real, felt decision; the autumn flow is a second chance to fill shelves.
+    // Yearly total is kept ~level (dearth removes ≈ what the autumn flow adds back), so year
+    // one stays winnable — the change is TIMING, not scarcity. (Validated headless; see
+    // tools/economy-sim.js.) Telegraphed for first-timers in stepDay's dearth/goldenrod tips.
+    const nectarM=[0.25,0.55,0.85,1.0,0.85,0.5,0.34,0.46,0.26,0.06,0,0];
     const pollenM=[0.5,0.8,0.9,0.8,0.6,0.45,0.3,0.12,0.03,0,0,0];
     const tempM  =[10,15,20,24,26,24,18,12,6,1,-2,2];
     const layM   =[0.4,0.8,1.0,1.0,0.85,0.6,0.35,0.12,0.0,0,0,0.1];
@@ -3118,6 +3183,10 @@
         if(cell){ $('csBody').innerHTML=inspectHTML(cell); $('cellSheet').classList.remove('hide'); }
         inspectMode=false; $('inspectBtn').classList.remove('on'); return; }
       const c0=cellAtPx(p.x,p.y), erase0=(e.button===2)||e.shiftKey;
+      // the founding coach's first comb taps go through a paused preview→confirm, so the
+      // keeper learns to weigh each cell. A valid cell opens the card; you can tap around
+      // to compare spots. Anything else this-tap does nothing.
+      if(combDeliberate() && !erase0){ if(placeValid(c0)) openPlacePreview(c0); return; }
       if(!erase0){ const rz=needsConfirm(c0); if(rz && !noConfirm){ openConfirm(c0, rz); return; } }
       strokeSnap=combSnap(); painting=true; paintErase=erase0; applyBrush(c0); });
     canvas.addEventListener('pointermove',e=>{ const p=rel(e);
@@ -3428,6 +3497,11 @@
       $('advisor').classList.toggle('raid', raiding);
       const feedable=(winter || day<75 || day>235) && hc<5 && !fedWinter && started && !over && !onboard;
       $('feedBtn').classList.add('hide'); syncSyrup(feedable);   // the syrup pack in the tray is the access point now
+      // telegraph the two flow events so the calendar reads as designed encounters, not a silent curve
+      if(started&&!over&&!onboard&&!winter){
+        if(day>149&&day<177) tip('dearth','Hazel: Feel the flow fade? The spring bloom is spent — this is the <b>summer dearth</b>. For a few weeks the meadow holds its nectar back, and the colony lives on what you <b>banked</b>. Hold steady, and build nothing you can’t fill.');
+        else if(day>206&&day<234) tip('goldflow','Hazel: The <b>goldenrod</b> is coming in — the last real flow of the year. Lean <b>Nectar</b> and fill every shelf you can; after this, only winter.');
+      }
       if(raiding){ ic='⚔️'; warn=true; tx='A <b>hornet</b> is raiding — <em>tap it</em> to help the guards, or let them handle it.'; }
       else if(starveT>0){ ic='🍽'; warn=true; tx=feedable?'The pantry is empty and the cluster is hungry — tap your glowing <b>🍼 syrup pack</b> to see them through.':'The pantry is empty — every drop of <b>Nectar</b> counts now.'; }
       else if(feedable){ ic='🍽'; tx='The pantry is nearly bare. Your <b>🍼 syrup pack</b> is glowing — tap it to carry the cluster (once a year).'; }
@@ -3445,8 +3519,9 @@
       else if(!winter && bp.q>0.5 && (activePatch==null || patchEff(activePatch,day)<bp.q-0.15)){ ic='💃'; tx='A <b>rich patch</b> is blooming within easy reach. Open the <b>☀ Meadow</b> and tap it to send your foragers there.'; }
       else if(winter && hc<need*0.5){ ic='❄️'; tx='Deep winter and the shelves are thin — but spring is coming.'; }
       else if(day<55){ ic='🌱'; tx='Early spring \u2014 feed the babies first. <b>Pollen</b> or Balanced stocks the nursery kitchen.'; }
-      else if(day>=85&&day<175){ ic='🌻'; tx='The meadow is pouring. Lean <b>Nectar</b>, <b>Expand</b> the shelves, and chase the best <b>patch</b>.'; }
-      else if(day>=175&&day<250){ ic='🍂'; tx='Autumn \u2014 the meadow is closing up shop. Top off with <b>Nectar</b>; build nothing you can\u2019t fill.'; }
+      else if(day>=85&&day<148){ ic='🌻'; tx='The meadow is <b>pouring</b>. Lean <b>Nectar</b>, <b>Expand</b> the shelves and <b>bank hard</b> — a summer dearth is coming, and the colony will live on what you store.'; }
+      else if(day>=148&&day<200){ ic='🥀'; tx='The <b>summer dearth</b> — the flow has run thin. Live on what you banked; hold the nursery steady and build nothing you can’t fill.'; }
+      else if(day>=200&&day<250){ ic='🍂'; tx='Autumn \u2014 the meadow is closing up shop. Top off with <b>Nectar</b>; build nothing you can\u2019t fill.'; }
       else if(day>=250&&!winter){ ic='🍂'; tx='Brood eats your honey. Shrink the <b>brood zone</b> so fewer mouths face winter.'; }
       else if(winter){ ic='❄️'; tx='Winter. The meadow sleeps, and the cluster dreams on stored honey. Hold on for spring.'; }
       else if(br.total<6 && Na>0.2){ ic='👑'; tx='Brood is sparse. Ensure there\u2019s <b>pollen</b> and empty <b>brood</b> cells for the queen.'; }
@@ -3540,7 +3615,7 @@
         s.zone=(b>h && cellDist(s.c,s.r)<2.2)?'brood':'honey';
         const bn=cells.reduce((a,cc)=>a+(cc.built?1:0),0);
         if(CHEX.has(bn)){ const rr=CHEXRING[bn]; toast('Ring '+rr+' complete \u2014 '+bn+' cells. The comb grows in the centred hexagonal numbers: 1, 7, 19, 37\u2026','ring'+bn);
-          ringFx={t:0, ring:rr}; burst(hiveCx,hiveCy,22); fanfare(); shake=Math.max(shake,0.25); }
+          ringFx={t:0, ring:rr, n:bn}; burst(hiveCx,hiveCy,36); fanfare(); try{ chime(784,1175); }catch(e){} shake=Math.max(shake,0.34); }
         else toast('Fresh comb drawn.','built1'); }
     }
     function stepDay(dd, offline){
@@ -3894,6 +3969,11 @@
           ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(p0.x,p0.y,rr,0,6.28); ctx.stroke(); }
         ctx.fillStyle='rgba(255,255,255,'+(0.32+0.22*Math.sin(gt*3)).toFixed(2)+')';
         ctx.beginPath(); ctx.arc(p0.x,p0.y,size*0.14,0,6.28); ctx.fill(); } }
+      // the pending placement, previewed on the comb as a pulsing ghost of what it will become
+      if(pendingPlace && view==='hive'){ const {x:gx,y:gy}=cellCenter(pendingPlace.c,pendingPlace.r), gs=size*0.93;
+        const gcol=brush==='brood'?'120,170,235':brush==='honey'?'247,183,51':'150,214,110', gp=0.5+0.35*Math.sin(gt*4.2);
+        ctx.save(); hexPathOn(ctx,gx,gy,gs); ctx.fillStyle='rgba('+gcol+','+(0.22+0.22*gp).toFixed(3)+')'; ctx.fill();
+        ctx.strokeStyle='rgba('+gcol+','+(0.7+0.3*gp).toFixed(3)+')'; ctx.lineWidth=2.6; ctx.stroke(); ctx.restore(); }
       // when storage is full and nectar still flows, honey visibly drips away
       { const cp=caps(), full=cp.total>0&&(honeyU+pollenU+nectarU)>=cp.total-2, Na2=lerpM(nectarM,day);
         if(started&&!over&&full&&Na2>0.1&&!winter&&Math.random()<lastDt*2.2){
@@ -3920,13 +4000,28 @@
       drawScout(); drawHornet(); drawParts(lastDt);
       // ring-completion "line clear": a golden sweep rides out over the new ring, the
       // whole nest brightens for a beat, then it fades — the satisfying bang of progress
-      if(ringFx){ ringFx.t+=lastDt; const p=Math.min(1,ringFx.t/0.9), ease=1-(1-p)*(1-p);
+      if(ringFx){ ringFx.t+=lastDt; const T=1.5, p=Math.min(1,ringFx.t/T), ease=1-(1-p)*(1-p);
         ctx.save(); ctx.globalCompositeOperation='lighter';
-        const flash=(1-p)*0.5; if(flash>0.01 && !RM){ ctx.fillStyle='rgba(255,206,110,'+(flash*0.4).toFixed(3)+')'; ctx.fillRect(0,0,W,Hh); }
-        const rad=size*SQ3*(ringFx.ring+0.4)*(0.2+ease*1.15), th=size*(1.4-p);
-        ctx.strokeStyle='rgba(255,224,150,'+((1-p)*0.9).toFixed(3)+')'; ctx.lineWidth=Math.max(1,th);
-        hexPathOn(ctx,hiveCx,hiveCy,rad); ctx.stroke();
-        ctx.restore(); if(ringFx.t>0.95) ringFx=null; }
+        const flash=(1-p)*0.6; if(flash>0.01 && !RM){ ctx.fillStyle='rgba(255,206,110,'+(flash*0.34).toFixed(3)+')'; ctx.fillRect(0,0,W,Hh);
+          // a warm bloom pulses out of the hive heart — the whole nest lights for a beat
+          let bg=ctx.createRadialGradient(hiveCx,hiveCy,0,hiveCx,hiveCy,size*SQ3*(ringFx.ring+2.2)*(0.45+ease));
+          bg.addColorStop(0,'rgba(255,228,158,'+(flash*0.55).toFixed(3)+')'); bg.addColorStop(1,'rgba(255,224,150,0)'); ctx.fillStyle=bg; ctx.fillRect(0,0,W,Hh); }
+        // twin golden sweeps ride out over the new ring
+        for(const off of [0,0.15]){ const pp=(ringFx.t-off*T)/(T-off*T); if(pp<=0||pp>=1) continue;
+          const e2=1-(1-pp)*(1-pp), rad=size*SQ3*(ringFx.ring+0.4)*(0.2+e2*1.18), th=size*(1.5-pp);
+          ctx.strokeStyle='rgba(255,224,150,'+((1-pp)*(off?0.5:0.95)).toFixed(3)+')'; ctx.lineWidth=Math.max(1,th);
+          hexPathOn(ctx,hiveCx,hiveCy,rad); ctx.stroke(); }
+        ctx.restore();
+        // the number, rising and fading — the "you just did that" of the beat
+        if(!RM){ const ry=hiveCy-size*2.4-ease*size*3.4, ta=Math.min(1,(1-p)*1.7);
+          ctx.save(); ctx.globalAlpha=ta; ctx.textAlign='center';
+          ctx.shadowColor='rgba(255,176,52,.9)'; ctx.shadowBlur=size*1.3;
+          ctx.fillStyle='#fff2cf'; ctx.font='800 '+Math.round(size*1.7)+'px Bricolage Grotesque';
+          ctx.fillText('◆ RING '+ringFx.ring, hiveCx, ry);
+          ctx.font='600 '+Math.round(size*0.82)+'px JetBrains Mono'; ctx.shadowBlur=size*0.6; ctx.fillStyle='rgba(255,238,196,.96)';
+          ctx.fillText((ringFx.n||0)+' cells of comb', hiveCx, ry+size*1.45);
+          ctx.textAlign='left'; ctx.restore(); }
+        if(ringFx.t>T) ringFx=null; }
       // guidance: with hints on, the comb shows where the active brush CAN go
       // (faint rim) and where it's WISE to go (breathing glow) — chess for bees
       if(hints && started && !over && view==='hive' && !inspectMode){
@@ -4456,13 +4551,13 @@
       if(forage!==FORAGE_STEPS[ci]) forage=FORAGE_STEPS[ci]; // snap a legacy continuous value onto the notch
       const ri=(started&&!onboard)?recForageIdx():-1, tk=$('fxTicks');
       if(tk){ const ii=tk.children; for(let i=0;i<ii.length;i++){ ii[i].classList.toggle('on',i===ci); ii[i].classList.toggle('rec',i===ri); } }
-      const n=$('fxNote'); if(n){ const note=forageNote(); if(n.innerHTML!==note) n.innerHTML=note; } }
+      const n=$('fxNote'); if(n){ const note='<span>'+forageNote()+'</span>'; if(n.innerHTML!==note) n.innerHTML=note; } }
     const BRUSHHELP={
-      brood:'\ud83c\udf7c <b>Brood</b> cradle \u2014 <span class="gain">gain: more bees</span> <span class="cost">\u00b7 cost: nurses &amp; warmth</span>',
+      brood:'\ud83c\udf7c <b>Brood</b> = the baby bees \u2014 <span class="gain">gain: more workers</span> <span class="cost">\u00b7 cost: nurses &amp; warmth</span>',
       honey:'\ud83c\udf6f <b>Honey</b> shelf \u2014 <span class="gain">gain: +1 pantry cell</span> <span class="cost">\u00b7 cost: wax, drawn from honey</span>',
       expand:'\ud83d\udd28 <b>Expand</b> wax \u2014 <span class="gain">gain: room to grow</span> <span class="cost">\u00b7 cost: wax &amp; a builder\u2019s time \u2014 watch the bank</span>'
     };
-    function syncBrushHelp(){ const el=$('brushHelp'); if(el) el.innerHTML=BRUSHHELP[brush]||''; syncWaxBank(); }
+    function syncBrushHelp(){ const el=$('brushHelp'); if(el) el.innerHTML='<span>'+(BRUSHHELP[brush]||'')+'</span>'; syncWaxBank(); }
     // ---- comb key: a collapsible legend that decodes every cell + brood phase. One row
     // per kind (a data table, not a branch); each swatch is drawn to match the comb itself ----
     const COMBKEY=[
@@ -4477,8 +4572,20 @@
       {k:'expand', n:'Building',     d:'flagged wax the builders draw'},
       {k:'heat',   n:'Warmth',       d:'heat lens · where the nest holds heat'},
     ];
+    // plain-English glossary for a first-timer — the words a keeper uses that a
+    // newcomer won't know. "Brood" gets its own headline in the key (see buildCombKey).
+    const GLOSSARY=[
+      {w:'Nectar',  d:'flower sugar the bees gather — it thickens into honey'},
+      {w:'Pollen',  d:'flower dust · “bee bread,” the babies’ protein'},
+      {w:'Forage',  d:'to fly out and gather nectar &amp; pollen'},
+      {w:'Wax',     d:'what comb is built from — drawn from honey'},
+      {w:'Cluster', d:'the winter huddle that shivers to stay warm'},
+      {w:'Swarm',   d:'half the hive leaving with the old queen to start anew'},
+    ];
     function drawKeySwatch(cv,k){ const g=cv.getContext('2d'); const D=cv.width, c=D/2, s=D*0.46;
       g.clearRect(0,0,D,D);
+      if(k==='empty'){ hexPathOn(g,c,c,s); g.strokeStyle='rgba(255,255,255,0.24)'; g.lineWidth=Math.max(1,D*0.04);
+        if(g.setLineDash) g.setLineDash([D*0.11,D*0.09]); g.stroke(); if(g.setLineDash) g.setLineDash([]); return; }
       hexPathOn(g,c,c,s);
       if(k==='heat'){ let hg=g.createRadialGradient(c,c,1,c,c,s); hg.addColorStop(0,heatColor(0.95,1)); hg.addColorStop(1,heatColor(0.5,1)); g.fillStyle=hg; g.fill(); }
       else if(k==='honey'||k==='nectar'||k==='pollen'){ const L=LIQ[k]; let lg=g.createLinearGradient(0,c-s,0,c+s);
@@ -4493,7 +4600,10 @@
       else if(k==='larva'){ const lr=s*0.5; let lg=g.createRadialGradient(c-lr*0.3,c-lr*0.35,1,c,c,lr); lg.addColorStop(0,'#fdf3d8'); lg.addColorStop(0.7,COL.larva); lg.addColorStop(1,'#d8bd86'); g.fillStyle=lg; g.beginPath(); g.arc(c,c,lr,0,6.28); g.fill(); }
       else if(k==='capped'){ let pg=g.createRadialGradient(c-s*0.22,c-s*0.26,1,c,c,s*0.82); pg.addColorStop(0,'#e3c58c'); pg.addColorStop(0.65,COL.pupa); pg.addColorStop(1,'#9c8049'); g.fillStyle=pg; hexPathOn(g,c,c,s*0.82); g.fill(); } }
     function buildCombKey(){ const body=$('ckBody'); if(!body||body.dataset.built) return; body.dataset.built='1';
-      body.innerHTML=COMBKEY.map(r=>'<div class="ckRow"><canvas width="40" height="40" data-k="'+r.k+'"></canvas><div class="ckText"><div class="ckName">'+r.n+'</div><div class="ckDesc">'+r.d+'</div></div></div>').join('');
+      const intro='<div class="ckIntro"><b>Brood</b> = the baby bees. An egg becomes a grub (a <i>larva</i>), then the cell is capped and a <i>pupa</i> ripens into a bee — about 20 days. The blue <i>nursery</i> is where they grow.</div>';
+      const rows=COMBKEY.map(r=>'<div class="ckRow"><canvas width="40" height="40" data-k="'+r.k+'"></canvas><div class="ckText"><div class="ckName">'+r.n+'</div><div class="ckDesc">'+r.d+'</div></div></div>').join('');
+      const words='<div class="ckWordsHead">the keeper’s words</div>'+GLOSSARY.map(g=>'<div class="ckWord"><b>'+g.w+'</b> — '+g.d+'</div>').join('');
+      body.innerHTML=intro+rows+words;
       body.querySelectorAll('canvas').forEach(cv=>drawKeySwatch(cv,cv.dataset.k)); }
     let combKeyOpen=false; try{ combKeyOpen=localStorage.getItem('hm_combkey')==='1'; }catch(e){}
     function setCombKey(open){ combKeyOpen=open; const el=$('combKey'); if(!el) return;
@@ -4831,6 +4941,47 @@
     function coachContinue(){ if(!coachWait) return; coachWait=false;
       $('coach').classList.remove('show'); if(!onboard) return;
       if(coachStep>=COACH.length){ endCoach(); } else showCoach(); }
+    // ---- deliberate first placements: the paused preview→confirm card (#placeConfirm) ----
+    // Active only during the founding coach's three comb-placement steps (brood/honey/expand),
+    // where coachTarget() is non-null — so the very first taps teach cost, effect and location
+    // instead of just dropping a cell. Tap around to compare spots; the card follows your finger.
+    let pendingPlace=null;
+    const PLACEINFO={
+      brood:{ after:'brood', name:'Brood — a cradle',
+        effect:'The queen lays here → a new worker in about <b>20 days</b>.',
+        cost:'a nurse’s <b>warmth</b> to keep the young cosy',
+        best:'the <b>warm heart</b> of the nest — babies need heat, and a tight nursery holds its own.' },
+      honey:{ after:'honey', name:'Honey — a shelf',
+        effect:'Ripe nectar sleeps here → your <b>winter fuel</b>.',
+        cost:'a little <b>wax</b>, drawn from honey',
+        best:'the <b>outer wall</b>, wrapping the warm nest like a blanket.' },
+      expand:{ after:'expand', name:'Expand — fresh wax',
+        effect:'Fresh comb the colony can <b>grow into</b>.',
+        cost:'<b>wax &amp; a builder’s time</b> — build one step ahead',
+        best:'<b>just outside</b> the comb — reach a little, don’t sprawl.' },
+    };
+    function combDeliberate(){ return onboard && !coachWait && !!coachTarget() && !!PLACEINFO[brush]; }
+    function placeValid(cell){ if(!cell) return false;
+      if(brush==='expand') return !cell.built && !cell.flagExpand && neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built);
+      if(!cell.built) return false;
+      if(brush==='brood') return cell.zone!=='brood';
+      if(brush==='honey') return cell.zone!=='honey' && !cell.brood;
+      return false; }
+    function placeCompare(cell){ const rg=hexDist(cell.c,cell.r,CCC,CCR);
+      if(brush==='brood') return rg<=1?'This one sits right in the warm heart — a fine choice.':'A little out from the heart — warm cells hold brood best, but this will do.';
+      if(brush==='honey') return rg>=2?'Out on the wall — just where stores belong.':'Close to the heart — shelves keep better on the outer wall.';
+      return 'Reaching just past the comb — the builders won’t have far to go.'; }
+    function openPlacePreview(cell){ const info=PLACEINFO[brush]; if(!info) return; pendingPlace=cell;
+      try{ drawKeySwatch($('pcBefore'), cell.built?'bare':'empty'); drawKeySwatch($('pcAfter'), info.after); }catch(e){}
+      $('pcName').innerHTML=info.name; $('pcEffect').innerHTML=info.effect; $('pcCost').innerHTML=info.cost;
+      $('pcBest').innerHTML='Best spot: '+info.best; $('pcNote').innerHTML=placeCompare(cell);
+      const el=$('placeConfirm'); el.classList.remove('hide'); el.style.bottom=(botH+14)+'px';
+      requestAnimationFrame(()=>el.classList.add('show')); }
+    function closePlacePreview(){ pendingPlace=null; const el=$('placeConfirm'); if(!el) return;
+      el.classList.remove('show'); setTimeout(()=>{ if(!pendingPlace) el.classList.add('hide'); }, 240); }
+    press($('pcPlace'), ()=>{ const cell=pendingPlace; closePlacePreview(); if(!cell) return;
+      strokeSnap=combSnap(); applyBrush(cell); commitStroke(); });
+    press($('pcCancel'), ()=>closePlacePreview());
     // the blueprint: comb strategy as one picture — concentric truth, three lines.
     // The pattern mirrors a real frame: brood nest at the warm centre, a band of
     // stores wrapped around it, empty fresh wax at the working rim.
@@ -4865,7 +5016,7 @@
       drawCombPlan(); openOverlay('combPlan'); try{ chime(440,587); }catch(e){} return true; }
     window.__hmPlan=()=>{ drawCombPlan(); openOverlay('combPlan'); };   // dev/test handle, like __hm
     function endCoach(viaSkip){
-      onboard=false; finishType(false); clearSpots(); $('coach').classList.remove('show'); setReveal(false); forecastCache=forecastToSpring();
+      onboard=false; finishType(false); clearSpots(); closePlacePreview(); $('coach').classList.remove('show'); setReveal(false); forecastCache=forecastToSpring();
       goals=makeGoals(); lastSI=seasonIdx(day); saveGame();
       // the hive is handed over PAUSED and simply waits. Nothing counts down,
       // nothing gates a sunrise — the clock starts when the keeper says so, and
@@ -5372,8 +5523,8 @@
       '<b>'+Math.round(pollenU/HC)+'</b> cells of protein. Nurses knead it into food for the larvae — <em>no pollen, no new bees</em>.','forage'));
     press($('stPop'),()=>showTip($('stPop'),'Your workforce',
       '<b>'+Math.round(P)+'</b> bees alive. What makes more? <em>Warm brood cells + pollen</em>. More bees bring more of everything else.','brood'));
-    press($('stBrood'),()=>showTip($('stBrood'),'The next generation',
-      'Eggs → larvae → capped pupae, about <b>twenty days</b> from laying to a bee that flies. This number is next month\u2019s workforce.','brood'));
+    press($('stBrood'),()=>showTip($('stBrood'),'🍼 Brood — the colony’s babies',
+      'The <b>young bees</b> growing up: an egg, then a grub (a <em>larva</em>), then a sealed <em>pupa</em> — about <b>twenty days</b> from laying to a bee that flies. This count is next month\u2019s workforce.','brood'));
     press($('stKeeper'),()=>showTip($('stKeeper'),'Your keeper\u2019s shelf',
       '<b>✧'+rj+'</b> royal jelly — spend it on <em>Queen\u2019s Gifts</em> between years · <b>'+jars+'</b> jar'+(jars===1?'':'s')+' harvested. Your legacy in glass.','notes'));
     press($('clockWrap'),()=>{ if($('clockWrap').classList.contains('hidden')) return;
