@@ -413,6 +413,24 @@
   .ckWord{ font:500 10px 'Bricolage Grotesque',sans-serif; color:var(--dim); line-height:1.5; padding:3px 0; border-top:1px solid rgba(255,255,255,.05); }
   .ckWord:first-of-type{ border-top:none; }
   .ckWord b{ color:#f5e9c8; }
+  /* ---- deliberate first-placement preview card ---- */
+  #placeConfirm{ position:fixed; left:50%; bottom:180px; transform:translate(-50%,14px); z-index:46; width:min(93vw,368px);
+    background:linear-gradient(180deg,rgba(36,26,11,.985),rgba(22,15,6,.985)); border:1px solid rgba(255,214,107,.36);
+    border-radius:17px; padding:13px 14px 14px; box-shadow:0 12px 38px rgba(0,0,0,.55);
+    opacity:0; pointer-events:none; transition:opacity .22s ease, transform .28s cubic-bezier(.3,1.25,.5,1); }
+  #placeConfirm.show{ opacity:1; transform:translate(-50%,0); pointer-events:auto; }
+  #placeConfirm.hide{ display:none; }
+  .pcArt{ display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:9px; }
+  .pcArt canvas{ width:54px; height:54px; }
+  .pcArrow{ font:800 22px 'Bricolage Grotesque',sans-serif; color:var(--gold); }
+  .pcName{ font:800 15.5px 'Bricolage Grotesque',sans-serif; color:#fff2cf; text-align:center; margin-bottom:8px; }
+  .pcRow{ display:flex; gap:9px; align-items:baseline; font:500 12.5px 'Bricolage Grotesque',sans-serif; line-height:1.42; color:#e8dcc4; padding:2px 2px; }
+  .pcRow>span:first-child{ flex:none; width:15px; text-align:center; font-size:12.5px; }
+  .pcRow.pcGain>span:first-child{ color:#a7e07c; } .pcRow.pcCost>span:first-child{ color:#e6a86a; } .pcRow.pcBest>span:first-child{ color:var(--gold); }
+  .pcRow b{ color:#fff2cf; }
+  .pcNote{ font:500 10.5px 'JetBrains Mono',monospace; color:var(--frost); text-align:center; margin:7px 0 1px; min-height:14px; line-height:1.4; }
+  .pcBtns{ display:flex; gap:9px; margin-top:10px; align-items:center; }
+  #pcPlace{ flex:1; }
   #ckHandle{ flex:none; width:30px; min-height:96px; cursor:pointer; border:1px solid rgba(255,214,107,.3); border-left:none;
     background:linear-gradient(180deg,rgba(40,30,12,.96),rgba(26,18,7,.96)); border-radius:0 12px 12px 0; color:var(--gold);
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:8px 0; box-shadow:4px 0 14px rgba(0,0,0,.4); }
@@ -1487,6 +1505,26 @@
     </div>
   </div>
 
+  <!-- deliberate first placements: on the founding coach's three comb taps, the game
+       is paused and this card shows before→after, what it costs, what it does, and where
+       the best spot is — so the keeper learns to weigh each cell before committing. -->
+  <div id="placeConfirm" class="hide" role="dialog" aria-live="polite">
+    <div class="pcArt">
+      <canvas id="pcBefore" width="54" height="54" aria-hidden="true"></canvas>
+      <span class="pcArrow">→</span>
+      <canvas id="pcAfter" width="54" height="54" aria-hidden="true"></canvas>
+    </div>
+    <div class="pcName" id="pcName">—</div>
+    <div class="pcRow pcGain"><span>✓</span><span id="pcEffect">—</span></div>
+    <div class="pcRow pcCost"><span>◆</span><span id="pcCost">—</span></div>
+    <div class="pcRow pcBest"><span>★</span><span id="pcBest">—</span></div>
+    <div class="pcNote" id="pcNote"></div>
+    <div class="pcBtns">
+      <button class="btn ghost sm" id="pcCancel">Pick another</button>
+      <button class="btn pulse" id="pcPlace">Place it here ▸</button>
+    </div>
+  </div>
+
   <div id="report" class="panel hide">
     <div class="rHead"><span>Hive report</span><span id="reportFullBtn" title="The long view — what matters and which dial moves it">⤢ the long view</span><span id="reportX">✕</span></div>
     <div class="sec" id="planSec">
@@ -1877,7 +1915,7 @@
     // / non-https, where no service worker runs) — the real source of truth is sw.js's
     // VERSION; syncGameVer() below asks the running worker and corrects this label
     // live, so the two only ever drift cosmetically for a moment, never permanently.
-    let GAME_VER='2026.07.31.37';
+    let GAME_VER='2026.07.31.38';
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -3145,6 +3183,10 @@
         if(cell){ $('csBody').innerHTML=inspectHTML(cell); $('cellSheet').classList.remove('hide'); }
         inspectMode=false; $('inspectBtn').classList.remove('on'); return; }
       const c0=cellAtPx(p.x,p.y), erase0=(e.button===2)||e.shiftKey;
+      // the founding coach's first comb taps go through a paused preview→confirm, so the
+      // keeper learns to weigh each cell. A valid cell opens the card; you can tap around
+      // to compare spots. Anything else this-tap does nothing.
+      if(combDeliberate() && !erase0){ if(placeValid(c0)) openPlacePreview(c0); return; }
       if(!erase0){ const rz=needsConfirm(c0); if(rz && !noConfirm){ openConfirm(c0, rz); return; } }
       strokeSnap=combSnap(); painting=true; paintErase=erase0; applyBrush(c0); });
     canvas.addEventListener('pointermove',e=>{ const p=rel(e);
@@ -3927,6 +3969,11 @@
           ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(p0.x,p0.y,rr,0,6.28); ctx.stroke(); }
         ctx.fillStyle='rgba(255,255,255,'+(0.32+0.22*Math.sin(gt*3)).toFixed(2)+')';
         ctx.beginPath(); ctx.arc(p0.x,p0.y,size*0.14,0,6.28); ctx.fill(); } }
+      // the pending placement, previewed on the comb as a pulsing ghost of what it will become
+      if(pendingPlace && view==='hive'){ const {x:gx,y:gy}=cellCenter(pendingPlace.c,pendingPlace.r), gs=size*0.93;
+        const gcol=brush==='brood'?'120,170,235':brush==='honey'?'247,183,51':'150,214,110', gp=0.5+0.35*Math.sin(gt*4.2);
+        ctx.save(); hexPathOn(ctx,gx,gy,gs); ctx.fillStyle='rgba('+gcol+','+(0.22+0.22*gp).toFixed(3)+')'; ctx.fill();
+        ctx.strokeStyle='rgba('+gcol+','+(0.7+0.3*gp).toFixed(3)+')'; ctx.lineWidth=2.6; ctx.stroke(); ctx.restore(); }
       // when storage is full and nectar still flows, honey visibly drips away
       { const cp=caps(), full=cp.total>0&&(honeyU+pollenU+nectarU)>=cp.total-2, Na2=lerpM(nectarM,day);
         if(started&&!over&&full&&Na2>0.1&&!winter&&Math.random()<lastDt*2.2){
@@ -4537,6 +4584,8 @@
     ];
     function drawKeySwatch(cv,k){ const g=cv.getContext('2d'); const D=cv.width, c=D/2, s=D*0.46;
       g.clearRect(0,0,D,D);
+      if(k==='empty'){ hexPathOn(g,c,c,s); g.strokeStyle='rgba(255,255,255,0.24)'; g.lineWidth=Math.max(1,D*0.04);
+        if(g.setLineDash) g.setLineDash([D*0.11,D*0.09]); g.stroke(); if(g.setLineDash) g.setLineDash([]); return; }
       hexPathOn(g,c,c,s);
       if(k==='heat'){ let hg=g.createRadialGradient(c,c,1,c,c,s); hg.addColorStop(0,heatColor(0.95,1)); hg.addColorStop(1,heatColor(0.5,1)); g.fillStyle=hg; g.fill(); }
       else if(k==='honey'||k==='nectar'||k==='pollen'){ const L=LIQ[k]; let lg=g.createLinearGradient(0,c-s,0,c+s);
@@ -4892,6 +4941,47 @@
     function coachContinue(){ if(!coachWait) return; coachWait=false;
       $('coach').classList.remove('show'); if(!onboard) return;
       if(coachStep>=COACH.length){ endCoach(); } else showCoach(); }
+    // ---- deliberate first placements: the paused preview→confirm card (#placeConfirm) ----
+    // Active only during the founding coach's three comb-placement steps (brood/honey/expand),
+    // where coachTarget() is non-null — so the very first taps teach cost, effect and location
+    // instead of just dropping a cell. Tap around to compare spots; the card follows your finger.
+    let pendingPlace=null;
+    const PLACEINFO={
+      brood:{ after:'brood', name:'Brood — a cradle',
+        effect:'The queen lays here → a new worker in about <b>20 days</b>.',
+        cost:'a nurse’s <b>warmth</b> to keep the young cosy',
+        best:'the <b>warm heart</b> of the nest — babies need heat, and a tight nursery holds its own.' },
+      honey:{ after:'honey', name:'Honey — a shelf',
+        effect:'Ripe nectar sleeps here → your <b>winter fuel</b>.',
+        cost:'a little <b>wax</b>, drawn from honey',
+        best:'the <b>outer wall</b>, wrapping the warm nest like a blanket.' },
+      expand:{ after:'expand', name:'Expand — fresh wax',
+        effect:'Fresh comb the colony can <b>grow into</b>.',
+        cost:'<b>wax &amp; a builder’s time</b> — build one step ahead',
+        best:'<b>just outside</b> the comb — reach a little, don’t sprawl.' },
+    };
+    function combDeliberate(){ return onboard && !coachWait && !!coachTarget() && !!PLACEINFO[brush]; }
+    function placeValid(cell){ if(!cell) return false;
+      if(brush==='expand') return !cell.built && !cell.flagExpand && neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built);
+      if(!cell.built) return false;
+      if(brush==='brood') return cell.zone!=='brood';
+      if(brush==='honey') return cell.zone!=='honey' && !cell.brood;
+      return false; }
+    function placeCompare(cell){ const rg=hexDist(cell.c,cell.r,CCC,CCR);
+      if(brush==='brood') return rg<=1?'This one sits right in the warm heart — a fine choice.':'A little out from the heart — warm cells hold brood best, but this will do.';
+      if(brush==='honey') return rg>=2?'Out on the wall — just where stores belong.':'Close to the heart — shelves keep better on the outer wall.';
+      return 'Reaching just past the comb — the builders won’t have far to go.'; }
+    function openPlacePreview(cell){ const info=PLACEINFO[brush]; if(!info) return; pendingPlace=cell;
+      try{ drawKeySwatch($('pcBefore'), cell.built?'bare':'empty'); drawKeySwatch($('pcAfter'), info.after); }catch(e){}
+      $('pcName').innerHTML=info.name; $('pcEffect').innerHTML=info.effect; $('pcCost').innerHTML=info.cost;
+      $('pcBest').innerHTML='Best spot: '+info.best; $('pcNote').innerHTML=placeCompare(cell);
+      const el=$('placeConfirm'); el.classList.remove('hide'); el.style.bottom=(botH+14)+'px';
+      requestAnimationFrame(()=>el.classList.add('show')); }
+    function closePlacePreview(){ pendingPlace=null; const el=$('placeConfirm'); if(!el) return;
+      el.classList.remove('show'); setTimeout(()=>{ if(!pendingPlace) el.classList.add('hide'); }, 240); }
+    press($('pcPlace'), ()=>{ const cell=pendingPlace; closePlacePreview(); if(!cell) return;
+      strokeSnap=combSnap(); applyBrush(cell); commitStroke(); });
+    press($('pcCancel'), ()=>closePlacePreview());
     // the blueprint: comb strategy as one picture — concentric truth, three lines.
     // The pattern mirrors a real frame: brood nest at the warm centre, a band of
     // stores wrapped around it, empty fresh wax at the working rim.
@@ -4926,7 +5016,7 @@
       drawCombPlan(); openOverlay('combPlan'); try{ chime(440,587); }catch(e){} return true; }
     window.__hmPlan=()=>{ drawCombPlan(); openOverlay('combPlan'); };   // dev/test handle, like __hm
     function endCoach(viaSkip){
-      onboard=false; finishType(false); clearSpots(); $('coach').classList.remove('show'); setReveal(false); forecastCache=forecastToSpring();
+      onboard=false; finishType(false); clearSpots(); closePlacePreview(); $('coach').classList.remove('show'); setReveal(false); forecastCache=forecastToSpring();
       goals=makeGoals(); lastSI=seasonIdx(day); saveGame();
       // the hive is handed over PAUSED and simply waits. Nothing counts down,
       // nothing gates a sunrise — the clock starts when the keeper says so, and
