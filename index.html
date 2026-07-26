@@ -1130,15 +1130,13 @@
   .hbRow .bd{ flex:1; min-width:0; font:500 12.5px 'Bricolage Grotesque',sans-serif; line-height:1.5; overflow-wrap:break-word; }
   .hbRow .dy{ flex:none; font:500 9.5px 'JetBrains Mono',monospace; color:var(--dim); padding-top:3px; }
   /* dawn-by-dawn: the first week is turn-based — each sunrise waits for the keeper */
-  #dawnChip{ position:fixed; left:50%; transform:translateX(-50%); bottom:calc(env(safe-area-inset-bottom,0px) + 168px); z-index:57;
+  #dawnChip{ position:fixed; left:50%; transform:translateX(-50%); bottom:calc(env(safe-area-inset-bottom,0px) + 268px); z-index:57;
     display:flex; flex-direction:column; gap:8px; align-items:center; max-width:min(88vw,380px); text-align:center;
     font:500 12.5px 'Bricolage Grotesque',sans-serif; color:var(--text);
     background:linear-gradient(180deg, rgba(46,34,14,0.97), rgba(30,21,8,0.97)); border:1.5px solid rgba(255,214,107,0.45);
     border-radius:14px; padding:11px 14px; box-shadow:0 6px 22px rgba(0,0,0,0.5); animation:ordDrop .42s cubic-bezier(.3,1.5,.55,1); }
   #dawnChip b{ color:var(--gold); }
   .dawnBtns{ display:flex; gap:9px; align-items:center; }
-  #dawnSkip{ background:none; border:none; cursor:pointer; font:600 10.5px 'JetBrains Mono',monospace; color:var(--dim); text-decoration:underline; padding:4px; }
-  #dawnSkip:hover{ color:var(--gold); }
   #combPlanC{ width:min(232px,64vw); height:auto; display:block; margin:10px auto 4px; }
   .cpLines{ display:flex; flex-direction:column; gap:7px; margin-top:8px; text-align:left; }
   .cpLines>div{ display:flex; gap:10px; align-items:baseline; font:500 13px 'Bricolage Grotesque',sans-serif; line-height:1.45; }
@@ -1669,10 +1667,9 @@
   </div>
   <div id="mpOrder" class="hide" role="status"></div>
   <div id="dawnChip" class="hide" role="status">
-    <span id="dawnTx"><b>🌅 Day 2.</b> Look around, paint, plan — time waits for you.</span>
+    <span id="dawnTx"><b>🌱 The hive is yours.</b> Time is paused — look around, paint, read Hazel. Start the days whenever you like.</span>
     <span class="dawnBtns">
-      <button class="btn sm" id="dawnGo">▶ Begin the day</button>
-      <button id="dawnSkip">⏩ let the days flow</button>
+      <button class="btn sm" id="dawnGo">▶ Start the days</button>
     </span>
   </div>
 
@@ -1777,7 +1774,7 @@
     // / non-https, where no service worker runs) — the real source of truth is sw.js's
     // VERSION; syncGameVer() below asks the running worker and corrects this label
     // live, so the two only ever drift cosmetically for a moment, never permanently.
-    let GAME_VER='2026.07.31.32';
+    let GAME_VER='2026.07.31.33';
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1972,7 +1969,14 @@
     // is where winter bees start to die faster; MITE_CAP is the hard ceiling. Tuned headless.
     const MITE_YEAR=2, MITE_GROW=0.02, MITE_HURT=0.6, MITE_DEFORM=0.8, MITE_CAP=1.5;
     // pace: how many real seconds one hive-day takes — a player choice, not a law
-    const PACES={ easy:2.5, medium:1.0, hard:0.6 };
+    // seconds of real time per hive-day. Easy is deliberately unhurried: a whole
+    // year is ~20 quiet minutes, with winter fast-forwarding itself when nothing
+    // needs deciding. Pace is presentation only — the economy is per-hive-day and
+    // does not move when these do.
+    const PACES={ easy:3.4, medium:1.4, hard:0.7 };
+    // a party keeps the brisker old cadence: eight people talking fill the time
+    // by themselves, and a shared year should still land in ~15 minutes
+    const PARTY_DAY=2.5;
     let pace='easy', DAY_LEN=PACES.easy;
     // faster seasons are earned: Medium by surviving a winter, Hard by mastering Medium
     let unlocked={m:false,h:false};
@@ -3087,7 +3091,7 @@
     document.querySelectorAll('[data-sp]').forEach(b=>press(b,()=>{
       if(netClient()){ if(NET.denyCool<=0){ NET.denyCool=4;
         const q=NET.players[0]; toast('👑 Time is the Queen’s — <b>'+netEsc(q?q.name:'she')+'</b> holds the clock. Tap your 🐝 post badge to see everything that <i>is</i> yours.'); } return; }
-      setSpeed(+b.dataset.sp); }));
+      hideDawnChip(); setSpeed(+b.dataset.sp); }));
     function setSpeed(s){ speed=s; document.querySelectorAll('[data-sp]').forEach(x=>x.classList.toggle('on',+x.dataset.sp===s)); }
     press($('tabHive'),()=>setView('hive'));
     press($('tabMeadow'),()=>setView('meadow'));
@@ -3108,7 +3112,7 @@
       if(RM){ view=v; applyViewCls(); return; }
       const w=$('wipe'); w.style.opacity=1; setTimeout(()=>{ view=v; applyViewCls(); w.style.opacity=0; },300); }
     addEventListener('keydown',e=>{ if(anyOverlayOpen()) return;   // a modal's open — let Tab/keys behave normally, not hijack gameplay shortcuts underneath it
-      if(e.key===' '){e.preventDefault(); setSpeed(speed===0?1:0);} if(e.key==='1')pickBrush('brood'); if(e.key==='2')pickBrush('honey'); if(e.key==='3')pickBrush('expand'); if(e.key==='h'||e.key==='H')harvestSurplus(); if(e.key==='Tab'){e.preventDefault(); setView(view==='hive'?'meadow':'hive');} });
+      if(e.key===' '){e.preventDefault(); hideDawnChip(); setSpeed(speed===0?1:0);} if(e.key==='1')pickBrush('brood'); if(e.key==='2')pickBrush('honey'); if(e.key==='3')pickBrush('expand'); if(e.key==='h'||e.key==='H')harvestSurplus(); if(e.key==='Tab'){e.preventDefault(); setView(view==='hive'?'meadow':'hive');} });
     function pickBrush(b){ brush=b; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x.dataset.brush===b)); syncBrushHelp(); }
 
     // ===================== harvest (push-your-luck legacy score) =====================
@@ -4658,24 +4662,25 @@
     // and waits; the keeper releases the day themselves. Five dawns (or one tap of
     // "let the days flow") and the game graduates to real time — decisions first,
     // clock later. Session-only; never in daily, parties, or continued colonies.
-    let dawnRamp=0;
     function showDawnChip(){ const el=$('dawnChip'); if(!el) return;
-      $('dawnTx').innerHTML='<b>🌅 Day '+(Math.floor(day)+1)+'.</b> Look around, paint, plan — time waits for you.';
       el.classList.remove('hide'); try{ chime(392,494); }catch(e){} }
     function hideDawnChip(){ const el=$('dawnChip'); if(el&&!el.classList.contains('hide')) el.classList.add('hide'); }
     function dawnResume(){ hideDawnChip(); if(speed===0) setSpeed(1); }
     press($('dawnGo'),dawnResume);
-    press($('dawnSkip'),()=>{ dawnRamp=0; dawnResume();
-      toast('🎓 Flowing time it is — you can pause any moment with ⏸. You have the rhythm.'); });
     window.__hmDawn=()=>showDawnChip();   // dev/test handle, like __hm
     function showCombPlan(){ let seen=false; try{ seen=localStorage.getItem('hm_combplan')==='1'; }catch(e){}
       if(seen) return false; lsSet('hm_combplan','1');
       drawCombPlan(); openOverlay('combPlan'); try{ chime(440,587); }catch(e){} return true; }
     window.__hmPlan=()=>{ drawCombPlan(); openOverlay('combPlan'); };   // dev/test handle, like __hm
-    function endCoach(viaSkip){ if(!viaSkip) dawnRamp=5;   // graduates of the coach get a turn-based first week
+    function endCoach(viaSkip){
       onboard=false; finishType(false); clearSpots(); $('coach').classList.remove('show'); setReveal(false); forecastCache=forecastToSpring();
-      goals=makeGoals(); lastSI=seasonIdx(day); setSpeed(1); saveGame();
-      setTimeout(()=>{ if(!showCombPlan()) tip('notes','Hazel: The <b>?</b> up top keeps every note. Take your time — the bees aren’t going anywhere.'); }, 1200); }
+      goals=makeGoals(); lastSI=seasonIdx(day); saveGame();
+      // the hive is handed over PAUSED and simply waits. Nothing counts down,
+      // nothing gates a sunrise — the clock starts when the keeper says so, and
+      // ⏸ is always there afterwards. (An earlier build stopped time at every
+      // dawn for a week; being interrupted five times read as nagging, not calm.)
+      setSpeed(0);
+      setTimeout(()=>{ showCombPlan(); showDawnChip(); }, 1200); }
     press($('coachBtn'),()=>{ if(coachWait){ if(twActive){ finishType(); } else coachContinue(); return; } const s=COACH[coachStep]; if(s&&!s.until) advanceCoach(); });
     press($('coachSkip'),()=>{ coachWait=false; seedStarterZones(); endCoach(true); });
     press($('coach'),e=>{ if(e.target&&e.target.closest&&(e.target.closest('#coachBtn')||e.target.closest('#coachSkip'))) return; if(twActive) finishType(); });
@@ -5627,7 +5632,7 @@
       NET.started=true; NET.endSent=false; NET.lastSnap=performance.now();
       document.body.classList.add('netc');
       closeOverlay('mpJoin'); closeOverlay('mpEnd'); $('intro').classList.add('hide');
-      dailyMode=false; onboard=false; queenLine='meadow'; setPace('easy');
+      dailyMode=false; onboard=false; queenLine='meadow'; setPace('easy'); DAY_LEN=PARTY_DAY;
       tinyComb(); resetColonyIdentity(); goals=makeGoals(); netLastSI=-1; clearUndo();
       brush='brood'; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x.dataset.brush==='brood')); setReveal(false);
       netRecomputeSectors(); netApplySnap(m.s);
@@ -5655,7 +5660,7 @@
       NET.hiveName=resume?(resume.name||netHiveName()):netHiveName();
       if(!resume) partyClear();
       closeOverlay('mpHost'); closeOverlay('mpEnd'); $('intro').classList.add('hide');
-      dailyMode=false; setPace('easy'); tinyComb();
+      dailyMode=false; setPace('easy'); DAY_LEN=PARTY_DAY; tinyComb();
       for(const cell of cells){ if(!cell.built&&cellDist(cell.c,cell.r)<2.9){ cell.built=true; cell.zone='none'; } }   // a wider founding comb — every wedge gets cells
       seedStarterZones();
       honeyU=10*HC; pollenU=5*HC; nectarU=0; P=18; day=0; year=1; peakPop=18; bornTotal=0; swarmP=0; mite=0; grades=[]; forage=0.6; activePatch=null; resetColonyIdentity(); drawSeason();
@@ -6324,10 +6329,6 @@
           prevv.h=honeyU; prevv.p=pollenU; prevv.b=P; prevv.br=brc;
           waxRateEMA+=((waxAccum/dd)-waxRateEMA)*0.12; waxAccum=0;
           if(danceCallCD>0) danceCallCD-=dd;
-          if(dawnRamp>0){ hideDawnChip();   // any running frame means the keeper released the day
-            if(Math.floor(day)>Math.floor(day-dd)){ dawnRamp--;
-              if(dawnRamp>0){ setSpeed(0); showDawnChip(); }
-              else toast('🎓 <b>That’s the rhythm.</b> From here the days flow — pause with ⏸ whenever you like.'); } }
           fcTimer+=dt; if(fcTimer>0.6){ fcTimer=0; forecastCache=forecastToSpring(); }
           syncBeePool();
           saveTimer+=dt; if(saveTimer>5){ saveTimer=0; saveGame(); }

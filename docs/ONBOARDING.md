@@ -75,12 +75,21 @@ them.** Concretely:
 The first session now runs: **cold open** (touch a cell, a bee wakes) →
 **terse coach** (one brush per step, tap-here hints, no paragraphs) →
 **"Warm heart, sweet walls"** (comb strategy as one drawn picture, three
-icon-lines, shown once at `endCoach`) → **the turn-based first week**
-(five dawns that each stop the clock — "▶ Begin the day" / "⏩ let the days
-flow" — graduating with a small ceremony to real time) → **the scouts'
-dance call** (the first interrupt-and-choose event, ~when a rich bloom
+icon-lines, shown once at `endCoach`) → **a hive handed over paused**
+(the clock simply waits, with one "▶ Start the days" invitation; ⏸ stays
+available forever after) → **the scouts' dance call** (the first interrupt-and-choose event, ~when a rich bloom
 appears). Decisions first, clock later; pictures before prose; biology as
 the tutorial voice throughout.
+
+**A note on rhythm, learned the hard way.** An earlier build gated the first
+*five* sunrises — each dawn stopped the clock and asked the keeper to release
+the day. On paper it was "turn-based until you learn the rhythm"; in the hand
+it read as being interrupted five times, which is the opposite of calm. What
+replaced it is quieter and does the same job: the hive is handed over
+**paused**, once, and waits as long as you like. Easy's days are also longer
+now (3.4 s per hive-day — a year is ~20 unhurried minutes, and winter still
+fast-forwards itself when nothing needs deciding). Parties keep the brisker
+2.5 s cadence via `PARTY_DAY`, since eight people fill the time by talking.
 
 ## Candidate future work (solo)
 

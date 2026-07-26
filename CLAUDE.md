@@ -129,8 +129,10 @@ numbers drift as the file changes; re-grep `// =====` banners if they look off)
   linked hive. See docs/MULTIPLAYER.md.
 - Newer solo-UX systems (all `// ----`-commented near their wiring): the
   **comb blueprint** (`showCombPlan`/`drawCombPlan`, one-shot `hm_combplan`
-  flag, shown from `endCoach`), the **dawn ramp** (`dawnRamp` — five
-  turn-based sunrises after the coach; released in `frame()`'s sim block),
+  flag, shown from `endCoach`), the **paused hand-over** (`endCoach`
+  leaves `speed` at 0 and shows the one-shot `#dawnChip`; any play/pause press
+  or the spacebar dismisses it — an earlier per-sunrise gate was rolled back,
+  see docs/ONBOARDING.md),
   the **scouts' dance call** (`openDanceCall`/`danceCallCheck`, solo-only,
   cooldown in days via `danceCallCD`), the **report long view**
   (`buildReportFull`, opened from the mini report's `⤢`), and **Hazel's
