@@ -157,10 +157,13 @@ numbers drift as the file changes; re-grep `// =====` banners if they look off)
   renders as all sky — the "no grass on iPad" bug). `fitComb` hugs tighter and
   allows larger cells on big screens (was: *more* padding + a 50px cap, which
   marooned the comb in the middle of an iPad).
-- **comb key** (`#combKey`, `buildCombKey`/`drawKeySwatch`/`syncCombKey`, one
-  `COMBKEY[]` row per cell/phase) — the collapsible left-edge legend; swatches
-  are drawn with the real `COL`/`LIQ`/`heatColor` so they match the comb.
-  Open-state persists in `hm_combkey`. **party connection legend** — the
+- **comb key & words** (`#combKey`, `buildCombKey`/`drawKeySwatch`/`syncCombKey`,
+  one `COMBKEY[]` row per cell/phase + a `GLOSSARY[]` of keeper-words) — the
+  collapsible left-edge legend; swatches are drawn with the real
+  `COL`/`LIQ`/`heatColor` so they match the comb. Leads with a plain-English
+  **Brood** headline; open-state persists in `hm_combkey`. The plainest
+  jargon glosses live in three places kept in sync by hand: this key, the
+  `BRUSHHELP` line, and the `stBrood` stat tip. **party connection legend** — the
   keeper strip (`netStripSync`) leads with a `🔗 N/M linked` chip and a
   lit/hollow `.cdot` per keeper.
 - `M{}` — the stat-modifier reducer over `GIFTS`(owned) + `QUEENS`(mods).

@@ -405,6 +405,14 @@
   .ckRow .ckText{ min-width:0; }
   .ckRow .ckName{ font:700 11.5px 'Bricolage Grotesque',sans-serif; color:#f5e9c8; line-height:1.15; }
   .ckRow .ckDesc{ font:500 9.5px 'JetBrains Mono',monospace; color:var(--dim); line-height:1.3; }
+  /* the plain-English "brood" headline + the keeper's-words glossary */
+  .ckIntro{ font:500 10.5px 'Bricolage Grotesque',sans-serif; color:#e8dcc4; line-height:1.5;
+    background:rgba(143,196,255,.09); border:1px solid rgba(143,196,255,.22); border-radius:9px; padding:8px 9px; margin-bottom:9px; }
+  .ckIntro b{ color:#bcd8ff; } .ckIntro i{ font-style:italic; color:#f5e9c8; }
+  .ckWordsHead{ font:800 8.5px 'JetBrains Mono',monospace; letter-spacing:1.6px; text-transform:uppercase; color:var(--dim); margin:12px 0 5px; }
+  .ckWord{ font:500 10px 'Bricolage Grotesque',sans-serif; color:var(--dim); line-height:1.5; padding:3px 0; border-top:1px solid rgba(255,255,255,.05); }
+  .ckWord:first-of-type{ border-top:none; }
+  .ckWord b{ color:#f5e9c8; }
   #ckHandle{ flex:none; width:30px; min-height:96px; cursor:pointer; border:1px solid rgba(255,214,107,.3); border-left:none;
     background:linear-gradient(180deg,rgba(40,30,12,.96),rgba(26,18,7,.96)); border-radius:0 12px 12px 0; color:var(--gold);
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:8px 0; box-shadow:4px 0 14px rgba(0,0,0,.4); }
@@ -1346,7 +1354,7 @@
        left edge (where a wide screen has room to spare); tap the 🔑 handle to slide it out. -->
   <div id="combKey" class="hide closed" aria-hidden="true">
     <div id="ckPanel" role="region" aria-label="Comb key — what each cell means">
-      <div class="ckTitle">🔑 Comb key</div>
+      <div class="ckTitle">🔑 Comb key &amp; words</div>
       <div id="ckBody"></div>
     </div>
     <button id="ckHandle" tabindex="0" aria-expanded="false" aria-controls="ckPanel" title="Comb key — what each cell means"><span class="ckIco">🔑</span><span class="ckWord">KEY</span></button>
@@ -1869,7 +1877,7 @@
     // / non-https, where no service worker runs) — the real source of truth is sw.js's
     // VERSION; syncGameVer() below asks the running worker and corrects this label
     // live, so the two only ever drift cosmetically for a moment, never permanently.
-    let GAME_VER='2026.07.31.35';
+    let GAME_VER='2026.07.31.36';
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -4470,7 +4478,7 @@
       if(tk){ const ii=tk.children; for(let i=0;i<ii.length;i++){ ii[i].classList.toggle('on',i===ci); ii[i].classList.toggle('rec',i===ri); } }
       const n=$('fxNote'); if(n){ const note='<span>'+forageNote()+'</span>'; if(n.innerHTML!==note) n.innerHTML=note; } }
     const BRUSHHELP={
-      brood:'\ud83c\udf7c <b>Brood</b> cradle \u2014 <span class="gain">gain: more bees</span> <span class="cost">\u00b7 cost: nurses &amp; warmth</span>',
+      brood:'\ud83c\udf7c <b>Brood</b> = the baby bees \u2014 <span class="gain">gain: more workers</span> <span class="cost">\u00b7 cost: nurses &amp; warmth</span>',
       honey:'\ud83c\udf6f <b>Honey</b> shelf \u2014 <span class="gain">gain: +1 pantry cell</span> <span class="cost">\u00b7 cost: wax, drawn from honey</span>',
       expand:'\ud83d\udd28 <b>Expand</b> wax \u2014 <span class="gain">gain: room to grow</span> <span class="cost">\u00b7 cost: wax &amp; a builder\u2019s time \u2014 watch the bank</span>'
     };
@@ -4489,6 +4497,16 @@
       {k:'expand', n:'Building',     d:'flagged wax the builders draw'},
       {k:'heat',   n:'Warmth',       d:'heat lens · where the nest holds heat'},
     ];
+    // plain-English glossary for a first-timer — the words a keeper uses that a
+    // newcomer won't know. "Brood" gets its own headline in the key (see buildCombKey).
+    const GLOSSARY=[
+      {w:'Nectar',  d:'flower sugar the bees gather — it thickens into honey'},
+      {w:'Pollen',  d:'flower dust · “bee bread,” the babies’ protein'},
+      {w:'Forage',  d:'to fly out and gather nectar &amp; pollen'},
+      {w:'Wax',     d:'what comb is built from — drawn from honey'},
+      {w:'Cluster', d:'the winter huddle that shivers to stay warm'},
+      {w:'Swarm',   d:'half the hive leaving with the old queen to start anew'},
+    ];
     function drawKeySwatch(cv,k){ const g=cv.getContext('2d'); const D=cv.width, c=D/2, s=D*0.46;
       g.clearRect(0,0,D,D);
       hexPathOn(g,c,c,s);
@@ -4505,7 +4523,10 @@
       else if(k==='larva'){ const lr=s*0.5; let lg=g.createRadialGradient(c-lr*0.3,c-lr*0.35,1,c,c,lr); lg.addColorStop(0,'#fdf3d8'); lg.addColorStop(0.7,COL.larva); lg.addColorStop(1,'#d8bd86'); g.fillStyle=lg; g.beginPath(); g.arc(c,c,lr,0,6.28); g.fill(); }
       else if(k==='capped'){ let pg=g.createRadialGradient(c-s*0.22,c-s*0.26,1,c,c,s*0.82); pg.addColorStop(0,'#e3c58c'); pg.addColorStop(0.65,COL.pupa); pg.addColorStop(1,'#9c8049'); g.fillStyle=pg; hexPathOn(g,c,c,s*0.82); g.fill(); } }
     function buildCombKey(){ const body=$('ckBody'); if(!body||body.dataset.built) return; body.dataset.built='1';
-      body.innerHTML=COMBKEY.map(r=>'<div class="ckRow"><canvas width="40" height="40" data-k="'+r.k+'"></canvas><div class="ckText"><div class="ckName">'+r.n+'</div><div class="ckDesc">'+r.d+'</div></div></div>').join('');
+      const intro='<div class="ckIntro"><b>Brood</b> = the baby bees. An egg becomes a grub (a <i>larva</i>), then the cell is capped and a <i>pupa</i> ripens into a bee — about 20 days. The blue <i>nursery</i> is where they grow.</div>';
+      const rows=COMBKEY.map(r=>'<div class="ckRow"><canvas width="40" height="40" data-k="'+r.k+'"></canvas><div class="ckText"><div class="ckName">'+r.n+'</div><div class="ckDesc">'+r.d+'</div></div></div>').join('');
+      const words='<div class="ckWordsHead">the keeper’s words</div>'+GLOSSARY.map(g=>'<div class="ckWord"><b>'+g.w+'</b> — '+g.d+'</div>').join('');
+      body.innerHTML=intro+rows+words;
       body.querySelectorAll('canvas').forEach(cv=>drawKeySwatch(cv,cv.dataset.k)); }
     let combKeyOpen=false; try{ combKeyOpen=localStorage.getItem('hm_combkey')==='1'; }catch(e){}
     function setCombKey(open){ combKeyOpen=open; const el=$('combKey'); if(!el) return;
@@ -5384,8 +5405,8 @@
       '<b>'+Math.round(pollenU/HC)+'</b> cells of protein. Nurses knead it into food for the larvae — <em>no pollen, no new bees</em>.','forage'));
     press($('stPop'),()=>showTip($('stPop'),'Your workforce',
       '<b>'+Math.round(P)+'</b> bees alive. What makes more? <em>Warm brood cells + pollen</em>. More bees bring more of everything else.','brood'));
-    press($('stBrood'),()=>showTip($('stBrood'),'The next generation',
-      'Eggs → larvae → capped pupae, about <b>twenty days</b> from laying to a bee that flies. This number is next month\u2019s workforce.','brood'));
+    press($('stBrood'),()=>showTip($('stBrood'),'🍼 Brood — the colony’s babies',
+      'The <b>young bees</b> growing up: an egg, then a grub (a <em>larva</em>), then a sealed <em>pupa</em> — about <b>twenty days</b> from laying to a bee that flies. This count is next month\u2019s workforce.','brood'));
     press($('stKeeper'),()=>showTip($('stKeeper'),'Your keeper\u2019s shelf',
       '<b>✧'+rj+'</b> royal jelly — spend it on <em>Queen\u2019s Gifts</em> between years · <b>'+jars+'</b> jar'+(jars===1?'':'s')+' harvested. Your legacy in glass.','notes'));
     press($('clockWrap'),()=>{ if($('clockWrap').classList.contains('hidden')) return;
