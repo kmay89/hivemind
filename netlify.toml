@@ -4,6 +4,16 @@
 [build]
   publish = "."
 
+# The only server-side code in the project: the hive mailbox, an ephemeral
+# WebRTC-handshake pigeonhole that gives Play Together its four-letter room
+# codes and its "waiting hives" list. Served same-origin at /api/hive, so the
+# CSP's `connect-src 'self'` covers it with no loosening. The site itself is
+# still published as-is with no build step; Netlify bundles this one function.
+# See netlify/functions/hive.js and docs/MULTIPLAYER.md.
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
 # Redirect www to the apex domain (Cloudflare DNS points both at Netlify).
 [[redirects]]
   from = "https://www.hive-mind-game.com/*"

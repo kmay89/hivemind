@@ -110,11 +110,44 @@ screen (position travels in comb units, so screen sizes don't matter) and
 **everyone taps to defend** — joiner swats travel as intents, damage lands on
 the host's sim, local screens keep the juice (shake, hitstop, puff).
 
-## Networking (zero-server, by design)
+## Networking (two handshakes, one of them magic)
 
-The repo rule is *no server, no dependencies* — so there is **no signaling
-server**. Connection is WebRTC `RTCDataChannel` with **manual signaling**,
-dressed up so completely that the ritual disappears (the Roblox lesson).
+Connection is WebRTC `RTCDataChannel`. There are **two ways to shake hands**,
+and the game picks automatically.
+
+### The magic path: four-letter room codes (default on the live site)
+
+`netlify/functions/hive.js` is a tiny same-origin "mailbox" — the only
+server-side code in the project. It holds handshake blobs in a pigeonhole
+under a code and forgets them after 8 minutes. It exists because the two
+things players actually want are impossible peer-to-peer: a WebRTC handshake
+is ~600 characters (DTLS fingerprint + ICE credentials) so it can never be
+typed, and browsers have no API to see games on the local network.
+
+1. Host taps **Host a hive** → a four-letter code fills the screen (`BUZZ`).
+   No QR, no link, nothing to send. They read it out loud.
+2. Joiner taps **Join a hive** → the waiting hives are simply *listed*, with
+   host name and keeper count. **One tap and they're in.** Or they type the
+   four letters — it submits itself on the fourth.
+3. Host taps **Wake the hive** once. No confirm.
+
+Under the hood the host keeps two or three spare pigeonholes published at all
+times (so several keepers can arrive in the same second) and polls for
+answers every 2 s. A joiner who lands in the gap between spares sees "the hive
+is making room for you…" and retries itself. A woken hive drops off the public
+list but stays joinable by code, which is what makes drop-in play work.
+
+Served at `/api/hive`, so the CSP's `connect-src 'self'` covers it unchanged.
+Polls are `cache: 'no-store'` with a nonce — a cached poll silently breaks the
+whole handshake (it did, once; that's what `tools/mp-lobby-smoke.js` guards).
+
+### The fallback path: pass the handshake by hand
+
+When the mailbox isn't there — `file://`, offline, a fork hosting the static
+file with no function — `NET.mailbox` latches false the moment a reply comes
+back as anything but JSON, and the join card switches to the original
+manual signaling, dressed up so the ritual mostly disappears (the Roblox
+lesson).
 
 **The "grandma flow"** (the target UX — nobody types anything but a name):
 

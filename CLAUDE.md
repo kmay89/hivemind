@@ -4,13 +4,26 @@ Orientation for working in this repo — read this before editing `index.html`.
 
 ## What this is
 
-HIVEMIND is a single-player browser game (a beekeeping survival sim) shipped
-as **one self-contained `index.html` file** — one inline `<style>`, one
-inline `<script>`, no build step, no dependencies, no server. That's
+HIVEMIND is a browser game (a beekeeping survival sim, solo or 2–8 players)
+shipped as **one self-contained `index.html` file** — one inline `<style>`, one
+inline `<script>`, no build step, no browser dependencies, and no server it
+*needs* (see the one exception below). That's
 deliberate (see README.md): `open index.html` must always work, and Netlify
 publishes the repo root as-is. Don't introduce a build step, a bundler, or a
 runtime dependency into the shipped page. Dev-only tooling (see `tools/`) is
 fine as long as it never runs in the browser.
+
+**The one exception, added deliberately:** `netlify/functions/hive.js` — a ~40
+line serverless "hive mailbox" that holds WebRTC handshakes under four-letter
+room codes so Play Together can offer typed codes and a waiting-hives list
+(neither is possible peer-to-peer: a handshake is ~600 chars and browsers
+cannot see the local network). It is the *only* server-side code, it stores
+nothing but ephemeral handshake blobs, and **`index.html` must keep working
+without it** — `NET.mailbox` latches false on anything that isn't a JSON reply
+and the whole party falls back to the paste/QR handshake. `@netlify/blobs` in
+package.json is that function's dependency **only**; it must never reach the
+browser bundle. Test both paths: `tools/mp-lobby-smoke.js` (mailbox) and
+`tools/mp-smoke.js` (fallback).
 
 There is no framework, no module system, no test runner in the shipped
 artifact. The whole `<script>` is one closure: ~280 functions and ~600
