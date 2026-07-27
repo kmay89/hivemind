@@ -93,8 +93,15 @@ numbers drift as the file changes; re-grep `// =====` banners if they look off)
 - `press(el, fn)` (1334) — the one place the iOS Safari synthesized-click
   bug is handled. Every tappable control should go through this or the
   delegated pointerdown listener (2080), not a raw `addEventListener('click', …)`.
-- `toast(msg)` → `logMsg()` (2614) — the single funnel for all player-facing
-  messages. Don't invent a new popup/banner for a new notification.
+- `toast(msg)` → `logMsg()` — the single funnel for all player-facing
+  messages. Don't invent a new popup/banner for a new notification. `logMsg()`
+  now also drives the **living log** (`pushFeed`, `#msgFeed`): every message
+  rises on the left edge as an `.lfcard`, lingers (life scales with text
+  length), then ages away — purely ambient (`pointer-events:none`, so it never
+  eats a comb tap), suppressed in `storyMode`/zen/cine. The old centred `#toast`
+  popup is retired (kept in the DOM, unused). Full history still lives in the
+  advisor chat (`MSGLOG`). NB: `.lfcard` is the feed card — **not** `.mcard`,
+  which is the modal/pause card.
 - `openOverlay(id)` / `closeOverlay(id)` — the shared modal primitive (see
   below). Every `.ov` panel opens/closes through this, never by hand-toggling
   `.hide` or the `paused` flag directly.
@@ -127,6 +134,22 @@ numbers drift as the file changes; re-grep `// =====` banners if they look off)
   automatically shared (but `netApplySnap()` must be taught to *apply* it —
   update both or the field silently stays host-only). Undo is disabled in a
   linked hive. See docs/MULTIPLAYER.md.
+- `familyMode` / `setFamily(on,transient)` — the title-screen 🧸 Family-mode
+  switch (`#familyToggle`, persisted as `hm_family`; toggles a `.family` body
+  class). It is a *tone* switch read in five places: (1) easy words —
+  `buildCombKey` (family intro + `COMBKEY_KID`/`GLOSSARY_KID`), `syncBrushHelp`
+  (`BRUSHHELP_KID`), and the `COACH[]` rows' optional `kid`/`kidBridge` fields;
+  (2) gentler play — `difficulty()` has a `familyMode` branch (mild winter/flow)
+  and `spawnHornet`/`stepHornet` make the hornet rarer, weaker & cuddlier;
+  (3) the simpler screen is pure CSS under `.family` (hides `.arr`/`.sub`,
+  `#reportBtn`, `#stKeeper`; chunkier brushes); (4) shared party comb —
+  `netAssignSectors` fills every cell `-2` when `NET.family`, so nobody is
+  fenced; (5) `netShowRole`/`netPostChip` show a single "One Big Hive" card.
+  **It never touches the headless economy sim** (that never sets the flag), so a
+  red `check` still means a real regression. A joiner *adopts* the host's family
+  tone for the session via `setFamily(true, /*transient*/true)` (no `lsSet`, so
+  their own saved choice survives) — `NET.family` rides the `t:'start'` message
+  as `fam`, and the party-teardown restores `hm_family`.
 - Newer solo-UX systems (all `// ----`-commented near their wiring): the
   **comb blueprint** (`showCombPlan`/`drawCombPlan`, one-shot `hm_combplan`
   flag, shown from `endCoach`), the **paused hand-over** (`endCoach`
@@ -154,9 +177,14 @@ numbers drift as the file changes; re-grep `// =====` banners if they look off)
   labour-and-time-bound, not honey-bound, at the scales that matter.
 - `meadowGroundY()` — the horizon. Portrait keeps 72%; short/landscape screens
   lift it (else the 72% line falls behind the tall control tray and the meadow
-  renders as all sky — the "no grass on iPad" bug). `fitComb` hugs tighter and
-  allows larger cells on big screens (was: *more* padding + a 50px cap, which
-  marooned the comb in the middle of an iPad).
+  renders as all sky — the "no grass on iPad" bug). `fitComb` makes the comb the
+  hero: the HUD panes are translucent overlays, so the comb grows *into* their
+  margins (`reclaim` ~46% desktop / ~22% phones) rather than being fenced to the
+  clear band `Hh-topH-botH` — this fixed "hive too small" on shorter (Intel-Mac)
+  viewports where two fixed ~120-350px panes ate the height. Cap 104 desktop /
+  52 phone, pad 1.05 desktop; centres on the *visible* band (`visTop`/`visH`) so
+  outer/empty rings tuck behind the frosted panels but working cells stay clear.
+  Re-check with a headless shot at 1280×800@2x / 1440×900@2x if you touch it.
 - **comb key & words** (`#combKey`, `buildCombKey`/`drawKeySwatch`/`syncCombKey`,
   one `COMBKEY[]` row per cell/phase + a `GLOSSARY[]` of keeper-words) — the
   collapsible left-edge legend; swatches are drawn with the real
