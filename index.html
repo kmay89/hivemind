@@ -677,6 +677,28 @@
     font-size:12.5px; opacity:0; transition:opacity .7s; pointer-events:none; text-align:center; max-width:84vw; line-height:1.45; }
   #toast.show{ opacity:1; }
   #toast b{ color:var(--gold); font-weight:600; } #toast em{ color:var(--cyan); font-style:normal; }
+  /* ---------- the living log: Hazel & events drift up the left edge, linger, then
+     age away like an MMO feed. Purely ambient (pointer-events:none) so it never
+     steals a tap from the comb; the full history still lives in the advisor chat. ---------- */
+  #msgFeed{ position:fixed; left:0; z-index:var(--z-inspect); pointer-events:none;
+    display:flex; flex-direction:column; justify-content:flex-end; gap:7px;
+    width:min(330px, 44vw); padding:0 10px 6px 12px; overflow:hidden;
+    top:calc(var(--feed-top, 118px)); bottom:calc(var(--feed-bot, 128px)); }
+  .lfcard{ display:flex; gap:8px; align-items:flex-start; padding:8px 11px 9px; border-radius:12px;
+    background:rgba(26,19,7,0.80); border:1px solid rgba(255,217,122,0.22);
+    -webkit-backdrop-filter:blur(7px); backdrop-filter:blur(7px);
+    box-shadow:0 4px 15px rgba(0,0,0,0.42); color:var(--text);
+    font:500 12px 'Bricolage Grotesque',sans-serif; line-height:1.42;
+    transform-origin:left center; animation:lfIn .42s cubic-bezier(.2,.9,.3,1.2) both; }
+  .lfcard .lfic{ flex:none; font-size:16px; line-height:1.25; }
+  .lfcard .lftx{ min-width:0; }
+  .lfcard .lftx b{ color:var(--gold); font-weight:600; } .lfcard .lftx em{ color:var(--cyan); font-style:normal; }
+  .lfcard.warn{ border-color:rgba(255,140,90,0.55); background:rgba(38,18,8,0.82); }
+  .lfcard.age{ animation:lfOut .9s ease forwards; }
+  @keyframes lfIn{ from{ opacity:0; transform:translateX(-26px) scale(.95); } to{ opacity:1; transform:none; } }
+  @keyframes lfOut{ from{ opacity:1; } to{ opacity:0; transform:translateX(-16px) scale(.96); } }
+  @media (prefers-reduced-motion:reduce){ .lfcard{ animation:none; } .lfcard.age{ animation:none; opacity:0; transition:opacity .5s; } }
+  body.zen #msgFeed, body.cine #msgFeed{ opacity:0; visibility:hidden; transition:opacity .5s; }
 
   /* ---------- season interstitial ---------- */
   #sb{ position:fixed; inset:0; z-index:var(--z-panel); display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; opacity:0; }
@@ -1291,6 +1313,7 @@
 
   <button id="zenBtn" class="hide" type="button" aria-label="Zen view — hide the panels">🪷</button>
   <div id="zenHint" aria-hidden="true">breathe — the meadow is yours · tap 🪷 to return</div>
+  <div id="msgFeed" aria-live="polite" aria-label="Recent hive news"></div>
 
   <div id="hud-top">
     <div id="tabs" class="panel">
@@ -1407,6 +1430,7 @@
     <div class="card mcard">
       <h1>PAUSED</h1>
       <button class="btn pulse" id="menuResume">Back to the hive ▶</button>
+      <button class="btn ghost" id="menuSaveQuit">💾 Save &amp; Quit to title</button>
       <div class="mset">
         <div class="mrow"><span class="ml">Sound</span><button class="mtog" id="menuSnd">Off</button></div>
         <div class="mrow mcol"><span class="ml" id="paceLabel2">Pace</span>
@@ -1943,7 +1967,7 @@
     // / non-https, where no service worker runs) — the real source of truth is sw.js's
     // VERSION; syncGameVer() below asks the running worker and corrects this label
     // live, so the two only ever drift cosmetically for a moment, never permanently.
-    let GAME_VER='2026.07.31.39';
+    let GAME_VER='2026.07.31.40';
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2981,6 +3005,9 @@
       ctx.setTransform(DPR,0,0,DPR,0,0);
       const t=$('hud-top'), b=$('hud-bottom');
       topH=(t?t.offsetHeight:110)+8; botH=(b?b.offsetHeight:110)+8;
+      // keep the living log clear of both HUDs
+      const rs=document.documentElement.style;
+      rs.setProperty('--feed-top',(topH+6)+'px'); rs.setProperty('--feed-bot',(botH+8)+'px');
       // on phones the bottom HUD is tall — keep the coach clear of the controls it points at
       const compact = W<=760 || (W<=1080 && Hh>=W);   // matches CSS: square counts as portrait
       const co=$('coach'); if(co) co.style.bottom = compact ? (botH+2)+'px' : '';
@@ -2996,16 +3023,25 @@
       if(!any) return {c0:ccx-2.5,c1:ccx+2.5,r0:ccy-2.5,r1:ccy+2.5};
       return {c0,c1,r0,r1}; }
     function fitComb(hard){
-      // hug the comb so it fills the space between the HUDs. Big screens used to get MORE
-      // padding and a low cap, which left the comb marooned in the middle of an iPad —
-      // now tablets/desktop hug tighter and may draw larger cells, so the comb reads close.
+      // The comb is the hero. The HUD panes are translucent overlays, so the comb is
+      // allowed to grow *into* their margins rather than being fenced to the clear band
+      // between them — that's what fixes "too small" on shorter (e.g. Intel-Mac) viewports,
+      // where two fixed ~120px panes used to eat most of the height. We reclaim ~45% of
+      // each pane's height so the outer, mostly-empty rings tuck gently behind the frosted
+      // panels while every working cell stays clear, then centre on the visible band.
       const small=Math.min(W,Hh)<640;
-      const b=combBounds(), pad=small?1.4:1.2;
+      const b=combBounds(), pad=small?1.35:1.05;
       const needW=((b.c1-b.c0)+1.5+pad*2)*SQ3, needH=(b.r1-b.r0)*1.5+2+pad*2;
-      const availW=Math.min(W, STAGE_W)*0.96, availH=Math.max(120, Hh-topH-botH);
-      const s=Math.max(7, Math.min(small?50:76, Math.min(availW/needW, availH/needH)));
+      // reclaim less on phones (their bottom tray is genuinely tall and opaque), more on
+      // roomy landscape/desktop where the panes float and there's slack to give the comb.
+      const reclaim=small?0.22:0.46;
+      const availW=Math.min(W, STAGE_W)*0.98;
+      const availH=Math.max(120, Hh - topH*(1-reclaim) - botH*(1-reclaim));
+      const s=Math.max(7, Math.min(small?52:104, Math.min(availW/needW, availH/needH)));
       const midC=(b.c0+b.c1)/2, midR=(b.r0+b.r1)/2;
-      tSize=s; tOx=W/2 - s*SQ3*(midC+0.25); tOy=topH+availH/2 - s*1.5*midR;
+      // centre vertically on the band the panes actually leave visible (not the reclaimed one)
+      const visTop=topH*(1-reclaim*0.5), visH=Math.max(120, Hh - visTop - botH*(1-reclaim*0.5));
+      tSize=s; tOx=W/2 - s*SQ3*(midC+0.25); tOy=visTop+visH/2 - s*1.5*midR;
       if(hard){ size=tSize; ox=tOx; oy=tOy; syncHiveCentre(); } }
     // anchor the hive on a real cell, so ring 0 is a cell and not the seam between two
     function syncHiveCentre(){ hiveCx=ox+size*SQ3*(CCC+0.5*(CCR&1)); hiveCy=oy+size*1.5*CCR; }
@@ -3512,7 +3548,21 @@
       MSGLOG.push({ic, html, day:Math.max(0,Math.floor(day)), year});
       if(MSGLOG.length>90) MSGLOG.shift();
       if(advFold) $('advisor').classList.add('unread');
+      pushFeed(ic, html);
       if(!$('chatlog').classList.contains('hide')) renderChat(); }
+    // the living log: each message rises on the left edge, lingers long enough to read,
+    // then ages away — the full history is still kept in the advisor chat (MSGLOG).
+    const FEED_WARN=new Set(['⚔','🐻','🕯️','⚠','🥀','🚧','❄','🧊']);
+    function pushFeed(ic, html){ const feed=$('msgFeed'); if(!feed || storyMode) return;
+      const card=document.createElement('div');
+      card.className='lfcard'+(FEED_WARN.has((''+ic).trim())?' warn':'');
+      card.innerHTML='<span class="lfic">'+ic+'</span><span class="lftx">'+html+'</span>';
+      feed.appendChild(card);
+      while(feed.children.length>6){ const old=feed.firstChild; if(old._ft) clearTimeout(old._ft); feed.removeChild(old); }
+      const txt=(''+html).replace(/<[^>]+>/g,'');
+      const life=Math.min(15000, 6800 + txt.length*42);   // linger scales with how much there is to read
+      card._ft=setTimeout(()=>{ card.classList.add('age');
+        setTimeout(()=>{ if(card.parentNode) card.parentNode.removeChild(card); }, 900); }, life); }
     function renderChat(force){ const r=$('chatRows'), el=$('chatlog');
       const atBottom = force || (el.scrollHeight-el.clientHeight-el.scrollTop < 24);
       r.innerHTML = MSGLOG.length ? MSGLOG.map((m,i)=>'<div class="crow"><span class="ci2">'+m.ic+'</span><div class="cb2"><div class="cwhen">Y'+m.year+' · '+seasonName(m.day)+' · d'+(m.day+1)+'</div><div class="ctx2">'+m.html+'</div></div><span class="cdel" data-i="'+i+'" title="Dismiss">✕</span></div>').join('')
@@ -3533,7 +3583,9 @@
       if(LATER_TIPS.has(key) && year<2) return; // let a first year breathe; every word still lives in the ? menu
       seenTips[key]=1;
       if(tipCool>0){ tipQ.push(msg); } else { toast(msg); tipCool=TIP_GAP; } }
-    function toast(s,once){ if(once){if(said[once])return; said[once]=1;} logMsg('🐝', s); const el=$('toast'); el.innerHTML=s; el.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('show'),6500); }
+    // toast() now flows through the living left-edge feed (logMsg → pushFeed); the old
+    // centred #toast popup is retired so messages linger on the left where they can be read.
+    function toast(s,once){ if(once){if(said[once])return; said[once]=1;} logMsg('🐝', s); }
     let advCur='', advSince=0;
     function advise(){
       const T=currentTemp(), Na=lerpM(nectarM,day), winter=T<WIN_TEMP;
@@ -5508,6 +5560,11 @@
       b.textContent=on?'On':'Off'; b.classList.toggle('on',on); }
     press($('menuBtn'),()=>{ if($('menu').classList.contains('hide')) menuOpen(); else menuClose(); });
     press($('menuResume'),menuClose);
+    // Save & Quit: persist the colony (a party is ephemeral, so just leave it), then
+    // return to the title where "Continue" picks the hive right back up. One clear exit.
+    press($('menuSaveQuit'),()=>{ setSpeed(0);
+      if(NET.on){ netTeardown(); location.reload(); return; }
+      try{ saveGame(); }catch(e){} toast('💾 Saved. See you soon, keeper.'); location.reload(); });
     // ignore the synthesized click that retargets onto the backdrop right after opening
     press($('menu'),e=>{ if(performance.now()-menuOpenedAt<650) return; if(e.target===$('menu')) menuClose(); });
     press($('menuSnd'),()=>{ sndToggle(); setTimeout(syncMenuSnd,50); });
