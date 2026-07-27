@@ -127,6 +127,22 @@ numbers drift as the file changes; re-grep `// =====` banners if they look off)
   automatically shared (but `netApplySnap()` must be taught to *apply* it —
   update both or the field silently stays host-only). Undo is disabled in a
   linked hive. See docs/MULTIPLAYER.md.
+- `familyMode` / `setFamily(on,transient)` — the title-screen 🧸 Family-mode
+  switch (`#familyToggle`, persisted as `hm_family`; toggles a `.family` body
+  class). It is a *tone* switch read in five places: (1) easy words —
+  `buildCombKey` (family intro + `COMBKEY_KID`/`GLOSSARY_KID`), `syncBrushHelp`
+  (`BRUSHHELP_KID`), and the `COACH[]` rows' optional `kid`/`kidBridge` fields;
+  (2) gentler play — `difficulty()` has a `familyMode` branch (mild winter/flow)
+  and `spawnHornet`/`stepHornet` make the hornet rarer, weaker & cuddlier;
+  (3) the simpler screen is pure CSS under `.family` (hides `.arr`/`.sub`,
+  `#reportBtn`, `#stKeeper`; chunkier brushes); (4) shared party comb —
+  `netAssignSectors` fills every cell `-2` when `NET.family`, so nobody is
+  fenced; (5) `netShowRole`/`netPostChip` show a single "One Big Hive" card.
+  **It never touches the headless economy sim** (that never sets the flag), so a
+  red `check` still means a real regression. A joiner *adopts* the host's family
+  tone for the session via `setFamily(true, /*transient*/true)` (no `lsSet`, so
+  their own saved choice survives) — `NET.family` rides the `t:'start'` message
+  as `fam`, and the party-teardown restores `hm_family`.
 - Newer solo-UX systems (all `// ----`-commented near their wiring): the
   **comb blueprint** (`showCombPlan`/`drawCombPlan`, one-shot `hm_combplan`
   flag, shown from `endCoach`), the **paused hand-over** (`endCoach`

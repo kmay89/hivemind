@@ -952,6 +952,17 @@
   #sndInvite.on .box{ background:var(--gold); border-color:var(--gold); }
   #sndInvite .box i{ opacity:0; font-style:normal; transition:opacity .18s; } #sndInvite.on .box i{ opacity:1; }
   #sndInvite .sub2{ color:var(--dim); font-weight:500; }
+  /* family-mode toggle — same shape as the sound toggle, a gentle green tint */
+  #familyToggle{ display:inline-flex; align-items:center; gap:9px; margin:0 auto; padding:10px 15px; border-radius:999px; cursor:pointer;
+    background:rgba(150,214,110,0.08); border:1px solid rgba(150,214,110,0.30); transition:background .2s, border-color .2s;
+    font:600 12px 'Bricolage Grotesque',sans-serif; color:var(--text); user-select:none; -webkit-tap-highlight-color:transparent; }
+  #familyToggle:hover{ background:rgba(150,214,110,0.15); border-color:rgba(150,214,110,0.55); }
+  #familyToggle .box{ width:19px; height:19px; border-radius:6px; border:1.5px solid rgba(150,214,110,0.6); display:grid; place-items:center;
+    font-size:12px; color:#10240a; background:transparent; transition:background .18s; flex:none; }
+  #familyToggle.on{ background:rgba(150,214,110,0.16); border-color:rgba(150,214,110,0.62); }
+  #familyToggle.on .box{ background:#96d66e; border-color:#96d66e; }
+  #familyToggle .box i{ opacity:0; font-style:normal; transition:opacity .18s; } #familyToggle.on .box i{ opacity:1; }
+  #familyToggle .sub2{ color:var(--dim); font-weight:500; }
   .beenote{ margin-top:14px; padding:11px 13px; border-radius:12px; background:rgba(255,217,122,0.07); border:1px solid rgba(255,217,122,0.16);
     font-size:11.5px; line-height:1.55; color:var(--dim); text-align:left; }
   .beenote b{ color:var(--gold); font-weight:600; } .beenote .lbl{ display:block; font:700 8.5px 'JetBrains Mono',monospace; letter-spacing:.2em; text-transform:uppercase; color:var(--gold); margin-bottom:4px; opacity:.8; }
@@ -1117,6 +1128,19 @@
     font-size:13px; line-height:1; filter:drop-shadow(0 1px 2px rgba(0,0,0,.8)); pointer-events:none; }
   .netc #forageSlider{ opacity:.42; filter:grayscale(.6); }
   .netc #undoBtn{ display:none !important; }
+  /* ===== family mode: a calmer, simpler screen — fewer numbers, bigger taps ===== */
+  /* hide the advanced readouts: trend arrows, jargon sub-lines, the report/ledger
+     button and the royal-jelly/jars meta stat. Keep the big Honey / Bees / Brood /
+     Pollen numbers a child can read at a glance. */
+  .family #reportBtn{ display:none !important; }
+  .family .stat .arr{ display:none !important; }
+  .family .stat .sub{ display:none !important; }
+  .family #stKeeper{ display:none !important; }
+  .family .stat .val .n{ font-size:1.18em; }
+  .family .stat .lab{ font-size:1.05em; letter-spacing:.02em; }
+  /* bigger, friendlier brush buttons — taller taps, larger icons, easier for small hands */
+  .family #brushGrp{ gap:9px; }
+  .family #brushGrp .tb{ padding-top:10px; padding-bottom:10px; font-size:1.06em; }
   /* the always-there answer to "what am I?" */
   #mpStrip .post{ font:700 10px 'JetBrains Mono',monospace; letter-spacing:.08em; color:#1c1508;
     border-radius:20px; padding:4px 10px; border:1.5px solid rgba(0,0,0,.35);
@@ -1205,6 +1229,7 @@
     display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
   .prefRow{ display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; margin-top:13px; }
   .prefRow #sndInvite{ margin:0; padding:7px 12px; font-size:11.5px; }
+  .prefRow #familyToggle{ margin:0; padding:7px 12px; font-size:11.5px; }
   .prefRow .paceMini{ display:flex; align-items:center; gap:8px; }
   .prefRow .paceCap{ margin:0; }
   .prefRow #paceRow{ display:flex; gap:5px; margin:0; }
@@ -1647,6 +1672,9 @@
         <div id="sndInvite" class="on" tabindex="0" role="checkbox" aria-checked="true">
           <span class="box"><i>✓</i></span><span>🎧 Sound<span class="sub2"> — music &amp; the hive</span></span>
         </div>
+        <div id="familyToggle" tabindex="0" role="checkbox" aria-checked="false">
+          <span class="box"><i>✓</i></span><span>🧸 Family mode<span class="sub2"> — easy words, gentle bees, play as a group</span></span>
+        </div>
         <div class="paceMini">
           <div class="paceCap" id="paceLabel">seasons</div>
           <div id="paceRow" role="radiogroup" aria-labelledby="paceLabel">
@@ -1915,7 +1943,7 @@
     // / non-https, where no service worker runs) — the real source of truth is sw.js's
     // VERSION; syncGameVer() below asks the running worker and corrects this label
     // live, so the two only ever drift cosmetically for a moment, never permanently.
-    let GAME_VER='2026.07.31.38';
+    let GAME_VER='2026.07.31.39';
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2119,6 +2147,19 @@
     // by themselves, and a shared year should still land in ~15 minutes
     const PARTY_DAY=2.5;
     let pace='easy', DAY_LEN=PACES.easy;
+    // Family mode — a title-screen switch for playing with kids / as a relaxed group:
+    // easy words, gentle bees (rare & cuddly hornets, mild winters, forgiving food),
+    // a simpler screen, and wall-free party comb. It never touches the headless economy
+    // sim (that never sets the flag), so a red `check` still means a real regression.
+    let familyMode=false; try{ familyMode=localStorage.getItem('hm_family')==='1'; }catch(e){}
+    // transient=true applies the look/words for this session only (a joiner adopting the
+    // host's family hive) without overwriting the player's own saved title-screen choice.
+    function setFamily(on,transient){ familyMode=!!on;
+      if(!transient){ try{ lsSet('hm_family',familyMode?'1':'0'); }catch(e){} }
+      document.body.classList.toggle('family',familyMode);
+      const el=$('familyToggle'); if(el){ el.classList.toggle('on',familyMode); el.setAttribute('aria-checked',familyMode?'true':'false'); }
+      const body=$('ckBody'); if(body){ body.dataset.built=''; body.innerHTML=''; }   // let the comb key rebuild with the right words
+    }
     // faster seasons are earned: Medium by surviving a winter, Hard by mastering Medium
     let unlocked={m:false,h:false};
     try{ const u=JSON.parse(localStorage.getItem('hm_unlock')||'{}'); unlocked.m=!!u.m; unlocked.h=!!u.h; }catch(e){}
@@ -2796,28 +2837,30 @@
     function scoutActive(){ const w=hornetWindow(); const T=currentTemp();
       return !hornet && !over && started && !onboard && T>=WIN_TEMP && day>w.a && day<w.b && P>40 && hornetCD<6; }
     function spawnHornet(){ const side=Math.random()<0.5?-1:1;
-      hornet={x:hiveCx+side*W*0.55, y:topH+size*2, vx:0, vy:0, hp:M.hHP(), maxhp:M.hHP(), t:0, atk:1.2, state:'in', wob:Math.random()*6.28};
+      // family mode: a cuddlier hornet — fewer taps to shoo, softer alarm copy
+      const hp=familyMode?Math.max(1,Math.round(M.hHP()*0.5)):M.hHP();
+      hornet={x:hiveCx+side*W*0.55, y:topH+size*2, vx:0, vy:0, hp, maxhp:hp, t:0, atk:1.2, state:'in', wob:Math.random()*6.28};
       raidLoss=0; scoutShown=false;
-      toast('⚔ A hornet is raiding the hive! Tap it to drive it off!'); buzzAlert(); shake=0.45; }
+      toast(familyMode?'🐝 A big buzzy hornet flew in! <b>Tap it</b> to shoo it away! 👋':'⚔ A hornet is raiding the hive! Tap it to drive it off!'); buzzAlert(); shake=0.45; }
     function stepHornet(dt){ const h=hornet; if(!h) return; h.wob+=dt*26;
       const mv=(tx,ty,sp)=>{ const dx=tx-h.x,dy=ty-h.y,L=Math.hypot(dx,dy)||1,st=Math.min(L,sp*size*dt);
         h.x+=dx/L*st; h.y+=dy/L*st; h.vx=dx/L; h.vy=dy/L; return L<size*0.8; };
       if(h.state==='in'){ if(mv(hiveCx,hiveCy-size*2.5,4.5)) h.state='raid'; }
       else if(h.state==='raid'){ h.t+=dt; h.atk-=dt;
         h.x+=Math.sin(h.wob*0.4)*size*dt*1.6; h.y+=Math.cos(h.wob*0.31)*size*dt*1.2;
-        if(h.atk<=0){ h.atk=3.2; if(P>6){ const take=Math.max(1,Math.round(1*M.steal())); P-=take; raidLoss+=take;
+        if(h.atk<=0){ h.atk=familyMode?5.5:3.2; if(P>6){ const take=Math.max(1,Math.round(1*M.steal())); P-=take; raidLoss+=take;
           const vb=bees.length?bees[(Math.random()*bees.length)|0]:null;
           puff(vb?vb.x:h.x, vb?vb.y:h.y,'#ff7052',7,1.2); shake=Math.max(shake,0.12); } }
-        if(h.t>12){ h.state='flee'; puff(h.x,h.y,'#ffd76b',12,1.4);
-          toast(raidLoss?('Your guards drove the hornet off — '+raidLoss+' bees were lost.'):'Your guards drove the hornet off.'); } }
+        if(h.t>(familyMode?7:12)){ h.state='flee'; puff(h.x,h.y,'#ffd76b',12,1.4);
+          toast(familyMode?'👋 The hornet buzzed off! The bees are safe. 🐝':(raidLoss?('Your guards drove the hornet off — '+raidLoss+' bees were lost.'):'Your guards drove the hornet off.')); } }
       else { h.x+=h.vx*size*dt; mv(h.x>hiveCx?W+size*6:-size*6, -size*6, 6);
-        if(h.y<-size*4||h.x<-size*5||h.x>W+size*5){ hornet=null; hornetCD=(year>=4?14+Math.random()*20:24+Math.random()*36); } } }
+        if(h.y<-size*4||h.x<-size*5||h.x>W+size*5){ hornet=null; hornetCD=familyMode?(70+Math.random()*70):(year>=4?14+Math.random()*20:24+Math.random()*36); } } }
     function hornetDamage(){ const h=hornet; if(!h||h.state==='flee') return;
       h.hp--; h.x+=(Math.random()-0.5)*size*1.5; h.y-=size*0.4; shake=Math.max(shake,0.22); hitstop=0.055;
       puff(h.x,h.y,'#ff9a7a',6,1.4); chime(220+(h.maxhp-h.hp)*130, 160);
       if(h.hp<=0){ h.state='flee'; grantBadge('guardian'); puff(h.x,h.y,'#ffd76b',18,1.8); chime(520,880);
-        if(raidLoss===0){ rj++; burst(h.x,h.y,22); toast('Perfect defense — not one bee lost! +1 ✧ royal jelly 🛡'); fanfare(); }
-        else toast('Hornet driven off! The guard bees prevail. 🛡');
+        if(raidLoss===0){ rj++; burst(h.x,h.y,22); toast(familyMode?'🎉 You shooed it away — every bee is safe! +1 ✧ 🛡':'Perfect defense — not one bee lost! +1 ✧ royal jelly 🛡'); fanfare(); }
+        else toast(familyMode?'🎉 You shooed the hornet away! Great job! 🛡':'Hornet driven off! The guard bees prevail. 🛡');
         if(NET.on&&NET.host) netBcast({t:'ev',msg:raidLoss===0?'🛡 Perfect defense — not one bee lost! +1 ✧':'🛡 Hornet driven off — the hive prevails.'});
         saveGame(); } }
     function hitHornet(p){ const h=hornet; if(!h||h.state==='flee') return false;
@@ -2896,6 +2939,10 @@
       logMsg(curSeason.ic,'<b>'+curSeason.name+'</b> \u2014 '+curSeason.note+'.');
       if(curSeason.tip) setTimeout(()=>toast(curSeason.tip),1100); }
     function difficulty(){ const sf=curSeason?curSeason.flow:1, st=curSeason?curSeason.temp:0;
+      // Family mode keeps the meadow generous and winters mild so the hive mostly
+      // thrives no matter what — losing is still possible if truly neglected, just rare.
+      // (The headless economy sim never sets familyMode, so this can't move CI.)
+      if(familyMode) return {flow:Math.max(0.8,(1-(year-1)*0.03)*sf), temp:Math.max(-2.4,-(year-1)*0.6)+1.2+st};
       return {flow:Math.max(0.5,(1-(year-1)*0.055)*sf), temp:Math.max(-4.8,-(year-1)*1.2)+(year===1?0.8:0)+st}; }
     // the one temperature formula — tempAt(d) projects a given day (forecasts: no live
     // cold-snap term, it's transient and shouldn't leak into a multi-day projection);
@@ -4557,7 +4604,14 @@
       honey:'\ud83c\udf6f <b>Honey</b> shelf \u2014 <span class="gain">gain: +1 pantry cell</span> <span class="cost">\u00b7 cost: wax, drawn from honey</span>',
       expand:'\ud83d\udd28 <b>Expand</b> wax \u2014 <span class="gain">gain: room to grow</span> <span class="cost">\u00b7 cost: wax &amp; a builder\u2019s time \u2014 watch the bank</span>'
     };
-    function syncBrushHelp(){ const el=$('brushHelp'); if(el) el.innerHTML='<span>'+(BRUSHHELP[brush]||'')+'</span>'; syncWaxBank(); }
+    // family mode: the same three brushes, said the way you'd say them to a kid
+    const BRUSHHELP_KID={
+      brood:'\ud83c\udf7c <b>Baby bees</b> \u2014 <span class="gain">makes new bees</span> <span class="cost">\u00b7 keep them warm</span>',
+      honey:'\ud83c\udf6f <b>Honey room</b> \u2014 <span class="gain">a place to store food</span> <span class="cost">\u00b7 for winter</span>',
+      expand:'\ud83d\udd28 <b>New room</b> \u2014 <span class="gain">makes the hive bigger</span> <span class="cost">\u00b7 the builders need time</span>'
+    };
+    function syncBrushHelp(){ const el=$('brushHelp'); const H=familyMode?BRUSHHELP_KID:BRUSHHELP;
+      if(el) el.innerHTML='<span>'+(H[brush]||'')+'</span>'; syncWaxBank(); }
     // ---- comb key: a collapsible legend that decodes every cell + brood phase. One row
     // per kind (a data table, not a branch); each swatch is drawn to match the comb itself ----
     const COMBKEY=[
@@ -4599,10 +4653,25 @@
       if(k==='egg'){ g.fillStyle=COL.egg; g.beginPath(); g.ellipse(c,c,s*0.13,s*0.30,0.5,0,6.28); g.fill(); }
       else if(k==='larva'){ const lr=s*0.5; let lg=g.createRadialGradient(c-lr*0.3,c-lr*0.35,1,c,c,lr); lg.addColorStop(0,'#fdf3d8'); lg.addColorStop(0.7,COL.larva); lg.addColorStop(1,'#d8bd86'); g.fillStyle=lg; g.beginPath(); g.arc(c,c,lr,0,6.28); g.fill(); }
       else if(k==='capped'){ let pg=g.createRadialGradient(c-s*0.22,c-s*0.26,1,c,c,s*0.82); pg.addColorStop(0,'#e3c58c'); pg.addColorStop(0.65,COL.pupa); pg.addColorStop(1,'#9c8049'); g.fillStyle=pg; hexPathOn(g,c,c,s*0.82); g.fill(); } }
+    // family mode leads with the very plainest words for the youngest keeper
+    const COMBKEY_KID={ brood:'the blue baby-bee room', honey:'bee honey · winter food', nectar:'flower juice · turns into honey',
+      pollen:'flower dust · baby food', bare:'empty room · waiting for a job', expand:'a new room being built', heat:'where the nest stays warm',
+      egg:'a tiny egg', larva:'a little grub, being fed', capped:'sealed up · a bee growing inside' };
+    const GLOSSARY_KID=[
+      {w:'Nectar',  d:'sweet flower juice — the bees turn it into honey'},
+      {w:'Pollen',  d:'flower dust — it’s the baby bees’ food'},
+      {w:'Forage',  d:'when bees fly out to gather food'},
+      {w:'Wax',     d:'the stuff the honeycomb rooms are made of'},
+      {w:'Cluster', d:'the big warm bee-huddle that keeps everyone cozy in winter'},
+    ];
     function buildCombKey(){ const body=$('ckBody'); if(!body||body.dataset.built) return; body.dataset.built='1';
-      const intro='<div class="ckIntro"><b>Brood</b> = the baby bees. An egg becomes a grub (a <i>larva</i>), then the cell is capped and a <i>pupa</i> ripens into a bee — about 20 days. The blue <i>nursery</i> is where they grow.</div>';
-      const rows=COMBKEY.map(r=>'<div class="ckRow"><canvas width="40" height="40" data-k="'+r.k+'"></canvas><div class="ckText"><div class="ckName">'+r.n+'</div><div class="ckDesc">'+r.d+'</div></div></div>').join('');
-      const words='<div class="ckWordsHead">the keeper’s words</div>'+GLOSSARY.map(g=>'<div class="ckWord"><b>'+g.w+'</b> — '+g.d+'</div>').join('');
+      const intro=familyMode
+        ? '<div class="ckIntro"><b>Baby bees</b> grow in the blue rooms. First a tiny egg, then a little grub, then the room is sealed and a bee grows inside — it takes about 20 days. Then a brand-new bee climbs out! 🐝</div>'
+        : '<div class="ckIntro"><b>Brood</b> = the baby bees. An egg becomes a grub (a <i>larva</i>), then the cell is capped and a <i>pupa</i> ripens into a bee — about 20 days. The blue <i>nursery</i> is where they grow.</div>';
+      const rows=COMBKEY.map(r=>{ const d=(familyMode&&COMBKEY_KID[r.k])?COMBKEY_KID[r.k]:r.d;
+        return '<div class="ckRow"><canvas width="40" height="40" data-k="'+r.k+'"></canvas><div class="ckText"><div class="ckName">'+r.n+'</div><div class="ckDesc">'+d+'</div></div></div>'; }).join('');
+      const gl=familyMode?GLOSSARY_KID:GLOSSARY;
+      const words='<div class="ckWordsHead">'+(familyMode?'bee words':'the keeper’s words')+'</div>'+gl.map(g=>'<div class="ckWord"><b>'+g.w+'</b> — '+g.d+'</div>').join('');
       body.innerHTML=intro+rows+words;
       body.querySelectorAll('canvas').forEach(cv=>drawKeySwatch(cv,cv.dataset.k)); }
     let combKeyOpen=false; try{ combKeyOpen=localStorage.getItem('hm_combkey')==='1'; }catch(e){}
@@ -4866,41 +4935,46 @@
     // silently misalign the text or the hint.
     const COACH=[
       { ic:'🖌️', spot:'brushGrp', brushHint:'brood', pause:true, prog:'1 \u00b7 the brushes',
-        tx:'Pick up <span class="kb">Brood</span>.',
+        tx:'Pick up <span class="kb">Brood</span>.', kid:'Tap the <span class="kb">🍼 baby-bee</span> brush.',
         until:()=>brush==='brood' },
       { ic:'👑', prog:'2 \u00b7 her first cradle',
-        tx:'Tap the rippling cell.',
+        tx:'Tap the rippling cell.', kid:'Now tap the wiggly room to make a baby bee!',
         until:()=>brushedBrood>=1, unlock:'brood',
         bridge:'There \u2014 her first cradle. <em>A bee in twenty days.</em> Next craft: the <span class="kh">pantry</span>.',
+        kidBridge:'Yay! A baby bee is on the way \ud83d\udc1d Next, let\u2019s make a place for food.',
         target:()=>cells.find(c=>c.built&&c.zone!=='brood'&&!c.brood&&hexDist(c.c,c.r,CCC,CCR)<=1)
           || cells.find(c=>c.built&&c.zone!=='brood'&&!c.brood) || null },
       { ic:'🍯', spot:'brushGrp', brushHint:'honey', prog:'3 \u00b7 the pantry',
-        tx:'Now <span class="kh">Honey</span>.',
+        tx:'Now <span class="kh">Honey</span>.', kid:'Tap the <span class="kh">🍯 honey</span> brush.',
         until:()=>brush==='honey' },
       { ic:'🍯', prog:'4 \u00b7 first shelf',
-        tx:'One outer cell.',
+        tx:'One outer cell.', kid:'Tap a room near the edge to keep food in.',
         until:()=>paintedHoney>=1, unlock:'honey',
         bridge:'A shelf on the wall. When the <span class="kc">nectar</span> ripens, this is where it sleeps. One craft left: <span class="kg">room</span>.',
+        kidBridge:'A food room! That’s where the honey lives. One more thing to learn.',
         target:()=>cells.find(c=>c.built&&c.zone!=='honey'&&hexDist(c.c,c.r,CCC,CCR)>=2)
           || cells.find(c=>c.built&&c.zone!=='honey') || null },
       { ic:'🔨', spot:'brushGrp', brushHint:'expand', prog:'5 \u00b7 fresh wax',
-        tx:'And <span class="kg">Expand</span>.',
+        tx:'And <span class="kg">Expand</span>.', kid:'Tap the <span class="kg">🔨 build</span> brush.',
         until:()=>brush==='expand' },
       { ic:'🔨', prog:'6 \u00b7 make room',
-        tx:'Just outside the comb.',
+        tx:'Just outside the comb.', kid:'Tap just outside the hive to build a new room.',
         until:()=>flaggedExpand>=1, unlock:'expand',
         bridge:'The builders are already reaching for it. Last lesson \u2014 <em>aiming the foragers</em>.',
+        kidBridge:'The builder bees are on it! Last thing: telling the bees what to bring home.',
         target:()=>cells.find(c=>{ if(c.built||c.flagExpand) return false;
           let n=0; for(const [cc,rr] of neighbors(c.c,c.r)) if(cells[idx(cc,rr)].built) n++; return n>=2; }) || null },
       { ic:'🌼', spot:'forageGrp', show:['forageGrp'], prog:'7 \u00b7 the mixer',
         tx:'Aim your foragers \u2014 slide the <b>mixer</b> toward honey or bees.',
+        kid:'Slide the <b>bar</b> \u2014 toward \ud83c\udf6f honey, or toward \ud83d\udc1d more bees. You pick!',
         until:()=>forageTouched, unlock:'forage',
-        bridge:'That\u2019s the whole craft, keeper. The seasons teach the rest \u2014 and I\u2019m right here when you need me.' },
+        bridge:'That\u2019s the whole craft, keeper. The seasons teach the rest \u2014 and I\u2019m right here when you need me.',
+        kidBridge:'You did it! Now just have fun with your bees \u2014 I\u2019m right here if you need me.' },
     ];
     function showCoach(){ const s=COACH[coachStep]; if(!s){ endCoach(); return; }
       clearSpots();
       if(s.show) s.show.forEach(id=>{ const el=$(id); if(el) el.classList.remove('hidden'); });
-      $('coachIc').textContent=s.ic; typeInto($('coachTx'), s.tx); $('coachProg').textContent=s.prog||''; $('coachSkip').style.display='';
+      $('coachIc').textContent=s.ic; typeInto($('coachTx'), (familyMode&&s.kid)?s.kid:s.tx); $('coachProg').textContent=s.prog||''; $('coachSkip').style.display='';
       const btn=$('coachBtn');
       if(s.until){ if(s.until()){ btn.style.display=''; btn.textContent='Next'; } else btn.style.display='none'; } else { btn.style.display=''; btn.textContent=s.btn||'Next'; }
       $('coach').classList.add('show');
@@ -4920,7 +4994,7 @@
       const s=COACH[coachStep]; coachStep++;
       if(speed===0) setSpeed(1);
       $('coach').classList.remove('show');
-      const tease=()=>{ const prevStep=COACH[coachStep-1]; const bridge=(prevStep&&prevStep.bridge)||'';
+      const tease=()=>{ const prevStep=COACH[coachStep-1]; const bridge=(prevStep&&((familyMode&&prevStep.kidBridge)||prevStep.bridge))||'';
         if(!bridge){ coachWait=false; if(!onboard) return;
           if(coachStep>=COACH.length){ endCoach(); } else showCoach(); return; }
         $('coachIc').textContent='\ud83d\udc75'; $('coachProg').textContent='hazel';
@@ -5252,6 +5326,12 @@
       el.addEventListener('click',flip);
       el.addEventListener('keydown',e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); flip(e); } });
       set(); })();
+    (function(){ const el=$('familyToggle'); if(!el) return;
+      const flip=(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); setFamily(!familyMode);
+        if(familyMode) toast('🧸 <b>Family mode</b> on — easy words, gentle bees, and everyone shares the comb.'); };
+      el.addEventListener('click',flip);
+      el.addEventListener('keydown',e=>{ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); flip(e); } });
+      setFamily(familyMode); })();
 
     // ===================== lessons =====================
     // One idea at a time, full screen, with the thing itself drawn large — and always the part
@@ -5726,6 +5806,9 @@
       return s; }
     // ---- sectors: the Queen keeps the royal core; joiners get compass wedges ----
     function netAssignSectors(){ netSector=new Int8Array(cells.length); const nw=NET.players.length-1;
+      // Family mode: no wedge walls — the whole comb is shared, everyone paints anywhere
+      // together (-2 = "anyone's"). netPaintOk already treats -2 as free for all.
+      if(NET.family){ netSector.fill(-2); return; }
       const cx0=CCC+0.5*(CCR&1), TAU=Math.PI*2;
       for(let i=0;i<cells.length;i++){ const c=cells[i];
         // the royal core is just the brood nest — the starting ring beyond it
@@ -5913,10 +5996,10 @@
         p.dc.onmessage=e=>hostOnMsg(seat,e.data); p.dc.onclose=()=>netPeerGone(seat);
         NET.players.splice(NET.players.indexOf(p),1);
         netRecomputeSectors();
-        netSendTo(seat,{t:'start',s:netSnapObj(),ps:netRoster(),pace:'easy',you:seat.ix,name:NET.hiveName});
+        netSendTo(seat,{t:'start',s:netSnapObj(),ps:netRoster(),pace:'easy',you:seat.ix,name:NET.hiveName,fam:NET.family?1:0});
         netToastAll('🐝 <b>'+netEsc(seat.name)+'</b> returns to the comb — their wedge was kept warm.'); }
       else{ netRecomputeSectors();
-        netSendTo(p,{t:'start',s:netSnapObj(),ps:netRoster(),pace:'easy',you:p.ix,name:NET.hiveName});
+        netSendTo(p,{t:'start',s:netSnapObj(),ps:netRoster(),pace:'easy',you:p.ix,name:NET.hiveName,fam:NET.family?1:0});
         netToastAll('🐝 <b>'+netEsc(p.name)+'</b> joins mid-season — the comb redraws its wedges.'); }
       netLobbySync(); netStripSync(); }
     function netPeerGone(p){ if(p.gone) return; p.gone=true;
@@ -5975,6 +6058,7 @@
       openOverlay('mpEnd'); }
     function clientStartGame(m){ NET.players=m.ps.map(p=>({ix:p.ix,name:p.n,gone:!!p.g}));
       NET.hiveName=m.name||'';
+      NET.family=!!m.fam; if(NET.family) setFamily(true,true);   // adopt the host's family tone for this session
       if(typeof m.you==='number') NET.myIx=m.you;   // mid-game admits (and seat reclaims) re-pin the seat
       NET.started=true; NET.endSent=false; NET.lastSnap=performance.now();
       document.body.classList.add('netc');
@@ -6018,9 +6102,10 @@
       over=false;
       if(resume){ netApplySnap(resume.s); NET.ordersDone=resume.od||0;
         if(day>=270) armMidwinter(true); lastSI=seasonIdx(day); netLastSI=lastSI; }
+      NET.family=familyMode;   // the host's family switch sets the tone for the whole hive
       netRecomputeSectors();
       beginCommon();
-      netBcast({t:'start',s:netSnapObj(),ps:netRoster(),pace:'easy',name:NET.hiveName});
+      netBcast({t:'start',s:netSnapObj(),ps:netRoster(),pace:'easy',name:NET.hiveName,fam:NET.family?1:0});
       hostCloseRoom(true);   // off the public list, still reachable by code for latecomers
       if(NET.room&&NET.mailbox){ NET.pollT=setInterval(hostPollMailbox,2500); if(!NET.slots.size) hostPublishOffer(false); }
       netShowRole(); netStripSync();
@@ -6034,12 +6119,27 @@
       let n=0; for(let i=0;i<cells.length;i++) if(netSector[i]===NET.myIx&&cells[i].built) n++; return n; }
     function netPostChip(){   // the standing answer to "what am I?", first in the strip
       const nw=NET.players.filter(p=>p.ix>0&&!p.gone).length;
-      const label=NET.host?'👑 queen · time &amp; dial'
-        :('🐝 '+netEsc(netSectorName(NET.myIx-1,nw))+' · tap me');
+      const label=NET.family
+        ? (NET.host?'👑 grown-up · the clock':'🐝 you · tap me')
+        : (NET.host?'👑 queen · time &amp; dial'
+          :('🐝 '+netEsc(netSectorName(NET.myIx-1,nw))+' · tap me'));
       return '<span class="post" style="background:linear-gradient(180deg,'+(NETCOL[NET.myIx]||'#ffd66b')+',rgba(0,0,0,0.14))">'+label+'</span>'; }
     function netShowRole(){ const nw=NET.players.filter(p=>p.ix>0&&!p.gone).length, duo=(nw<=1);
       $('roleHive').textContent=NET.hiveName||'';
       const G=rows=>'<div class="roleGrid">'+rows.map(r=>'<div class="rg"><span>'+r[0]+'</span><span>'+r[1]+'</span></div>').join('')+'</div>';
+      if(NET.family){   // family mode: one shared hive, no wedges — the simplest possible card
+        $('roleBadge').textContent=NET.host?'👑 you started the hive':'🐝 you’re a bee-keeper';
+        $('roleName').textContent='One Big Hive'; $('roleName').style.color='#96d66e';
+        $('roleText').innerHTML='Everyone shares the <b>whole hive</b> — paint anywhere, help each other, look after the bees together. 🐝';
+        $('roleBody').innerHTML=
+          '<div class="roleHead mine">everyone can</div>'
+          +G([['🖌','<b>Paint any room</b> — 🍼 baby bees, 🍯 honey, 🔨 new rooms. No walls.'],
+              ['👋','<b>Tap hornets</b> to shoo them away — everyone helps.'],
+              ['🗳','<b>Ask the hive</b> — tap a flower in the ☀ meadow, or ask to fill a jar. Everyone taps yes or no.']])
+          +(NET.host?'<div class="roleHead">just you</div>'+G([['⏱','<b>The clock</b> — start, stop, or speed up time.'],['🎚','<b>The food bar</b> — more honey, or more bees.']])
+                    :'<div class="roleHead">the grown-up holds</div>'+G([['⏱','<b>The clock</b> and <b>the food bar</b> — ask them!']]));
+        $('roleInvite').classList.toggle('hide',!NET.host);
+        openOverlay('mpRole'); return; }
       if(NET.host){ $('roleBadge').textContent='👑 you are the queen keeper';
         $('roleName').textContent='the Royal Core'; $('roleName').style.color='#ffd66b';
         $('roleText').innerHTML=duo
@@ -6254,6 +6354,8 @@
       NET.players=[]; NET.pend=null; NET.vote=null; NET.cVote=null; NET.myIx=-1; netVoteUI=null; netSector=null; netVotedIx=[];
       NET.order=null; NET.orderCD=undefined; NET.ordersDone=0; NET.stale=false; NET.orderTaught=false; NET.voteTaught=false; NET.resume=null; NET.hiveName=''; NET.merit={}; netOrderShow();
       document.body.classList.remove('netc');
+      NET.family=false;   // restore the player's own saved family preference (a transient join-adopt reverts)
+      { let saved=false; try{ saved=localStorage.getItem('hm_family')==='1'; }catch(e){} setFamily(saved); }
       NET.armStart=false; clearTimeout(mpArmT);
       $('replyWrap').classList.add('hide'); $('joinWaiting').classList.add('hide'); $('inviteCode').value=''; $('answerIn').value=''; $('joinIn').value=''; $('replyCode').value='';
       $('mpPlayers').innerHTML=''; $('mpPlayersJ').innerHTML=''; netStripSync(); }
