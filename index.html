@@ -2497,7 +2497,10 @@
     // wild swarm taking over after the old colony dies (ovRestart). NOT called on a
     // year transition (yeNext): that's the same colony continuing, so its roster,
     // corpse-fall animation, and nectar-mix tracking are meant to carry over.
-    function resetColonyIdentity(){ roster=[]; corpses=[]; mix=FLOWERS.map(()=>0); coldSnap=0; }
+    // queenCall/shelfCall hold cells of the *previous* comb; they're transient presentation
+    // state (not serialized — play rebuilds them), but they must never survive a colony.
+    function resetColonyIdentity(){ roster=[]; corpses=[]; mix=FLOWERS.map(()=>0); coldSnap=0;
+      queenCall.length=0; shelfCall.length=0; }
     let rj=0, jars=0, jarsThisYear=0, fedWinter=false, goals=null, lastSI=0, scoutShown=false, raidLoss=0, starveT=0, bankAtFrost=0, seenTips={};
     const queenVigour=()=>Math.max(0.7, 1-(queenAge-1)*0.12);
 
@@ -3161,11 +3164,19 @@
       if(!RM) puff(p.x,p.y,PAINTCOL[kind]||'#ffd66b', kind==='erase'?4:7, 0.85);
       netPaintChanged(cell);   // hive link: a joiner reports the cell's new state to the Queen's device
       if(paintSndCool<=0){ paintDab(kind); paintSndCool=0.05; } }
+    // Cells the keeper has just designated, newest first. The colony visibly answers the
+    // brush by going to these before anywhere else — the queen to a fresh cradle, the next
+    // returning forager to a fresh shelf. This is purely *who goes where*: no rate, yield or
+    // capacity is touched by it, so the economy is unchanged.
+    let queenCall=[], shelfCall=[];
+    function callTo(list, cell){ if(!cell) return; const i=list.indexOf(cell); if(i>=0) list.splice(i,1);
+      list.unshift(cell); if(list.length>5) list.pop(); }
     function applyBrush(cell){ if(!cell)return; if(!netPaintOk(cell))return; let changed=false, kind=brush;
       if(brush==='expand'){ if(cell.built)return; if(neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built)){ const was=cell.flagExpand; if(!cell.flagExpand&&!paintErase){flaggedExpand++; armLesson('expand',flaggedExpand);} cell.flagExpand=!paintErase; if(!cell.flagExpand)cell.bp=0; changed=(was!==cell.flagExpand); kind=paintErase?'erase':'expand'; checkCoachProgress(); watchHands(); if(changed) paintFx(cell,kind); } return; }
       if(!cell.built)return;
       if(paintErase){ if(cell.zone==='brood'&&cell.brood)return; changed=(cell.zone!=='none'); cell.zone='none'; kind='erase'; }
-      else { if(brush==='brood'){ if(cell.zone!=='brood'){brushedBrood++; armLesson('brood',brushedBrood); changed=true;} cell.zone='brood'; } else if(brush==='honey'){ if(cell.zone!=='honey'){paintedHoney++; armLesson('honey',paintedHoney); changed=true;} cell.zone='honey'; if(cell.brood) cell.brood=null; } checkCoachProgress(); watchHands(); }
+      else { if(brush==='brood'){ if(cell.zone!=='brood'){brushedBrood++; armLesson('brood',brushedBrood); changed=true; callTo(queenCall,cell);} cell.zone='brood'; }
+        else if(brush==='honey'){ if(cell.zone!=='honey'){paintedHoney++; armLesson('honey',paintedHoney); changed=true; callTo(shelfCall,cell);} cell.zone='honey'; if(cell.brood) cell.brood=null; } checkCoachProgress(); watchHands(); }
       if(changed) paintFx(cell,kind);
     }
     // ---- undo: take back the last comb change (over-expansion, a stray paint) ----
@@ -3781,7 +3792,15 @@
       const layRate=Math.min(LAYMAX*lv*M.lay(),nurses*0.8,space)*pollenF*(P<CAP?1:0.15)*queenVigour();
       if(layRate>0&&space>0){ let n=Math.floor(layRate*dd)+(Math.random()<((layRate*dd)%1)?1:0); n=Math.min(n,space,5);
         const empties=cells.filter(c=>c.built&&c.zone==='brood'&&!c.brood);
-        for(let i=0;i<n&&empties.length;i++){ const k=(Math.random()*empties.length)|0; empties[k].brood={stage:'egg',t:0}; empties.splice(k,1); } }
+        // She lays where she is standing. This picks *which* cradle takes the egg, never how
+        // many are laid (`n` above is untouched), so the economy is exactly as balanced as
+        // before -- it just happens somewhere the eye was already looking. Offline catch-up
+        // keeps the old random scatter: the queen isn't walking anywhere during it.
+        for(let i=0;i<n&&empties.length;i++){ let k=(Math.random()*empties.length)|0;
+          if(!offline){ let bd=Infinity;
+            for(let j=0;j<empties.length;j++){ const ep=cellCenter(empties[j].c,empties[j].r);
+              const ed=(ep.x-queen.x)*(ep.x-queen.x)+(ep.y-queen.y)*(ep.y-queen.y); if(ed<bd){ bd=ed; k=j; } } }
+          empties[k].brood={stage:'egg',t:0}; empties.splice(k,1); } }
       honeyU -= P*C_BEE*coldMult(T)*M.eat()*dd;
       if(offline||onboard){ if(honeyU<2*HC)honeyU=2*HC; starveT=0; }
       else if(honeyU<=0){ honeyU=0; starveT+=dd; if(starveT>2.5 && !dailyMode) return gameOver('starve'); }
@@ -3840,11 +3859,16 @@
       // build/nurse bees without a target re-pick every frame they lack one — up to
       // several dozen at once — so filter the comb for candidates once per call here
       // instead of once per bee (each was a fresh 480-cell scan via randomFlagged/randomLarva).
-      let flaggedPool=null, larvaPool=null;
+      let flaggedPool=null, larvaPool=null, shelfPool=null;
       const pickFlagged=()=>{ if(flaggedPool===null) flaggedPool=cells.filter(c=>!c.built&&c.flagExpand);
         return flaggedPool.length?flaggedPool[(Math.random()*flaggedPool.length)|0]:null; };
       const pickLarva=()=>{ if(larvaPool===null) larvaPool=cells.filter(c=>c.brood&&c.brood.stage==='larva');
         return larvaPool.length?larvaPool[(Math.random()*larvaPool.length)|0]:null; };
+      // a shelf the keeper just painted takes the next delivery, so a new pantry cell is
+      // visibly *used* within seconds of being drawn rather than some time next week
+      const pickShelf=()=>{ for(const c of shelfCall) if(c.built&&c.zone==='honey') return c;
+        if(shelfPool===null) shelfPool=cells.filter(c=>c.built&&c.zone==='honey');
+        return shelfPool.length?shelfPool[(Math.random()*shelfPool.length)|0]:null; };
       // court & duty rosters, refreshed every few seconds
       dancerRef=null; for(const b of bees){ if(b.state==='waggle'){ dancerRef=b; break; } }
       retT+=dt; if(retT>2.5){ retT=0;
@@ -3884,7 +3908,10 @@
             b.carry = hot&&Math.random()<0.22 ? 'water' : (Math.random()<forage?'nectar':'pollen');
             if(b.carry==='water') tip('water','Hazel: See the <em>silver drops</em>? On hot days some foragers haul <b>water</b> — spread thin and fanned, it cools the nest. A colony is its own air-conditioner.');
             b.state='return'; } }
-          else { if(move(b,hiveCx+(Math.random()-0.5)*size*5,hiveCy+(Math.random()-0.5)*size*4,2.4)){ if(dancing&&Math.random()<0.18){ b.state='waggle'; b.danceT=0; } else b.state='idle'; b.carry=null; } } }
+          else { // home with a full crop — she carries it to an actual shelf and unloads there
+            if(!b.un || !(b.un.built && b.un.zone==='honey')) b.un=pickShelf();
+            const up = b.un ? cellCenter(b.un.c,b.un.r) : {x:hiveCx+(Math.random()-0.5)*size*5, y:hiveCy+(Math.random()-0.5)*size*4};
+            if(move(b,up.x,up.y,2.4)){ b.un=null; if(dancing&&Math.random()<0.18){ b.state='waggle'; b.danceT=0; } else b.state='idle'; b.carry=null; } } }
         else if(b.role==='build'){ const site=b.tcell;
           if(site&&!site.built&&site.flagExpand){ const p=cellCenter(site.c,site.r); move(b,p.x,p.y,1.4); } else { b.tcell=pickFlagged(); if(!b.tcell) move(b,hiveCx+(Math.random()-0.5)*size*8,hiveCy+(Math.random()-0.5)*size*6,0.7); } }
         else if(b.role==='nurse'){ if(!b.lc||!b.lc.brood) b.lc=pickLarva();
@@ -3892,7 +3919,14 @@
         else { if(hornet&&hornet.state==='raid'){ move(b,hornet.x+(Math.random()-0.5)*size*2.4,hornet.y+(Math.random()-0.5)*size*2.4,1.8); } else move(b,hiveCx+(Math.random()-0.5)*size*6,hiveCy+(Math.random()-0.5)*size*5,0.6); }
       }
       queen.wob+=dt;
-      if(Math.random()<dt*1.2){ const bc=randomWhere(c=>c.built&&c.zone==='brood'); if(bc){const p=cellCenter(bc.c,bc.r);queen.tx=p.x;queen.ty=p.y;} }
+      // The queen answers the brush. A cradle you just painted is the next one she walks to,
+      // and (below, in the lay step) she lays in whatever empty cradle she is standing on —
+      // so painting a nursery cell and watching an egg appear in *that* cell is one
+      // continuous, legible act rather than a statistic that shows up somewhere later.
+      while(queenCall.length && !(queenCall[0].built && queenCall[0].zone==='brood')) queenCall.shift();
+      if(queenCall.length){ const qp=cellCenter(queenCall[0].c,queenCall[0].r); queen.tx=qp.x; queen.ty=qp.y;
+        if(Math.hypot(queen.x-qp.x,queen.y-qp.y)<size*0.55) queenCall.shift(); }
+      else if(Math.random()<dt*1.2){ const bc=randomWhere(c=>c.built&&c.zone==='brood'); if(bc){const p=cellCenter(bc.c,bc.r);queen.tx=p.x;queen.ty=p.y;} }
       const dx=queen.tx-queen.x,dy=queen.ty-queen.y,L=Math.hypot(dx,dy)||1; queen.x+=dx/L*Math.min(L,0.6*size*dt); queen.y+=dy/L*Math.min(L,0.6*size*dt);
     }
     let dancerRef=null, retT=9;
@@ -6880,6 +6914,11 @@
     window.__hm=()=>({day,year,P,honeyU,pollenU,nectarU,honeyCells:honeyCells(),broodCells:broodCells(),ap:activePatch,speed,brush,bank:buildBank(),
       story:{on:storyMode, ix:storyIx, sc:((curBeats||STORY)[storyIx]||{}).sc, camX, camS, hiveX:W*camX, W, horizon:storyHorizon(), Hh},
       view:{W,Hh,size,mSize,tSize,ox,oy,hiveCx,hiveCy,topH,botH,stage:Math.min(W,STAGE_W),bounds:combBounds()},
+      // where the colony is actually headed — lets a test assert that the queen answered
+      // the brush, rather than trying to identify her sprite in a screenshot
+      queen:{x:queen.x,y:queen.y,tx:queen.tx,ty:queen.ty},
+      calls:{queen:queenCall.map(c=>({c:c.c,r:c.r})), shelf:shelfCall.map(c=>({c:c.c,r:c.r}))},
+      broodAt:cells.filter(c=>c.brood).map(c=>({c:c.c,r:c.r,st:c.brood.stage})),
       therm:{warmth:nestWarmth(), amb:AMB(currentTemp()),
         broodHeats:cells.filter(c=>c.brood).map(c=>+c.heat.toFixed(3)),
         growAvg:(()=>{const b=cells.filter(c=>c.brood); return b.length? b.reduce((a,c)=>a+thermF(c.heat),0)/b.length : 0;})()},
