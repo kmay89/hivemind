@@ -793,6 +793,14 @@
   #coach .cskip{ font-size:11px; color:#8a5a12; cursor:pointer; text-decoration:underline; font-weight:600; }
   #coach .cprog{ font-size:9.5px; letter-spacing:.16em; color:#8a5a12; margin-bottom:6px; text-transform:uppercase; font-weight:800; }
 
+  /* ---------- discovery: interface that hasn't been earned yet doesn't exist ---------- */
+  /* display:none, not opacity — an undiscovered stat must not hold an empty slot open. */
+  .undisc{ display:none !important; }
+  .discPop{ animation:discPop .62s cubic-bezier(.2,1.5,.4,1) both; }
+  @keyframes discPop{ 0%{ opacity:0; transform:scale(.6) translateY(6px); }
+    60%{ opacity:1; transform:scale(1.07) translateY(0); } 100%{ opacity:1; transform:scale(1); } }
+  @media (prefers-reduced-motion:reduce){ .discPop{ animation:none; } }
+
   .preveal{ transition:opacity .5s, transform .5s; }
   .preveal.hidden{ opacity:0; transform:translateY(-6px); pointer-events:none; }
   #hud-top .preveal.hidden, #hud-bottom .preveal.hidden{ pointer-events:none; }
@@ -2584,6 +2592,7 @@
     function seedDaily(){ dailyMode=true; const rnd=mulberry32(dateSeedNum());
       const pool=WEATHERS.filter(x=>x.id!=='calm'&&!x.event); // a pure test of keeping — no scripted raids
       curSeason=pool[Math.floor(rnd()*pool.length)]||WEATHERS[0]; seasonEventDone=true; seasonEventFired=null; lastSeasonId=curSeason.id;
+      discoverAll();   // the daily is not a first run — keep the whole interface
       setPace('medium'); tinyComb(); honeyU=8*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; mite=0; grades=[]; forage=0.6; activePatch=null; resetColonyIdentity();
       queenAge=1; hornet=null; hornetCD=18+rnd()*22; parts.length=0; shake=0; rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=makeGoals(); lastSI=0; scoutShown=false; seenTips={}; lessonSeen={}; nudged={}; tipQ.length=0; tipCool=0; starveT=0; bankAtFrost=0; raidLoss=0;
       brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=false; yearHist.length=0; histT=2.7; popMilo={};
@@ -4708,6 +4717,7 @@
       { const host=$('ovTrophies'); const old=host.parentNode.querySelector('.beenote'); if(old) old.remove(); host.insertAdjacentHTML('afterend', beeNote()); }
       saveGame(); openOverlay('over'); }
     $('ovRestart').addEventListener('click',()=>{ // renewal: the apiary persists; a wild swarm takes the comb
+      discoverAll();   // a keeper who has already lost a colony keeps their interface
       year++; day=0; P=12; honeyU=6*HC; pollenU=3*HC; nectarU=0; peakPop=12; swarmP=0; mite=0; activePatch=null; resetColonyIdentity();
       queenAge=1; hornet=null; hornetCD=18+Math.random()*22; scoutShown=false; raidLoss=0; starveT=0;
       jarsThisYear=0; fedWinter=false; bankAtFrost=0; yearHist.length=0; histT=2.7; goals=makeGoals(); lastSI=0; said={};
@@ -4731,7 +4741,7 @@
       const bt=cells.map(c=>c.brood?Math.round(c.brood.t*10):0);
       const bx=cells.map(c=>(!c.built&&c.flagExpand&&c.bp>0)?Math.round(c.bp*100):0);
       return {v:SAVE_V,t:Date.now(),day,year,P,honeyU,pollenU,nectarU,peakPop,bornTotal,swarmP,mite:Math.round(mite*1000)/1000,forage,activePatch,grades,queenAge,cb,bt,bx,
-        rj,jars,jy:jarsThisYear,ql:queenLine,rs:roster,se:curSeason?curSeason.id:'calm',sq:seasonEventDone?1:0,sx:seasonEventFired,mx:mix.map(v=>Math.round(v)),ow:Object.keys(owned),fw:fedWinter?1:0,bf:Math.round(bankAtFrost),tp:Object.keys(seenTips),ls:Object.keys(lessonSeen),gd:goals?goals.map(g=>g.done?1:0):[0,0,0,0]}; }
+        rj,jars,jy:jarsThisYear,ql:queenLine,rs:roster,se:curSeason?curSeason.id:'calm',sq:seasonEventDone?1:0,sx:seasonEventFired,mx:mix.map(v=>Math.round(v)),ow:Object.keys(owned),fw:fedWinter?1:0,bf:Math.round(bankAtFrost),tp:Object.keys(seenTips),ls:Object.keys(lessonSeen),gd:goals?goals.map(g=>g.done?1:0):[0,0,0,0],dc:Object.keys(discovered)}; }
     function saveGame(){ if(dailyMode||NET.on) return true; return lsSet(SAVE_KEY,JSON.stringify(serialize())); }   // a hive-link party never touches the solo save
     function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
     // a save is only safe to hand to deserialize() if it's the shape that code below
@@ -4747,6 +4757,9 @@
       rj=s.rj||0; jars=s.jars||0; jarsThisYear=s.jy||0; queenLine=(s.ql&&QUEENS.some(q=>q.id===s.ql))?s.ql:'meadow'; roster=Array.isArray(s.rs)?s.rs.filter(b=>b&&b.nm):[]; mix=(s.mx&&s.mx.length===FLOWERS.length)?s.mx.slice():FLOWERS.map(()=>0); owned={}; (s.ow||[]).forEach(k=>owned[k]=true); fedWinter=!!s.fw; bankAtFrost=s.bf||0; seenTips={}; (s.tp||[]).forEach(k=>seenTips[k]=1); lessonSeen={}; (s.ls||[]).forEach(k=>lessonSeen[k]=1); tipQ.length=0; tipCool=0;
       curSeason=WEATHERS.find(x=>x.id===s.se)||WEATHERS[0]; lastSeasonId=curSeason.id; seasonEventDone=!!s.sq; seasonEventFired=s.sx||null;
       goals=makeGoals(); (s.gd||[]).forEach((d,i)=>{ if(goals[i]) goals[i].done=!!d; });
+      // no record of what was discovered means a save written before the discovery table
+      // existed -- a returning keeper never has their interface taken back off them
+      if(Array.isArray(s.dc)){ discovered={}; s.dc.forEach(k=>discovered[k]=1); applyDiscovery(); } else discoverAll();
       if(day>=270) armMidwinter(true);
       lastSI=seasonIdx(day);
       // deserialize()'s one caller already runs saves through isValidSave() first, but
@@ -5126,8 +5139,65 @@
     window.__hmDance=()=>openDanceCall();   // dev/test handle, like __hm
 
     // ===================== founding coach (progressive onboarding) =====================
+    // ===================== discovery: the interface arrives as the world earns it =====================
+    // The old behaviour dumped five panels on screen the moment the coach ended -- a wall of
+    // readouts for quantities that were still zero. Stardew and Minecraft both teach the
+    // opposite rule: nothing is on screen before it means anything, and nothing is explained
+    // before it exists. So each row below is one piece of interface, the condition in the
+    // world that makes it true, and the single line that marks the moment it shows up.
+    //
+    // Add a row; never add a branch. `id` is the element, `when()` is asked ~2/sec, and `tx`
+    // (optional) goes through the same paced feed as every other message, so discoveries
+    // arrive one at a time and never pile up. Rows are checked in order and at most one
+    // fires per pump, so a burst of simultaneous truths still reads as a sequence.
+    const DISCOVER=[
+      // Conditions are things the keeper CAUSED or WATCHED HAPPEN, never the state a colony
+      // is founded with. A founding hive already holds honey, pollen, bees and capped brood,
+      // so "honeyU>0" is true before the first tap and every readout would arrive at once --
+      // which is the pile-on this table exists to prevent. Each also has a generous day-based
+      // fallback so nothing can stay hidden forever if a keeper plays in an unexpected order.
+      {id:'stPop',     when:()=>bornTotal>0,                          ic:'🐝', tx:'<b>Bees.</b> Every other number here follows from this one.'},
+      {id:'stBrood',   when:()=>brushedBrood>0||day>=10,              ic:'🍼', tx:'<b>Brood</b> — what the queen has laid. Twenty days to a flying bee.'},
+      {id:'tabMeadow', when:()=>nectarU>0,                            ic:'☀',  tx:'They’re bringing something home. <b>Meadow</b> shows you where from.'},
+      {id:'stHoney',   when:()=>paintedHoney>0||day>=16,              ic:'🍯', tx:'<b>Honey.</b> Not treasure — it’s what they eat all winter.'},
+      {id:'stPollen',  when:()=>nectarU>0||day>=20,                   ic:'🌸', tx:'<b>Pollen</b> is protein. No pollen, no babies.'},
+      {id:'waxBank',   when:()=>cells.some(c=>c.flagExpand),          ic:'🔨', tx:'<b>Wax bank</b> — what the pantry can afford to build.'},
+      {id:'advisor',   when:()=>day>=8,                               ic:'👵', tx:'Hazel is watching. Tap her any time to read back.'},
+      {id:'forageGrp', when:()=>(nectarU>0&&day>=12)||day>=24,        ic:'🌼', tx:'You can’t command bees — but you can aim them.'},
+      {id:'goal',      when:()=>day>=18&&!!(goals&&goals.length),     ic:'🧭', tx:'Something to aim at this season.'},
+      {id:'reportBtn', when:()=>day>=34,                              ic:'📊', tx:'The <b>report</b>, if you ever want the numbers behind all this.'},
+      {id:'wr',        when:()=>day>=HARV0*0.55,                      ic:'❄️', tx:'<b>Winter pantry.</b> This is the number the whole year is really about.'},
+      {id:'stKeeper',  when:()=>rj>0||jars>0,                         ic:'✧',  tx:'<b>Keeper</b> — what you’ve earned across every colony.'},
+    ];
+    // containers that should stay out of the way until at least one of their children exists
+    const DISC_BOX={res:['stHoney','stPollen','stPop','stBrood','stKeeper']};
+    let discovered={};
+    function applyDiscovery(){
+      for(const d of DISCOVER){ const el=$(d.id); if(el) el.classList.toggle('undisc', !discovered[d.id]); }
+      for(const box in DISC_BOX){ const el=$(box); if(!el) continue;
+        el.classList.toggle('undisc', !DISC_BOX[box].some(k=>discovered[k])); }
+    }
+    // a returning keeper never has their interface taken away: a save with no record of
+    // what was discovered (or one written before this existed) counts as having found it all
+    function discoverAll(){ discovered={}; for(const d of DISCOVER) discovered[d.id]=1; applyDiscovery(); }
+    function discoverReset(){ discovered={}; applyDiscovery(); }
+    let discT=0;
+    function pumpDiscover(dt){ if(!started||over||storyMode||onboard) return;
+      discT+=dt; if(discT<2.4) return; discT=0;   // a beat between arrivals, so two never read as one
+      for(const d of DISCOVER){ if(discovered[d.id]) continue;
+        let ok=false; try{ ok=!!d.when(); }catch(e){ ok=false; }
+        if(!ok) continue;
+        discovered[d.id]=1; applyDiscovery();
+        const el=$(d.id); if(el){ el.classList.remove('discPop'); void el.offsetWidth; el.classList.add('discPop'); }
+        if(d.tx) logMsg(d.ic||'✦', d.tx);
+        try{ chime(523,784); }catch(e){}
+        return;                       // one discovery per pump — they arrive as a sequence
+      } }
+    // PREVEAL/setReveal survive as the story-mode curtain only: the founding coach still
+    // wants a bare screen while it runs, and the discovery table takes over afterwards.
     const PREVEAL=['res','clockWrap','reportBtn','advisor','forageGrp'];
-    function setReveal(on){ PREVEAL.forEach(id=>{ const el=$(id); if(el) el.classList.toggle('hidden', on); }); }
+    function setReveal(on){ PREVEAL.forEach(id=>{ const el=$(id); if(el) el.classList.toggle('hidden', on); });
+      if(!on) applyDiscovery(); }
     function spot(id,on){ const el=$(id); if(el) el.classList.toggle('spotlight',on); }
     function clearSpots(){ ['forageGrp','brushGrp','timeGrp','tabMeadow','reportBtn'].forEach(id=>spot(id,false)); document.querySelectorAll('[data-brush],.timeBtn,[data-f]').forEach(e=>e.classList.remove('tapHere')); }
     // `bridge` is Hazel's congratulation line after a step's unlock fires (steps
@@ -6291,7 +6361,7 @@
       document.body.classList.add('netc');
       closeOverlay('mpJoin'); closeOverlay('mpEnd'); $('intro').classList.add('hide');
       dailyMode=false; onboard=false; queenLine='meadow'; setPace('easy'); DAY_LEN=PARTY_DAY;
-      tinyComb(); resetColonyIdentity(); goals=makeGoals(); netLastSI=-1; clearUndo();
+      tinyComb(); resetColonyIdentity(); goals=makeGoals(); netLastSI=-1; clearUndo(); discoverAll();
       brush='brood'; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x.dataset.brush==='brood')); setReveal(false);
       netRecomputeSectors(); netApplySnap(m.s);
       over=false; beginCommon(); netLastSI=seasonIdx(day);
@@ -6320,7 +6390,7 @@
       closeOverlay('mpHost'); closeOverlay('mpEnd'); $('intro').classList.add('hide');
       dailyMode=false; setPace('easy'); DAY_LEN=PARTY_DAY; tinyComb();
       for(const cell of cells){ if(!cell.built&&cellDist(cell.c,cell.r)<2.9){ cell.built=true; cell.zone='none'; } }   // a wider founding comb — every wedge gets cells
-      seedStarterZones();
+      seedStarterZones(); discoverAll();
       honeyU=10*HC; pollenU=5*HC; nectarU=0; P=18; day=0; year=1; peakPop=18; bornTotal=0; swarmP=0; mite=0; grades=[]; forage=0.6; activePatch=null; resetColonyIdentity(); drawSeason();
       queenAge=1; hornet=null; hornetCD=25+Math.random()*20; parts.length=0; shake=0;
       rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=makeGoals(); lastSI=0; scoutShown=true; seenTips={}; lessonSeen={}; nudged={}; tipQ.length=0; tipCool=0; starveT=0; bankAtFrost=0; raidLoss=0;
@@ -6909,6 +6979,7 @@
       brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=true; yearHist.length=0; histT=2.7; popMilo={};
       brush=null; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.remove('on')); setReveal(true);
       clearFeed();          // Hazel opens on a clean screen — no leftovers from the crowning
+      discoverReset();      // a new colony earns its interface back from scratch
       beginCommon();
       setTimeout(()=>{ if(onboard) showCoach(); }, 1800); saveGame(); }
     function renderQueens(){ const row=$('queenRow');
@@ -7037,7 +7108,7 @@
       if(nudgeCool>0) nudgeCool-=dt;
       if(paintSndCool>0) paintSndCool-=dt;
       if(tipCool>0){ tipCool-=dt; if(tipCool<=0 && tipQ.length){ toast(tipQ.shift()); tipCool=TIP_GAP; } }
-      pumpFeed(dt);
+      pumpFeed(dt); pumpDiscover(dt);
       if(hzHold>0) hzHold-=dt;
       idleT+=dt; if(idleT>4){ idleT=0; watchIdle(); }
       drawHazel(dt);
