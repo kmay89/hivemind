@@ -3030,14 +3030,17 @@
       // each pane's height so the outer, mostly-empty rings tuck gently behind the frosted
       // panels while every working cell stays clear, then centre on the visible band.
       const small=Math.min(W,Hh)<640;
-      const b=combBounds(), pad=small?1.35:1.05;
+      // the comb is the hero, and a founding colony is only ~16 cells — with the frame of
+      // foundation now drawn behind it there's no void left to pad against, so the early
+      // comb is allowed to sit much larger and closer to the eye.
+      const b=combBounds(), pad=small?0.85:0.8;
       const needW=((b.c1-b.c0)+1.5+pad*2)*SQ3, needH=(b.r1-b.r0)*1.5+2+pad*2;
       // reclaim less on phones (their bottom tray is genuinely tall and opaque), more on
       // roomy landscape/desktop where the panes float and there's slack to give the comb.
       const reclaim=small?0.22:0.46;
       const availW=Math.min(W, STAGE_W)*0.98;
       const availH=Math.max(120, Hh - topH*(1-reclaim) - botH*(1-reclaim));
-      const s=Math.max(7, Math.min(small?52:104, Math.min(availW/needW, availH/needH)));
+      const s=Math.max(7, Math.min(small?68:118, Math.min(availW/needW, availH/needH)));
       const midC=(b.c0+b.c1)/2, midR=(b.r0+b.r1)/2;
       // centre vertically on the band the panes actually leave visible (not the reclaimed one)
       const visTop=topH*(1-reclaim*0.5), visH=Math.max(120, Hh - visTop - botH*(1-reclaim*0.5));
@@ -3873,7 +3876,11 @@
 
     // ===================== rendering: INSIDE =====================
     const COL={ wallEmpty:'#3a2c16', wallRim:'#5a4624', egg:'#f3ead6', larva:'#f0dcae', pupa:'#caa86a', nectar:'#e9c64f', honey:'#f7b733', pollen:'#ef8c2c',
-      broodZone:'rgba(120,170,235,0.16)', honeyZone:'rgba(247,183,51,0.10)', unbuilt:'rgba(150,120,70,0.16)', frontier:'rgba(150,200,120,0.28)' };
+      broodZone:'rgba(124,178,246,0.30)', honeyZone:'rgba(255,201,78,0.24)', unbuilt:'rgba(190,152,92,0.24)', frontier:'rgba(150,200,120,0.28)' };
+    // zone identity, painted as material rather than a wash of tint: the nursery is a set of
+    // deep shadowed cradles, the pantry a rack of clean pale shelves. Value and texture carry
+    // the read even at a glance on a phone — the hue alone never did.
+    const ZONE_EDGE={ brood:'rgba(168,208,255,', honey:'rgba(255,214,120,' };
     function hexPathOn(ctx,x,y,s){ ctx.beginPath(); for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-30), px=x+s*Math.cos(a), py=y+s*Math.sin(a); i?ctx.lineTo(px,py):ctx.moveTo(px,py);} ctx.closePath(); }
     // heat palette: deep night-blue through teal and umber to honey-gold —
     // a smooth 4-stop lerp over the simulated 0..1 warmth
@@ -3936,12 +3943,29 @@
       if(heatView){ if(!heatBands||heatBands.length!==cells.length) heatBands=new Int8Array(cells.length);
         for(let i=0;i<cells.length;i++){ const c0=cells[i];
           heatBands[i]=c0.built?Math.max(0,Math.min(4,Math.floor(c0.heat*5))):-1; } }
-      let g=ctx.createLinearGradient(0,0,0,Hh); g.addColorStop(0,winter?'#10131c':'#1c1507'); g.addColorStop(1,winter?'#0b0d14':'#0c0803'); ctx.fillStyle=g; ctx.fillRect(0,0,W,Hh);
+      let g=ctx.createLinearGradient(0,0,0,Hh); g.addColorStop(0,winter?'#1a2131':'#3a2810'); g.addColorStop(1,winter?'#0d1119':'#170e05'); ctx.fillStyle=g; ctx.fillRect(0,0,W,Hh);
       // a warm hearth-glow pools behind the comb — the hive is lit from within
-      if(!winter){ const wr=Math.max(W,Hh)*0.62;
+      { const wr=Math.max(W,Hh)*0.72;
         let wg=ctx.createRadialGradient(hiveCx,hiveCy,size,hiveCx,hiveCy,wr);
-        wg.addColorStop(0,'rgba(120,72,20,0.34)'); wg.addColorStop(0.5,'rgba(80,48,14,0.14)'); wg.addColorStop(1,'rgba(40,24,6,0)');
+        if(winter){ wg.addColorStop(0,'rgba(96,116,164,0.20)'); wg.addColorStop(0.5,'rgba(58,72,108,0.09)'); wg.addColorStop(1,'rgba(20,26,42,0)'); }
+        else { wg.addColorStop(0,'rgba(196,124,32,0.42)'); wg.addColorStop(0.5,'rgba(126,76,20,0.19)'); wg.addColorStop(1,'rgba(50,30,8,0)'); }
         ctx.fillStyle=wg; ctx.fillRect(0,0,W,Hh); }
+      // Sheet of foundation: the whole frame is drawn wax waiting to be built on, so the
+      // comb sits *inside* something instead of floating in a void — and the room you have
+      // left to grow into is visible from the first second. One batched path, one stroke.
+      if(!heatView){ const fs=size*0.93; ctx.save();
+        ctx.beginPath();
+        for(const cell of cells){ if(cell.built||cell.flagExpand) continue;
+          const {x,y}=cellCenter(cell.c,cell.r);
+          if(x<-fs*2||x>W+fs*2||y<-fs*2||y>Hh+fs*2) continue;   // offscreen rows cost nothing
+          for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-30), px=x+fs*Math.cos(a), py=y+fs*Math.sin(a); i?ctx.lineTo(px,py):ctx.moveTo(px,py); }
+          ctx.closePath(); }
+        // fades out toward the edges of the frame, so the eye stays on the living comb
+        const lg=ctx.createRadialGradient(hiveCx,hiveCy,size*2,hiveCx,hiveCy,Math.max(W,Hh)*0.72);
+        lg.addColorStop(0,winter?'rgba(150,178,225,0.16)':'rgba(255,206,132,0.17)');
+        lg.addColorStop(0.55,winter?'rgba(130,158,205,0.07)':'rgba(232,178,104,0.075)');
+        lg.addColorStop(1,'rgba(200,150,80,0)');
+        ctx.strokeStyle=lg; ctx.lineWidth=1; ctx.stroke(); ctx.restore(); }
       // on a large display the surround falls away, so the comb reads as the subject
       if(W>1100||Hh>860){ const vr=Math.max(W,Hh)*0.85;
         let vg=ctx.createRadialGradient(hiveCx,hiveCy,Math.min(W,Hh)*0.22,hiveCx,hiveCy,vr);
@@ -3976,7 +4000,18 @@
             cg.addColorStop(0,'#4a3719'); cg.addColorStop(0.6,COL.wallEmpty); cg.addColorStop(1,'#241906'); return cg; });
           hexPathOn(ctx,0,0,s2); ctx.fill(); ctx.restore(); hexPathOn(ctx,x,y,s2); }
         else { ctx.fillStyle=COL.wallEmpty; ctx.fill(); }
-        if(cell.zone==='brood'){ ctx.fillStyle=COL.broodZone; ctx.fill(); } else if(cell.zone==='honey'){ ctx.fillStyle=COL.honeyZone; ctx.fill(); }
+        if(cell.zone==='brood'){ ctx.fillStyle=COL.broodZone; ctx.fill();
+          if(!heatView){ // a cradle: sunk deeper than the comb around it, and lined with pale royal jelly
+            ctx.save(); ctx.translate(x,y);
+            ctx.fillStyle=gradFor('cradle',()=>{ const cg=ctx.createRadialGradient(0,s2*0.34,s2*0.06,0,s2*0.1,s2*1.0);
+              cg.addColorStop(0,'rgba(255,247,226,0.30)'); cg.addColorStop(0.45,'rgba(150,120,72,0.12)'); cg.addColorStop(1,'rgba(18,10,2,0.46)'); return cg; });
+            hexPathOn(ctx,0,0,s2); ctx.fill(); ctx.restore(); hexPathOn(ctx,x,y,s2); } }
+        else if(cell.zone==='honey'){ ctx.fillStyle=COL.honeyZone; ctx.fill();
+          if(!heatView){ // a shelf: scrubbed pale wax, lit from above, waiting for a jar
+            ctx.save(); ctx.translate(x,y);
+            ctx.fillStyle=gradFor('shelf',()=>{ const sg=ctx.createLinearGradient(0,-s2,0,s2);
+              sg.addColorStop(0,'rgba(255,242,206,0.34)'); sg.addColorStop(0.5,'rgba(255,222,152,0.12)'); sg.addColorStop(1,'rgba(120,76,20,0.20)'); return sg; });
+            hexPathOn(ctx,0,0,s2); ctx.fill(); ctx.restore(); hexPathOn(ctx,x,y,s2); } }
         // virgin wax is nearly white and ambers with age and ten thousand feet —
         // fresh-drawn cells glow pale for their first weeks, then join the old comb
         if(!heatView&&cell.bday!==undefined){ const wage=year*YEAR+day-cell.bday;
@@ -4048,6 +4083,31 @@
         for(const p of glowPts){ ctx.globalAlpha=p.a; ctx.fillStyle=uG(p.k);
           ctx.save(); ctx.translate(p.x,p.y); ctx.fillRect(-s2*1.5,-s2*1.5,s2*3,s2*3); ctx.restore(); }
         ctx.globalAlpha=1; ctx.restore(); }
+      // The shape you drew, outlined. Every boundary between a zone and anything that isn't
+      // that zone gets stroked in the zone's own colour, so a nursery and a pantry read as
+      // *regions you authored* rather than a scatter of tinted cells. This one pass is what
+      // turns painting from "tinting hexes" into laying out a nest.
+      // Edge index is looked up, not derived: both neighbour tables are wound in the same
+      // order, so entry i always faces hex edge EDGE_OF[i] — no atan2 in a 480-cell loop.
+      if(!heatView){ const EDGE_OF=[0,5,4,3,2,1], es=s2*0.93;
+        ctx.save(); ctx.lineCap='round'; ctx.lineJoin='round';
+        for(const key of ['honey','brood']){ const col=ZONE_EDGE[key]; if(!col) continue;
+          ctx.beginPath(); let any=false;
+          for(const cell of cells){ if(!cell.built||cell.zone!==key) continue;
+            const {x,y}=cellCenter(cell.c,cell.r);
+            if(x<-es*2||x>W+es*2||y<-es*2||y>Hh+es*2) continue;
+            const tbl=(cell.r&1)?N_ODD:N_EVEN;
+            for(let i=0;i<6;i++){ const nc=cell.c+tbl[i][0], nr=cell.r+tbl[i][1];
+              const nb=inGrid(nc,nr)?cells[idx(nc,nr)]:null;
+              if(nb&&nb.built&&nb.zone===key) continue;      // interior seam — never drawn
+              const e=EDGE_OF[i], a0=Math.PI/180*(60*e-30), a1=Math.PI/180*(60*e+30);
+              ctx.moveTo(x+es*Math.cos(a0), y+es*Math.sin(a0));
+              ctx.lineTo(x+es*Math.cos(a1), y+es*Math.sin(a1)); any=true; } }
+          if(!any) continue;
+          const bre=0.5+0.5*Math.sin(gt*1.5);            // the outline breathes, very slightly
+          ctx.strokeStyle=col+(0.13+0.05*bre).toFixed(3)+')'; ctx.lineWidth=Math.max(3,es*0.30); ctx.stroke();
+          ctx.strokeStyle=col+(0.78+0.14*bre).toFixed(3)+')'; ctx.lineWidth=Math.max(1.4,es*0.075); ctx.stroke(); }
+        ctx.restore(); }
       // freshly-painted cells flash bright and settle — the wax "takes" under your hand
       if(!heatView) for(const cell of cells){ if(!cell.pf||cell.pf<=0) continue;
         const {x,y}=cellCenter(cell.c,cell.r), pf=cell.pf, glow=PAINTGLOW[cell.pfk]||'255,245,216';
