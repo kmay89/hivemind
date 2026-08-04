@@ -328,7 +328,18 @@
 
   /* ---- one play/pause toggle: the icon is the tap-action, the pill's colour + word are the state ---- */
   .timeBtn .ico{ width:18px; height:18px; }
-  #playToggle{ min-width:98px; justify-content:center; gap:7px; }
+  #playToggle{ min-width:98px; justify-content:center; gap:7px; position:relative; overflow:hidden; }
+  /* the day itself, filling the button. Answers "is time moving?" from the control you'd
+     press to change it -- it creeps at 1x, visibly races on fast, and freezes when paused. */
+  #playToggle .tFill{ position:absolute; left:0; bottom:0; height:3px; width:0%;
+    background:linear-gradient(90deg,rgba(255,255,255,.35),rgba(255,255,255,.9)); border-radius:0 2px 2px 0;
+    pointer-events:none; transition:width .12s linear; }
+  #playToggle:not(.on) .tFill{ opacity:.35; }
+  /* running also breathes, so the state reads in peripheral vision */
+  #playToggle.on{ animation:runBreath 2.4s ease-in-out infinite; }
+  @keyframes runBreath{ 0%,100%{ box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 3px 0 #4e7d38, 0 5px 12px rgba(120,200,90,.42); }
+    50%{ box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 3px 0 #4e7d38, 0 6px 20px rgba(150,230,110,.75); } }
+  @media (prefers-reduced-motion:reduce){ #playToggle.on{ animation:none; } #playToggle .tFill{ transition:none; } }
   #playToggle .tState,#fastToggle .tState{ font:800 9.5px 'JetBrains Mono',monospace; letter-spacing:.13em; text-transform:uppercase; }
   #playToggle .icoPause{ display:none; } #playToggle .icoPlay{ display:block; }
   #playToggle.on .icoPause{ display:block; } #playToggle.on .icoPlay{ display:none; }
@@ -1427,6 +1438,7 @@
           <svg class="ico icoPlay" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7.5 5.2v13.6a.8.8 0 0 0 1.2.7l11-6.8a.8.8 0 0 0 0-1.4l-11-6.8a.8.8 0 0 0-1.2.7z"/></svg>
           <svg class="ico icoPause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4.2" height="14" rx="1.4"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.4"/></svg>
           <span class="tState">paused</span>
+          <i class="tFill" id="playFill" aria-hidden="true"></i>
         </div>
         <div class="tb timeBtn fastBtn" id="fastToggle" tabindex="0" role="button" aria-pressed="false" aria-label="Fast-forward the days" title="Fast-forward the days">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.8 5.6v12.8a.7.7 0 0 0 1.1.6l8-6.4a.7.7 0 0 0 0-1.2l-8-6.4a.7.7 0 0 0-1.1.6z"/><path d="M12.6 5.6v12.8a.7.7 0 0 0 1.1.6l8-6.4a.7.7 0 0 0 0-1.2l-8-6.4a.7.7 0 0 0-1.1.6z"/></svg>
@@ -4204,6 +4216,19 @@
           ctx.strokeStyle=col+(0.13+0.05*bre).toFixed(3)+')'; ctx.lineWidth=Math.max(3,es*0.30); ctx.stroke();
           ctx.strokeStyle=col+(0.78+0.14*bre).toFixed(3)+')'; ctx.lineWidth=Math.max(1.4,es*0.075); ctx.stroke(); }
         ctx.restore(); }
+      // Daylight crossing the comb. The band's position IS the fraction of the current day,
+      // so "is time actually moving?" is answerable without reading a number: it creeps while
+      // running, tears along on fast, and sits perfectly still when paused. Built once in
+      // local space and translated, like every other cached gradient here.
+      if(!heatView && started && !over){
+        const frac=day-Math.floor(day), bandX=-W*0.3+frac*(W*1.6), bw=W*0.32;
+        const dgr=gradFor('daylight'+(winter?'W':'S')+Math.round(W),()=>{
+          const g2=ctx.createLinearGradient(-bw,0,bw,0);
+          g2.addColorStop(0,'rgba(255,214,140,0)');
+          g2.addColorStop(0.5,winter?'rgba(196,222,255,0.10)':'rgba(255,216,146,0.13)');
+          g2.addColorStop(1,'rgba(255,214,140,0)'); return g2; });
+        ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.translate(bandX,0);
+        ctx.fillStyle=dgr; ctx.fillRect(-bw,0,bw*2,Hh); ctx.restore(); }
       // freshly-painted cells flash bright and settle — the wax "takes" under your hand
       if(!heatView) for(const cell of cells){ if(!cell.pf||cell.pf<=0) continue;
         const {x,y}=cellCenter(cell.c,cell.r), pf=cell.pf, glow=PAINTGLOW[cell.pfk]||'255,245,216';
@@ -7109,6 +7134,10 @@
       if(paintSndCool>0) paintSndCool-=dt;
       if(tipCool>0){ tipCool-=dt; if(tipCool<=0 && tipQ.length){ toast(tipQ.shift()); tipCool=TIP_GAP; } }
       pumpFeed(dt); pumpDiscover(dt);
+      // the day, drawn on the button you'd press to stop it
+      { const pf=$('playFill');
+        if(pf){ const w=(started&&!over)?((day-Math.floor(day))*100).toFixed(1)+'%':'0%';
+          if(pf._w!==w){ pf._w=w; pf.style.width=w; } } }
       if(hzHold>0) hzHold-=dt;
       idleT+=dt; if(idleT>4){ idleT=0; watchIdle(); }
       drawHazel(dt);
