@@ -3316,7 +3316,9 @@
     }
     let lastInspectedCell=null, lastInspectAt=0;
     function showInspect(cx,cy){ const el=$('inspect');
-      if(!hoveredCell||!started||over||storyMode){ hideInspect(); lastInspectedCell=null; return; }
+      // while Hazel is teaching she owns the screen — a hover tooltip that lands on top of
+      // her card is exactly the "two things talking at once" a first-timer reads as noise
+      if(!hoveredCell||!started||over||storyMode||(onboard&&$('coach').classList.contains('show'))){ hideInspect(); lastInspectedCell=null; return; }
       // rebuilding innerHTML (and the layout it forces) on every single pointermove is
       // the busiest interaction there is (drag-painting can fire dozens/sec) for content
       // that's almost always identical sub-pixel jitter within the same cell. Rebuild on
@@ -3556,16 +3558,40 @@
     // the living log: each message rises on the left edge, lingers long enough to read,
     // then ages away — the full history is still kept in the advisor chat (MSGLOG).
     const FEED_WARN=new Set(['⚔','🐻','🕯️','⚠','🥀','🚧','❄','🧊']);
-    function pushFeed(ic, html){ const feed=$('msgFeed'); if(!feed || storyMode) return;
+    // One thing speaks at a time. Messages used to be appended the instant they were
+    // logged, up to six at once, so founding a colony greeted a brand-new keeper with
+    // three simultaneous cards before they had touched anything. Now they queue and are
+    // released on a cadence, and while Hazel is teaching she is the only voice on screen —
+    // everything else still goes to MSGLOG (the advisor log keeps the full history), it
+    // just doesn't shout over her.
+    const FEED_KEEP=3;                                   // most cards on screen at once
+    let feedQ=[], feedWait=0;
+    function clearFeed(){ feedQ.length=0; feedWait=0; const feed=$('msgFeed'); if(!feed) return;
+      while(feed.firstChild){ const c=feed.firstChild; if(c._ft) clearTimeout(c._ft); feed.removeChild(c); } }
+    function pushFeed(ic, html){ if(!$('msgFeed') || storyMode) return;
+      // While the founding coach is running, her card is the only surface. Her bridges are
+      // already typed into it, and the unlock already has its own chip, so feeding them here
+      // too printed every tutorial line twice — in two places that overlap on a phone.
+      // MSGLOG still records everything; the advisor log has the full history either way.
+      if(onboard) return;
+      feedQ.push({ic, html});
+      if(feedQ.length>8) feedQ.shift();                  // a backlog nobody will read is noise
+      if(feedWait<=0) releaseFeed(); }
+    function releaseFeed(){ const feed=$('msgFeed'); if(!feed || !feedQ.length) return;
+      if(feed.children.length>=FEED_KEEP) return;        // wait for room rather than stacking
+      const {ic, html}=feedQ.shift();
       const card=document.createElement('div');
       card.className='lfcard'+(FEED_WARN.has((''+ic).trim())?' warn':'');
       card.innerHTML='<span class="lfic">'+ic+'</span><span class="lftx">'+html+'</span>';
       feed.appendChild(card);
-      while(feed.children.length>6){ const old=feed.firstChild; if(old._ft) clearTimeout(old._ft); feed.removeChild(old); }
       const txt=(''+html).replace(/<[^>]+>/g,'');
       const life=Math.min(15000, 6800 + txt.length*42);   // linger scales with how much there is to read
       card._ft=setTimeout(()=>{ card.classList.add('age');
-        setTimeout(()=>{ if(card.parentNode) card.parentNode.removeChild(card); }, 900); }, life); }
+        setTimeout(()=>{ if(card.parentNode) card.parentNode.removeChild(card); }, 900); }, life);
+      // long lines get a longer beat after them, so two messages never arrive as one wall
+      feedWait=Math.min(3.4, 1.5 + txt.length*0.012); }
+    function pumpFeed(dt){ if(feedWait>0){ feedWait-=dt; if(feedWait>0) return; }
+      if(feedQ.length) releaseFeed(); }
     function renderChat(force){ const r=$('chatRows'), el=$('chatlog');
       const atBottom = force || (el.scrollHeight-el.clientHeight-el.scrollTop < 24);
       r.innerHTML = MSGLOG.length ? MSGLOG.map((m,i)=>'<div class="crow"><span class="ci2">'+m.ic+'</span><div class="cb2"><div class="cwhen">Y'+m.year+' · '+seasonName(m.day)+' · d'+(m.day+1)+'</div><div class="ctx2">'+m.html+'</div></div><span class="cdel" data-i="'+i+'" title="Dismiss">✕</span></div>').join('')
@@ -5186,7 +5212,12 @@
       g.fillText('🍼',cx,cy);
       g.fillText('🍯',cx+s*SQ3*2,cy);
       g.fillText('🔨',cx+s*SQ3*1.5,cy-s*4.5); }
-    press($('combPlanGo'),()=>closeOverlay('combPlan'));
+    // the handoff is a sequence, not a pile: the layout card first, and only once the
+    // keeper has closed it does the "start the days" chip appear. These used to fire on
+    // the same timeout and landed on top of each other.
+    let dawnAfterPlan=false;
+    press($('combPlanGo'),()=>{ closeOverlay('combPlan');
+      if(dawnAfterPlan){ dawnAfterPlan=false; setTimeout(()=>showDawnChip(), 460); } });
     // ---- dawn-by-dawn: the first week is turn-based. Each sunrise stops the clock
     // and waits; the keeper releases the day themselves. Five dawns (or one tap of
     // "let the days flow") and the game graduates to real time — decisions first,
@@ -5209,7 +5240,7 @@
       // ⏸ is always there afterwards. (An earlier build stopped time at every
       // dawn for a week; being interrupted five times read as nagging, not calm.)
       setSpeed(0);
-      setTimeout(()=>{ showCombPlan(); showDawnChip(); }, 1200); }
+      setTimeout(()=>{ if(showCombPlan()) dawnAfterPlan=true; else showDawnChip(); }, 1200); }
     press($('coachBtn'),()=>{ if(coachWait){ if(twActive){ finishType(); } else coachContinue(); return; } const s=COACH[coachStep]; if(s&&!s.until) advanceCoach(); });
     press($('coachSkip'),()=>{ coachWait=false; seedStarterZones(); endCoach(true); });
     press($('coach'),e=>{ if(e.target&&e.target.closest&&(e.target.closest('#coachBtn')||e.target.closest('#coachSkip'))) return; if(twActive) finishType(); });
@@ -6798,6 +6829,7 @@
       rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=null; lastSI=0; scoutShown=false; seenTips={}; lessonSeen={}; nudged={}; tipQ.length=0; tipCool=0; starveT=0; bankAtFrost=0; raidLoss=0;
       brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=true; yearHist.length=0; histT=2.7; popMilo={};
       brush=null; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.remove('on')); setReveal(true);
+      clearFeed();          // Hazel opens on a clean screen — no leftovers from the crowning
       beginCommon();
       setTimeout(()=>{ if(onboard) showCoach(); }, 1800); saveGame(); }
     function renderQueens(){ const row=$('queenRow');
@@ -6921,6 +6953,7 @@
       if(nudgeCool>0) nudgeCool-=dt;
       if(paintSndCool>0) paintSndCool-=dt;
       if(tipCool>0){ tipCool-=dt; if(tipCool<=0 && tipQ.length){ toast(tipQ.shift()); tipCool=TIP_GAP; } }
+      pumpFeed(dt);
       if(hzHold>0) hzHold-=dt;
       idleT+=dt; if(idleT>4){ idleT=0; watchIdle(); }
       drawHazel(dt);
