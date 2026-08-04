@@ -766,19 +766,32 @@
   #reportBtn.on{ color:#0a1a2c; background:linear-gradient(180deg,#cfe6ff,#79b1e6); }
 
   /* ---------- coach ---------- */
-  #coach{ position:fixed; left:50%; bottom:96px; transform:translateX(-50%); z-index:var(--z-coach); max-width:352px; width:calc(100% - 32px);
-    padding:16px 18px; display:flex; gap:12px; align-items:flex-start; opacity:0; transition:opacity .4s, transform .4s; pointer-events:none; }
-  #coach.show{ opacity:1; pointer-events:auto; }
-  #coach .ci{ font-size:21px; line-height:1.1; }
-  #coach .cb{ flex:1; }
-  #coach .ct{ font-size:clamp(13px, 12px + 0.25vw, 15px); line-height:1.6; color:var(--text); }
-  #coach .ct b{ color:var(--gold); font-weight:600; } #coach .ct em{ color:var(--cyan); font-style:normal; }
-  #coach .cgo{ margin-top:13px; display:flex; gap:10px; align-items:center; }
-  #coach .cbtn{ font-family:'Bricolage Grotesque'; font-weight:700; font-size:12px; padding:7px 14px; border-radius:9px; cursor:pointer; border:none;
-    color:#241503; background:linear-gradient(180deg,var(--gold),var(--honey)); transition:transform .09s; }
-  #coach .cbtn:active{ transform:scale(.95); }
-  #coach .cskip{ font-size:10px; color:var(--dim); cursor:pointer; text-decoration:underline; }
-  #coach .cprog{ font-size:9px; letter-spacing:.18em; color:var(--dim); margin-bottom:8px; text-transform:uppercase; font-weight:600; }
+  /* Hazel's card is the one thing on screen that is NOT dark UI chrome: a bright slab of
+     honey with dark text on it, so "the game is talking to you" never reads as another
+     panel. `--coach-bot` is set from JS to clear the real height of the bottom tray — it
+     used to fall back to a flat 96px on wide screens and sat directly on top of the very
+     brushes it was telling you to press. The short-landscape rule below still overrides
+     it to a top-anchored card, which is why this is a variable and not an inline style. */
+  #coach{ position:fixed; left:50%; bottom:var(--coach-bot, 96px); transform:translateX(-50%); z-index:var(--z-coach); max-width:392px; width:calc(100% - 32px);
+    padding:15px 17px; display:flex; gap:13px; align-items:flex-start; opacity:0; pointer-events:none;
+    transition:opacity .32s, transform .32s cubic-bezier(.2,1.4,.4,1);
+    background:linear-gradient(168deg,#ffe6a3 0%,#ffd070 46%,#f6b23c 100%);
+    border:none; border-radius:20px; color:#3a2205;
+    box-shadow:0 3px 0 rgba(160,96,12,.85), 0 14px 30px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.7);
+    -webkit-backdrop-filter:none; backdrop-filter:none; }
+  #coach.show{ opacity:1; pointer-events:auto; animation:coachPop .42s cubic-bezier(.2,1.5,.4,1) both; }
+  @keyframes coachPop{ from{ transform:translateX(-50%) translateY(10px) scale(.94); } to{ transform:translateX(-50%) translateY(0) scale(1); } }
+  #coach .ci{ font-size:27px; line-height:1; filter:drop-shadow(0 2px 3px rgba(120,70,10,.4)); animation:coachBob 2.6s ease-in-out infinite; }
+  @keyframes coachBob{ 0%,100%{ transform:translateY(0) rotate(-4deg); } 50%{ transform:translateY(-3px) rotate(4deg); } }
+  #coach .cb{ flex:1; min-width:0; }
+  #coach .ct{ font-size:clamp(15px, 13px + 0.4vw, 18px); line-height:1.45; color:#3a2205; font-weight:600; }
+  #coach .ct b{ color:#7a3d00; font-weight:800; } #coach .ct em{ color:#0a6d61; font-style:normal; font-weight:700; }
+  #coach .cgo{ margin-top:12px; display:flex; gap:12px; align-items:center; }
+  #coach .cbtn{ font-family:'Bricolage Grotesque'; font-weight:800; font-size:13.5px; padding:9px 20px; border-radius:11px; cursor:pointer; border:none;
+    color:#ffeec4; background:linear-gradient(180deg,#6b3f0a,#4a2a05); box-shadow:0 2px 0 rgba(0,0,0,.35); transition:transform .09s; }
+  #coach .cbtn:active{ transform:translateY(1px) scale(.97); }
+  #coach .cskip{ font-size:11px; color:#8a5a12; cursor:pointer; text-decoration:underline; font-weight:600; }
+  #coach .cprog{ font-size:9.5px; letter-spacing:.16em; color:#8a5a12; margin-bottom:6px; text-transform:uppercase; font-weight:800; }
 
   .preveal{ transition:opacity .5s, transform .5s; }
   .preveal.hidden{ opacity:0; transform:translateY(-6px); pointer-events:none; }
@@ -932,7 +945,7 @@
     #hud-bottom{ padding-bottom:max(12px, env(safe-area-inset-bottom)); padding-left:max(12px, env(safe-area-inset-left)); padding-right:max(12px, env(safe-area-inset-right)); }
     #storyTop{ padding-top:max(16px, calc(env(safe-area-inset-top) + 6px)); padding-right:max(18px, env(safe-area-inset-right)); }
     #storyNarr{ padding-bottom:max(40px, calc(env(safe-area-inset-bottom) + 26px)); }
-    #coach{ bottom:max(96px, calc(env(safe-area-inset-bottom) + 92px)); }
+    #coach{ bottom:max(var(--coach-bot, 96px), calc(env(safe-area-inset-bottom) + 92px)); }
   }
   /* phones */
   @media (max-width:620px){
@@ -3013,7 +3026,13 @@
       rs.setProperty('--feed-top',(topH+6)+'px'); rs.setProperty('--feed-bot',(botH+8)+'px');
       // on phones the bottom HUD is tall — keep the coach clear of the controls it points at
       const compact = W<=760 || (W<=1080 && Hh>=W);   // matches CSS: square counts as portrait
-      const co=$('coach'); if(co) co.style.bottom = compact ? (botH+2)+'px' : '';
+      // Hazel must clear the bottom tray on EVERY size, not just phones. On wide screens
+      // this used to reset to the stylesheet's flat 96px while the tray (wax bank + mixer
+      // + brushes + time) stood far taller, so her card covered the brushes it was asking
+      // you to tap. Set as a custom property so the short-landscape rule can still move
+      // her to the top of the screen instead.
+      document.documentElement.style.setProperty('--coach-bot',(botH+10)+'px');
+      const co=$('coach'); if(co) co.style.bottom='';
       const availW=W*0.94, availH=Math.max(120,Hh-topH-botH);
       const needW=(COLS+0.5)*SQ3, needH=(ROWS-1)*1.5+2;
       mSize=Math.max(6, Math.min(availW/needW, availH/needH));
@@ -3291,8 +3310,16 @@
       else { hoveredCell=null; hideInspect(); } });
     function hideInspect(){ $('inspect').classList.remove('show'); }
     const STAGE_NAME={egg:'Egg',larva:'Larva',pupa:'Capped brood'};
-    function inspectHTML(cell){
+    // `terse` is the hover tooltip: the name of the thing and what a tap would do, and
+    // nothing else. The same function also fills the tap-to-inspect sheet, which is a
+    // deliberate request for depth and still gets all four lines. A hover that follows your
+    // cursor around the comb should never be four lines of prose — "Out of reach / wax can
+    // only grow from wax / Switch to Expand to build here" was fifteen words to say "no".
+    function inspectHTML(cell, terse){
       const degC=Math.round(cell.heat*33+2);
+      const out=(t,s,a,cls,d)=> terse
+        ? '<div class="it">'+t+'</div>'+(a?'<div class="ia '+(cls||'')+'">'+a+'</div>':'')
+        : '<div class="it">'+t+'</div><div class="is">'+s+'</div><div class="ia '+(cls||'')+'">'+a+'</div>'+(d?'<div class="id2">'+d+'</div>':'');
       let t,s,a='',cls='',d='';
       if(!cell.built){
         const adj=neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built);
@@ -3308,8 +3335,8 @@
         if(brush==='expand'){ if(cell.flagExpand){ a='Click to unmark'; cls='no'; }
           else if(adj){ a='→ Draw wax here'; const bk=buildBank(); d=bk.affordable>0?('joins the build queue · pantry funds '+(bk.affordable>12?'plenty':bk.affordable)+' more'):'stores lean — bees will draw it once honey comes in'; }
           else { a='Too far from the comb'; cls='bad'; } }
-        else { a='Switch to Expand to build here'; cls='no'; }
-        return '<div class="it">'+t+'</div><div class="is">'+s+'</div><div class="ia '+cls+'">'+a+'</div>'+(d?'<div class="id2">'+d+'</div>':'');
+        else { a='Pick Expand to build'; cls='no'; }
+        return out(t,s,a,cls,d);
       }
       if(cell.brood){ const st=cell.brood.stage, dur=st==='egg'?EGG_D:st==='larva'?LAR_D:PUP_D;
         t=STAGE_NAME[st]; s='day '+(Math.floor(cell.brood.t)+1)+' of '+dur+' · '+degC+'\u00b0C'; }
@@ -3323,7 +3350,7 @@
         else { a='→ Storage'; d='store '+honeyCells()+' \u2192 '+(honeyCells()+1)+' cells'; } }
       else { a='Already built'; cls='no'; }
       if(cell.brood && degC<28 && brush==='brood') d='cold for brood \u2014 a tighter nest holds heat';
-      return '<div class="it">'+t+'</div><div class="is">'+s+'</div><div class="ia '+cls+'">'+a+'</div>'+(d?'<div class="id2">'+d+'</div>':'');
+      return out(t,s,a,cls,d);
     }
     let lastInspectedCell=null, lastInspectAt=0;
     function showInspect(cx,cy){ const el=$('inspect');
@@ -3338,7 +3365,7 @@
       // watching a value like wax-fill % or temperature tick up still reads as live.
       const now=performance.now();
       if(hoveredCell!==lastInspectedCell || painting || now-lastInspectAt>150){
-        lastInspectedCell=hoveredCell; lastInspectAt=now; el.innerHTML=inspectHTML(hoveredCell); }
+        lastInspectedCell=hoveredCell; lastInspectAt=now; el.innerHTML=inspectHTML(hoveredCell, true); }
       el.classList.add('show');
       const w=el.offsetWidth||200, h=el.offsetHeight||70;
       el.style.left=Math.max(8, Math.min(W-w-8, cx+18))+'px';
@@ -5111,6 +5138,19 @@
     // (coachTarget()) -- folded on here so reordering or inserting a step can't
     // silently misalign the text or the hint.
     const COACH=[
+      // Three beats of "what is this, and why do I care" before a single instruction. The
+      // tutorial used to open cold on "Pick up Brood" — a command with no world around it.
+      // Deliberately one short line each: framing, not a lecture. No `until`, so each is a
+      // tap-to-continue beat, and no step number — being told what a hive is isn't a task.
+      { ic:'🐝', pause:true, prog:'your hive',
+        tx:'This is your hive. <b>Forty thousand bees</b>, thinking as one.',
+        kid:'This is your beehive! Thousands of bees live here together.' },
+      { ic:'❄️', prog:'the whole game',
+        tx:'They have one year to get ready for <span class="kw">winter</span>.',
+        kid:'They need to get ready before the cold comes!' },
+      { ic:'🖌️', prog:'your job',
+        tx:'You decide what each room becomes. That’s the whole job.',
+        kid:'You choose what each little room is for. That’s your job!' },
       { ic:'🖌️', spot:'brushGrp', brushHint:'brood', pause:true, prog:'1 \u00b7 the brushes',
         tx:'Pick up <span class="kb">Brood</span>.', kid:'Tap the <span class="kb">🍼 baby-bee</span> brush.',
         until:()=>brush==='brood' },
