@@ -4895,8 +4895,13 @@
     function syncYields(){
       const cpY=caps(), fullY=(honeyU+pollenU+nectarU)>=cpY.total-2;
       syncForageUI();
-      $('yBrood').innerHTML='<i>nest </i><b>'+broodCells()+'</b><i> r</i><b>'+nestRing()+'</b>';
-      $('yHon').innerHTML='<i>store </i><b>'+honeyCells()+'</b>';
+      // plain nouns, and the same ones the layout card and Hazel already use ("nursery in
+      // the middle, shelves around it") — the chips used to read "nest 6 r2" / "store 10",
+      // where r2 was the nest-ring radius: real information, but expert shorthand sitting on
+      // the most-looked-at control in the game. nestRing() still drives its nudge internally.
+      const nbY=broodCells(), nhY=honeyCells();
+      $('yBrood').innerHTML='<b>'+nbY+'</b><i> cradle'+(nbY===1?'':'s')+'</i>';
+      $('yHon').innerHTML='<b>'+nhY+'</b><i> shel'+(nhY===1?'f':'ves')+'</i>';
       const L=ledger();
       $('yExp').innerHTML= L.wax>0.02 ? ('<i>wax </i><b>-'+(L.wax*7).toFixed(1)+'</b>') : '<i>+room</i>';
     }
