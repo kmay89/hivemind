@@ -328,7 +328,18 @@
 
   /* ---- one play/pause toggle: the icon is the tap-action, the pill's colour + word are the state ---- */
   .timeBtn .ico{ width:18px; height:18px; }
-  #playToggle{ min-width:98px; justify-content:center; gap:7px; }
+  #playToggle{ min-width:98px; justify-content:center; gap:7px; position:relative; overflow:hidden; }
+  /* the day itself, filling the button. Answers "is time moving?" from the control you'd
+     press to change it -- it creeps at 1x, visibly races on fast, and freezes when paused. */
+  #playToggle .tFill{ position:absolute; left:0; bottom:0; height:3px; width:0%;
+    background:linear-gradient(90deg,rgba(255,255,255,.35),rgba(255,255,255,.9)); border-radius:0 2px 2px 0;
+    pointer-events:none; transition:width .12s linear; }
+  #playToggle:not(.on) .tFill{ opacity:.35; }
+  /* running also breathes, so the state reads in peripheral vision */
+  #playToggle.on{ animation:runBreath 2.4s ease-in-out infinite; }
+  @keyframes runBreath{ 0%,100%{ box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 3px 0 #4e7d38, 0 5px 12px rgba(120,200,90,.42); }
+    50%{ box-shadow:0 1px 0 rgba(255,255,255,.5) inset, 0 3px 0 #4e7d38, 0 6px 20px rgba(150,230,110,.75); } }
+  @media (prefers-reduced-motion:reduce){ #playToggle.on{ animation:none; } #playToggle .tFill{ transition:none; } }
   #playToggle .tState,#fastToggle .tState{ font:800 9.5px 'JetBrains Mono',monospace; letter-spacing:.13em; text-transform:uppercase; }
   #playToggle .icoPause{ display:none; } #playToggle .icoPlay{ display:block; }
   #playToggle.on .icoPause{ display:block; } #playToggle.on .icoPlay{ display:none; }
@@ -766,19 +777,40 @@
   #reportBtn.on{ color:#0a1a2c; background:linear-gradient(180deg,#cfe6ff,#79b1e6); }
 
   /* ---------- coach ---------- */
-  #coach{ position:fixed; left:50%; bottom:96px; transform:translateX(-50%); z-index:var(--z-coach); max-width:352px; width:calc(100% - 32px);
-    padding:16px 18px; display:flex; gap:12px; align-items:flex-start; opacity:0; transition:opacity .4s, transform .4s; pointer-events:none; }
-  #coach.show{ opacity:1; pointer-events:auto; }
-  #coach .ci{ font-size:21px; line-height:1.1; }
-  #coach .cb{ flex:1; }
-  #coach .ct{ font-size:clamp(13px, 12px + 0.25vw, 15px); line-height:1.6; color:var(--text); }
-  #coach .ct b{ color:var(--gold); font-weight:600; } #coach .ct em{ color:var(--cyan); font-style:normal; }
-  #coach .cgo{ margin-top:13px; display:flex; gap:10px; align-items:center; }
-  #coach .cbtn{ font-family:'Bricolage Grotesque'; font-weight:700; font-size:12px; padding:7px 14px; border-radius:9px; cursor:pointer; border:none;
-    color:#241503; background:linear-gradient(180deg,var(--gold),var(--honey)); transition:transform .09s; }
-  #coach .cbtn:active{ transform:scale(.95); }
-  #coach .cskip{ font-size:10px; color:var(--dim); cursor:pointer; text-decoration:underline; }
-  #coach .cprog{ font-size:9px; letter-spacing:.18em; color:var(--dim); margin-bottom:8px; text-transform:uppercase; font-weight:600; }
+  /* Hazel's card is the one thing on screen that is NOT dark UI chrome: a bright slab of
+     honey with dark text on it, so "the game is talking to you" never reads as another
+     panel. `--coach-bot` is set from JS to clear the real height of the bottom tray — it
+     used to fall back to a flat 96px on wide screens and sat directly on top of the very
+     brushes it was telling you to press. The short-landscape rule below still overrides
+     it to a top-anchored card, which is why this is a variable and not an inline style. */
+  #coach{ position:fixed; left:50%; bottom:var(--coach-bot, 96px); transform:translateX(-50%); z-index:var(--z-coach); max-width:392px; width:calc(100% - 32px);
+    padding:15px 17px; display:flex; gap:13px; align-items:flex-start; opacity:0; pointer-events:none;
+    transition:opacity .32s, transform .32s cubic-bezier(.2,1.4,.4,1);
+    background:linear-gradient(168deg,#ffe6a3 0%,#ffd070 46%,#f6b23c 100%);
+    border:none; border-radius:20px; color:#3a2205;
+    box-shadow:0 3px 0 rgba(160,96,12,.85), 0 14px 30px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.7);
+    -webkit-backdrop-filter:none; backdrop-filter:none; }
+  #coach.show{ opacity:1; pointer-events:auto; animation:coachPop .42s cubic-bezier(.2,1.5,.4,1) both; }
+  @keyframes coachPop{ from{ transform:translateX(-50%) translateY(10px) scale(.94); } to{ transform:translateX(-50%) translateY(0) scale(1); } }
+  #coach .ci{ font-size:27px; line-height:1; filter:drop-shadow(0 2px 3px rgba(120,70,10,.4)); animation:coachBob 2.6s ease-in-out infinite; }
+  @keyframes coachBob{ 0%,100%{ transform:translateY(0) rotate(-4deg); } 50%{ transform:translateY(-3px) rotate(4deg); } }
+  #coach .cb{ flex:1; min-width:0; }
+  #coach .ct{ font-size:clamp(15px, 13px + 0.4vw, 18px); line-height:1.45; color:#3a2205; font-weight:600; }
+  #coach .ct b{ color:#7a3d00; font-weight:800; } #coach .ct em{ color:#0a6d61; font-style:normal; font-weight:700; }
+  #coach .cgo{ margin-top:12px; display:flex; gap:12px; align-items:center; }
+  #coach .cbtn{ font-family:'Bricolage Grotesque'; font-weight:800; font-size:13.5px; padding:9px 20px; border-radius:11px; cursor:pointer; border:none;
+    color:#ffeec4; background:linear-gradient(180deg,#6b3f0a,#4a2a05); box-shadow:0 2px 0 rgba(0,0,0,.35); transition:transform .09s; }
+  #coach .cbtn:active{ transform:translateY(1px) scale(.97); }
+  #coach .cskip{ font-size:11px; color:#8a5a12; cursor:pointer; text-decoration:underline; font-weight:600; }
+  #coach .cprog{ font-size:9.5px; letter-spacing:.16em; color:#8a5a12; margin-bottom:6px; text-transform:uppercase; font-weight:800; }
+
+  /* ---------- discovery: interface that hasn't been earned yet doesn't exist ---------- */
+  /* display:none, not opacity — an undiscovered stat must not hold an empty slot open. */
+  .undisc{ display:none !important; }
+  .discPop{ animation:discPop .62s cubic-bezier(.2,1.5,.4,1) both; }
+  @keyframes discPop{ 0%{ opacity:0; transform:scale(.6) translateY(6px); }
+    60%{ opacity:1; transform:scale(1.07) translateY(0); } 100%{ opacity:1; transform:scale(1); } }
+  @media (prefers-reduced-motion:reduce){ .discPop{ animation:none; } }
 
   .preveal{ transition:opacity .5s, transform .5s; }
   .preveal.hidden{ opacity:0; transform:translateY(-6px); pointer-events:none; }
@@ -932,7 +964,7 @@
     #hud-bottom{ padding-bottom:max(12px, env(safe-area-inset-bottom)); padding-left:max(12px, env(safe-area-inset-left)); padding-right:max(12px, env(safe-area-inset-right)); }
     #storyTop{ padding-top:max(16px, calc(env(safe-area-inset-top) + 6px)); padding-right:max(18px, env(safe-area-inset-right)); }
     #storyNarr{ padding-bottom:max(40px, calc(env(safe-area-inset-bottom) + 26px)); }
-    #coach{ bottom:max(96px, calc(env(safe-area-inset-bottom) + 92px)); }
+    #coach{ bottom:max(var(--coach-bot, 96px), calc(env(safe-area-inset-bottom) + 92px)); }
   }
   /* phones */
   @media (max-width:620px){
@@ -1406,6 +1438,7 @@
           <svg class="ico icoPlay" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7.5 5.2v13.6a.8.8 0 0 0 1.2.7l11-6.8a.8.8 0 0 0 0-1.4l-11-6.8a.8.8 0 0 0-1.2.7z"/></svg>
           <svg class="ico icoPause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4.2" height="14" rx="1.4"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.4"/></svg>
           <span class="tState">paused</span>
+          <i class="tFill" id="playFill" aria-hidden="true"></i>
         </div>
         <div class="tb timeBtn fastBtn" id="fastToggle" tabindex="0" role="button" aria-pressed="false" aria-label="Fast-forward the days" title="Fast-forward the days">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.8 5.6v12.8a.7.7 0 0 0 1.1.6l8-6.4a.7.7 0 0 0 0-1.2l-8-6.4a.7.7 0 0 0-1.1.6z"/><path d="M12.6 5.6v12.8a.7.7 0 0 0 1.1.6l8-6.4a.7.7 0 0 0 0-1.2l-8-6.4a.7.7 0 0 0-1.1.6z"/></svg>
@@ -2571,6 +2604,7 @@
     function seedDaily(){ dailyMode=true; const rnd=mulberry32(dateSeedNum());
       const pool=WEATHERS.filter(x=>x.id!=='calm'&&!x.event); // a pure test of keeping — no scripted raids
       curSeason=pool[Math.floor(rnd()*pool.length)]||WEATHERS[0]; seasonEventDone=true; seasonEventFired=null; lastSeasonId=curSeason.id;
+      discoverAll();   // the daily is not a first run — keep the whole interface
       setPace('medium'); tinyComb(); honeyU=8*HC; pollenU=4*HC; nectarU=0; P=15; day=0; year=1; peakPop=15; bornTotal=0; swarmP=0; mite=0; grades=[]; forage=0.6; activePatch=null; resetColonyIdentity();
       queenAge=1; hornet=null; hornetCD=18+rnd()*22; parts.length=0; shake=0; rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=makeGoals(); lastSI=0; scoutShown=false; seenTips={}; lessonSeen={}; nudged={}; tipQ.length=0; tipCool=0; starveT=0; bankAtFrost=0; raidLoss=0;
       brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=false; yearHist.length=0; histT=2.7; popMilo={};
@@ -3013,7 +3047,13 @@
       rs.setProperty('--feed-top',(topH+6)+'px'); rs.setProperty('--feed-bot',(botH+8)+'px');
       // on phones the bottom HUD is tall — keep the coach clear of the controls it points at
       const compact = W<=760 || (W<=1080 && Hh>=W);   // matches CSS: square counts as portrait
-      const co=$('coach'); if(co) co.style.bottom = compact ? (botH+2)+'px' : '';
+      // Hazel must clear the bottom tray on EVERY size, not just phones. On wide screens
+      // this used to reset to the stylesheet's flat 96px while the tray (wax bank + mixer
+      // + brushes + time) stood far taller, so her card covered the brushes it was asking
+      // you to tap. Set as a custom property so the short-landscape rule can still move
+      // her to the top of the screen instead.
+      document.documentElement.style.setProperty('--coach-bot',(botH+10)+'px');
+      const co=$('coach'); if(co) co.style.bottom='';
       const availW=W*0.94, availH=Math.max(120,Hh-topH-botH);
       const needW=(COLS+0.5)*SQ3, needH=(ROWS-1)*1.5+2;
       mSize=Math.max(6, Math.min(availW/needW, availH/needH));
@@ -3291,8 +3331,16 @@
       else { hoveredCell=null; hideInspect(); } });
     function hideInspect(){ $('inspect').classList.remove('show'); }
     const STAGE_NAME={egg:'Egg',larva:'Larva',pupa:'Capped brood'};
-    function inspectHTML(cell){
+    // `terse` is the hover tooltip: the name of the thing and what a tap would do, and
+    // nothing else. The same function also fills the tap-to-inspect sheet, which is a
+    // deliberate request for depth and still gets all four lines. A hover that follows your
+    // cursor around the comb should never be four lines of prose — "Out of reach / wax can
+    // only grow from wax / Switch to Expand to build here" was fifteen words to say "no".
+    function inspectHTML(cell, terse){
       const degC=Math.round(cell.heat*33+2);
+      const out=(t,s,a,cls,d)=> terse
+        ? '<div class="it">'+t+'</div>'+(a?'<div class="ia '+(cls||'')+'">'+a+'</div>':'')
+        : '<div class="it">'+t+'</div><div class="is">'+s+'</div><div class="ia '+(cls||'')+'">'+a+'</div>'+(d?'<div class="id2">'+d+'</div>':'');
       let t,s,a='',cls='',d='';
       if(!cell.built){
         const adj=neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built);
@@ -3308,8 +3356,8 @@
         if(brush==='expand'){ if(cell.flagExpand){ a='Click to unmark'; cls='no'; }
           else if(adj){ a='→ Draw wax here'; const bk=buildBank(); d=bk.affordable>0?('joins the build queue · pantry funds '+(bk.affordable>12?'plenty':bk.affordable)+' more'):'stores lean — bees will draw it once honey comes in'; }
           else { a='Too far from the comb'; cls='bad'; } }
-        else { a='Switch to Expand to build here'; cls='no'; }
-        return '<div class="it">'+t+'</div><div class="is">'+s+'</div><div class="ia '+cls+'">'+a+'</div>'+(d?'<div class="id2">'+d+'</div>':'');
+        else { a='Pick Expand to build'; cls='no'; }
+        return out(t,s,a,cls,d);
       }
       if(cell.brood){ const st=cell.brood.stage, dur=st==='egg'?EGG_D:st==='larva'?LAR_D:PUP_D;
         t=STAGE_NAME[st]; s='day '+(Math.floor(cell.brood.t)+1)+' of '+dur+' · '+degC+'\u00b0C'; }
@@ -3323,7 +3371,7 @@
         else { a='→ Storage'; d='store '+honeyCells()+' \u2192 '+(honeyCells()+1)+' cells'; } }
       else { a='Already built'; cls='no'; }
       if(cell.brood && degC<28 && brush==='brood') d='cold for brood \u2014 a tighter nest holds heat';
-      return '<div class="it">'+t+'</div><div class="is">'+s+'</div><div class="ia '+cls+'">'+a+'</div>'+(d?'<div class="id2">'+d+'</div>':'');
+      return out(t,s,a,cls,d);
     }
     let lastInspectedCell=null, lastInspectAt=0;
     function showInspect(cx,cy){ const el=$('inspect');
@@ -3338,7 +3386,7 @@
       // watching a value like wax-fill % or temperature tick up still reads as live.
       const now=performance.now();
       if(hoveredCell!==lastInspectedCell || painting || now-lastInspectAt>150){
-        lastInspectedCell=hoveredCell; lastInspectAt=now; el.innerHTML=inspectHTML(hoveredCell); }
+        lastInspectedCell=hoveredCell; lastInspectAt=now; el.innerHTML=inspectHTML(hoveredCell, true); }
       el.classList.add('show');
       const w=el.offsetWidth||200, h=el.offsetHeight||70;
       el.style.left=Math.max(8, Math.min(W-w-8, cx+18))+'px';
@@ -4168,6 +4216,19 @@
           ctx.strokeStyle=col+(0.13+0.05*bre).toFixed(3)+')'; ctx.lineWidth=Math.max(3,es*0.30); ctx.stroke();
           ctx.strokeStyle=col+(0.78+0.14*bre).toFixed(3)+')'; ctx.lineWidth=Math.max(1.4,es*0.075); ctx.stroke(); }
         ctx.restore(); }
+      // Daylight crossing the comb. The band's position IS the fraction of the current day,
+      // so "is time actually moving?" is answerable without reading a number: it creeps while
+      // running, tears along on fast, and sits perfectly still when paused. Built once in
+      // local space and translated, like every other cached gradient here.
+      if(!heatView && started && !over){
+        const frac=day-Math.floor(day), bandX=-W*0.3+frac*(W*1.6), bw=W*0.32;
+        const dgr=gradFor('daylight'+(winter?'W':'S')+Math.round(W),()=>{
+          const g2=ctx.createLinearGradient(-bw,0,bw,0);
+          g2.addColorStop(0,'rgba(255,214,140,0)');
+          g2.addColorStop(0.5,winter?'rgba(196,222,255,0.10)':'rgba(255,216,146,0.13)');
+          g2.addColorStop(1,'rgba(255,214,140,0)'); return g2; });
+        ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.translate(bandX,0);
+        ctx.fillStyle=dgr; ctx.fillRect(-bw,0,bw*2,Hh); ctx.restore(); }
       // freshly-painted cells flash bright and settle — the wax "takes" under your hand
       if(!heatView) for(const cell of cells){ if(!cell.pf||cell.pf<=0) continue;
         const {x,y}=cellCenter(cell.c,cell.r), pf=cell.pf, glow=PAINTGLOW[cell.pfk]||'255,245,216';
@@ -4681,6 +4742,7 @@
       { const host=$('ovTrophies'); const old=host.parentNode.querySelector('.beenote'); if(old) old.remove(); host.insertAdjacentHTML('afterend', beeNote()); }
       saveGame(); openOverlay('over'); }
     $('ovRestart').addEventListener('click',()=>{ // renewal: the apiary persists; a wild swarm takes the comb
+      discoverAll();   // a keeper who has already lost a colony keeps their interface
       year++; day=0; P=12; honeyU=6*HC; pollenU=3*HC; nectarU=0; peakPop=12; swarmP=0; mite=0; activePatch=null; resetColonyIdentity();
       queenAge=1; hornet=null; hornetCD=18+Math.random()*22; scoutShown=false; raidLoss=0; starveT=0;
       jarsThisYear=0; fedWinter=false; bankAtFrost=0; yearHist.length=0; histT=2.7; goals=makeGoals(); lastSI=0; said={};
@@ -4704,7 +4766,7 @@
       const bt=cells.map(c=>c.brood?Math.round(c.brood.t*10):0);
       const bx=cells.map(c=>(!c.built&&c.flagExpand&&c.bp>0)?Math.round(c.bp*100):0);
       return {v:SAVE_V,t:Date.now(),day,year,P,honeyU,pollenU,nectarU,peakPop,bornTotal,swarmP,mite:Math.round(mite*1000)/1000,forage,activePatch,grades,queenAge,cb,bt,bx,
-        rj,jars,jy:jarsThisYear,ql:queenLine,rs:roster,se:curSeason?curSeason.id:'calm',sq:seasonEventDone?1:0,sx:seasonEventFired,mx:mix.map(v=>Math.round(v)),ow:Object.keys(owned),fw:fedWinter?1:0,bf:Math.round(bankAtFrost),tp:Object.keys(seenTips),ls:Object.keys(lessonSeen),gd:goals?goals.map(g=>g.done?1:0):[0,0,0,0]}; }
+        rj,jars,jy:jarsThisYear,ql:queenLine,rs:roster,se:curSeason?curSeason.id:'calm',sq:seasonEventDone?1:0,sx:seasonEventFired,mx:mix.map(v=>Math.round(v)),ow:Object.keys(owned),fw:fedWinter?1:0,bf:Math.round(bankAtFrost),tp:Object.keys(seenTips),ls:Object.keys(lessonSeen),gd:goals?goals.map(g=>g.done?1:0):[0,0,0,0],dc:Object.keys(discovered)}; }
     function saveGame(){ if(dailyMode||NET.on) return true; return lsSet(SAVE_KEY,JSON.stringify(serialize())); }   // a hive-link party never touches the solo save
     function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
     // a save is only safe to hand to deserialize() if it's the shape that code below
@@ -4720,6 +4782,9 @@
       rj=s.rj||0; jars=s.jars||0; jarsThisYear=s.jy||0; queenLine=(s.ql&&QUEENS.some(q=>q.id===s.ql))?s.ql:'meadow'; roster=Array.isArray(s.rs)?s.rs.filter(b=>b&&b.nm):[]; mix=(s.mx&&s.mx.length===FLOWERS.length)?s.mx.slice():FLOWERS.map(()=>0); owned={}; (s.ow||[]).forEach(k=>owned[k]=true); fedWinter=!!s.fw; bankAtFrost=s.bf||0; seenTips={}; (s.tp||[]).forEach(k=>seenTips[k]=1); lessonSeen={}; (s.ls||[]).forEach(k=>lessonSeen[k]=1); tipQ.length=0; tipCool=0;
       curSeason=WEATHERS.find(x=>x.id===s.se)||WEATHERS[0]; lastSeasonId=curSeason.id; seasonEventDone=!!s.sq; seasonEventFired=s.sx||null;
       goals=makeGoals(); (s.gd||[]).forEach((d,i)=>{ if(goals[i]) goals[i].done=!!d; });
+      // no record of what was discovered means a save written before the discovery table
+      // existed -- a returning keeper never has their interface taken back off them
+      if(Array.isArray(s.dc)){ discovered={}; s.dc.forEach(k=>discovered[k]=1); applyDiscovery(); } else discoverAll();
       if(day>=270) armMidwinter(true);
       lastSI=seasonIdx(day);
       // deserialize()'s one caller already runs saves through isValidSave() first, but
@@ -5099,8 +5164,65 @@
     window.__hmDance=()=>openDanceCall();   // dev/test handle, like __hm
 
     // ===================== founding coach (progressive onboarding) =====================
+    // ===================== discovery: the interface arrives as the world earns it =====================
+    // The old behaviour dumped five panels on screen the moment the coach ended -- a wall of
+    // readouts for quantities that were still zero. Stardew and Minecraft both teach the
+    // opposite rule: nothing is on screen before it means anything, and nothing is explained
+    // before it exists. So each row below is one piece of interface, the condition in the
+    // world that makes it true, and the single line that marks the moment it shows up.
+    //
+    // Add a row; never add a branch. `id` is the element, `when()` is asked ~2/sec, and `tx`
+    // (optional) goes through the same paced feed as every other message, so discoveries
+    // arrive one at a time and never pile up. Rows are checked in order and at most one
+    // fires per pump, so a burst of simultaneous truths still reads as a sequence.
+    const DISCOVER=[
+      // Conditions are things the keeper CAUSED or WATCHED HAPPEN, never the state a colony
+      // is founded with. A founding hive already holds honey, pollen, bees and capped brood,
+      // so "honeyU>0" is true before the first tap and every readout would arrive at once --
+      // which is the pile-on this table exists to prevent. Each also has a generous day-based
+      // fallback so nothing can stay hidden forever if a keeper plays in an unexpected order.
+      {id:'stPop',     when:()=>bornTotal>0,                          ic:'🐝', tx:'<b>Bees.</b> Every other number here follows from this one.'},
+      {id:'stBrood',   when:()=>brushedBrood>0||day>=10,              ic:'🍼', tx:'<b>Brood</b> — what the queen has laid. Twenty days to a flying bee.'},
+      {id:'tabMeadow', when:()=>nectarU>0,                            ic:'☀',  tx:'They’re bringing something home. <b>Meadow</b> shows you where from.'},
+      {id:'stHoney',   when:()=>paintedHoney>0||day>=16,              ic:'🍯', tx:'<b>Honey.</b> Not treasure — it’s what they eat all winter.'},
+      {id:'stPollen',  when:()=>nectarU>0||day>=20,                   ic:'🌸', tx:'<b>Pollen</b> is protein. No pollen, no babies.'},
+      {id:'waxBank',   when:()=>cells.some(c=>c.flagExpand),          ic:'🔨', tx:'<b>Wax bank</b> — what the pantry can afford to build.'},
+      {id:'advisor',   when:()=>day>=8,                               ic:'👵', tx:'Hazel is watching. Tap her any time to read back.'},
+      {id:'forageGrp', when:()=>(nectarU>0&&day>=12)||day>=24,        ic:'🌼', tx:'You can’t command bees — but you can aim them.'},
+      {id:'goal',      when:()=>day>=18&&!!(goals&&goals.length),     ic:'🧭', tx:'Something to aim at this season.'},
+      {id:'reportBtn', when:()=>day>=34,                              ic:'📊', tx:'The <b>report</b>, if you ever want the numbers behind all this.'},
+      {id:'wr',        when:()=>day>=HARV0*0.55,                      ic:'❄️', tx:'<b>Winter pantry.</b> This is the number the whole year is really about.'},
+      {id:'stKeeper',  when:()=>rj>0||jars>0,                         ic:'✧',  tx:'<b>Keeper</b> — what you’ve earned across every colony.'},
+    ];
+    // containers that should stay out of the way until at least one of their children exists
+    const DISC_BOX={res:['stHoney','stPollen','stPop','stBrood','stKeeper']};
+    let discovered={};
+    function applyDiscovery(){
+      for(const d of DISCOVER){ const el=$(d.id); if(el) el.classList.toggle('undisc', !discovered[d.id]); }
+      for(const box in DISC_BOX){ const el=$(box); if(!el) continue;
+        el.classList.toggle('undisc', !DISC_BOX[box].some(k=>discovered[k])); }
+    }
+    // a returning keeper never has their interface taken away: a save with no record of
+    // what was discovered (or one written before this existed) counts as having found it all
+    function discoverAll(){ discovered={}; for(const d of DISCOVER) discovered[d.id]=1; applyDiscovery(); }
+    function discoverReset(){ discovered={}; applyDiscovery(); }
+    let discT=0;
+    function pumpDiscover(dt){ if(!started||over||storyMode||onboard) return;
+      discT+=dt; if(discT<2.4) return; discT=0;   // a beat between arrivals, so two never read as one
+      for(const d of DISCOVER){ if(discovered[d.id]) continue;
+        let ok=false; try{ ok=!!d.when(); }catch(e){ ok=false; }
+        if(!ok) continue;
+        discovered[d.id]=1; applyDiscovery();
+        const el=$(d.id); if(el){ el.classList.remove('discPop'); void el.offsetWidth; el.classList.add('discPop'); }
+        if(d.tx) logMsg(d.ic||'✦', d.tx);
+        try{ chime(523,784); }catch(e){}
+        return;                       // one discovery per pump — they arrive as a sequence
+      } }
+    // PREVEAL/setReveal survive as the story-mode curtain only: the founding coach still
+    // wants a bare screen while it runs, and the discovery table takes over afterwards.
     const PREVEAL=['res','clockWrap','reportBtn','advisor','forageGrp'];
-    function setReveal(on){ PREVEAL.forEach(id=>{ const el=$(id); if(el) el.classList.toggle('hidden', on); }); }
+    function setReveal(on){ PREVEAL.forEach(id=>{ const el=$(id); if(el) el.classList.toggle('hidden', on); });
+      if(!on) applyDiscovery(); }
     function spot(id,on){ const el=$(id); if(el) el.classList.toggle('spotlight',on); }
     function clearSpots(){ ['forageGrp','brushGrp','timeGrp','tabMeadow','reportBtn'].forEach(id=>spot(id,false)); document.querySelectorAll('[data-brush],.timeBtn,[data-f]').forEach(e=>e.classList.remove('tapHere')); }
     // `bridge` is Hazel's congratulation line after a step's unlock fires (steps
@@ -5111,6 +5233,19 @@
     // (coachTarget()) -- folded on here so reordering or inserting a step can't
     // silently misalign the text or the hint.
     const COACH=[
+      // Three beats of "what is this, and why do I care" before a single instruction. The
+      // tutorial used to open cold on "Pick up Brood" — a command with no world around it.
+      // Deliberately one short line each: framing, not a lecture. No `until`, so each is a
+      // tap-to-continue beat, and no step number — being told what a hive is isn't a task.
+      { ic:'🐝', pause:true, prog:'your hive',
+        tx:'This is your hive. <b>Forty thousand bees</b>, thinking as one.',
+        kid:'This is your beehive! Thousands of bees live here together.' },
+      { ic:'❄️', prog:'the whole game',
+        tx:'They have one year to get ready for <span class="kw">winter</span>.',
+        kid:'They need to get ready before the cold comes!' },
+      { ic:'🖌️', prog:'your job',
+        tx:'You decide what each room becomes. That’s the whole job.',
+        kid:'You choose what each little room is for. That’s your job!' },
       { ic:'🖌️', spot:'brushGrp', brushHint:'brood', pause:true, prog:'1 \u00b7 the brushes',
         tx:'Pick up <span class="kb">Brood</span>.', kid:'Tap the <span class="kb">🍼 baby-bee</span> brush.',
         until:()=>brush==='brood' },
@@ -6251,7 +6386,7 @@
       document.body.classList.add('netc');
       closeOverlay('mpJoin'); closeOverlay('mpEnd'); $('intro').classList.add('hide');
       dailyMode=false; onboard=false; queenLine='meadow'; setPace('easy'); DAY_LEN=PARTY_DAY;
-      tinyComb(); resetColonyIdentity(); goals=makeGoals(); netLastSI=-1; clearUndo();
+      tinyComb(); resetColonyIdentity(); goals=makeGoals(); netLastSI=-1; clearUndo(); discoverAll();
       brush='brood'; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x.dataset.brush==='brood')); setReveal(false);
       netRecomputeSectors(); netApplySnap(m.s);
       over=false; beginCommon(); netLastSI=seasonIdx(day);
@@ -6280,7 +6415,7 @@
       closeOverlay('mpHost'); closeOverlay('mpEnd'); $('intro').classList.add('hide');
       dailyMode=false; setPace('easy'); DAY_LEN=PARTY_DAY; tinyComb();
       for(const cell of cells){ if(!cell.built&&cellDist(cell.c,cell.r)<2.9){ cell.built=true; cell.zone='none'; } }   // a wider founding comb — every wedge gets cells
-      seedStarterZones();
+      seedStarterZones(); discoverAll();
       honeyU=10*HC; pollenU=5*HC; nectarU=0; P=18; day=0; year=1; peakPop=18; bornTotal=0; swarmP=0; mite=0; grades=[]; forage=0.6; activePatch=null; resetColonyIdentity(); drawSeason();
       queenAge=1; hornet=null; hornetCD=25+Math.random()*20; parts.length=0; shake=0;
       rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=makeGoals(); lastSI=0; scoutShown=true; seenTips={}; lessonSeen={}; nudged={}; tipQ.length=0; tipCool=0; starveT=0; bankAtFrost=0; raidLoss=0;
@@ -6869,6 +7004,7 @@
       brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=true; yearHist.length=0; histT=2.7; popMilo={};
       brush=null; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.remove('on')); setReveal(true);
       clearFeed();          // Hazel opens on a clean screen — no leftovers from the crowning
+      discoverReset();      // a new colony earns its interface back from scratch
       beginCommon();
       setTimeout(()=>{ if(onboard) showCoach(); }, 1800); saveGame(); }
     function renderQueens(){ const row=$('queenRow');
@@ -6997,7 +7133,11 @@
       if(nudgeCool>0) nudgeCool-=dt;
       if(paintSndCool>0) paintSndCool-=dt;
       if(tipCool>0){ tipCool-=dt; if(tipCool<=0 && tipQ.length){ toast(tipQ.shift()); tipCool=TIP_GAP; } }
-      pumpFeed(dt);
+      pumpFeed(dt); pumpDiscover(dt);
+      // the day, drawn on the button you'd press to stop it
+      { const pf=$('playFill');
+        if(pf){ const w=(started&&!over)?((day-Math.floor(day))*100).toFixed(1)+'%':'0%';
+          if(pf._w!==w){ pf._w=w; pf.style.width=w; } } }
       if(hzHold>0) hzHold-=dt;
       idleT+=dt; if(idleT>4){ idleT=0; watchIdle(); }
       drawHazel(dt);
