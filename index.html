@@ -2497,7 +2497,10 @@
     // wild swarm taking over after the old colony dies (ovRestart). NOT called on a
     // year transition (yeNext): that's the same colony continuing, so its roster,
     // corpse-fall animation, and nectar-mix tracking are meant to carry over.
-    function resetColonyIdentity(){ roster=[]; corpses=[]; mix=FLOWERS.map(()=>0); coldSnap=0; }
+    // queenCall/shelfCall hold cells of the *previous* comb; they're transient presentation
+    // state (not serialized — play rebuilds them), but they must never survive a colony.
+    function resetColonyIdentity(){ roster=[]; corpses=[]; mix=FLOWERS.map(()=>0); coldSnap=0;
+      queenCall.length=0; shelfCall.length=0; }
     let rj=0, jars=0, jarsThisYear=0, fedWinter=false, goals=null, lastSI=0, scoutShown=false, raidLoss=0, starveT=0, bankAtFrost=0, seenTips={};
     const queenVigour=()=>Math.max(0.7, 1-(queenAge-1)*0.12);
 
@@ -3030,14 +3033,17 @@
       // each pane's height so the outer, mostly-empty rings tuck gently behind the frosted
       // panels while every working cell stays clear, then centre on the visible band.
       const small=Math.min(W,Hh)<640;
-      const b=combBounds(), pad=small?1.35:1.05;
+      // the comb is the hero, and a founding colony is only ~16 cells — with the frame of
+      // foundation now drawn behind it there's no void left to pad against, so the early
+      // comb is allowed to sit much larger and closer to the eye.
+      const b=combBounds(), pad=small?0.85:0.8;
       const needW=((b.c1-b.c0)+1.5+pad*2)*SQ3, needH=(b.r1-b.r0)*1.5+2+pad*2;
       // reclaim less on phones (their bottom tray is genuinely tall and opaque), more on
       // roomy landscape/desktop where the panes float and there's slack to give the comb.
       const reclaim=small?0.22:0.46;
       const availW=Math.min(W, STAGE_W)*0.98;
       const availH=Math.max(120, Hh - topH*(1-reclaim) - botH*(1-reclaim));
-      const s=Math.max(7, Math.min(small?52:104, Math.min(availW/needW, availH/needH)));
+      const s=Math.max(7, Math.min(small?68:118, Math.min(availW/needW, availH/needH)));
       const midC=(b.c0+b.c1)/2, midR=(b.r0+b.r1)/2;
       // centre vertically on the band the panes actually leave visible (not the reclaimed one)
       const visTop=topH*(1-reclaim*0.5), visH=Math.max(120, Hh - visTop - botH*(1-reclaim*0.5));
@@ -3158,11 +3164,19 @@
       if(!RM) puff(p.x,p.y,PAINTCOL[kind]||'#ffd66b', kind==='erase'?4:7, 0.85);
       netPaintChanged(cell);   // hive link: a joiner reports the cell's new state to the Queen's device
       if(paintSndCool<=0){ paintDab(kind); paintSndCool=0.05; } }
+    // Cells the keeper has just designated, newest first. The colony visibly answers the
+    // brush by going to these before anywhere else — the queen to a fresh cradle, the next
+    // returning forager to a fresh shelf. This is purely *who goes where*: no rate, yield or
+    // capacity is touched by it, so the economy is unchanged.
+    let queenCall=[], shelfCall=[];
+    function callTo(list, cell){ if(!cell) return; const i=list.indexOf(cell); if(i>=0) list.splice(i,1);
+      list.unshift(cell); if(list.length>5) list.pop(); }
     function applyBrush(cell){ if(!cell)return; if(!netPaintOk(cell))return; let changed=false, kind=brush;
       if(brush==='expand'){ if(cell.built)return; if(neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built)){ const was=cell.flagExpand; if(!cell.flagExpand&&!paintErase){flaggedExpand++; armLesson('expand',flaggedExpand);} cell.flagExpand=!paintErase; if(!cell.flagExpand)cell.bp=0; changed=(was!==cell.flagExpand); kind=paintErase?'erase':'expand'; checkCoachProgress(); watchHands(); if(changed) paintFx(cell,kind); } return; }
       if(!cell.built)return;
       if(paintErase){ if(cell.zone==='brood'&&cell.brood)return; changed=(cell.zone!=='none'); cell.zone='none'; kind='erase'; }
-      else { if(brush==='brood'){ if(cell.zone!=='brood'){brushedBrood++; armLesson('brood',brushedBrood); changed=true;} cell.zone='brood'; } else if(brush==='honey'){ if(cell.zone!=='honey'){paintedHoney++; armLesson('honey',paintedHoney); changed=true;} cell.zone='honey'; if(cell.brood) cell.brood=null; } checkCoachProgress(); watchHands(); }
+      else { if(brush==='brood'){ if(cell.zone!=='brood'){brushedBrood++; armLesson('brood',brushedBrood); changed=true; callTo(queenCall,cell);} cell.zone='brood'; }
+        else if(brush==='honey'){ if(cell.zone!=='honey'){paintedHoney++; armLesson('honey',paintedHoney); changed=true; callTo(shelfCall,cell);} cell.zone='honey'; if(cell.brood) cell.brood=null; } checkCoachProgress(); watchHands(); }
       if(changed) paintFx(cell,kind);
     }
     // ---- undo: take back the last comb change (over-expansion, a stray paint) ----
@@ -3313,7 +3327,9 @@
     }
     let lastInspectedCell=null, lastInspectAt=0;
     function showInspect(cx,cy){ const el=$('inspect');
-      if(!hoveredCell||!started||over||storyMode){ hideInspect(); lastInspectedCell=null; return; }
+      // while Hazel is teaching she owns the screen — a hover tooltip that lands on top of
+      // her card is exactly the "two things talking at once" a first-timer reads as noise
+      if(!hoveredCell||!started||over||storyMode||(onboard&&$('coach').classList.contains('show'))){ hideInspect(); lastInspectedCell=null; return; }
       // rebuilding innerHTML (and the layout it forces) on every single pointermove is
       // the busiest interaction there is (drag-painting can fire dozens/sec) for content
       // that's almost always identical sub-pixel jitter within the same cell. Rebuild on
@@ -3553,16 +3569,40 @@
     // the living log: each message rises on the left edge, lingers long enough to read,
     // then ages away — the full history is still kept in the advisor chat (MSGLOG).
     const FEED_WARN=new Set(['⚔','🐻','🕯️','⚠','🥀','🚧','❄','🧊']);
-    function pushFeed(ic, html){ const feed=$('msgFeed'); if(!feed || storyMode) return;
+    // One thing speaks at a time. Messages used to be appended the instant they were
+    // logged, up to six at once, so founding a colony greeted a brand-new keeper with
+    // three simultaneous cards before they had touched anything. Now they queue and are
+    // released on a cadence, and while Hazel is teaching she is the only voice on screen —
+    // everything else still goes to MSGLOG (the advisor log keeps the full history), it
+    // just doesn't shout over her.
+    const FEED_KEEP=3;                                   // most cards on screen at once
+    let feedQ=[], feedWait=0;
+    function clearFeed(){ feedQ.length=0; feedWait=0; const feed=$('msgFeed'); if(!feed) return;
+      while(feed.firstChild){ const c=feed.firstChild; if(c._ft) clearTimeout(c._ft); feed.removeChild(c); } }
+    function pushFeed(ic, html){ if(!$('msgFeed') || storyMode) return;
+      // While the founding coach is running, her card is the only surface. Her bridges are
+      // already typed into it, and the unlock already has its own chip, so feeding them here
+      // too printed every tutorial line twice — in two places that overlap on a phone.
+      // MSGLOG still records everything; the advisor log has the full history either way.
+      if(onboard) return;
+      feedQ.push({ic, html});
+      if(feedQ.length>8) feedQ.shift();                  // a backlog nobody will read is noise
+      if(feedWait<=0) releaseFeed(); }
+    function releaseFeed(){ const feed=$('msgFeed'); if(!feed || !feedQ.length) return;
+      if(feed.children.length>=FEED_KEEP) return;        // wait for room rather than stacking
+      const {ic, html}=feedQ.shift();
       const card=document.createElement('div');
       card.className='lfcard'+(FEED_WARN.has((''+ic).trim())?' warn':'');
       card.innerHTML='<span class="lfic">'+ic+'</span><span class="lftx">'+html+'</span>';
       feed.appendChild(card);
-      while(feed.children.length>6){ const old=feed.firstChild; if(old._ft) clearTimeout(old._ft); feed.removeChild(old); }
       const txt=(''+html).replace(/<[^>]+>/g,'');
       const life=Math.min(15000, 6800 + txt.length*42);   // linger scales with how much there is to read
       card._ft=setTimeout(()=>{ card.classList.add('age');
-        setTimeout(()=>{ if(card.parentNode) card.parentNode.removeChild(card); }, 900); }, life); }
+        setTimeout(()=>{ if(card.parentNode) card.parentNode.removeChild(card); }, 900); }, life);
+      // long lines get a longer beat after them, so two messages never arrive as one wall
+      feedWait=Math.min(3.4, 1.5 + txt.length*0.012); }
+    function pumpFeed(dt){ if(feedWait>0){ feedWait-=dt; if(feedWait>0) return; }
+      if(feedQ.length) releaseFeed(); }
     function renderChat(force){ const r=$('chatRows'), el=$('chatlog');
       const atBottom = force || (el.scrollHeight-el.clientHeight-el.scrollTop < 24);
       r.innerHTML = MSGLOG.length ? MSGLOG.map((m,i)=>'<div class="crow"><span class="ci2">'+m.ic+'</span><div class="cb2"><div class="cwhen">Y'+m.year+' · '+seasonName(m.day)+' · d'+(m.day+1)+'</div><div class="ctx2">'+m.html+'</div></div><span class="cdel" data-i="'+i+'" title="Dismiss">✕</span></div>').join('')
@@ -3752,7 +3792,15 @@
       const layRate=Math.min(LAYMAX*lv*M.lay(),nurses*0.8,space)*pollenF*(P<CAP?1:0.15)*queenVigour();
       if(layRate>0&&space>0){ let n=Math.floor(layRate*dd)+(Math.random()<((layRate*dd)%1)?1:0); n=Math.min(n,space,5);
         const empties=cells.filter(c=>c.built&&c.zone==='brood'&&!c.brood);
-        for(let i=0;i<n&&empties.length;i++){ const k=(Math.random()*empties.length)|0; empties[k].brood={stage:'egg',t:0}; empties.splice(k,1); } }
+        // She lays where she is standing. This picks *which* cradle takes the egg, never how
+        // many are laid (`n` above is untouched), so the economy is exactly as balanced as
+        // before -- it just happens somewhere the eye was already looking. Offline catch-up
+        // keeps the old random scatter: the queen isn't walking anywhere during it.
+        for(let i=0;i<n&&empties.length;i++){ let k=(Math.random()*empties.length)|0;
+          if(!offline){ let bd=Infinity;
+            for(let j=0;j<empties.length;j++){ const ep=cellCenter(empties[j].c,empties[j].r);
+              const ed=(ep.x-queen.x)*(ep.x-queen.x)+(ep.y-queen.y)*(ep.y-queen.y); if(ed<bd){ bd=ed; k=j; } } }
+          empties[k].brood={stage:'egg',t:0}; empties.splice(k,1); } }
       honeyU -= P*C_BEE*coldMult(T)*M.eat()*dd;
       if(offline||onboard){ if(honeyU<2*HC)honeyU=2*HC; starveT=0; }
       else if(honeyU<=0){ honeyU=0; starveT+=dd; if(starveT>2.5 && !dailyMode) return gameOver('starve'); }
@@ -3811,11 +3859,16 @@
       // build/nurse bees without a target re-pick every frame they lack one — up to
       // several dozen at once — so filter the comb for candidates once per call here
       // instead of once per bee (each was a fresh 480-cell scan via randomFlagged/randomLarva).
-      let flaggedPool=null, larvaPool=null;
+      let flaggedPool=null, larvaPool=null, shelfPool=null;
       const pickFlagged=()=>{ if(flaggedPool===null) flaggedPool=cells.filter(c=>!c.built&&c.flagExpand);
         return flaggedPool.length?flaggedPool[(Math.random()*flaggedPool.length)|0]:null; };
       const pickLarva=()=>{ if(larvaPool===null) larvaPool=cells.filter(c=>c.brood&&c.brood.stage==='larva');
         return larvaPool.length?larvaPool[(Math.random()*larvaPool.length)|0]:null; };
+      // a shelf the keeper just painted takes the next delivery, so a new pantry cell is
+      // visibly *used* within seconds of being drawn rather than some time next week
+      const pickShelf=()=>{ for(const c of shelfCall) if(c.built&&c.zone==='honey') return c;
+        if(shelfPool===null) shelfPool=cells.filter(c=>c.built&&c.zone==='honey');
+        return shelfPool.length?shelfPool[(Math.random()*shelfPool.length)|0]:null; };
       // court & duty rosters, refreshed every few seconds
       dancerRef=null; for(const b of bees){ if(b.state==='waggle'){ dancerRef=b; break; } }
       retT+=dt; if(retT>2.5){ retT=0;
@@ -3855,7 +3908,10 @@
             b.carry = hot&&Math.random()<0.22 ? 'water' : (Math.random()<forage?'nectar':'pollen');
             if(b.carry==='water') tip('water','Hazel: See the <em>silver drops</em>? On hot days some foragers haul <b>water</b> — spread thin and fanned, it cools the nest. A colony is its own air-conditioner.');
             b.state='return'; } }
-          else { if(move(b,hiveCx+(Math.random()-0.5)*size*5,hiveCy+(Math.random()-0.5)*size*4,2.4)){ if(dancing&&Math.random()<0.18){ b.state='waggle'; b.danceT=0; } else b.state='idle'; b.carry=null; } } }
+          else { // home with a full crop — she carries it to an actual shelf and unloads there
+            if(!b.un || !(b.un.built && b.un.zone==='honey')) b.un=pickShelf();
+            const up = b.un ? cellCenter(b.un.c,b.un.r) : {x:hiveCx+(Math.random()-0.5)*size*5, y:hiveCy+(Math.random()-0.5)*size*4};
+            if(move(b,up.x,up.y,2.4)){ b.un=null; if(dancing&&Math.random()<0.18){ b.state='waggle'; b.danceT=0; } else b.state='idle'; b.carry=null; } } }
         else if(b.role==='build'){ const site=b.tcell;
           if(site&&!site.built&&site.flagExpand){ const p=cellCenter(site.c,site.r); move(b,p.x,p.y,1.4); } else { b.tcell=pickFlagged(); if(!b.tcell) move(b,hiveCx+(Math.random()-0.5)*size*8,hiveCy+(Math.random()-0.5)*size*6,0.7); } }
         else if(b.role==='nurse'){ if(!b.lc||!b.lc.brood) b.lc=pickLarva();
@@ -3863,7 +3919,14 @@
         else { if(hornet&&hornet.state==='raid'){ move(b,hornet.x+(Math.random()-0.5)*size*2.4,hornet.y+(Math.random()-0.5)*size*2.4,1.8); } else move(b,hiveCx+(Math.random()-0.5)*size*6,hiveCy+(Math.random()-0.5)*size*5,0.6); }
       }
       queen.wob+=dt;
-      if(Math.random()<dt*1.2){ const bc=randomWhere(c=>c.built&&c.zone==='brood'); if(bc){const p=cellCenter(bc.c,bc.r);queen.tx=p.x;queen.ty=p.y;} }
+      // The queen answers the brush. A cradle you just painted is the next one she walks to,
+      // and (below, in the lay step) she lays in whatever empty cradle she is standing on —
+      // so painting a nursery cell and watching an egg appear in *that* cell is one
+      // continuous, legible act rather than a statistic that shows up somewhere later.
+      while(queenCall.length && !(queenCall[0].built && queenCall[0].zone==='brood')) queenCall.shift();
+      if(queenCall.length){ const qp=cellCenter(queenCall[0].c,queenCall[0].r); queen.tx=qp.x; queen.ty=qp.y;
+        if(Math.hypot(queen.x-qp.x,queen.y-qp.y)<size*0.55) queenCall.shift(); }
+      else if(Math.random()<dt*1.2){ const bc=randomWhere(c=>c.built&&c.zone==='brood'); if(bc){const p=cellCenter(bc.c,bc.r);queen.tx=p.x;queen.ty=p.y;} }
       const dx=queen.tx-queen.x,dy=queen.ty-queen.y,L=Math.hypot(dx,dy)||1; queen.x+=dx/L*Math.min(L,0.6*size*dt); queen.y+=dy/L*Math.min(L,0.6*size*dt);
     }
     let dancerRef=null, retT=9;
@@ -3873,7 +3936,11 @@
 
     // ===================== rendering: INSIDE =====================
     const COL={ wallEmpty:'#3a2c16', wallRim:'#5a4624', egg:'#f3ead6', larva:'#f0dcae', pupa:'#caa86a', nectar:'#e9c64f', honey:'#f7b733', pollen:'#ef8c2c',
-      broodZone:'rgba(120,170,235,0.16)', honeyZone:'rgba(247,183,51,0.10)', unbuilt:'rgba(150,120,70,0.16)', frontier:'rgba(150,200,120,0.28)' };
+      broodZone:'rgba(124,178,246,0.30)', honeyZone:'rgba(255,201,78,0.24)', unbuilt:'rgba(190,152,92,0.24)', frontier:'rgba(150,200,120,0.28)' };
+    // zone identity, painted as material rather than a wash of tint: the nursery is a set of
+    // deep shadowed cradles, the pantry a rack of clean pale shelves. Value and texture carry
+    // the read even at a glance on a phone — the hue alone never did.
+    const ZONE_EDGE={ brood:'rgba(168,208,255,', honey:'rgba(255,214,120,' };
     function hexPathOn(ctx,x,y,s){ ctx.beginPath(); for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-30), px=x+s*Math.cos(a), py=y+s*Math.sin(a); i?ctx.lineTo(px,py):ctx.moveTo(px,py);} ctx.closePath(); }
     // heat palette: deep night-blue through teal and umber to honey-gold —
     // a smooth 4-stop lerp over the simulated 0..1 warmth
@@ -3936,12 +4003,29 @@
       if(heatView){ if(!heatBands||heatBands.length!==cells.length) heatBands=new Int8Array(cells.length);
         for(let i=0;i<cells.length;i++){ const c0=cells[i];
           heatBands[i]=c0.built?Math.max(0,Math.min(4,Math.floor(c0.heat*5))):-1; } }
-      let g=ctx.createLinearGradient(0,0,0,Hh); g.addColorStop(0,winter?'#10131c':'#1c1507'); g.addColorStop(1,winter?'#0b0d14':'#0c0803'); ctx.fillStyle=g; ctx.fillRect(0,0,W,Hh);
+      let g=ctx.createLinearGradient(0,0,0,Hh); g.addColorStop(0,winter?'#1a2131':'#3a2810'); g.addColorStop(1,winter?'#0d1119':'#170e05'); ctx.fillStyle=g; ctx.fillRect(0,0,W,Hh);
       // a warm hearth-glow pools behind the comb — the hive is lit from within
-      if(!winter){ const wr=Math.max(W,Hh)*0.62;
+      { const wr=Math.max(W,Hh)*0.72;
         let wg=ctx.createRadialGradient(hiveCx,hiveCy,size,hiveCx,hiveCy,wr);
-        wg.addColorStop(0,'rgba(120,72,20,0.34)'); wg.addColorStop(0.5,'rgba(80,48,14,0.14)'); wg.addColorStop(1,'rgba(40,24,6,0)');
+        if(winter){ wg.addColorStop(0,'rgba(96,116,164,0.20)'); wg.addColorStop(0.5,'rgba(58,72,108,0.09)'); wg.addColorStop(1,'rgba(20,26,42,0)'); }
+        else { wg.addColorStop(0,'rgba(196,124,32,0.42)'); wg.addColorStop(0.5,'rgba(126,76,20,0.19)'); wg.addColorStop(1,'rgba(50,30,8,0)'); }
         ctx.fillStyle=wg; ctx.fillRect(0,0,W,Hh); }
+      // Sheet of foundation: the whole frame is drawn wax waiting to be built on, so the
+      // comb sits *inside* something instead of floating in a void — and the room you have
+      // left to grow into is visible from the first second. One batched path, one stroke.
+      if(!heatView){ const fs=size*0.93; ctx.save();
+        ctx.beginPath();
+        for(const cell of cells){ if(cell.built||cell.flagExpand) continue;
+          const {x,y}=cellCenter(cell.c,cell.r);
+          if(x<-fs*2||x>W+fs*2||y<-fs*2||y>Hh+fs*2) continue;   // offscreen rows cost nothing
+          for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-30), px=x+fs*Math.cos(a), py=y+fs*Math.sin(a); i?ctx.lineTo(px,py):ctx.moveTo(px,py); }
+          ctx.closePath(); }
+        // fades out toward the edges of the frame, so the eye stays on the living comb
+        const lg=ctx.createRadialGradient(hiveCx,hiveCy,size*2,hiveCx,hiveCy,Math.max(W,Hh)*0.72);
+        lg.addColorStop(0,winter?'rgba(150,178,225,0.16)':'rgba(255,206,132,0.17)');
+        lg.addColorStop(0.55,winter?'rgba(130,158,205,0.07)':'rgba(232,178,104,0.075)');
+        lg.addColorStop(1,'rgba(200,150,80,0)');
+        ctx.strokeStyle=lg; ctx.lineWidth=1; ctx.stroke(); ctx.restore(); }
       // on a large display the surround falls away, so the comb reads as the subject
       if(W>1100||Hh>860){ const vr=Math.max(W,Hh)*0.85;
         let vg=ctx.createRadialGradient(hiveCx,hiveCy,Math.min(W,Hh)*0.22,hiveCx,hiveCy,vr);
@@ -3976,7 +4060,18 @@
             cg.addColorStop(0,'#4a3719'); cg.addColorStop(0.6,COL.wallEmpty); cg.addColorStop(1,'#241906'); return cg; });
           hexPathOn(ctx,0,0,s2); ctx.fill(); ctx.restore(); hexPathOn(ctx,x,y,s2); }
         else { ctx.fillStyle=COL.wallEmpty; ctx.fill(); }
-        if(cell.zone==='brood'){ ctx.fillStyle=COL.broodZone; ctx.fill(); } else if(cell.zone==='honey'){ ctx.fillStyle=COL.honeyZone; ctx.fill(); }
+        if(cell.zone==='brood'){ ctx.fillStyle=COL.broodZone; ctx.fill();
+          if(!heatView){ // a cradle: sunk deeper than the comb around it, and lined with pale royal jelly
+            ctx.save(); ctx.translate(x,y);
+            ctx.fillStyle=gradFor('cradle',()=>{ const cg=ctx.createRadialGradient(0,s2*0.34,s2*0.06,0,s2*0.1,s2*1.0);
+              cg.addColorStop(0,'rgba(255,247,226,0.30)'); cg.addColorStop(0.45,'rgba(150,120,72,0.12)'); cg.addColorStop(1,'rgba(18,10,2,0.46)'); return cg; });
+            hexPathOn(ctx,0,0,s2); ctx.fill(); ctx.restore(); hexPathOn(ctx,x,y,s2); } }
+        else if(cell.zone==='honey'){ ctx.fillStyle=COL.honeyZone; ctx.fill();
+          if(!heatView){ // a shelf: scrubbed pale wax, lit from above, waiting for a jar
+            ctx.save(); ctx.translate(x,y);
+            ctx.fillStyle=gradFor('shelf',()=>{ const sg=ctx.createLinearGradient(0,-s2,0,s2);
+              sg.addColorStop(0,'rgba(255,242,206,0.34)'); sg.addColorStop(0.5,'rgba(255,222,152,0.12)'); sg.addColorStop(1,'rgba(120,76,20,0.20)'); return sg; });
+            hexPathOn(ctx,0,0,s2); ctx.fill(); ctx.restore(); hexPathOn(ctx,x,y,s2); } }
         // virgin wax is nearly white and ambers with age and ten thousand feet —
         // fresh-drawn cells glow pale for their first weeks, then join the old comb
         if(!heatView&&cell.bday!==undefined){ const wage=year*YEAR+day-cell.bday;
@@ -4048,6 +4143,31 @@
         for(const p of glowPts){ ctx.globalAlpha=p.a; ctx.fillStyle=uG(p.k);
           ctx.save(); ctx.translate(p.x,p.y); ctx.fillRect(-s2*1.5,-s2*1.5,s2*3,s2*3); ctx.restore(); }
         ctx.globalAlpha=1; ctx.restore(); }
+      // The shape you drew, outlined. Every boundary between a zone and anything that isn't
+      // that zone gets stroked in the zone's own colour, so a nursery and a pantry read as
+      // *regions you authored* rather than a scatter of tinted cells. This one pass is what
+      // turns painting from "tinting hexes" into laying out a nest.
+      // Edge index is looked up, not derived: both neighbour tables are wound in the same
+      // order, so entry i always faces hex edge EDGE_OF[i] — no atan2 in a 480-cell loop.
+      if(!heatView){ const EDGE_OF=[0,5,4,3,2,1], es=s2*0.93;
+        ctx.save(); ctx.lineCap='round'; ctx.lineJoin='round';
+        for(const key of ['honey','brood']){ const col=ZONE_EDGE[key]; if(!col) continue;
+          ctx.beginPath(); let any=false;
+          for(const cell of cells){ if(!cell.built||cell.zone!==key) continue;
+            const {x,y}=cellCenter(cell.c,cell.r);
+            if(x<-es*2||x>W+es*2||y<-es*2||y>Hh+es*2) continue;
+            const tbl=(cell.r&1)?N_ODD:N_EVEN;
+            for(let i=0;i<6;i++){ const nc=cell.c+tbl[i][0], nr=cell.r+tbl[i][1];
+              const nb=inGrid(nc,nr)?cells[idx(nc,nr)]:null;
+              if(nb&&nb.built&&nb.zone===key) continue;      // interior seam — never drawn
+              const e=EDGE_OF[i], a0=Math.PI/180*(60*e-30), a1=Math.PI/180*(60*e+30);
+              ctx.moveTo(x+es*Math.cos(a0), y+es*Math.sin(a0));
+              ctx.lineTo(x+es*Math.cos(a1), y+es*Math.sin(a1)); any=true; } }
+          if(!any) continue;
+          const bre=0.5+0.5*Math.sin(gt*1.5);            // the outline breathes, very slightly
+          ctx.strokeStyle=col+(0.13+0.05*bre).toFixed(3)+')'; ctx.lineWidth=Math.max(3,es*0.30); ctx.stroke();
+          ctx.strokeStyle=col+(0.78+0.14*bre).toFixed(3)+')'; ctx.lineWidth=Math.max(1.4,es*0.075); ctx.stroke(); }
+        ctx.restore(); }
       // freshly-painted cells flash bright and settle — the wax "takes" under your hand
       if(!heatView) for(const cell of cells){ if(!cell.pf||cell.pf<=0) continue;
         const {x,y}=cellCenter(cell.c,cell.r), pf=cell.pf, glow=PAINTGLOW[cell.pfk]||'255,245,216';
@@ -4775,8 +4895,13 @@
     function syncYields(){
       const cpY=caps(), fullY=(honeyU+pollenU+nectarU)>=cpY.total-2;
       syncForageUI();
-      $('yBrood').innerHTML='<i>nest </i><b>'+broodCells()+'</b><i> r</i><b>'+nestRing()+'</b>';
-      $('yHon').innerHTML='<i>store </i><b>'+honeyCells()+'</b>';
+      // plain nouns, and the same ones the layout card and Hazel already use ("nursery in
+      // the middle, shelves around it") — the chips used to read "nest 6 r2" / "store 10",
+      // where r2 was the nest-ring radius: real information, but expert shorthand sitting on
+      // the most-looked-at control in the game. nestRing() still drives its nudge internally.
+      const nbY=broodCells(), nhY=honeyCells();
+      $('yBrood').innerHTML='<b>'+nbY+'</b><i> cradle'+(nbY===1?'':'s')+'</i>';
+      $('yHon').innerHTML='<b>'+nhY+'</b><i> shel'+(nhY===1?'f':'ves')+'</i>';
       const L=ledger();
       $('yExp').innerHTML= L.wax>0.02 ? ('<i>wax </i><b>-'+(L.wax*7).toFixed(1)+'</b>') : '<i>+room</i>';
     }
@@ -5126,7 +5251,12 @@
       g.fillText('🍼',cx,cy);
       g.fillText('🍯',cx+s*SQ3*2,cy);
       g.fillText('🔨',cx+s*SQ3*1.5,cy-s*4.5); }
-    press($('combPlanGo'),()=>closeOverlay('combPlan'));
+    // the handoff is a sequence, not a pile: the layout card first, and only once the
+    // keeper has closed it does the "start the days" chip appear. These used to fire on
+    // the same timeout and landed on top of each other.
+    let dawnAfterPlan=false;
+    press($('combPlanGo'),()=>{ closeOverlay('combPlan');
+      if(dawnAfterPlan){ dawnAfterPlan=false; setTimeout(()=>showDawnChip(), 460); } });
     // ---- dawn-by-dawn: the first week is turn-based. Each sunrise stops the clock
     // and waits; the keeper releases the day themselves. Five dawns (or one tap of
     // "let the days flow") and the game graduates to real time — decisions first,
@@ -5149,7 +5279,7 @@
       // ⏸ is always there afterwards. (An earlier build stopped time at every
       // dawn for a week; being interrupted five times read as nagging, not calm.)
       setSpeed(0);
-      setTimeout(()=>{ showCombPlan(); showDawnChip(); }, 1200); }
+      setTimeout(()=>{ if(showCombPlan()) dawnAfterPlan=true; else showDawnChip(); }, 1200); }
     press($('coachBtn'),()=>{ if(coachWait){ if(twActive){ finishType(); } else coachContinue(); return; } const s=COACH[coachStep]; if(s&&!s.until) advanceCoach(); });
     press($('coachSkip'),()=>{ coachWait=false; seedStarterZones(); endCoach(true); });
     press($('coach'),e=>{ if(e.target&&e.target.closest&&(e.target.closest('#coachBtn')||e.target.closest('#coachSkip'))) return; if(twActive) finishType(); });
@@ -6738,6 +6868,7 @@
       rj=0; jars=0; jarsThisYear=0; owned={}; fedWinter=false; goals=null; lastSI=0; scoutShown=false; seenTips={}; lessonSeen={}; nudged={}; tipQ.length=0; tipCool=0; starveT=0; bankAtFrost=0; raidLoss=0;
       brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=false; coachStep=0; onboard=true; yearHist.length=0; histT=2.7; popMilo={};
       brush=null; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.remove('on')); setReveal(true);
+      clearFeed();          // Hazel opens on a clean screen — no leftovers from the crowning
       beginCommon();
       setTimeout(()=>{ if(onboard) showCoach(); }, 1800); saveGame(); }
     function renderQueens(){ const row=$('queenRow');
@@ -6788,6 +6919,11 @@
     window.__hm=()=>({day,year,P,honeyU,pollenU,nectarU,honeyCells:honeyCells(),broodCells:broodCells(),ap:activePatch,speed,brush,bank:buildBank(),
       story:{on:storyMode, ix:storyIx, sc:((curBeats||STORY)[storyIx]||{}).sc, camX, camS, hiveX:W*camX, W, horizon:storyHorizon(), Hh},
       view:{W,Hh,size,mSize,tSize,ox,oy,hiveCx,hiveCy,topH,botH,stage:Math.min(W,STAGE_W),bounds:combBounds()},
+      // where the colony is actually headed — lets a test assert that the queen answered
+      // the brush, rather than trying to identify her sprite in a screenshot
+      queen:{x:queen.x,y:queen.y,tx:queen.tx,ty:queen.ty},
+      calls:{queen:queenCall.map(c=>({c:c.c,r:c.r})), shelf:shelfCall.map(c=>({c:c.c,r:c.r}))},
+      broodAt:cells.filter(c=>c.brood).map(c=>({c:c.c,r:c.r,st:c.brood.stage})),
       therm:{warmth:nestWarmth(), amb:AMB(currentTemp()),
         broodHeats:cells.filter(c=>c.brood).map(c=>+c.heat.toFixed(3)),
         growAvg:(()=>{const b=cells.filter(c=>c.brood); return b.length? b.reduce((a,c)=>a+thermF(c.heat),0)/b.length : 0;})()},
@@ -6861,6 +6997,7 @@
       if(nudgeCool>0) nudgeCool-=dt;
       if(paintSndCool>0) paintSndCool-=dt;
       if(tipCool>0){ tipCool-=dt; if(tipCool<=0 && tipQ.length){ toast(tipQ.shift()); tipCool=TIP_GAP; } }
+      pumpFeed(dt);
       if(hzHold>0) hzHold-=dt;
       idleT+=dt; if(idleT>4){ idleT=0; watchIdle(); }
       drawHazel(dt);
