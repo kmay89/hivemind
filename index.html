@@ -22,6 +22,11 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="HIVEMIND — a honeycomb with glowing cells and a bee. Keep a honeybee colony alive, year after year.">
+<meta property="og:video" content="https://hive-mind-game.com/marketing/hivemind-trailer-1920x1080.mp4">
+<meta property="og:video:secure_url" content="https://hive-mind-game.com/marketing/hivemind-trailer-1920x1080.mp4">
+<meta property="og:video:type" content="video/mp4">
+<meta property="og:video:width" content="1920">
+<meta property="og:video:height" content="1080">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://hive-mind-game.com/social-card.png?v=2">
 <title>HIVEMIND — keep a honeybee colony alive, year after year</title>
@@ -520,6 +525,14 @@
   .colink{ background:none; border:0; color:var(--gold); font:600 12px 'JetBrains Mono',monospace; letter-spacing:.03em;
     cursor:pointer; padding:4px 2px; margin:-2px 0 4px; opacity:.85; text-decoration:none; }
   .colink:hover{ opacity:1; text-decoration:underline; }
+  #watchTrailer{ display:block; margin:6px auto 0; }
+  #trailerPop{ z-index:var(--z-popup); flex-direction:column; }
+  .trWrap{ width:min(960px,100%); display:flex; flex-direction:column; gap:12px; align-items:center; }
+  #trailerVid{ width:100%; aspect-ratio:16/9; max-height:calc(100vh - 110px); background:#000; border-radius:14px;
+    border:1px solid var(--border); box-shadow:var(--shadow); }
+  #trailerPop.tall .trWrap{ width:min(440px,100%); }
+  #trailerPop.tall #trailerVid{ aspect-ratio:9/16; }
+  .trRow{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
 
   /* ---------- unlock chip: the prize moment ---------- */
   #unlockChip{ position:fixed; left:50%; top:38%; transform:translate(-50%,-50%); z-index:var(--z-popup);
@@ -1742,8 +1755,20 @@
         </div>
       </div>
       <button class="colink" id="whyBees" type="button">🌸 why bees matter →</button>
+      <button class="colink" id="watchTrailer" type="button">▶ watch the 1-minute trailer</button>
       <div class="cardLinks">
         <a href="about.html" target="_blank" rel="noopener">About</a><a href="privacy.html" target="_blank" rel="noopener">Privacy</a><a href="terms.html" target="_blank" rel="noopener">Terms</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- the trailer: lazy — the video is only requested when someone taps "watch" -->
+  <div class="ov hide" id="trailerPop" role="dialog" aria-modal="true" aria-label="HIVEMIND trailer">
+    <div class="trWrap">
+      <video id="trailerVid" controls playsinline preload="none"></video>
+      <div class="trRow">
+        <button class="btn ghost" id="trailerX">‹ Back</button>
+        <button class="btn pulse" id="trailerPlay">Keep bees now ▶</button>
       </div>
     </div>
   </div>
@@ -2048,6 +2073,23 @@
       press($('coBtn'),()=>{ lsSet('hm_coldopen','1'); co.classList.add('hide'); }); })();
     press($('welcomeBtn'),()=>{ lsSet('hm_welcomed','1'); $('welcome').classList.add('hide'); });
     press($('whyBees'),()=>{ $('welcome').classList.remove('hide'); });
+    // ---- the trailer: nothing is fetched until "watch" is tapped (it's ~16 MB, and most
+    // visitors came to play). Portrait screens get the 9:16 cut. The game's own audio
+    // steps aside while it plays and comes back on close.
+    function openTrailer(){ const v=$('trailerVid'), tall=innerHeight>innerWidth*1.1;
+      const src='marketing/hivemind-trailer-'+(tall?'1080x1920':'1920x1080')+'.mp4';
+      $('trailerPop').classList.toggle('tall',tall);
+      if(v.dataset.src!==src){ v.poster='marketing/trailer-poster-'+(tall?'9x16':'16x9')+'.jpg'; v.src=src; v.dataset.src=src; }
+      openOverlay('trailerPop');
+      if(AU.ctx&&AU.ctx.state==='running'){ try{ AU.ctx.suspend(); }catch(e){} v.dataset.duck='1'; }
+      const p=v.play(); if(p&&p.catch) p.catch(()=>{}); }
+    function closeTrailer(){ const v=$('trailerVid'); try{ v.pause(); }catch(e){}
+      closeOverlay('trailerPop');
+      if(v.dataset.duck&&AU.ctx){ try{ AU.ctx.resume(); }catch(e){} delete v.dataset.duck; } }
+    press($('watchTrailer'),openTrailer);
+    press($('trailerX'),closeTrailer);
+    press($('trailerPlay'),()=>{ closeTrailer(); const b=$('startCont'); (b&&!b.classList.contains('hide')?b:$('startNew')).focus({preventScroll:true}); });
+    addEventListener('keydown',e=>{ if(e.key==='Escape'&&topOverlay()==='trailerPop'){ e.preventDefault(); closeTrailer(); } });
 
     // ---- typewriter: text arrives at reading pace, Zelda-style; markup tags
     // are swallowed whole so colours appear with their words. One channel —
