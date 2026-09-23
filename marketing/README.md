@@ -27,7 +27,7 @@ roughly every two seconds after that. Every cut lands on a 120 bpm beat grid.
 | 28–32 s | **Tension** | "Then… winter." Day counter climbing, honey counter falling. "Did you store enough honey?" |
 | 32–36 s | **Win** | YEAR 1 SURVIVED! "Now it gets harder. Year 2 brings varroa mites." |
 | 36–48 s | **What you'll learn** | Five "field notes", each one a mechanic in the game: bees shiver to heat the hive; a waggle dance is a map; one queen lays 1,500 eggs a day; one bee makes 1/12 tsp of honey in her life; varroa is the real enemy. |
-| 48–56 s | **What you'll achieve** | Survive your first winter, unlock 7 queen lines, earn 7 Queen's Gifts, fill a cellar of rare honey, collect 12 badges, reach LEGENDARY (ten winters). |
+| 48–56 s | **What you'll achieve** | Survive your first winter, unlock 7 queen lines, earn 7 Queen's Gifts, fill a cellar of rare honey, collect 14 badges, reach LEGENDARY (ten winters). |
 | 56–62 s | **Why it matters** | "Honeybees have keepers. The wild bees don't." Plant the flowers that feed them all. |
 | 62–66 s | **Social** | Play solo or with 2–8 friends in one hive; Family mode; hive votes. |
 | 66–72 s | **Call to action** | HIVEMIND · "Can you keep them alive?" · hive-mind-game.com · Free, no ads, no download. |
