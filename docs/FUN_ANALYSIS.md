@@ -7,6 +7,56 @@ the real simulation. The commands to reproduce each one are in the appendix.*
 
 ---
 
+## Status: implemented (2026-09)
+
+Every recommendation below has shipped. Here is what changed and what the numbers say now.
+
+| | Before | After |
+|---|---|---|
+| Zero-input strategy (nectar-pinned dial, flag once, walk away) | **15/15 survive 3 years** | **0/15 survive 2 years**; CI now asserts it |
+| Strategy the game teaches (grow in spring, bank in summer, brood breaks) | 0/15 over 3 years (worse than the exploit) | 14–15/15 year one, 7–10/15 over 3 years |
+| Seasonal dial vs dial pinned on nectar, 3 years | pinned wins | seasonal 9/15, pinned 0/15 |
+| Newcomer who follows Hazel and the ★ | not measured | 14–15/15 survive year one |
+| Page load to first real decision | ~45–60 s, 6 screens | **18 s**, 3 story beats, no queen menu |
+| Decision prompts in spring | a dance call every ~25 days | a card or dance call every 15–30 s |
+| One year at 1× | ~20 min | ~6–7 min (Calm pace keeps the long year) |
+| Founding colony on the HUD | "15 bees" | "4,500 bees", rising in +300 hatches |
+
+What went in, by recommendation:
+
+- **#1** `tools/economy-sim.js` plays archetypes and CI asserts the *spread* (the agency contract).
+- **#2** Pollen gates laying for real now that growth pays, and the ★ is a year-one aid.
+  The economy change underneath is the **winter cluster** (`beeCost`/`clusterF`/`chillLoss`):
+  big clusters burn less honey per bee, and small ones chill. Before it the economy was
+  scale-free, so small was optimal. `NEC_PF` 4 → 6 lets a strong summer bank a surplus.
+- **#3** Bees shown ×300 (`beeN`/`beeK`), with a `+300` floater on each hatch.
+- **#4** Hazel's advice matches the sim: a spring nursery bigger than the colony, a
+  pollen-starved queen, a too-small winter cluster, and a countdown to the first hatch.
+- **#5** Routine deaths fold into one line a fortnight.
+- **#6** First-timers skip the queen menu, the studio card plays in full only once, and the
+  story is 3 beats (the full tale stays in the menu).
+- **#7** One voice: the advisor doesn't echo into the log, and the brush help and wax-bank
+  sentence retire once learned.
+- **#8** Easy is a ~6-minute year, and a Calm pace keeps the old one.
+- **#9** `EVENTS[]`: 11 cards. Frame check, queen cells, main flow, robbing, drones, cold
+  snap, mites, spraying, winter wrap, plus two comeback cards for weak colonies (a stray
+  swarm, spring syrup).
+- **#10** Hatch waves (a golden sweep when a cohort emerges together) and wax-capping puffs.
+- **#11** The frame check: a 10-second mini-game to find the queen, tap the mites and cut
+  the queen cells.
+- **#12** A death card naming the cause and one thing to try, plus a one-time
+  "rewind to autumn".
+- **#13** `QUESTS[]`: three small goals per season, paying ✧.
+- **#14** The meadow gets its own readable unit, bigger blooms and denser forager streams.
+- **#15** The Daily is a fixed 3-minute session.
+- **#16** Field notes: 17 to collect, one per event plus the sim's big moments.
+- **#17** The apiary: splits and each surviving year add a hive to the hillside.
+- **#18** The mastery ramp: from year three the forecast stops naming the exact day.
+
+The analysis below is kept as written, since it's the reasoning behind the changes.
+
+---
+
 ## TL;DR
 
 HIVEMIND is beautiful, scientifically honest and warm, and in its current shape it

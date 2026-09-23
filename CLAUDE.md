@@ -194,6 +194,40 @@ numbers drift as the file changes; re-grep `// =====` banners if they look off)
   `BRUSHHELP` line, and the `stBrood` stat tip. **party connection legend** — the
   keeper strip (`netStripSync`) leads with a `🔗 N/M linked` chip and a
   lit/hollow `.cdot` per keeper.
+- `beeCost(p,T)` / `clusterF(p)` / `chillLoss(p,winter)` — the ONE honey-consumption
+  formula (sim, ledger and `forecastToSpring` all read it). A winter cluster follows
+  surface-to-volume physics: big clusters burn less per bee, small ones more, and below
+  `CLUSTER_MIN` they chill. This is what makes growing the colony pay, and what killed
+  the zero-input "stay small, pin the dial on nectar" strategy (docs/FUN_ANALYSIS.md).
+  Family mode keeps the reward and drops the penalty. Don't write `P*C_BEE*coldMult(T)`
+  anywhere new.
+- `beeN(p)` / `beeK(p)` — how a bee count is *shown*: one sim bee = `BEE_SCALE` (300)
+  real bees ("4,500" / "4.5k"). Every player-facing bee number goes through these; every
+  rule, goal and badge still compares raw `P`. Goal rows take an optional `fmt`.
+- **The hive-event deck** (`EVENTS[]`, `eventCheck`/`openEvent`/`chooseEvent`, overlay
+  `#hiveEvent`) — the "decision every minute": each row is a real beekeeping dilemma with
+  `when()`, a `gap` in hive-days, two `opts` (`go()` applies it, optional `ok()` greys it
+  out) and a `fact` that files a field note. Lasting effects go through
+  `addFx(kind,mult,days)` / `fxMul(kind)`; the kinds the sim reads are `nec`, `pol`,
+  `lay`, `eat`. Add a row, never a branch. Solo only (never while `NET.on` or in a daily);
+  the headless sim never opens a card, so CI measures the bare colony. Debug:
+  `window.__hmEvent(id)`.
+- **Frame check** (`openFrameGame`/`fgTick`/`fgEnd`, overlay `#frameGame`, offered by the
+  `inspect` event) — a 10-second canvas mini-game: find the painted queen, tap mites
+  (year 2+), cut queen cells (when `swarmP` is up). Rewards are in sim terms (lay fx,
+  `mite`, `swarmP`, ✧). Debug: `window.__hmFrame()`.
+- **Quests** (`QUESTS[]`, `questTick`, `#quests`) — three small goals per season under the
+  season goal; the first two finished per season pay +1 ✧. Progress rows read a baseline
+  (`questBase()`) taken when the quest became active.
+- **Field notes** (`FNOTES`, `noteField`/`noteExtra`, `FIELD_EXTRA[]`, `hm_notes`) and the
+  **apiary** (`APIARY`, `apiaryAdd`, `hm_apiary`, drawn as extra hive boxes in the meadow)
+  are career-long, like the cellar.
+- **Death card + rewind** — `deathCause(kind)` writes one sentence of why and one thing to
+  try into `#ovCause`. As each autumn begins (day 210) a snapshot of the colony is kept in
+  `hm_rewind`; `#ovRewind` restores it once (the snapshot is consumed, and the death's
+  chronicle page is popped).
+- `meadowU()` — the meadow's drawing unit (`mSize` alone collapses to ~6px on laptops).
+  `patchPos` uses it too, so drawing and tap hit-testing agree.
 - `M{}` — the stat-modifier reducer over `GIFTS`(owned) + `QUEENS`(mods).
   A gift or queen mod that should affect gameplay must be wired through here
   (additive *or* multiplicative, see the function's own comment), not read
@@ -211,6 +245,9 @@ level is probably section-local):
   fields listed explicitly in `serialize()`/`deserialize()` (3385-3411) — that
   pair is the closest thing to a state schema, so when in doubt, check what
   they read/write.
+- The event deck's `evFx`/`evLast`/`evCD`, the rewind point `rwTaken` (+ `hm_rewind`),
+  and the year's quests (`questDone`/`questAct`) are folded into `resetColonyIdentity()`
+  and serialized (`ef`/`el`/`ecd`/`qd`); quests also clear at the year transition.
 - Anything touched by `resetColonyIdentity()` or hand-reset alongside its
   three call sites (`seedAndPlay`, `seedDaily`, `ovRestart`) is per-run state
   and must be included there, in `serialize`/`deserialize`, and in any
@@ -235,8 +272,15 @@ row, that's a sign the table needs a field instead.
 ## Dev tooling (never shipped, never a runtime dependency)
 
 - `tools/economy-sim.js` — headless multi-year economy simulation used to
-  validate CONFIG/QUEENS/GIFTS balance changes before they ship. Run it
-  manually before retuning the economy: `node tools/economy-sim.js`. Its
+  validate CONFIG/QUEENS/GIFTS balance changes before they ship. It plays player
+  **archetypes** (`passive`, `exploit`, `tinkerer`, `casual`, `skilled`, `pinned`)
+  across all 15 queen/gift scenarios and asserts an **agency contract**: skilled play
+  and a Hazel-following newcomer survive year one, neglect and the nectar-pinned exploit
+  die by year two, and the seasonal dial beats a pinned one over three years. A balance
+  change that makes decisions stop mattering now turns CI red, not just one that makes
+  the game unwinnable. Probe one archetype with
+  `node tools/economy-sim.js --strategy=skilled --years=3 [--trace]`.
+  Run the contract before retuning the economy: `node tools/economy-sim.js`. Its
   `Math.random` is **seeded** (fixed default) so CI is a reliable guard rather
   than a flaky one — a borderline scenario like the `insulated` gift survives
   to the last day and used to fail ~1 run in 10 unseeded. Probe balance margins
