@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>HIVEMIND Trailer</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+  :root{ --bg:#0b0805; }
+  html,body{margin:0;background:var(--bg);overflow:hidden}
+  canvas{display:block}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<script>
+// HIVEMIND trailer: a deterministic, frame-addressable motion piece.
+// renderAt(t) paints exactly one frame for time t (seconds), so a headless
+// renderer can step it at 30 fps and pipe the frames to ffmpeg. Gameplay
+// footage is real: jpeg frames captured from index.html (see marketing/README.md).
+'use strict';
+const Q=new URLSearchParams(location.search);
+const W=+(Q.get('w')||1920), H=+(Q.get('h')||1080), FPS=30;
+const V=H>W;                       // vertical (9:16) cut
+const U=Math.min(W,H)/1080;        // type/size unit
+const cv=document.getElementById('cv'); cv.width=W; cv.height=H;
+if(!Q.get('render')){ cv.style.width='100vw'; cv.style.height=(100*H/W)+'vw'; }
+const ctx=cv.getContext('2d');
+
+// ---------------------------------------------------------------- assets
+let CLIPS={};
+const IMG=new Map(); const LRU=[];
+function loadImg(src){ if(IMG.has(src)) return IMG.get(src);
+  const p=new Promise(res=>{ const im=new Image(); im.onload=()=>res(im); im.onerror=()=>res(null); im.src=src; });
+  IMG.set(src,p); LRU.push(src); if(LRU.length>60){ const old=LRU.shift(); IMG.delete(old); } return p; }
+// frame of clip `name` at clip-time tau (s): the last captured frame at or before tau
+function frameSrc(name,tau){ const c=CLIPS[name]; if(!c||!c.length) return null;
+  let lo=0,hi=c.length-1; const T=Math.max(0,Math.min(tau,c[hi].t));
+  while(lo<hi){ const m=(lo+hi+1)>>1; if(c[m].t<=T) lo=m; else hi=m-1; }
+  return c[lo].dir+'/'+c[lo].f; }
+function clipLen(name){ const c=CLIPS[name]; return c&&c.length?c[c.length-1].t:0; }
+
+// ---------------------------------------------------------------- maths
+const cl=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const lerp=(a,b,t)=>a+(b-a)*t;
+const inv=(a,b,x)=>cl((x-a)/(b-a));
+const eo=t=>1-Math.pow(1-cl(t),3);                  // ease out cubic
+const eio=t=>{t=cl(t);return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;};
+const back=t=>{t=cl(t);const c1=1.9,c3=c1+1;return 1+c3*Math.pow(t-1,3)+c1*Math.pow(t-1,2);};
+function rnd(i){ const x=Math.sin(i*127.1+311.7)*43758.5453; return x-Math.floor(x); }
+
+// ---------------------------------------------------------------- palette
+const C={ honey:'#ffb52e', honey2:'#ffd66b', cream:'#fff4d6', ink:'#1a1006', brood:'#8fb8ff', grow:'#9be07a', pollen:'#ff9d5c', winter:'#bfe3ff', red:'#ff5a4e' };
+const F=(w,s)=>`${w} ${Math.round(s*U)}px 'Bricolage Grotesque', 'DejaVu Sans', sans-serif`;
+const FM=(w,s)=>`${w} ${Math.round(s*U)}px 'JetBrains Mono', 'DejaVu Sans Mono', monospace`;
+
+// ---------------------------------------------------------------- drawing kit
+function hexPath(x,y,r,rot=0){ ctx.beginPath(); for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i-30)+rot; ctx.lineTo(x+r*Math.cos(a), y+r*Math.sin(a)); } ctx.closePath(); }
+function bgHoney(t,dark=0){
+  const g=ctx.createRadialGradient(W/2,H*0.45,0,W/2,H*0.45,Math.max(W,H)*0.75);
+  g.addColorStop(0,`rgba(${90-dark*60},${58-dark*40},${16-dark*10},1)`); g.addColorStop(1,'#080503');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H); }
+function hexField(t,alpha=0.35,r=70){ r*=U; const dx=r*Math.sqrt(3), dy=r*1.5;
+  ctx.save(); ctx.lineWidth=2*U;
+  for(let row=-1; row*dy<H+r; row++) for(let col=-1; col*dx<W+dx; col++){
+    const x=col*dx+(row&1?dx/2:0), y=row*dy; const d=Math.hypot(x-W/2,y-H*0.45)/(Math.max(W,H));
+    const pulse=0.5+0.5*Math.sin(t*2.2-d*9+rnd(row*97+col)*2);
+    ctx.strokeStyle=`rgba(255,190,80,${alpha*(0.35+0.65*pulse)*(1-d*0.9)})`;
+    hexPath(x,y,r*0.92); ctx.stroke(); }
+  ctx.restore(); }
+function vignette(a=0.55){ const g=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*0.3,W/2,H/2,Math.max(W,H)*0.72);
+  g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,`rgba(0,0,0,${a})`); ctx.fillStyle=g; ctx.fillRect(0,0,W,H); }
+function dim(a){ ctx.fillStyle=`rgba(8,5,2,${a})`; ctx.fillRect(0,0,W,H); }
+function flash(a,col='255,240,200'){ if(a<=0) return; ctx.fillStyle=`rgba(${col},${cl(a)})`; ctx.fillRect(0,0,W,H); }
+
+// a cartoon bee — body along +x
+function bee(x,y,s,ang,t,{alpha=1}={}){ s*=U; ctx.save(); ctx.globalAlpha*=alpha; ctx.translate(x,y); ctx.rotate(ang);
+  const flap=Math.sin(t*70)*0.5+0.5;
+  ctx.fillStyle='rgba(255,255,255,0.55)'; ctx.strokeStyle='rgba(255,255,255,0.8)'; ctx.lineWidth=1.2*U;
+  for(const sgn of [-1,1]){ ctx.save(); ctx.translate(-s*0.1, sgn*-s*0.35); ctx.rotate(sgn*(-0.5-flap*0.7)); ctx.beginPath(); ctx.ellipse(0,-s*0.45*sgn,s*0.28,s*0.55,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.restore(); }
+  ctx.beginPath(); ctx.ellipse(0,0,s*0.75,s*0.5,0,0,Math.PI*2); ctx.save(); ctx.clip();
+  ctx.fillStyle='#ffc21c'; ctx.fillRect(-s,-s,2*s,2*s); ctx.fillStyle='#22160a';
+  for(const sx of [-0.45,-0.05,0.33]) ctx.fillRect(sx*s,-s,s*0.2,2*s); ctx.restore();
+  ctx.strokeStyle='#22160a'; ctx.lineWidth=2*U; ctx.beginPath(); ctx.ellipse(0,0,s*0.75,s*0.5,0,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle='#22160a'; ctx.beginPath(); ctx.arc(s*0.78,0,s*0.3,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(s*0.9,-s*0.1,s*0.09,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#22160a'; ctx.beginPath(); ctx.moveTo(-s*0.75,0); ctx.lineTo(-s*1.02,s*0.05); ctx.lineTo(-s*0.75,s*0.12); ctx.fill();
+  ctx.restore(); }
+// a stream of bees flying across — deterministic in t
+function swarm(t,n,{seed=1,speed=1,size=26,alpha=1,band=[0,1]}={}){
+  for(let i=0;i<n;i++){ const r1=rnd(i*13+seed), r2=rnd(i*7+seed*3), r3=rnd(i*3+seed*11);
+    const sp=(0.12+r2*0.16)*speed; const dir=r3<0.5?1:-1;
+    const u=((t*sp+r1)%1+1)%1; const x=dir>0? lerp(-0.1*W,1.1*W,u) : lerp(1.1*W,-0.1*W,u);
+    const yb=lerp(band[0],band[1],rnd(i*29+seed))*H; const y=yb+Math.sin(t*(1.5+r2*2)+i)*40*U;
+    const vy=Math.cos(t*(1.5+r2*2)+i)*40*U*(1.5+r2*2);
+    const ang=Math.atan2(vy, dir*sp*W*1.2); bee(x,y,size*(0.6+r3*0.8),dir>0?ang:Math.PI+ang*-1,t+i,{alpha}); } }
+
+// draw a gameplay clip, cover-fit, with a Ken Burns zoom about a focus point (normalized frame coords)
+async function clip(name,tau,{z0=1,z1=1,p=0,fx=0.5,fy=0.45,alpha=1,blur=0,sat=1,bright=1}={}){
+  const src=frameSrc(name,tau); if(!src) return; const im=await loadImg(src); if(!im) return;
+  const z=lerp(z0,z1,p); const iw=im.width, ih=im.height;
+  const s=Math.max(W/iw,H/ih)*z; const dw=iw*s, dh=ih*s;
+  let x=W/2-fx*dw, y=H/2-fy*dh; x=Math.min(0,Math.max(W-dw,x)); y=Math.min(0,Math.max(H-dh,y));
+  ctx.save(); ctx.globalAlpha=alpha; const f=[]; if(blur) f.push(`blur(${blur*U}px)`); if(sat!==1) f.push(`saturate(${sat})`); if(bright!==1) f.push(`brightness(${bright})`);
+  if(f.length) ctx.filter=f.join(' ');
+  ctx.drawImage(im,x,y,dw,dh); ctx.restore(); }
+
+// ---------------------------------------------------------------- type
+function textFit(str,font,maxW){ ctx.font=font; return ctx.measureText(str).width>maxW; }
+function sizeFor(str,w,s,maxW){ let size=s; while(size>20){ ctx.font=F(w,size); if(ctx.measureText(str).width<=maxW) break; size-=4; } return size; }
+// big title: pop-in with overshoot. k = local anim time (s)
+function title(str,x,y,size,k,{w=800,fill='honey',align='center',stroke=true,maxW=W*0.9,rot=0,delay=0,out=null}={}){
+  const kk=k-delay; if(kk<=0) return; size=sizeFor(str,w,size,maxW);
+  let sc=lerp(0.5,1,back(kk/0.38)), a=cl(kk/0.15);
+  if(out!=null){ const o=cl(out); a*=1-o; sc*=1+o*0.15; }
+  if(a<=0) return;
+  ctx.save(); ctx.translate(x,y); ctx.rotate(rot*(1-eo(kk/0.4))); ctx.scale(sc,sc); ctx.globalAlpha*=a;
+  ctx.font=F(w,size); ctx.textAlign=align; ctx.textBaseline='middle';
+  const hh=size*U;
+  if(stroke){ ctx.lineJoin='round'; ctx.lineWidth=hh*0.16; ctx.strokeStyle='rgba(26,14,4,0.92)'; ctx.strokeText(str,0,0);
+    ctx.shadowColor='rgba(0,0,0,0.45)'; ctx.shadowBlur=hh*0.25; ctx.shadowOffsetY=hh*0.06; }
+  if(fill==='honey'){ const g=ctx.createLinearGradient(0,-hh*0.5,0,hh*0.5); g.addColorStop(0,'#fff6cf'); g.addColorStop(0.45,'#ffd35c'); g.addColorStop(1,'#ff9f1a'); ctx.fillStyle=g; }
+  else ctx.fillStyle=fill;
+  ctx.fillText(str,0,0); ctx.restore(); }
+// words appear one by one
+function words(str,x,y,size,k,{w=700,fill=C.cream,gap=0.12,maxW=W*0.86,lineH=1.18,align='center'}={}){
+  const ws=str.split(' '); ctx.font=F(w,size); const lines=[]; let cur='';
+  for(const wd of ws){ const tr=cur?cur+' '+wd:wd; if(ctx.measureText(tr.replace(/\*/g,'')).width>maxW&&cur){ lines.push(cur); cur=wd; } else cur=tr; } if(cur) lines.push(cur);
+  let wi=0; const lh=size*U*lineH; const y0=y-(lines.length-1)*lh/2;
+  lines.forEach((ln,li)=>{ const lw=ctx.measureText(ln.replace(/\*/g,'')).width; let cx=align==='center'? x-lw/2 : x;
+    for(const wd of ln.split(' ')){ const kk=k-wi*gap; wi++; const ww=ctx.measureText(wd.replace(/\*/g,'')+' ').width;
+      if(kk>0){ const a=cl(kk/0.18), dy=(1-eo(kk/0.3))*size*U*0.4;
+        ctx.save(); ctx.globalAlpha*=a; ctx.font=F(w,size); ctx.textBaseline='middle'; ctx.textAlign='left';
+        const hl=/\*/.test(wd); const t2=wd.replace(/\*/g,'');
+        ctx.lineWidth=size*U*0.14; ctx.lineJoin='round'; ctx.strokeStyle='rgba(20,10,2,0.85)'; ctx.strokeText(t2,cx,y0+li*lh+dy);
+        ctx.fillStyle=hl?C.honey2:fill; ctx.fillText(t2,cx,y0+li*lh+dy); ctx.restore(); }
+      cx+=ww; } });
+}
+function pill(str,x,y,size,k,{bg='rgba(26,16,6,0.86)',fg=C.cream,accent=C.honey,icon='',align='center',delay=0}={}){
+  const kk=k-delay; if(kk<=0) return; ctx.save(); ctx.font=F(700,size); const tw=ctx.measureText(str).width;
+  ctx.font=`${Math.round(size*U)}px 'Noto Color Emoji'`; const iw=icon?ctx.measureText(icon).width+size*U*0.4:0;
+  const pw=tw+iw+size*U*1.3, ph=size*U*1.9; let px=align==='center'?x-pw/2:(align==='right'?x-pw:x);
+  const sc=lerp(0.6,1,back(kk/0.35)); ctx.translate(px+pw/2,y); ctx.scale(sc,sc); ctx.globalAlpha*=cl(kk/0.12); ctx.translate(-pw/2,0);
+  ctx.fillStyle=bg; ctx.strokeStyle=accent; ctx.lineWidth=3*U; ctx.beginPath(); ctx.roundRect(0,-ph/2,pw,ph,ph/2); ctx.fill(); ctx.stroke();
+  ctx.textBaseline='middle'; let cx=size*U*0.65;
+  if(icon){ ctx.font=`${Math.round(size*U)}px 'Noto Color Emoji'`; ctx.fillText(icon,cx,size*U*0.05); cx+=iw; }
+  ctx.font=F(700,size); ctx.fillStyle=fg; ctx.fillText(str,cx,size*U*0.04); ctx.restore(); }
+function emoji(e,x,y,size,k=1,{rot=0}={}){ if(k<=0) return; ctx.save(); ctx.translate(x,y); ctx.rotate(rot); const sc=back(k/0.4); ctx.scale(sc,sc);
+  ctx.font=`${Math.round(size*U)}px 'Noto Color Emoji'`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(e,0,0); ctx.restore(); }
+function kicker(str,x,y,k,{col=C.honey,size=26}={}){ if(k<=0) return; ctx.save(); ctx.globalAlpha=cl(k/0.2); ctx.font=FM(800,size); ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillStyle=col; const sp=str.split('').join(String.fromCharCode(8202)); ctx.fillText(sp,x,y); ctx.restore(); }
+
+// hexagon transition: tiles grow from the centre out (p 0→1 covers, 1→2 reveals)
+function hexWipe(p,col='#ffb52e'){ if(p<=0||p>=2) return; const r=90*U, dx=r*Math.sqrt(3), dy=r*1.5; const maxD=Math.hypot(W,H)/2;
+  ctx.save(); ctx.fillStyle=col;
+  for(let row=-1; row*dy<H+r; row++) for(let col2=-1; col2*dx<W+dx; col2++){
+    const x=col2*dx+(row&1?dx/2:0), y=row*dy; const d=Math.hypot(x-W/2,y-H/2)/maxD;
+    const s = p<1 ? eio(cl(p*1.6-d*0.6)) : 1-eio(cl((p-1)*1.6-d*0.6));
+    if(s>0){ hexPath(x,y,r*1.02*s); ctx.fill(); } }
+  ctx.restore(); }
+// sparkle burst
+function sparks(x,y,k,n=40,{spread=380,col='255,215,110',seed=5}={}){ if(k<0||k>1.4) return;
+  for(let i=0;i<n;i++){ const a=rnd(i+seed)*Math.PI*2, sp=(0.35+rnd(i*3+seed)*0.65)*spread*U; const d=eo(k/1.1)*sp;
+    const px=x+Math.cos(a)*d, py=y+Math.sin(a)*d+k*k*120*U; const s=(1-k/1.4)*(6+rnd(i*9)*10)*U;
+    ctx.fillStyle=`rgba(${col},${1-k/1.4})`; hexPath(px,py,s,a); ctx.fill(); } }
+function counter(label,val,x,y,size,{col=C.honey2}={}){ ctx.save(); ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.font=FM(800,size); ctx.lineWidth=size*U*0.14; ctx.strokeStyle='rgba(20,10,2,.9)'; ctx.strokeText(val,x,y); ctx.fillStyle=col; ctx.fillText(val,x,y);
+  ctx.font=FM(600,size*0.34); ctx.fillStyle=C.cream; ctx.fillText(label,x,y-size*U*0.78); ctx.restore(); }
+function flower(x,y,r,k,hue=0,petals=6){ if(k<=0) return; const s=back(k/0.5)*r*U; ctx.save(); ctx.translate(x,y); ctx.rotate(k*0.3);
+  for(let i=0;i<petals;i++){ ctx.rotate(Math.PI*2/petals); ctx.fillStyle=`hsl(${hue},85%,${72-i%2*6}%)`; ctx.beginPath(); ctx.ellipse(s*0.55,0,s*0.5,s*0.26,0,0,Math.PI*2); ctx.fill(); }
+  ctx.fillStyle='#ffcf33'; ctx.beginPath(); ctx.arc(0,0,s*0.28,0,Math.PI*2); ctx.fill(); ctx.restore(); }
+
+// ---------------------------------------------------------------- scenes
+// Timeline is on a 120 bpm grid (a bar = 2 s) so cuts land on the beat.
+// Each scene: [start, end, draw(t_local, dur)] ; CUES feed the sound design.
+const CUES=[]; const cue=(t,k,v=1)=>CUES.push({t,k,v});
+const SC=[];
+function scene(a,b,fn){ SC.push({a,b,fn}); }
+const CX=W/2, CY=H/2;
+const TOPY = V? H*0.2 : H*0.2, BOTY = V? H*0.8 : H*0.82;
+
+// 1 · HOOK (0–4): the stakes, in one number
+scene(0,4.05,async(t)=>{
+  bgHoney(t,0.6); hexField(t,0.25*cl(t/1.5));
+  swarm(t,7,{seed:3,size:22,alpha:cl(t/1.2)*0.9,band:[0.1,0.9]});
+  const foods=['🍎','🥑','🍓']; const fy=V?H*0.36:H*0.34, gap=(V?260:300)*U;
+  foods.forEach((f,i)=>{ const k=t-0.15-i*0.14; const on=i===0; emoji(f, CX+(i-1)*gap, fy, on?170:150, k, {rot:Math.sin(t*3+i)*0.06});
+    if(t>1.3 && !on){ ctx.save(); ctx.globalAlpha=0.55*cl((t-1.3)/0.3); ctx.fillStyle='#0b0805'; ctx.beginPath(); ctx.arc(CX+(i-1)*gap,fy,95*U,0,7); ctx.fill(); ctx.restore(); } });
+  if(t>1.3){ ctx.save(); ctx.strokeStyle=C.honey; ctx.lineWidth=8*U; ctx.globalAlpha=cl((t-1.3)/0.2); ctx.beginPath(); ctx.arc(CX-gap,fy,112*U*back((t-1.3)/0.35),0,7); ctx.stroke(); ctx.restore(); }
+  title('1 in 3 bites', CX, V?H*0.55:H*0.62, 150, t-0.25, {rot:-0.04, out:inv(3.7,4.0,t)});
+  words('of the food you eat depends on *pollinators* like *bees.*', CX, V?H*0.68:H*0.8, 58, t-1.35, {maxW:W*0.84, gap:0.09});
+  vignette(0.6); flash(1-t/0.35,'0,0,0');
+});
+cue(0,'buzz',0.6); cue(0.25,'hit',0.7); cue(1.3,'chime'); cue(3.55,'riserShort');
+
+// 2 · THE QUESTION (4–8): the real cold open — one cell, one tap, one bee
+scene(4,8.05,async(t)=>{
+  await clip('coldopen', 0.9+t*1.05, {z0:1.25,z1:1.05,p:t/4,fx:0.5,fy:0.5});
+  vignette(0.5);
+  title('Could YOU keep', CX, V?H*0.16:H*0.16, 104, t-0.1, {out:inv(3.75,4.0,t)});
+  title('a colony alive?', CX, V?H*0.16+120*U:H*0.16+118*U, 104, t-0.35, {out:inv(3.75,4.0,t)});
+  pill('40,000 bees. One year. Winter is coming.', CX, BOTY, 38, t-1.4, {icon:'❄️',accent:C.winter});
+  flash(1-(t)/0.25);
+});
+cue(4,'whoosh'); cue(5.2,'pop'); cue(5.4,'riser',1);
+
+// 3 · DROP (8–14): logo slam, then real brush strokes
+scene(8,14.05,async(t)=>{
+  if(t<2){
+    bgHoney(t,0.2); hexField(t+8,0.6,64);
+    const k=t; swarm(t+8,14,{seed:9,speed:2.2,size:24,alpha:0.95});
+    const s=lerp(2.4,1,eo(k/0.28)); ctx.save(); ctx.translate(CX,CY-20*U); ctx.scale(s,s); ctx.translate(-CX,-(CY-20*U));
+    title('HIVEMIND', CX, CY-20*U, V?190:230, k+0.5, {w:800});
+    ctx.restore();
+    kicker('A  BEEKEEPING  SURVIVAL  GAME', CX, CY+(V?120:150)*U, t-0.3, {size:V?30:34, col:C.cream});
+    sparks(CX,CY,t,60,{spread:900});
+    flash(1-t/0.3); vignette(0.5);
+  } else {
+    const tt=t-2; // paint clip is 32 s of real brushing — played back at ~7x
+    await clip(CLIPS.paint2?'paint2':'paint', 1.2+tt*7.4, {z0:1.55,z1:1.75,p:tt/4,fx:0.48,fy:0.4});
+    vignette(0.55);
+    title('PAINT THE COMB', CX, TOPY*0.72, 120, tt, {rot:-0.03});
+    const ys=V?[H*0.66,H*0.74,H*0.82]:[BOTY-8*U,BOTY-8*U,BOTY-8*U]; const xs=V?[CX,CX,CX]:[W*0.2,W*0.5,W*0.8];
+    pill('Brood = the nursery', xs[0], ys[0], 36, tt-0.5, {icon:'🍼',accent:C.brood});
+    pill('Honey = the pantry', xs[1], ys[1], 36, tt-1.4, {icon:'🍯',accent:C.honey});
+    pill('Expand = fresh wax', xs[2], ys[2], 36, tt-2.3, {icon:'🔨',accent:C.grow});
+    flash(1-tt/0.2);
+  }
+  hexWipe(inv(-0.3,0.3,t)+1);
+});
+cue(8,'drop'); cue(8,'hit',1); cue(10,'whoosh'); cue(10.5,'pop'); cue(11.4,'pop'); cue(12.3,'pop');
+
+// 4 · ALIVE (14–18): the bees take it from there — and a ring completes
+scene(14,18.05,async(t)=>{
+  if(t<2.6){ await clip(t<1.3?'alive':'fast', t<1.3? 1+t*1.6 : 0.5+(t-1.3)*2.4, {z0:1.7,z1:1.85,p:t/2.6,fx:0.48,fy:0.42}); }
+  else { await clip('ring', 0.2+(t-2.6)*1.25, {z0:1.6,z1:1.5,p:(t-2.6)/1.4,fx:0.48,fy:0.4}); }
+  vignette(0.5);
+  if(t<2.6){ title('…and 40,000 bees', CX, TOPY*0.7, 100, t, {out:inv(2.35,2.6,t)}); title('bring it to life', CX, TOPY*0.7+110*U, 100, t-0.25, {out:inv(2.35,2.6,t)}); }
+  else { const k=t-2.6; title('RING COMPLETE!', CX, V?H*0.3:H*0.2, 128, k, {rot:0.05}); sparks(CX,CY,k,70,{spread:700}); flash(0.7-k*1.4); }
+  flash(1-t/0.2);
+});
+cue(14,'whoosh'); cue(16.6,'ring'); cue(16.6,'hit',0.8);
+
+// 5 · FORAGE (18–22): the meadow and the waggle-dance vote
+scene(18,22.05,async(t)=>{
+  if(t<2){ await clip('meadow', 1.5+t*1.6, {z0:1.25,z1:1.35,p:t/2,fx:0.5,fy:0.5}); }
+  else { await clip('dancecall', 0.7+(t-2)*1.1, {z0:V?1:1.5,z1:V?1.04:1.6,p:(t-2)/2,fx:0.5,fy:0.28}); }
+  vignette(0.55);
+  if(t<2){ title('SEND THE FORAGERS', CX, TOPY*0.7, 110, t, {rot:-0.03, out:inv(1.8,2,t)}); pill('Near flowers fly cheap. Far ones must bloom rich.', CX, BOTY, 34, t-0.5, {icon:'🌼',accent:C.pollen}); }
+  else { const k=t-2; title('THE HIVE VOTES', CX, V?H*0.62:H*0.8, 116, k, {rot:0.03}); pill('with real waggle dances', CX, V?H*0.72:H*0.9, 34, k-0.4, {icon:'💃',accent:C.honey}); }
+  flash(1-t/0.2); if(t>=2) flash(1-(t-2)/0.15);
+});
+cue(18,'whoosh'); cue(18.5,'pop'); cue(20,'whoosh'); cue(20.4,'pop');
+
+// 6 · THREATS (22–28): beat-synced smash cuts
+const THREATS=[
+  {w:'HORNETS!', clip:'hornet', at:1.1, sp:1.1, fx:0.5, fy:0.2, z:1.9, col:C.red, e:'🐝'},
+  {w:'COLD SNAPS', clip:'winterheat', at:0.5, sp:0.8, fx:0.48, fy:0.4, z:1.6, col:C.winter, e:'🥶'},
+  {w:'SUMMER DROUGHT', clip:'autumn', at:0.2, sp:0.8, fx:0.48, fy:0.42, z:1.6, col:C.pollen, e:'☀️', sat:0.35},
+  {w:'SWARMS', clip:'fast', at:2, sp:2.5, fx:0.48, fy:0.42, z:1.8, col:C.honey2, e:'🌪️'},
+  {w:'MITES', clip:'alive', at:3, sp:0.8, fx:0.48, fy:0.42, z:2.1, col:C.red, e:'🔬', mites:true},
+];
+scene(22,28.05,async(t)=>{
+  const i=Math.min(4,Math.floor(t/1.2)), k=t-i*1.2, th=THREATS[i];
+  const sh=Math.max(0,0.3-k)*30*U; ctx.save(); ctx.translate(Math.sin(t*90)*sh,Math.cos(t*77)*sh);
+  await clip(th.clip, th.at+k*th.sp, {z0:th.z,z1:th.z*1.08,p:k/1.2,fx:th.fx,fy:th.fy,sat:th.sat||1});
+  if(th.mites){ for(let m=0;m<26;m++){ const a=rnd(m)*7, d=(0.08+rnd(m*5)*0.28)*Math.min(W,H); const x=CX+Math.cos(a)*d, y=CY+Math.sin(a)*d*0.8;
+      const kk=k-m*0.02; if(kk>0){ ctx.fillStyle='rgba(170,30,20,0.95)'; ctx.beginPath(); ctx.ellipse(x,y,9*U*back(kk/0.3),7*U*back(kk/0.3),a,0,7); ctx.fill(); } } }
+  ctx.restore();
+  ctx.fillStyle=`rgba(0,0,0,${0.25})`; ctx.fillRect(0,0,W,H); vignette(0.7);
+  ctx.save(); ctx.globalAlpha=0.9; ctx.strokeStyle=th.col; ctx.lineWidth=14*U; ctx.strokeRect(7*U,7*U,W-14*U,H-14*U); ctx.restore();
+  title(th.w, CX, V?H*0.5:H*0.5, V?140:170, k*1.3, {fill:th.col, rot:(i%2?0.06:-0.06)});
+  emoji(th.e, CX, (V?H*0.5:H*0.5)-(V?170:190)*U, 110, k*1.2);
+  kicker(`THREAT ${i+1} / 5`, CX, (V?H*0.5:H*0.5)+(V?130:140)*U, k, {col:C.cream,size:30});
+  flash(0.9-k*4,'255,255,255');
+});
+for(let i=0;i<5;i++) cue(22+i*1.2,'smash',1);
+
+// 7 · WINTER (28–32): the breakdown — did you store enough?
+scene(28,32.05,async(t)=>{
+  await clip('winter', 0.3+t*1.2, {z0:1.35,z1:1.65,p:t/4,fx:0.48,fy:0.4});
+  ctx.fillStyle=`rgba(40,70,110,${0.25})`; ctx.fillRect(0,0,W,H);
+  for(let i=0;i<70;i++){ const x=(rnd(i)*W + t*40*U*(0.5+rnd(i*3)))%W, y=(rnd(i*7)*H + t*(60+rnd(i*9)*90)*U)%H; ctx.fillStyle='rgba(255,255,255,0.8)'; ctx.beginPath(); ctx.arc(x,y,(1.5+rnd(i*11)*3.5)*U,0,7); ctx.fill(); }
+  vignette(0.7);
+  title('Then… winter.', CX, TOPY*0.72, 120, t-0.1, {fill:'#e8f6ff'});
+  const d=Math.floor(lerp(290,338,eio(t/3.6)));
+  counter('DAY', String(d), V?W*0.3:W*0.2, BOTY-10*U, 84, {col:C.winter});
+  counter('HONEY LEFT', String(Math.max(3,Math.round(lerp(26,9,eio(t/3.6))))) , V?W*0.7:W*0.8, BOTY-10*U, 84, {col:C.honey2});
+  if(t>1.8) words('Did you store *enough* honey?', CX, V?H*0.62:H*0.62, 66, t-1.8, {gap:0.1});
+  flash(0.6-t*2,'200,230,255');
+});
+cue(28,'breakdown'); cue(29.8,'tick'); cue(30.3,'tick'); cue(30.8,'tick'); cue(31.3,'tick'); cue(31.5,'riser',0.9);
+
+// 8 · SURVIVED (32–36)
+scene(32,36.05,async(t)=>{
+  const ye=CLIPS.yearend2?'yearend2':'yearend'; if(CLIPS[ye]){ await clip(ye, 0.6+t*0.9, {z0:1.25,z1:1.3,p:t/4,fx:0.5,fy:0.33}); }
+  else { bgHoney(t); hexField(t,0.5); }
+  dim(0.25); vignette(0.55);
+  const s=lerp(1.6,1,eo(t/0.3));
+  ctx.save(); ctx.translate(CX,CY); ctx.scale(s,s); ctx.translate(-CX,-CY);
+  title('YEAR 1', CX, CY-(V?110:100)*U, 170, t, {fill:'honey'});
+  title('SURVIVED!', CX, CY+(V?60:80)*U, 170, t-0.2, {fill:'#c9ffb0'});
+  ctx.restore();
+  sparks(CX,CY,t,80,{spread:1000}); sparks(CX,CY,t-0.5,50,{spread:800,col:'201,255,176',seed:9});
+  pill('Now it gets harder. Year 2 brings varroa mites.', CX, BOTY, 34, t-1.2, {icon:'😈',accent:C.red});
+  flash(1-t/0.25);
+});
+cue(32,'hit',1); cue(32,'fanfare'); cue(33.2,'pop');
+
+// 9 · YOU'LL LEARN (36–48): five true things, each one a mechanic in the game
+const FACTS=[
+  {e:'🔥', h:'Bees shiver to heat the hive', s:'No fire. Just 40,000 bodies at blood heat.', clip:'winterheat', at:0.5, fy:0.4},
+  {e:'💃', h:'A waggle dance is a map', s:'The angle points the way. The waggle counts the distance.', clip:'dancecall', at:1.5, fy:0.3},
+  {e:'👑', h:'One queen, 1,500 eggs a day', s:'The whole colony is her daughters.', clip:'alive', at:2, fy:0.42},
+  {e:'🍯', h:'1/12 teaspoon of honey', s:'…is all one bee makes in her whole life.', clip:'winter', at:3, fy:0.4},
+  {e:'🔬', h:'The real enemy is tiny', s:'Varroa mites ride bees and breed in the brood.', clip:'fast', at:3, fy:0.42},
+];
+scene(36,48.05,async(t)=>{
+  if(t<2){ bgHoney(t,0.4); hexField(t,0.45); swarm(t,9,{seed:21,size:20,alpha:0.8});
+    kicker('WHAT YOU’LL LEARN', CX, CY-(V?150:140)*U, t, {size:34});
+    words('How a *superorganism* actually works.', CX, CY, V?78:92, t-0.2, {w:800, maxW:W*0.8, gap:0.1});
+    flash(1-t/0.2); return; }
+  const i=Math.min(4,Math.floor((t-2)/2)), k=t-2-i*2, f=FACTS[i];
+  await clip(f.clip, f.at+k*0.8, {z0:1.5,z1:1.62,p:k/2,fx:0.48,fy:f.fy,blur:10,bright:0.55});
+  vignette(0.7);
+  const cw=Math.min(W*0.84, 1300*U), ch=(V?560:430)*U, cx0=CX-cw/2, cy0=CY-ch/2;
+  const sc=lerp(0.8,1,back(k/0.35)); ctx.save(); ctx.translate(CX,CY); ctx.scale(sc,sc); ctx.rotate((i%2?1:-1)*0.012); ctx.translate(-CX,-CY); ctx.globalAlpha=cl(k/0.12)*(1-inv(1.85,2,k));
+  ctx.fillStyle='rgba(28,18,7,0.92)'; ctx.strokeStyle=C.honey; ctx.lineWidth=4*U; ctx.beginPath(); ctx.roundRect(cx0,cy0,cw,ch,36*U); ctx.fill(); ctx.stroke();
+  ctx.restore();
+  ctx.save(); ctx.globalAlpha=1-inv(1.85,2,k);
+  emoji(f.e, CX, cy0+(V?110:95)*U, 110, k);
+  kicker(`FIELD NOTE ${i+1}`, CX, cy0+(V?205:180)*U, k-0.1, {size:26});
+  title(f.h, CX, cy0+(V?300:262)*U, V?72:80, k-0.15, {w:800, maxW:cw*0.9, stroke:false});
+  words(f.s, CX, cy0+(V?420:352)*U, V?40:42, k-0.45, {w:500, maxW:cw*0.86, gap:0.05, fill:'#f3dfb4'});
+  ctx.restore();
+});
+cue(36,'hit',0.8); for(let i=0;i<5;i++){ cue(38+i*2,'whoosh',0.6); cue(38.15+i*2,'chime',0.7); }
+
+// 10 · YOU'LL ACHIEVE (48–56): a keeper's career, unlocking
+const GOALS=[
+  ['🌱','Survive your first winter'],['👑','Unlock 7 queen lines'],['🎁','Earn 7 Queen’s Gifts'],
+  ['🫙','Fill a cellar with rare honey'],['🏅','Collect 12 badges'],['🏆','Reach LEGENDARY: ten winters'],
+];
+scene(48,56.05,async(t)=>{
+  await clip('winter', 2+t*0.3, {z0:1.2,z1:1.3,p:t/8,fx:0.48,fy:0.4,blur:14,bright:0.45});
+  vignette(0.75);
+  kicker('WHAT YOU’LL ACHIEVE', CX, V?H*0.17:H*0.1, t, {size:32});
+  const rowH=(V?118:104)*U, top=(V?H*0.26:H*0.2), bw=Math.min(W*0.86,1100*U);
+  GOALS.forEach((g,i)=>{ const k=t-0.4-i*1.1; if(k<=0) return; const y=top+i*rowH+rowH/2; const x0=CX-bw/2;
+    const sl=(1-eo(k/0.35))*120*U; const last=i===GOALS.length-1;
+    ctx.save(); ctx.globalAlpha=cl(k/0.15); ctx.translate(sl,0);
+    ctx.fillStyle=last?'rgba(255,181,46,0.22)':'rgba(28,18,7,0.85)'; ctx.strokeStyle=last?C.honey2:'rgba(255,190,90,0.45)'; ctx.lineWidth=(last?4:2)*U;
+    ctx.beginPath(); ctx.roundRect(x0,y-rowH*0.42,bw,rowH*0.84,22*U); ctx.fill(); ctx.stroke();
+    ctx.font=`${Math.round(52*U)}px 'Noto Color Emoji'`; ctx.textBaseline='middle'; ctx.fillText(g[0],x0+28*U,y+2*U);
+    ctx.font=F(800,V?44:48); ctx.fillStyle=last?C.honey2:C.cream; ctx.fillText(g[1],x0+110*U,y+2*U);
+    const ck=k-0.35; if(ck>0){ const cxk=x0+bw-58*U; ctx.fillStyle=C.grow; ctx.beginPath(); ctx.arc(cxk,y,28*U*back(ck/0.3),0,7); ctx.fill();
+      ctx.strokeStyle='#10300a'; ctx.lineWidth=7*U; ctx.lineCap='round'; ctx.beginPath(); ctx.moveTo(cxk-12*U,y); ctx.lineTo(cxk-3*U,y+10*U); ctx.lineTo(cxk+14*U,y-11*U); ctx.stroke(); }
+    ctx.restore(); if(last) sparks(CX,y,k-0.35,50,{spread:600}); });
+  flash(1-t/0.2);
+});
+cue(48,'whoosh'); for(let i=0;i<6;i++){ cue(48.4+i*1.1,'pop'); cue(48.75+i*1.1,'ding',1+i*0.12); } cue(54.2,'fanfare');
+
+// 11 · WHY IT MATTERS (56–62)
+scene(56,62.05,async(t)=>{
+  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,'#1d3b56'); g.addColorStop(0.55,'#f3b25c'); g.addColorStop(0.56,'#3f7a2c'); g.addColorStop(1,'#1f4415'); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  const sunY=H*0.52; ctx.fillStyle='rgba(255,230,160,0.9)'; ctx.beginPath(); ctx.arc(CX,sunY,160*U,Math.PI,0); ctx.fill();
+  for(let i=0;i<46;i++){ const x=rnd(i*3)*W, y=H*(0.6+rnd(i*5)*0.36); flower(x,y,24+rnd(i)*26,(t-0.2-rnd(i*7)*2.2), [0,45,280,320,200][i%5], 5+(i%3)); }
+  swarm(t,10,{seed:31,size:18,band:[0.35,0.75]});
+  vignette(0.5);
+  kicker('WHY IT MATTERS', CX, V?H*0.12:H*0.1, t, {size:32, col:'#fff4d6'});
+  words('Honeybees have keepers. The *wild bees* don’t.', CX, V?H*0.24:H*0.23, V?64:74, t-0.2, {w:800, maxW:W*0.86, gap:0.08});
+  if(t>2.4) words('Learn what every bee is up against — then plant the flowers that feed them *all*.', CX, V?H*0.38:H*0.4, V?42:46, t-2.4, {w:600, maxW:W*0.8, gap:0.05});
+  flash(1-t/0.3);
+});
+cue(56,'whoosh'); cue(56.2,'chime'); cue(58.4,'chime',0.7);
+
+// 12 · TOGETHER (62–66)
+scene(62,66.05,async(t)=>{
+  await clip('title', 0.2+t*0.6, {z0:1.05,z1:1.15,p:t/4,fx:0.5,fy:0.55,blur:3,bright:0.7});
+  vignette(0.6);
+  title('Play solo…', CX, V?H*0.3:H*0.28, 110, t);
+  title('…or 2–8 friends, one hive', CX, V?H*0.42:H*0.44, V?84:96, t-0.7, {fill:C.cream});
+  pill('Family mode: easy words, gentle bees', CX, V?H*0.6:H*0.66, 36, t-1.5, {icon:'🧸',accent:C.grow});
+  pill('Big decisions go to a hive vote', CX, V?H*0.68:H*0.78, 36, t-2.1, {icon:'🗳️',accent:C.honey});
+  flash(1-t/0.2);
+});
+cue(62,'whoosh'); cue(62.1,'pop'); cue(62.8,'pop'); cue(63.6,'pop'); cue(64.2,'pop');
+
+// 13 · CTA (66–72)
+scene(66,72.05,async(t)=>{
+  bgHoney(t,0.1); hexField(t+66,0.6,64); swarm(t+66,12,{seed:41,size:22,alpha:0.9});
+  const s=lerp(1.8,1,eo(t/0.3)); ctx.save(); ctx.translate(CX,CY*0.8); ctx.scale(s,s); ctx.translate(-CX,-CY*0.8);
+  title('HIVEMIND', CX, CY*0.8, V?180:220, t+0.5); ctx.restore();
+  words('Can you keep them *alive?*', CX, CY*0.8+(V?150:170)*U, V?60:64, t-0.5, {w:700});
+  pill('hive-mind-game.com', CX, CY*0.8+(V?300:320)*U, V?46:50, t-1.3, {icon:'🐝',accent:C.honey2});
+  kicker('FREE  ·  NO ADS  ·  NO DOWNLOAD  ·  PLAYS IN YOUR BROWSER', CX, CY*0.8+(V?420:430)*U, t-1.9, {size:V?22:28, col:C.cream});
+  sparks(CX,CY*0.8,t,70,{spread:900});
+  flash(1-t/0.25); flash(inv(5.3,6,t),'0,0,0');
+  hexWipe(inv(-0.3,0.3,t)+1);
+});
+cue(66,'hit',1); cue(66,'fanfare'); cue(67.3,'pop'); cue(70,'end');
+
+const DUR=72;
+// ---------------------------------------------------------------- render
+let busy=null;
+async function renderAt(T){
+  ctx.setTransform(1,0,0,1,0,0); ctx.globalAlpha=1; ctx.filter='none';
+  ctx.fillStyle='#0b0805'; ctx.fillRect(0,0,W,H);
+  for(const s of SC){ if(T>=s.a && T<s.b){ ctx.save(); await s.fn(T-s.a, s.b-s.a); ctx.restore(); } }
+}
+async function boot(){
+  const dirs=['clips','clips2'];
+  for(const d of dirs){ try{ const j=await (await fetch(d+'/clips.json')).json(); for(const k in j){ const key=(d==='clips2'&&CLIPS[k])?k+'2':k; CLIPS[key]=j[k].map(x=>({...x,dir:d})); } }catch(e){} }
+  await document.fonts.load(F(800,100)); await document.fonts.load(F(700,40)); await document.fonts.load(F(500,40)); await document.fonts.load(FM(800,40)); await document.fonts.load(FM(600,40));
+  await document.fonts.load(`40px 'Noto Color Emoji'`);
+}
+const ready=boot();
+window.TRAILER={W,H,FPS,DUR,CUES,ready,renderAt,frame:async(i)=>{ await renderAt(i/FPS); return cv.toDataURL('image/jpeg',0.93); }};
+// live preview when opened directly
+if(!Q.get('render')) ready.then(()=>{ const t0=performance.now(); const loop=async()=>{ const T=((performance.now()-t0)/1000)%DUR; if(!busy){ busy=renderAt(T).then(()=>busy=null); } requestAnimationFrame(loop); }; loop(); });
+</script>
+</body>
+</html>

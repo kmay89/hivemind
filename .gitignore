@@ -3,3 +3,8 @@ Thumbs.db
 *.log
 node_modules/
 .claude/
+
+# trailer capture/render scratch (see marketing/README.md)
+marketing/clips/
+marketing/clips2/
+marketing/.render-*/
