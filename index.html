@@ -2228,7 +2228,14 @@
     const LIFE_S=35, LIFE_W=135;
     const CAP=200, RENDER_BEES=120;
     const C_BEE=0.45, COLD_K=1.25, RIPE=0.55;
-    const NEC_PF=4.0, POL_PF=2.2;
+    // the winter cluster is a ball of bees: every body makes heat, but it escapes only
+    // through the surface (~N^2/3), so each bee in a big cluster burns less honey to stay
+    // at blood heat, and a small one burns more. Below CLUSTER_MIN it can't hold its
+    // core warm at all and bees chill away. This is what makes growing the colony *pay*:
+    // before it, a tiny hive wintered as cheaply per bee as a strong one, and "stay
+    // small, pin the dial on nectar, walk away" was the best strategy (FUN_ANALYSIS.md).
+    const CLUSTER_REF=24, CLUSTER_MIN=10, CHILL_K=0.035;
+    const NEC_PF=6.0, POL_PF=2.2;
     const BROOD_H=0.28, BROOD_P=0.20, WAX_H=3.5, LAYMAX=6.0;
     const FOR_FRAC=0.45, NURSE_FRAC=0.30, BUILD_FRAC=0.17;
     const YEAR=360, WIN_TEMP=6;
@@ -2307,6 +2314,13 @@
     const SEASONS=[[0,'Spring'],[90,'Summer'],[180,'Autumn'],[270,'Winter']];
     const lerpM=(a,d)=>{const x=d/30,i=Math.floor(x)%12,f=x-Math.floor(x);return a[i]*(1-f)+a[(i+1)%12]*f;};
     const coldMult=T=>1+Math.max(0,(12-T))/12*COLD_K;
+    // (Family mode keeps the reward for a big cluster but drops the penalty for a small one)
+    const clusterF=p=>{ const f=Math.max(0.65,Math.min(1.9,Math.pow(CLUSTER_REF/Math.max(1,p),1/3))); return familyMode?Math.min(1,f):f; };
+    // honey one bee burns per hive-day at temperature T in a colony of p bees — the ONE
+    // consumption formula: the sim, the ledger and the forecast all read it
+    const beeCost=(p,T)=>C_BEE*(1+(coldMult(T)-1)*clusterF(p));
+    // bees lost per hive-day to chill when a winter cluster is too small to stay warm
+    const chillLoss=(p,winter)=>(winter&&p<CLUSTER_MIN&&!familyMode)?p*CHILL_K*(1-p/CLUSTER_MIN):0;
     const seasonName=d=>{let n='Spring';for(const[s,nm]of SEASONS)if(d>=s)n=nm;return n;};
     const seasonIdx=d=>Math.max(0,Math.min(3,Math.floor(d/90)));
 
@@ -3740,6 +3754,10 @@
       else if(year>=MITE_YEAR && mite>0.85 && !winter){ ic='🩹'; warn=true; tx='<b>Varroa</b> is heavy in the brood — shrink the nursery so fewer cappings feed the mites, or winter will thin the cluster hard.'; }
       else if(year>=MITE_YEAR && mite>0.5 && day>170 && !winter){ ic='🪥'; tx='<b>Mites</b> are building under the cappings. A smaller brood nest now means a stronger cluster at frost.'; }
       else if(!winter && countBrood().total>5 && nestWarmth()<0.72){ ic='🌡'; tx='The brood is <b>chilled at the edges</b> — a nursery in one tight patch holds its own heat. Scattered comb bleeds it away.'; }
+      else if(!winter && Na>0.2 && pollenU<3*HC && br.total>3){ ic='🌼'; warn=true; tx='The queen is short of <b>bee bread</b> — with little <b>Pollen</b> banked she lays at half pace. Slide the mixer toward Pollen for a while.'; }
+      else if(!winter && day>195 && day<262 && P<CLUSTER_MIN*1.8){ ic='🧶'; warn=true; tx='This colony is small for a <b>winter cluster</b> — a little ball of bees can’t hold its heat. Keep some <b>Brood</b> going now: autumn bees are the long-lived winter bees.'; }
+      else if(!winter && day<210 && buildStall==='small' && broodCells()<P*1.1){ ic='👑'; tx='The builders are at their limit for a colony this size. Turn a few <b>Honey</b> shelves into <b>Brood</b>: more bees, more hands, more comb.'; }
+      else if(!winter && day<140 && broodCells()<P*1.1+4){ ic='👑'; tx='Spring is for growing: the <b>nursery</b> should be <em>bigger</em> than the colony. Paint more comb as <b>Brood</b> so the queen can lay.'; }
       else if(!winter && day<210 && broodCells()<Math.max(6,P*0.45)){ ic='👑'; tx='The <b>nursery is small</b> for this colony — paint more comb as <b>Brood</b> so the queen can lay.'; }
       else if(caps().total>0 && (honeyU+pollenU+nectarU)>=caps().total-2){ ic='📦'; tx='Storage is <b>full</b> — flow is wasted. <b>Expand</b> comb to hold more.'; }
       else if(!winter && fc && fc.starve!==null && day>135 && day<252){ ic='📉'; warn=true; tx='At this pace the pantry won\u2019t last the winter — favour <b>Nectar</b> for a while.'; }
@@ -3831,7 +3849,7 @@
       let budget=(P*BUILD_FRAC*1.4 + Math.random()*0.15)*dd; // cells-worth of progress this step (dd-scaled → frame-rate independent)
       const bank=buildBank(), cost=bank.perCell, reserve=bank.reserve;   // shared with the on-screen wax bank so the pips obey the same rule
       const builtN=cells.reduce((a,c)=>a+(c.built?1:0),0);
-      if(builtN >= P*2.4+14){ buildStall='small'; toast('The colony is too small to tend more comb — grow the brood nest first.','buildscale'); return; }
+      if(builtN >= P*2.4+14){ buildStall='small'; toast('The builders are at their limit for this many bees — turn a few Honey shelves into <b>Brood</b> to grow the workforce.','buildscale'); return; }
       tip('wax','Hazel: Wax is dear. The old rule is eight ounces of honey burned for every ounce of wax drawn \u2014 that\u2019s why the builders hang back when the pantry runs thin.');
       if(honeyU<reserve){ buildStall='lean'; toast('Builders wait — stores are too lean to draw wax.','buildwait'); return; }
       buildStall='';
@@ -3891,7 +3909,7 @@
             for(let j=0;j<empties.length;j++){ const ep=cellCenter(empties[j].c,empties[j].r);
               const ed=(ep.x-queen.x)*(ep.x-queen.x)+(ep.y-queen.y)*(ep.y-queen.y); if(ed<bd){ bd=ed; k=j; } } }
           empties[k].brood={stage:'egg',t:0}; empties.splice(k,1); } }
-      honeyU -= P*C_BEE*coldMult(T)*M.eat()*dd;
+      honeyU -= P*beeCost(P,T)*M.eat()*dd;
       if(offline||onboard){ if(honeyU<2*HC)honeyU=2*HC; starveT=0; }
       else if(honeyU<=0){ honeyU=0; starveT+=dd; if(starveT>2.5 && !dailyMode) return gameOver('starve'); }
       else { starveT=0; if(honeyU<0)honeyU=0; }
@@ -3908,7 +3926,7 @@
         if(!offline && mite>0.3) tip('mites','Hazel: The real danger isn’t hornets — it’s <b>varroa</b>, a pinhead mite that breeds under the wax cappings of your brood. The more cells you keep capped, the faster it spreads. A break in laying, a smaller nursery, or hygienic stock starves them back.');
       }
       const miteWear=(year>=MITE_YEAR)?1+Math.max(0,mite-MITE_HURT)*(winter?1.0:0.3):1;   // heavy mites shorten lives, worst in winter
-      const drate=winter?1/LIFE_W:1/LIFE_S; P-=P*drate*dd*1.2*miteWear;
+      const drate=winter?1/LIFE_W:1/LIFE_S; P-=P*drate*dd*1.2*miteWear + chillLoss(P,winter)*dd;
       if(!offline) rosterTick(dd, winter);
       if(!offline && !onboard && !dailyMode && P<1) return gameOver('dwindle'); if(P<1)P=1;
       if(!onboard && !winter && day<215){ const crowd=(P/CAP)*(1-Math.min(1,space/14)); swarmP=Math.max(0,Math.min(1.2, swarmP+(crowd-0.18)*dd*0.5*M.swarm()));
@@ -4843,7 +4861,7 @@
 
     // ===================== trends, ledger & forecast =====================
     function ledger(){ const dif=difficulty(); const T=currentTemp(); const Na=lerpM(nectarM,day)*dif.flow; const fN=forage; const foragers=P*FOR_FRAC; const br=countBrood(); const cp=caps(); const full=(honeyU+pollenU+nectarU)>=cp.total-2; const m=forageMult()*M.forage();
-      const income=(full?0:foragers*NEC_PF*Na*fN*m)/HC, eaten=P*C_BEE*coldMult(T)*M.eat()/HC, brood=br.l*BROOD_H/HC, wax=waxRateEMA/HC;
+      const income=(full?0:foragers*NEC_PF*Na*fN*m)/HC, eaten=P*beeCost(P,T)*M.eat()/HC, brood=br.l*BROOD_H/HC, wax=waxRateEMA/HC;
       return {income,eaten,brood,wax,mult:m,full,net:income-eaten-brood-wax}; }
     // the same maths the sim runs, asked hypothetically: "what would this dial pay today?"
     function forageYield(f){ const dif=difficulty();
@@ -4863,7 +4881,10 @@
         : f>=0.42?'A steady <b>mix</b> \u2014 honey and brood together.'
         : f>=0.22?'Leaning <b>pollen</b> \u2014 more brood, a slower pantry.'
         : 'Mostly <b>pollen</b> \u2014 every cradle filled, little honey stored.';
-      let rec=''; if(started&&!onboard){ const ri=recForageIdx(), ci=forageIdx();
+      // the training wheels come off: Hazel's ★ is a first-year aid (and stays for Family
+      // mode). From year two the keeper reads the season themselves — the right notch
+      // really does move now (pollen in spring, nectar in summer), so there's something to read
+      let rec=''; if(started&&!onboard&&(year<=1||familyMode)){ const ri=recForageIdx(), ci=forageIdx();
         if(ri>ci) rec=' <span class="fxRec">\u2605 Hazel: lean to honey</span>'; else if(ri<ci) rec=' <span class="fxRec">\u2605 Hazel: raise more brood</span>'; }
       return t+' '+(full?'<span class="fxY">comb full</span>':('<span class="fxY">+'+(y.h*7).toFixed(1)+'\ud83c\udf6f \u00b7 +'+(y.p*7).toFixed(1)+'\ud83c\udf3c /wk</span>'))+rec; }
     // year one, once per season: Hazel says what the mixer wants now and why
@@ -4875,7 +4896,7 @@
       tip('forageS'+si, M[si]); }
     function syncForageUI(){ const ci=forageIdx(), sl=$('forageSlider'); if(sl && +sl.value!==ci) sl.value=ci;
       if(forage!==FORAGE_STEPS[ci]) forage=FORAGE_STEPS[ci]; // snap a legacy continuous value onto the notch
-      const ri=(started&&!onboard)?recForageIdx():-1, tk=$('fxTicks');
+      const ri=(started&&!onboard&&(year<=1||familyMode))?recForageIdx():-1, tk=$('fxTicks');
       if(tk){ const ii=tk.children; for(let i=0;i<ii.length;i++){ ii[i].classList.toggle('on',i===ci); ii[i].classList.toggle('rec',i===ri); } }
       const n=$('fxNote'); if(n){ const note='<span>'+forageNote()+'</span>'; if(n.innerHTML!==note) n.innerHTML=note; } }
     const BRUSHHELP={
@@ -5044,7 +5065,7 @@
         const nL=larv.reduce((a,b)=>a+b,0); const needH=nL*BROOD_H,needP=nL*BROOD_P; Hn=Math.max(0,Hn-Math.min(Hn,needH)); Po=Math.max(0,Po-Math.min(Po,needP));
         const space=Math.max(0,broodSpace-used), pollenF=Math.max(0,Math.min(1,Po/400)); const lay=Math.min(LAYMAX*lv*M.lay(),nurses*0.8,space)*pollenF*(p<CAP?1:0.15)*queenVigour();
         const em=pup[PUP_D-1]; for(let i=PUP_D-1;i>0;i--)pup[i]=pup[i-1]; pup[0]=larv[LAR_D-1]; for(let i=LAR_D-1;i>0;i--)larv[i]=larv[i-1]; larv[0]=eggs[EGG_D-1]; for(let i=EGG_D-1;i>0;i--)eggs[i]=eggs[i-1]; eggs[0]=lay;
-        used+=lay-em; if(used<0)used=0; if(used>broodSpace)used=broodSpace; p+=em-p*(winter?1/LIFE_W:1/LIFE_S)*1.2; if(p<1)p=1; Hn-=p*C_BEE*coldMult(T)*M.eat(); if(Hn<0){Hn=0; if(starve===null)starve=d;}
+        used+=lay-em; if(used<0)used=0; if(used>broodSpace)used=broodSpace; p+=em-p*(winter?1/LIFE_W:1/LIFE_S)*1.2-chillLoss(p,winter); if(p<1)p=1; Hn-=p*beeCost(p,T)*M.eat(); if(Hn<0){Hn=0; if(starve===null)starve=d;}
         if(d%6===0||d===YEAR) series.push({d,h:Hn/HC}); if(d>=250)minW=Math.min(minW,Hn); }
       if(minW===Infinity)minW=Hn; return {minW:minW/HC,endH:Hn/HC,starve,series}; }
     function setRow(id,txt){ const el=$(id); el.querySelector('b').textContent=txt+' /day'; }
