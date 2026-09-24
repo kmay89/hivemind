@@ -35,6 +35,9 @@
   .play{ display:inline-block; margin:10px 0 4px; padding:13px 28px; border-radius:999px; text-decoration:none;
     font-weight:700; font-size:15px; color:#241503; background:linear-gradient(180deg,var(--gold),var(--honey));
     box-shadow:0 8px 22px rgba(255,160,40,.28); }
+  .trailer{ width:100%; aspect-ratio:16/9; margin:18px 0 6px; border-radius:14px; background:#000;
+    border:1px solid var(--border); box-shadow:0 18px 54px rgba(0,0,0,.5); }
+  .cap{ font-size:12px; color:var(--dim); margin-bottom:10px; }
   footer{ max-width:640px; width:100%; margin-top:50px; padding-top:18px; border-top:1px solid var(--border);
     font-size:11.5px; color:var(--dim); display:flex; flex-wrap:wrap; gap:6px 18px; }
   footer a{ color:var(--dim); }
@@ -48,6 +51,12 @@
 
   <p><b>HIVEMIND</b> is a beekeeping survival sim that runs entirely in your browser. You take over an old beekeeper's hillside of hives and guide a honeybee colony through the year — paint the comb, steer the foragers, fend off hornets, and bank enough honey to survive the winter. Make it to spring and the next year gets harder.</p>
   <a class="play" href="/">Play HIVEMIND ▶</a>
+
+  <h2>Watch the trailer</h2>
+  <video class="trailer" controls playsinline preload="none" poster="/marketing/trailer-poster-16x9.jpg">
+    <source src="/marketing/hivemind-trailer-1920x1080.mp4" type="video/mp4">
+  </video>
+  <p class="cap">One minute, all real gameplay. Also in a <a href="/marketing/hivemind-trailer-1080x1920.mp4">vertical cut</a> for phones and social.</p>
 
   <h2>Grounded in real beekeeping</h2>
   <p>The colony is simulated, not scripted: brood develops from egg to larva to capped pupa, bees change jobs as they age, nectar ripens into honey, and the winter cluster burns its stores to stay warm. The game takes liberties where fun demands it, but the bones are honest — and the in-game keeper's notes are full of real bee facts.</p>

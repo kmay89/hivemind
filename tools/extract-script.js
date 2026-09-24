@@ -16,7 +16,7 @@ const path = require('path');
 const ACCESSOR_BINDINGS = [
   'day', 'year', 'P', 'honeyU', 'pollenU', 'nectarU', 'activePatch', 'forage',
   'coldSnap', 'over', 'started', 'peakPop', 'bornTotal', 'swarmP', 'queenLine',
-  'goals', 'curSeason',
+  'goals', 'curSeason', 'mite',
 ];
 // Objects/arrays/functions/consts: a captured reference points at the same
 // underlying value, and only ever-mutated-in-place (never reassigned) here, so
@@ -25,7 +25,7 @@ const DIRECT_BINDINGS = [
   'cells', 'roster', 'corpses', 'mix', 'owned', 'grades',
   'stepDay', 'resetColonyIdentity', 'tinyComb', 'drawSeason', 'makeGoals', 'seedStarterZones',
   'countBrood', 'honeyCellsStored', 'winterNeed', 'currentTemp', 'forecastToSpring',
-  'broodCells', 'honeyCells', 'caps',
+  'broodCells', 'honeyCells', 'caps', 'cellDist', 'neighbors', 'idx',
   'QUEENS', 'GIFTS', 'WEATHERS', 'FLOWERS',
   'YEAR', 'WIN_TEMP', 'CAP', 'HC', 'DAY_LEN',
 ];

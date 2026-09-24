@@ -1,7 +1,7 @@
 /* HIVEMIND service worker — offline play + update notifications.
    Bump VERSION with every release: the changed byte triggers the browser's
    service-worker update check, which shows players the in-game update bar. */
-const VERSION = '2026.07.31.40';
+const VERSION = '2026.09.23.41';
 const CACHE = 'hivemind-' + VERSION;
 const FONT_CACHE = 'hivemind-fonts';
 const SHELL = [
@@ -54,6 +54,11 @@ self.addEventListener('fetch', (e) => {
   }
 
   if (url.origin !== location.origin) return;
+
+  // The trailer: straight to the network. Video is fetched in byte ranges, which a
+  // cache-first handler would break, and a 16 MB file has no business in the
+  // offline shell.
+  if (url.pathname.startsWith('/marketing/') || req.headers.has('range')) return;
 
   // Navigations: network-first so a deploy reaches players immediately,
   // falling back to the cached shell when offline.
