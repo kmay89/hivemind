@@ -105,6 +105,9 @@ const STRATEGIES = {
   exploit: { dial: 0.95, tick(G, d) { if (d < 0.3) flagAll(G); } },
   // the previous CI stand-in: flags a few cells every two weeks, never zones or dials
   tinkerer: { dial: 0.6, tick(G, d) { if (Math.floor(d) % 14 === 0 && (d % 1) < 0.2) flagAll(G, 4); } },
+  // the least a newcomer does after the tutorial: taps Expand every week or so (the
+  // one verb that now grows the nursery in spring too), never paints, never moves the dial
+  expander: { dial: 0.6, tick(G, d) { if ((d % 1) < 0.2 && Math.floor(d) % 7 === 0 && G.day < 230) flagAll(G, 3); } },
   // a newcomer who does what the game tells them: follows the ★ on the forage dial,
   // paints the first two rings as nursery once, and taps a few edges every week
   casual: {
@@ -230,6 +233,8 @@ function main() {
     // --seed=N: across seeds 1-6 this line reads 15/15.
     { s: 'skilled', years: 1, min: 14, why: 'a keeper who plays the seasons well sees spring' },
     { s: 'casual',  years: 1, min: 13, why: 'a newcomer who follows Hazel and the ★ gets through year one' },
+    { s: 'expander',years: 1, min: 13, why: 'one verb (Expand) is enough to see the founding year through' },
+    { s: 'expander',years: 2, max: 7,  why: '…but after it, the dial, the mites and the calendar have to be read' },
     { s: 'skilled', years: 3, min: 6,  why: 'good keeping (brood breaks for mites included) carries on for years' },
     { s: 'passive', years: 2, max: 0,  why: 'a hive nobody keeps is lost' },
     { s: 'exploit', years: 2, max: 0,  why: 'no zero-input strategy wins (dial pinned on nectar, walk away)' },

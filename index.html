@@ -4028,6 +4028,14 @@
         if((LIFE.wb||0)<3){ LIFE.wb=(LIFE.wb||0)+1; lifeSave(); }
         let b=0,h=0; for(const[c,r]of neighbors(s.c,s.r)){const nb=cells[idx(c,r)]; if(nb.zone==='brood')b++; else if(nb.zone==='honey')h++;}
         s.zone=(b>h && cellDist(s.c,s.r)<2.2)?'brood':'honey';
+        // spring build-up: when the nursery is smaller than the colony needs, the queen
+        // moves out into the nearest shelf (the bees shift those stores outward) and the
+        // fresh comb takes the shelf's place. The nest stays one warm patch, and "Expand"
+        // means "grow" without a newcomer having to repaint shelves as Brood by hand.
+        if(s.zone==='honey' && day<150 && broodCells()<P*1.1+4){
+          const shift=cells.filter(c=>c.built&&c.zone==='honey'&&c!==s&&neighbors(c.c,c.r).some(([a,b2])=>cells[idx(a,b2)].zone==='brood'))
+            .sort((a,b2)=>cellDist(a.c,a.r)-cellDist(b2.c,b2.r))[0];
+          if(shift){ shift.zone='brood'; if(!said['nestgrow']){ said['nestgrow']=1; toast('🍼 The nursery grows into the nearest shelf. In spring the queen follows the new comb outward. More comb means more cradles.'); } } }
         const bn=cells.reduce((a,cc)=>a+(cc.built?1:0),0);
         if(CHEX.has(bn)){ const rr=CHEXRING[bn]; toast('Ring '+rr+' complete \u2014 '+bn+' cells. The comb grows in the centred hexagonal numbers: 1, 7, 19, 37\u2026','ring'+bn);
           ringFx={t:0, ring:rr, n:bn}; burst(hiveCx,hiveCy,36); fanfare(); try{ chime(784,1175); }catch(e){} shake=Math.max(shake,0.34); }
@@ -5933,7 +5941,11 @@
       drawCombPlan(); openOverlay('combPlan'); try{ chime(440,587); }catch(e){} return true; }
     window.__hmPlan=()=>{ drawCombPlan(); openOverlay('combPlan'); };   // dev/test handle, like __hm
     function endCoach(viaSkip){
-      onboard=false; finishType(false); clearSpots(); closePlacePreview(); $('coach').classList.remove('show'); setReveal(false); forecastCache=forecastToSpring();
+      onboard=false; finishType(false); clearSpots(); closePlacePreview(); $('coach').classList.remove('show'); setReveal(false);
+      // the coach teaches one cell of each craft; the rest of the founding comb still needs a
+      // job, or the stores (which only fit on Honey shelves) drain away the moment it ends
+      if(!viaSkip) seedStarterZones();
+      forecastCache=forecastToSpring();
       goals=makeGoals(); lastSI=seasonIdx(day); saveGame();
       // the hive is handed over PAUSED and simply waits. Nothing counts down,
       // nothing gates a sunrise — the clock starts when the keeper says so, and
@@ -5941,7 +5953,7 @@
       // dawn for a week; being interrupted five times read as nagging, not calm.)
       setSpeed(0);
       setTimeout(()=>{ if(showCombPlan()) dawnAfterPlan=true; else showDawnChip(); }, 1200); }
-    press($('coachBtn'),()=>{ if(coachWait){ if(twActive){ finishType(); } else coachContinue(); return; } const s=COACH[coachStep]; if(s&&!s.until) advanceCoach(); });
+    press($('coachBtn'),()=>{ if(coachWait){ if(twActive){ finishType(); } else coachContinue(); return; } const s=COACH[coachStep]; if(s&&(!s.until||s.until())) advanceCoach(); });   // a step already satisfied (brush picked early) must still move on
     press($('coachSkip'),()=>{ coachWait=false; seedStarterZones(); endCoach(true); });
     press($('coach'),e=>{ if(e.target&&e.target.closest&&(e.target.closest('#coachBtn')||e.target.closest('#coachSkip'))) return; if(twActive) finishType(); });
     function checkCoachProgress(){ if(!onboard||coachWait) return; const s=COACH[coachStep]; if(s&&s.until&&s.until()){ advanceCoach(); } }
@@ -7629,7 +7641,11 @@
       const autoFast=started&&!over&&!onboard&&winterNow&&!hornet&&speed>0&&forecastCache&&forecastCache.starve===null&&forecastCache.minW>10;
       if(autoFast) eff=Math.max(speed,3);
       $('fastW').classList.toggle('hide',!autoFast);
-      if(started && !over && speed>0 && !paused && !frozen && !netClient()){   // a linked joiner's sim lives on the Queen's device
+      // the founding coach holds the calendar: a newcomer reading at their own pace used
+      // to reach day ~90 inside the tutorial, with the founding bees dying off while they
+      // were still learning the brushes. The hive animates; the days wait.
+      const coachHold=onboard && day>=1.5;
+      if(started && !over && speed>0 && !paused && !frozen && !netClient() && !coachHold){   // a linked joiner's sim lives on the Queen's device
         const dd=(dt/DAY_LEN)*eff; day+=dd;
         if(dailyMode){ if(day>=DAILY_LEN && !over){ day=DAILY_LEN; syncHUD(); finishDaily(); } else stepDay(dd,false); }
         else if(day>=YEAR){ day=YEAR; stepDay(0.0001,false); if(!over){ syncHUD(); if(NET.on) netYearEnd(); else endOfYear(); } }
