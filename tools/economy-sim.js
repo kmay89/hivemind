@@ -236,7 +236,9 @@ function main() {
     { s: 'expander',years: 1, min: 13, why: 'one verb (Expand) is enough to see the founding year through' },
     { s: 'expander',years: 2, max: 7,  why: '…but after it, the dial, the mites and the calendar have to be read' },
     { s: 'skilled', years: 3, min: 6,  why: 'good keeping (brood breaks for mites included) carries on for years' },
-    { s: 'passive', years: 2, max: 0,  why: 'a hive nobody keeps is lost' },
+    // ≤1: the Insulated Hive gift (bought with royal jelly, so a decision in itself) can
+    // limp a hands-off colony across its second winter on the last few cells
+    { s: 'passive', years: 2, max: 1,  why: 'a hive nobody keeps is lost' },
     { s: 'exploit', years: 2, max: 0,  why: 'no zero-input strategy wins (dial pinned on nectar, walk away)' },
     { s: 'pinned',  years: 3, below: 'skilled', by: 4, why: 'the seasonal dial beats a pinned one — pollen matters' },
   ];
