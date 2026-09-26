@@ -152,6 +152,29 @@ function serve() {
   await trip.waitForFunction(() => window.__hm().net.started, null, { timeout: 6000 });
   console.log('✓ ONE TAP started — party live on all three devices');
 
+  // --- party play: a hive meeting, a reaction, a call for a hand ---
+  const tap = (pg, sel) => pg.$eval(sel, el => { el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0 })); el.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, button: 0 })); });
+  await host.evaluate(() => window.__hmEvent('mainflow'));
+  const meet = pg => pg.waitForFunction(() => { const v = document.getElementById('mpVote'); return !v.classList.contains('hide') && v.classList.contains('meet'); }, null, { timeout: 6000 });
+  await Promise.all([meet(host), meet(join), meet(trip)]);
+  const roads = await join.$eval('#voteYes', el => el.querySelector('b') ? el.querySelector('b').textContent : '');
+  console.log(roads ? `✓ hive meeting on every screen, the buttons are the card's two roads ("${roads}" / …)` : '✗ meeting buttons not relabelled');
+  await tap(join, '#voteYes'); await tap(trip, '#voteYes'); await tap(host, '#voteNo');
+  const noted = pg => pg.waitForFunction(() => /mainflow/.test(localStorage.getItem('hm_notes') || ''), null, { timeout: 8000 });
+  await Promise.all([noted(join), noted(trip)]);
+  const fx = await host.evaluate(() => !!document.querySelector('#fxRow .fxc'));
+  console.log(fx ? '✓ the majority road was played on the host, and every keeper filed the field note' : '✗ meeting result did not apply');
+  await join.waitForFunction(() => document.getElementById('mpVote').classList.contains('hide'), null, { timeout: 6000 });
+  await tap(join, '#mpEmo .emo[data-e="0"]');
+  await host.waitForSelector('.emoPop', { timeout: 4000 });
+  await trip.waitForSelector('.emoPop', { timeout: 4000 });
+  console.log('✓ a reaction floats on every screen');
+  await join.waitForTimeout(1500);   // reactions have a short cooldown
+  await tap(join, '#mpEmo .emo.help');
+  await trip.waitForFunction(() => [...document.querySelectorAll('.emoPop b')].some(b => b.textContent === '🙋'), null, { timeout: 4000 });
+  const opened = await host.evaluate(() => window.__hm().net.help);
+  console.log(opened.includes(1) ? '✓ 🙋 call for a hand opens Buzz\'s comb on the Queen\'s device (paints there count as aid)' : `✗ help flare not open on host (${JSON.stringify(opened)})`);
+
   // --- the woken hive leaves the public list but still takes latecomers ---
   const late = await mk('late');
   await late.click('#startParty');

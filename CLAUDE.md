@@ -209,9 +209,16 @@ numbers drift as the file changes; re-grep `// =====` banners if they look off)
   `when()`, a `gap` in hive-days, two `opts` (`go()` applies it, optional `ok()` greys it
   out) and a `fact` that files a field note. Lasting effects go through
   `addFx(kind,mult,days)` / `fxMul(kind)`; the kinds the sim reads are `nec`, `pol`,
-  `lay`, `eat`. Add a row, never a branch. Solo only (never while `NET.on` or in a daily);
-  the headless sim never opens a card, so CI measures the bare colony. Debug:
-  `window.__hmEvent(id)`.
+  `lay`, `eat`. Add a row, never a branch. Never in a daily. In a party the host deals
+  the same cards as **hive meetings** (`hostStartVote('ev',id,-1)` → `netApplyEvent`): the
+  two options become the vote buttons, a tie takes option two, so keep option two the
+  steadier road. Mark a row `party:false` if its `go()` opens host-only UI (the frame
+  check does). The headless sim never opens a card, so CI measures the bare colony. Debug:
+  `window.__hmEvent(id)` (a meeting when hosting a party).
+- **Party reactions** (`EMOTES[]`, `#mpEmo`, `netEmote`/`hostEmote`/`netShowEmote`): one-tap
+  emoji on every screen; the `help` row (🙋) opens the asker's wedge to everyone for
+  `NET_HELP_MS` — `netHelpOpen(ix)` is read by `netPaintOk`, `netApplyPaint` (paints there
+  are **aid** merit) and `drawSectorOverlay`. No free-text chat, deliberately.
 - **Frame check** (`openFrameGame`/`fgTick`/`fgEnd`, overlay `#frameGame`, offered by the
   `inspect` event) — a 10-second canvas mini-game: find the painted queen, tap mites
   (year 2+), cut queen cells (when `swarmP` is up). Rewards are in sim terms (lay fx,
@@ -234,6 +241,11 @@ numbers drift as the file changes; re-grep `// =====` banners if they look off)
 - **Spring nest growth** (`buildFromFlags`, `nestFlip`): while the nursery is smaller than
   the colony needs, every other new cell pushes the nearest shelf into the nursery, so
   Expand grows both nursery and pantry. It is part of the economy (the contract measures it).
+- **The tray arrives a control at a time** (the Hay Day unlock): `DISCOVER[]` rows also fold
+  away `#fastToggle`, `#inspectBtn`, `#heatBtn` and `#reportBtn` (`.undisc`) for a new colony
+  until their `when()` fires — fast after the first quest, the lenses through spring/summer,
+  the report in summer. Daily, party and resumed pre-`dc` saves call `discoverAll()`. A new
+  control that a newcomer doesn't need in minute one gets a row, not a hard-coded hide.
 - **Lessons are offered, not forced** (`offerLesson` → a log line + an unread dot on `?`);
   `showLesson` still opens them from the guide. Family mode keeps them opening directly.
 - **Visible consequences**: `syncFxRow` (`#fxRow`) shows every event effect still in force
