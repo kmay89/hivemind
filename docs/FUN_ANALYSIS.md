@@ -53,6 +53,49 @@ What went in, by recommendation:
 - **#17** The apiary: splits and each surviving year add a hive to the hillside.
 - **#18** The mastery ramp: from year three the forecast stops naming the exact day.
 
+### Round 3: approachable from the first tap (2026-09)
+
+A bot that played the founding tutorial **exactly as instructed** found the worst traps yet:
+
+- **The clock ran during the tutorial.** A player reading at their own pace reached day ~90
+  inside the coach, with the founding colony down from 15 to ~1.5 bees. The coach now holds
+  the calendar.
+- **Finishing the tutorial broke the comb.** It teaches one cell per craft and left 15 of 16
+  founding cells unzoned, and stores only fit on Honey shelves, so the pantry drained away the
+  moment it ended. Now the rest of the comb is zoned the way "skip" already did.
+- **An inert Next button** if a brush was picked before it was asked for.
+
+Then the changes that make the first year teach itself:
+
+- **Expand now means grow.** In spring, while the nursery is smaller than the colony needs,
+  every other new cell moves the queen into the nearest shelf. A newcomer who only ever taps
+  Expand now sees the founding year (15/15 on the CI seed) but usually not the next (4/15):
+  a learning curve, not a cliff. Both are new CI contract lines.
+- **Pollen is priced like the real thing.** Brood eats 0.5 pollen/larva-day (was 0.2). Real
+  colonies use pollen on the same order as honey, and at 0.2 a nectar-pinned dial could still
+  feed a nursery indefinitely.
+- **One clear next job.** A first colony's first spring is taught as a sequence of quests
+  (build comb → a 14-cradle nursery → send foragers → hatch 3,000), each announced once, with
+  its control pulsing. Tapping any quest chip says how.
+- **Lessons are offered, not forced**: a line from Hazel and a dot on `?`, instead of five
+  full-screen interruptions in the first minutes.
+- **Consequences you can see.** Active event effects sit in the HUD as chips with countdowns;
+  every choice and every dial move floats its change to the winter forecast; the dial ends in
+  a live "❄ winter covered / dry" verdict.
+- **The one-more-year pull.** Year-end shows three stars with plain criteria (surviving always
+  earns one, where the old letter grade gave most survivors a D) and a teaser: next year's
+  threat, ✧ toward the next gift, the next rank, field notes found.
+
+| Contract (CI seed) | Round 2 | Round 3 |
+|---|---|---|
+| Expand-only newcomer, year 1 | not measured | 15/15 |
+| Expand-only newcomer, year 2 | not measured | 4/15 |
+| Skilled, 3 years | 8/15 | 10/15 |
+| Nectar exploit, 2 years | 0/15 | 0/15 |
+
+Multi-year lines swing with the weather roll (across seeds 1–2: expand-only year 2 ranges
+4–13/15, skilled 3-year 4–10/15), so read them as a regression guard, not a promise.
+
 The analysis below is kept as written, since it's the reasoning behind the changes.
 
 ---

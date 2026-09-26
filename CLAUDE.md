@@ -226,6 +226,26 @@ numbers drift as the file changes; re-grep `// =====` banners if they look off)
   try into `#ovCause`. As each autumn begins (day 210) a snapshot of the colony is kept in
   `hm_rewind`; `#ovRewind` restores it once (the snapshot is consumed, and the death's
   chronicle page is popped).
+- **The founding coach holds the calendar** (`coachHold` in `frame()`: the day stops at
+  1.5 while `onboard`), and `endCoach` zones every unzoned founding cell via
+  `seedStarterZones()` — the coach teaches one cell per craft, and stores only fit on
+  Honey shelves. Both were live traps before (a reader reached day ~90 in the tutorial;
+  a finished tutorial drained the pantry).
+- **Spring nest growth** (`buildFromFlags`, `nestFlip`): while the nursery is smaller than
+  the colony needs, every other new cell pushes the nearest shelf into the nursery, so
+  Expand grows both nursery and pantry. It is part of the economy (the contract measures it).
+- **Lessons are offered, not forced** (`offerLesson` → a log line + an unread dot on `?`);
+  `showLesson` still opens them from the guide. Family mode keeps them opening directly.
+- **Visible consequences**: `syncFxRow` (`#fxRow`) shows every event effect still in force
+  with a countdown; `chooseEvent` and the forage slider float the change in the winter
+  forecast (`forecastToSpring` reads `fxMulAt`, so the forecast includes those effects);
+  `forageNote` ends with a live "❄ winter covered / dry" verdict.
+- **Year-end stars** (`endOfYear`): three stars with plain criteria plus a `#yeHook` teaser
+  (next year's name/threat, ✧ toward a gift, next rank, field notes). The letter grade
+  stays in the chronicle; `LIFE.st` counts stars across a career.
+- **Guided first spring**: `QUESTS[]` rows carry `guide` (teaching order for a first
+  colony's first year), `how` and `spot`; `questLead` is announced once as "Next job" and
+  its chip is labelled. Tapping any quest chip explains it and pulses its control.
 - `meadowU()` — the meadow's drawing unit (`mSize` alone collapses to ~6px on laptops).
   `patchPos` uses it too, so drawing and tap hit-testing agree.
 - `M{}` — the stat-modifier reducer over `GIFTS`(owned) + `QUEENS`(mods).
@@ -273,7 +293,7 @@ row, that's a sign the table needs a field instead.
 
 - `tools/economy-sim.js` — headless multi-year economy simulation used to
   validate CONFIG/QUEENS/GIFTS balance changes before they ship. It plays player
-  **archetypes** (`passive`, `exploit`, `tinkerer`, `casual`, `skilled`, `pinned`)
+  **archetypes** (`passive`, `exploit`, `tinkerer`, `expander`, `casual`, `skilled`, `pinned`)
   across all 15 queen/gift scenarios and asserts an **agency contract**: skilled play
   and a Hazel-following newcomer survive year one, neglect and the nectar-pinned exploit
   die by year two, and the seasonal dial beats a pinned one over three years. A balance
