@@ -1181,6 +1181,21 @@
   /* ===== hive link (same-room multiplayer) ===== */
   #mpStrip{ display:flex; gap:5px; flex-wrap:wrap; justify-content:center; margin-top:6px; cursor:pointer; }
   #mpStrip.hide{ display:none; }
+  /* a slim rail on the right edge (the combKey tab's mirror): never adds height to the HUD panes over the comb */
+  #mpEmo{ position:fixed; right:6px; top:50%; transform:translateY(-50%); z-index:44; display:flex; flex-direction:column; gap:5px; padding:5px; border-radius:14px; background:rgba(20,13,4,.55); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
+  #mpEmo.hide{ display:none; }
+  #mpEmo .emo{ font-size:17px; line-height:1; width:32px; height:32px; display:grid; place-items:center; border-radius:10px; cursor:pointer;
+    background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.14); transition:transform .12s; }
+  #mpEmo .emo:active{ transform:scale(.86); }
+  #mpEmo .emo.help{ background:rgba(255,214,107,.16); border-color:rgba(255,214,107,.45); }
+  #mpEmo.cool .emo{ opacity:.45; }
+  .emoPop{ position:fixed; z-index:var(--z-popup); pointer-events:none; display:flex; flex-direction:column; align-items:center; gap:3px;
+    animation:emoRise 2.6s cubic-bezier(.2,.9,.3,1) forwards; }
+  .emoPop b{ font-size:46px; line-height:1; filter:drop-shadow(0 4px 10px rgba(0,0,0,.45)); }
+  .emoPop span{ font:700 11px 'JetBrains Mono',monospace; color:#1c1508; padding:2px 8px; border-radius:12px; }
+  @keyframes emoRise{ 0%{ opacity:0; transform:translateY(24px) scale(.4); } 12%{ opacity:1; transform:translateY(0) scale(1.15); }
+    22%{ transform:scale(1); } 75%{ opacity:1; } 100%{ opacity:0; transform:translateY(-90px) scale(.9); } }
+  @media (prefers-reduced-motion:reduce){ .emoPop{ animation:none; opacity:1; } }
   #mpStrip .chip{ font:600 10.5px 'JetBrains Mono',monospace; color:#1c1508; border-radius:20px; padding:3px 9px; box-shadow:0 2px 6px rgba(0,0,0,0.35); border:1.5px solid rgba(0,0,0,0.28); opacity:0.94; }
   #mpStrip .chip.gone{ opacity:0.4; text-decoration:line-through; }
   #mpStrip .chip.me{ box-shadow:0 0 0 2px rgba(255,255,255,.85), 0 2px 6px rgba(0,0,0,.35); }
@@ -1204,6 +1219,12 @@
   #voteTally{ font:600 14.5px 'Bricolage Grotesque',sans-serif; margin-top:9px; min-height:22px; letter-spacing:1px; }
   .voteBtns{ display:flex; gap:9px; margin-top:11px; }
   .voteBtns .btn{ flex:1; font-size:16px; padding:13px 8px; }
+  #mpVote.meet .voteBtns{ flex-direction:column; }
+  #mpVote.meet .voteBtns .btn{ display:flex; flex-direction:column; gap:3px; text-align:left; padding:11px 13px; font-size:15px; }
+  #mpVote.meet .voteBtns .btn i{ font:500 11.5px 'Bricolage Grotesque',sans-serif; font-style:normal; opacity:.8; }
+  #mpVote.meet .voteBtns .btn.won{ opacity:1; outline:3px solid #c9ffb0; }
+  #mpVote.meet #voteSub{ text-transform:none; letter-spacing:0; font:500 14.5px/1.45 'Bricolage Grotesque',sans-serif; color:var(--text); margin-bottom:6px; }
+  .voteFact{ margin-top:8px; font-size:12.5px; opacity:.72; }
   /* a joiner's Queen-only controls are LOCKED, not hidden — hiding them answers
      "why can't I?" with silence; a crown answers it before they even tap */
   .netc #timeGrp .timeBtn{ display:none !important; }
@@ -1525,6 +1546,7 @@
 
   <!-- comb key: a collapsible legend that decodes every cell + brood phase. Lives on the
        left edge (where a wide screen has room to spare); tap the 🔑 handle to slide it out. -->
+  <div id="mpEmo" class="hide" aria-label="quick reactions"></div>
   <div id="combKey" class="hide closed" aria-hidden="true">
     <div id="ckPanel" role="region" aria-label="Comb key — what each cell means">
       <div class="ckTitle">🔑 Comb key &amp; words</div>
@@ -1968,7 +1990,7 @@
   </div>
   <div class="ov hide" id="mpVote" role="dialog" aria-modal="true">
     <div class="card panel">
-      <div class="mpBadge">🗳 the hive decides</div>
+      <div class="mpBadge" id="voteBadge">🗳 the hive decides</div>
       <h1 id="voteQ" style="font-size:21px"></h1>
       <div class="sub" id="voteSub"></div>
       <div class="voteBtns">
@@ -2119,7 +2141,7 @@
     // / non-https, where no service worker runs) — the real source of truth is sw.js's
     // VERSION; syncGameVer() below asks the running worker and corrects this label
     // live, so the two only ever drift cosmetically for a moment, never permanently.
-    let GAME_VER='2026.09.26.42';
+    let GAME_VER='2026.09.26.43';
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -5580,7 +5602,7 @@
     function apiaryAdd(){ if(dailyMode||NET.on) return; APIARY=Math.min(24,APIARY+1); lsSet('hm_apiary',String(APIARY));
       logMsg('🏠','Your apiary grows: <b>'+(APIARY+1)+' hives</b> on the hill now. Look for them in the ☀ Meadow.'); }
     const EVENTS=[
-      { id:'inspect', ic:'🔍', kick:'a keeper’s round', title:'TIME FOR A FRAME CHECK', gap:75,
+      { id:'inspect', ic:'🔍', kick:'a keeper’s round', title:'TIME FOR A FRAME CHECK', gap:75, party:false,
         when:()=>day>30 && day<250 && P>10 && countBrood().total>3,
         tx:()=>'A calm, sunny afternoon, good weather for opening the hive. Lift a frame and take a proper look?',
         fact:'Keepers inspect every week or two in the season: is the queen laying, is there room, are there queen cells or mites?',
@@ -5589,6 +5611,18 @@
             go(){ setTimeout(openFrameGame,260); return ''; } },
           { tx:'Not today', d:()=>'every inspection chills the brood a little, so skipping is fine',
             go(){ return 'You leave the lid on. Sometimes the best inspection is the one you don’t do.'; } },
+        ] },
+      // the first bloom: a party's first hive meeting, and a later colony's first spring choice.
+      // A first colony's first spring belongs to the guided quests, so it waits for them.
+      { id:'dandelion', ic:'🌼', kick:'the first big bloom', title:'THE DANDELIONS ARE OUT', gap:9999,
+        when:()=>day>12 && day<45 && P>8 && (NET.on||CHRON.length>0||year>1),
+        tx:()=>'The first big bloom of spring, and the colony is still small. Keep every forager on pollen for the nursery, or let them chase the first thin nectar?',
+        fact:'Dandelions are one of the first big pollen sources of spring. Bright orange loads in the pollen baskets mean a colony is building up.',
+        opts:[
+          { tx:'Pollen for the nursery', d:()=>'<span class="gain">+30% pollen</span> for 20 days · the queen lays on protein',
+            go(){ addFx('pol',1.3,20); return 'Orange loads on every leg. The nurses will have bee bread to spare.'; } },
+          { tx:'A little early honey', d:()=>'<span class="gain">+20% nectar</span> for 20 days · a thicker pantry, a slower start',
+            go(){ addFx('nec',1.2,20); return 'The first thin nectar of the year comes in. Not much, but it’s honey in the bank.'; } },
         ] },
       // comeback cards: a weak colony gets chances too, so a slow start is a story, not a sentence
       { id:'strayswarm', ic:'🌳', kick:'a lucky find', title:'A SWARM IN THE APPLE TREE', gap:9999,
@@ -5693,13 +5727,18 @@
         ] },
     ];
     let evCur=null;
-    function eventCheck(){ if(evCD>0||!started||over||paused||onboard||storyMode||danceMode||NET.on||dailyMode) return;
-      if(view!=='hive'||anyOverlayOpen()||(hornet&&hornet.state!=='flee')) return;
+    function eventCheck(){ if(evCD>0||!started||over||paused||onboard||storyMode||danceMode||dailyMode) return;
+      // in a linked hive only the Queen's device deals, and the card becomes a hive meeting
+      const party=NET.on; if(party&&!(NET.host&&NET.started&&!NET.vote&&!NET.cVote)) return;
+      if((!party&&view!=='hive')||anyOverlayOpen()||(hornet&&hornet.state!=='flee')) return;
       const now=absDay();
       const ready=EVENTS.filter(e=>{ const last=evLast[e.id]; if(last!=null && (e.gap>=9999 ? Math.floor(last/YEAR)===Math.floor(now/YEAR) : now-last<e.gap)) return false;
+        if(party && (e.party===false || e.opts.some(o=>o.ok&&!o.ok()))) return false;   // a vote needs two real choices
         try{ return e.when(); }catch(err){ return false; } });
       if(!ready.length) return;
-      openEvent(ready[(Math.random()*ready.length)|0]); }
+      const e=ready[(Math.random()*ready.length)|0];
+      if(party){ evLast[e.id]=now; evCD=48+Math.random()*20; hostStartVote('ev',e.id,-1); }
+      else openEvent(e); }
     function openEvent(e){ evCur=e; evLast[e.id]=absDay(); evCD=26+Math.random()*16;
       $('heKick').textContent=e.kick; $('heIc').textContent=e.ic; $('heTitle').textContent=e.title;
       $('heTx').innerHTML=e.tx(); $('heFact').innerHTML='📖 <b>Field note:</b> '+e.fact;
@@ -5779,7 +5818,7 @@
       if(FG.queen) grantBadge('inspector'); forecastCache=forecastToSpring(); }
     press($('fgDone'),()=>{ FG=null; closeOverlay('frameGame'); });
     window.__hmFrame=()=>openFrameGame();   // dev/test handle, like __hm
-    window.__hmEvent=id=>{ const e=EVENTS.find(x=>x.id===id)||EVENTS[0]; openEvent(e); };   // dev/test handle, like __hm
+    window.__hmEvent=id=>{ const e=EVENTS.find(x=>x.id===id)||EVENTS[0]; if(NET.on&&NET.host&&NET.started) hostStartVote('ev',e.id,-1); else openEvent(e); };   // dev/test handle, like __hm
 
     // ===================== founding coach (progressive onboarding) =====================
     // ===================== discovery: the interface arrives as the world earns it =====================
@@ -5808,7 +5847,10 @@
       {id:'advisor',   when:()=>day>=8,                               ic:'👵', tx:'Hazel is watching. Tap her any time to read back.'},
       {id:'forageGrp', when:()=>(nectarU>0&&day>=12)||day>=24,        ic:'🌼', tx:'You can’t command bees — but you can aim them.'},
       {id:'goal',      when:()=>day>=18&&!!(goals&&goals.length),     ic:'🧭', tx:'Something to aim at this season.'},
-      {id:'reportBtn', when:()=>day>=34,                              ic:'📊', tx:'The <b>report</b>, if you ever want the numbers behind all this.'},
+      {id:'fastToggle',when:()=>!!questDone.comb||day>=45,            ic:'⏩', tx:'<b>Fast-forward</b> — for the quiet stretches. Tap it again for normal speed.'},
+      {id:'inspectBtn',when:()=>day>=70,                              ic:'ⓘ',  tx:'The <b>ⓘ lens</b>: tap it, then any cell, to hear what that cell is doing.'},
+      {id:'heatBtn',   when:()=>day>=100,                             ic:'🌡', tx:'The <b>heat lens</b> shows the warmth the bees hold. Brood needs the warm heart.'},
+      {id:'reportBtn', when:()=>day>=130,                             ic:'📊', tx:'The <b>report</b>, if you ever want the numbers behind all this.'},
       {id:'wr',        when:()=>day>=HARV0*0.55,                      ic:'❄️', tx:'<b>Winter pantry.</b> This is the number the whole year is really about.'},
       {id:'stKeeper',  when:()=>rj>0||jars>0,                         ic:'✧',  tx:'<b>Keeper</b> — what you’ve earned across every colony.'},
     ];
@@ -5924,7 +5966,8 @@
       const s=COACH[coachStep]; coachStep++;
       if(speed===0) setSpeed(1);
       $('coach').classList.remove('show');
-      const tease=()=>{ const prevStep=COACH[coachStep-1]; const bridge=(prevStep&&((familyMode&&prevStep.kidBridge)||prevStep.bridge))||'';
+      const tease=()=>{ if(!onboard){ coachWait=false; return; }   // the coach already ended under the unlock chip: never re-show a card with a dead button
+        const prevStep=COACH[coachStep-1]; const bridge=(prevStep&&((familyMode&&prevStep.kidBridge)||prevStep.bridge))||'';
         if(!bridge){ coachWait=false; if(!onboard) return;
           if(coachStep>=COACH.length){ endCoach(); } else showCoach(); return; }
         $('coachIc').textContent='\ud83d\udc75'; $('coachProg').textContent='hazel';
@@ -6787,6 +6830,7 @@
       const s=netSector?netSector[idx(cell.c,cell.r)]:-2;
       if(s===-2||s===NET.myIx) return true;
       if(s>=0&&NET.players[s]&&NET.players[s].gone) return true;
+      if(netHelpOpen(s)) return true;   // they asked for a hand
       if(NET.denyCool<=0){ NET.denyCool=3; const p=NET.players[s];
         toast('🚧 That’s '+(s===0?'the Queen’s royal core':(p?netEsc(p.name)+'’s comb':'another keeper’s comb'))+'. Yours is <b>'+netSectorName(NET.myIx-1,NET.players.filter(q=>q.ix>0&&!q.gone).length)+'</b> — the patch tinted your colour.'); }
       return false; }
@@ -6795,8 +6839,9 @@
       netSend({t:'p', i:idx(cell.c,cell.r), z:cell.zone, f:cell.flagExpand?1:0}); }
     function netApplyPaint(m,pix){ const cell=cells[m.i]; if(!cell||!netSector) return;
       const s=netSector[m.i]; const owner=NET.players[s];
-      const helping=(s===-2||(s>=0&&s!==pix&&owner&&owner.gone));   // tending comb that isn't yours
-      if(!(s===-2||s===pix||(s>=0&&owner&&owner.gone))) return;
+      const asked=s!==pix&&netHelpOpen(s);
+      const helping=(s===-2||(s>=0&&s!==pix&&owner&&owner.gone)||asked);   // tending comb that isn't yours
+      if(!(s===-2||s===pix||(s>=0&&owner&&owner.gone)||asked)) return;
       let changed=false;
       if(!cell.built){ const f=!!m.f;
         if(f&&!neighbors(cell.c,cell.r).some(([c2,r2])=>cells[idx(c2,r2)].built)) return;
@@ -6844,6 +6889,9 @@
       if(k==='patch'){ const F=FLOWERS[PATCHES[v].f]; return {q:'Send the foragers to the '+F.n.toLowerCase()+' '+F.ic+'?', sub:'real hives choose exactly this way — scouts waggle-dance, the colony votes'}; }
       if(k==='harvest') return {q:'Harvest a jar of honey? 🫙', sub:'8 cells off the winter shelf — sweet now, thinner pantry later'};
       if(k==='feed') return {q:'Feed emergency syrup? 🥄', sub:'once a winter — kindness caps the year at a B, and it’s worth it'};
+      if(k==='ev'){ const e=EVENTS.find(x=>x.id===v); if(e){ let tx='', a=e.opts[0], b=e.opts[1]; try{ tx=e.tx(); }catch(err){}
+        const dd=o=>{ try{ return o.d(); }catch(err){ return ''; } };
+        return {q:e.ic+' '+e.title, sub:tx, a:a.tx, ad:dd(a), b:b.tx, bd:dd(b), fact:e.fact}; } }
       return {q:'Decide together?', sub:''}; }
     function netPropose(k,v){ if(!NET.on||!NET.started||over) return;
       if(NET.vote||NET.cVote){ toast('🗳 One vote at a time — the hive is mid-decision.'); return; }
@@ -6851,10 +6899,11 @@
       else netSend({t:'prop',k,v}); }
     function hostStartVote(k,v,byIx){ if(NET.vote) return;
       const id=++NET.voteN; NET.vote={id,k,v,by:byIx,bal:{}};
-      NET.vote.bal[byIx]=true;   // proposing IS your dance — in a duo, only your partner needs to answer
-      netBcast({t:'vote',id,k,v,by:byIx,secs:NET_VOTE_SECS});
-      netShowVote(k,v,byIx,NET_VOTE_SECS);
-      netBcast({t:'vst',id,voted:[byIx]}); netStripVoted([byIx]);
+      if(byIx>=0) NET.vote.bal[byIx]=true;   // proposing IS your dance — in a duo, only your partner needs to answer
+      const secs=k==='ev'?NET_VOTE_SECS+10:NET_VOTE_SECS;   // a hive meeting gets time to talk it over
+      netBcast({t:'vote',id,k,v,by:byIx,secs});
+      netShowVote(k,v,byIx,secs);
+      const v0=byIx>=0?[byIx]:[]; netBcast({t:'vst',id,voted:v0}); netStripVoted(v0);
       if(Object.keys(NET.vote.bal).length>=NET.players.filter(p=>!p.gone).length) hostEndVote(); }
     function hostBallot(ix,yes){ const V=NET.vote; if(!V||V.bal[ix]!==undefined) return; V.bal[ix]=!!yes;
       const voted=Object.keys(V.bal).map(Number);
@@ -6865,7 +6914,19 @@
       const pass=yes>no;   // a real quorum: a tie means the hive holds still
       netBcast({t:'tally',id:V.id,yes,no,pass,k:V.k,v:V.v});
       netVoteResult(V.k,V.v,yes,no,pass);
+      if(V.k==='ev'){ netApplyEvent(V.v,pass?0:1); return; }   // a hive meeting always decides: a tie takes the second, steadier road
       if(pass){ meritAdd(V.by,'voice'); netApplyDecision(V.k,V.v); } }
+    // the event deck, decided together — the host plays the chosen card exactly as solo does
+    function netApplyEvent(id,i){ const e=EVENTS.find(x=>x.id===id); if(!e) return; let o=e.opts[i];
+      if(o.ok&&!o.ok()) o=e.opts[1-i];   // ✧ spent while the hive talked: the other road it is
+      const before=(day<300)?forecastToSpring():null;
+      let res=''; try{ res=o.go()||''; }catch(err){}
+      noteField(e.id,e.ic,e.title,e.fact); netBcast({t:'fn',id:e.id});   // everyone files the field note
+      forecastCache=forecastToSpring();
+      netToastAll(e.ic+' <b>The hive chose: '+o.tx+'.</b> '+res);
+      if(before&&forecastCache){ const d=forecastCache.minW-before.minW;
+        if(Math.abs(d)>=0.3) netToastAll((d>0?'📈':'📉')+' Winter forecast: <b>'+(d>0?'+':'')+d.toFixed(1)+' cells</b> of honey at the leanest point.'); }
+      syncFxRow(); }
     function netApplyDecision(k,v){ // host only — state flows back out on the next snapshot
       if(k==='patch'){ if(v!=null&&PATCHES[v]){ activePatch=v; grantBadge('waggler'); forecastCache=forecastToSpring();
         netToastAll('💃 The dance is decided — foragers fly to the <b>'+FLOWERS[PATCHES[v].f].n.toLowerCase()+'</b>.'); } }
@@ -6874,15 +6935,25 @@
       else if(k==='feed'){ netExec=true; try{ feedSyrup(); }finally{ netExec=false; }
         netBcast({t:'ev',msg:'🥄 The hive votes to feed — a syrup feeder slides in. +10 cells.'}); } }
     function netShowVote(k,v,byIx,secs){ const by=NET.players[byIx], D=netVoteText(k,v);
-      const mine=(NET.host?0:NET.myIx)===byIx;
-      $('voteQ').innerHTML=D.q; $('voteSub').innerHTML='proposed by <b>'+(mine?'you':(by?netEsc(by.name):'a keeper'))+'</b>'+(D.sub?' · '+D.sub:'');
-      $('voteTally').textContent=mine?'proposing is your dance — 🐝 cast':'';
+      const mine=(NET.host?0:NET.myIx)===byIx, meet=k==='ev'&&D.a;
+      $('voteQ').innerHTML=D.q;
+      $('voteSub').innerHTML=meet?D.sub+'<div class="voteFact">📖 '+D.fact+'</div>'
+        :'proposed by <b>'+(mine?'you':(by?netEsc(by.name):'a keeper'))+'</b>'+(D.sub?' · '+D.sub:'');
+      $('voteYes').innerHTML=meet?'<b>'+D.a+'</b><i>'+D.ad+'</i>':'🐝 For';
+      $('voteNo').innerHTML=meet?'<b>'+D.b+'</b><i>'+D.bd+'</i>':'✋ Against';
+      $('mpVote').classList.toggle('meet',!!meet); $('voteBadge').textContent=meet?'🐝 hive meeting · talk it over':'🗳 the hive decides';
+      $('voteTally').textContent=mine?'proposing is your dance — 🐝 cast':(meet?'a tie takes the second road':'');
       $('voteYes').disabled=mine; $('voteNo').disabled=mine;
       netVoteUI={deadline:performance.now()+secs*1000, dur:secs*1000, cast:mine};
       NET.tickSec=null; const vb=$('voteBar'); if(vb) vb.classList.remove('low');
       netStripVoted([]); openOverlay('mpVote'); try{ chime(392,523); }catch(e){} hpt(15); }
     function netVoteResult(k,v,yes,no,pass){ netVoteUI=null; NET.cVote=null;
       const bees='🐝'.repeat(Math.min(8,yes))||'·', hands='✋'.repeat(Math.min(8,no));
+      if(k==='ev'){ const D=netVoteText(k,v);
+        $('voteTally').innerHTML='🐝'.repeat(Math.min(8,yes))+(yes&&no?'  ·  ':'')+'✋'.repeat(Math.min(8,no))+'<br>→ <b>'+(pass?D.a:D.b)+'</b>'+(yes===no?' (a tie takes the steadier road)':'');
+        $('voteYes').disabled=true; $('voteNo').disabled=true; $((pass?'voteYes':'voteNo')).classList.add('won');
+        setTimeout(()=>{ closeOverlay('mpVote'); $('voteYes').classList.remove('won'); $('voteNo').classList.remove('won'); },2200);
+        try{ fanfare(); }catch(e){} hpt(20); netStripVoted([]); return; }
       $('voteTally').innerHTML=(pass?'✅ ':'🚫 ')+bees+(no?'  vs  '+hands:'')+((yes===no&&yes+no>0)?' — a tie: the hive holds still':'');
       $('voteYes').disabled=true; $('voteNo').disabled=true;
       setTimeout(()=>{ closeOverlay('mpVote'); },1600);
@@ -6891,11 +6962,11 @@
       netStripVoted([]); }
     function netCastBallot(yes){ if(!netVoteUI||netVoteUI.cast) return; netVoteUI.cast=true;
       $('voteYes').disabled=true; $('voteNo').disabled=true; hpt(12);
-      $('voteTally').textContent=yes?'your dance says go 🐝':'your dance says wait ✋';
+      $('voteTally').textContent=$('mpVote').classList.contains('meet')?'your ballot is in — '+(yes?'the first road':'the second road'):(yes?'your dance says go 🐝':'your dance says wait ✋');
       if(NET.host) hostBallot(0,yes); else netSend({t:'bal',id:NET.cVote?NET.cVote.id:0,yes}); }
     // ---- the keeper strip: who's in the hive, who has danced their vote ----
     function netStripVoted(ixs){ netVotedIx=ixs||[]; netStripSync(); }
-    function netStripSync(){ const el=$('mpStrip'); if(!el) return;
+    function netStripSync(){ const el=$('mpStrip'); if(!el) return; netEmoSync();
       if(!NET.on||!NET.started){ el.classList.add('hide'); return; }
       el.classList.remove('hide');
       // connection legend: how many keepers are actually linked right now, at a glance
@@ -6904,6 +6975,30 @@
       // each keeper wears a live dot: lit = in the hive, hollow = dropped (their comb is held for them)
       el.innerHTML=netPostChip()+linkChip+NET.players.map(p=>'<span class="chip'+(p.gone?' gone':'')+(p.ix===NET.myIx?' me':'')+'" style="background:'+NETCOL[p.ix]+'"><i class="cdot'+(p.gone?' off':'')+'"></i>'+(p.ix===0?'👑 ':'')+netEsc(p.name)+(p.ix===NET.myIx?' (you)':'')+(netVotedIx.indexOf(p.ix)>=0?' ✓':'')+'</span>').join('')
         +(NET.stale?'<span class="chip warn" style="background:#3a2f1a;color:#ffd66b">reconnecting…</span>':''); }
+    // ---- quick reactions (the Clash Royale emote): say something with one tap, on every screen ----
+    // 🙋 is the Hay Day "help" request: for 40 s the other keepers may paint your wedge, and
+    // every cell they tend there counts as 🌾 aid — asking for help is how merit gets made.
+    const EMOTES=[{e:'👏'},{e:'😂'},{e:'😱'},{e:'💛'},{e:'🙋',help:1}];
+    const NET_HELP_MS=40000;
+    let emoCool=0;
+    function netEmoSync(){ const el=$('mpEmo'); if(!el) return; const on=NET.on&&NET.started;
+      el.classList.toggle('hide',!on); if(!on||el.childElementCount) return;
+      el.innerHTML=EMOTES.map((m,i)=>'<span class="emo'+(m.help?' help':'')+'" data-e="'+i+'" role="button" tabindex="0" title="'+(m.help?'Ask for a hand — the others can tend your comb for 40 s':'React')+'">'+m.e+'</span>').join('');
+      el.querySelectorAll('.emo').forEach(b=>press(b,()=>netEmote(+b.dataset.e))); }
+    function netEmote(i){ if(!NET.on||!NET.started||!EMOTES[i]) return; const now=performance.now(); if(now<emoCool) return;
+      emoCool=now+(EMOTES[i].help?NET_HELP_MS/2:1400); const el=$('mpEmo'); if(el){ el.classList.add('cool'); setTimeout(()=>el.classList.remove('cool'),emoCool-now); }
+      hpt(8); if(NET.host) hostEmote(0,i); else netSend({t:'emo',e:i}); }
+    function hostEmote(ix,i){ if(!EMOTES[i]) return; netBcast({t:'emo',ix,e:i}); netShowEmote(ix,i); }
+    function netHelpOpen(s){ return s>=0 && !!NET.help && (NET.help[s]||0)>performance.now(); }
+    function netShowEmote(ix,i){ const m=EMOTES[i], p=NET.players[ix]; if(!m) return; const nm=p?netEsc(p.name):'a keeper', me=ix===NET.myIx;
+      const d=document.createElement('div'); d.className='emoPop';
+      d.style.left=(14+Math.random()*62)+'%'; d.style.top=(34+Math.random()*22)+'%';
+      d.innerHTML='<b>'+m.e+'</b><span style="background:'+(NETCOL[ix]||'#fff')+'">'+(me?'you':nm)+'</span>';
+      document.body.appendChild(d); setTimeout(()=>d.remove(),2700);
+      try{ chime(m.help?523:659+ix*40, m.help?784:880+ix*40); }catch(e){}
+      if(m.help){ (NET.help||(NET.help={}))[ix]=performance.now()+NET_HELP_MS;
+        if(me) toast('🙋 You asked for a hand — for 40 s the others can tend your comb.');
+        else toast('🙋 <b>'+nm+'</b> asks for a hand! Their comb is open to you for 40 s — every cell you tend there is 🌾 good-neighbor merit.'); } }
     // ---- host plumbing ----
     async function hostNewInvite(){ const st=$('mpHostState');
       if(NET.players.filter(p=>!p.gone).length>=NET_MAX){ st.textContent='the hive is full — eight keepers is a crowd already'; $('inviteCode').value=''; NET.pend=null; return; }
@@ -6944,6 +7039,7 @@
         if(netValidProp(m.k,m.v)){ p.propAt=now; hostStartVote(m.k,m.v,p.ix); }
         else netSendTo(p,{t:'ev',msg:netWhyNot(m.k)}); }
       else if(m.t==='bal'&&NET.vote&&m.id===NET.vote.id){ hostBallot(p.ix,!!m.yes); }
+      else if(m.t==='emo'&&NET.started){ const now=performance.now(); if(now-(p.emoAt||0)<900) return; p.emoAt=now; hostEmote(p.ix,m.e|0); }
       else if(m.t==='hh'&&NET.started&&!over){ if(hornet&&!hornet._net&&hornet.state!=='flee'){ meritAdd(p.ix,'guard'); hornetDamage(); } } }
     // recompute wedges from the live roster, then free every departed keeper's cells —
     // the ONE way sector ownership is derived, on every device, after any roster change
@@ -7003,6 +7099,8 @@
       else if(m.t==='vst'){ netStripVoted(m.voted||[]); }
       else if(m.t==='tally'){ netVoteResult(m.k,m.v,m.yes,m.no,m.pass); }
       else if(m.t==='ev'){ toast(m.msg); }  // host-authored copy — same-room trust model
+      else if(m.t==='emo'){ netShowEmote(m.ix|0,m.e|0); }
+      else if(m.t==='fn'){ const e=EVENTS.find(x=>x.id===m.id); if(e) noteField(e.id,e.ic,e.title,e.fact); }
       else if(m.t==='ord'){ NET.order=m.twin?{twin:m.twin,secs:m.secs,rem:m.secs}
           :{id:m.id,ic:m.ic,n:m.n,who:(typeof m.who==='number'?m.who:null),duo:(Array.isArray(m.duo)?m.duo:null),base:m.base,baseB:m.baseB||0,secs:m.secs,rem:m.secs,txt:m.txt};
         try{ chime(440,587); }catch(e){} netOrderShow();
@@ -7096,7 +7194,9 @@
           '<div class="roleHead mine">everyone can</div>'
           +G([['🖌','<b>Paint any room</b> — 🍼 baby bees, 🍯 honey, 🔨 new rooms. No walls.'],
               ['👋','<b>Tap hornets</b> to shoo them away — everyone helps.'],
-              ['🗳','<b>Ask the hive</b> — tap a flower in the ☀ meadow, or ask to fill a jar. Everyone taps yes or no.']])
+              ['🗳','<b>Ask the hive</b> — tap a flower in the ☀ meadow, or ask to fill a jar. Everyone taps yes or no.'],
+              ['🐝','<b>Hive meetings</b> — sometimes the bees have a problem. Talk about it, then everyone picks.'],
+              ['👏','<b>Send a smile</b> — tap 👏 😂 😱 💛 on the right edge. 🙋 asks for help.']])
           +(NET.host?'<div class="roleHead">just you</div>'+G([['⏱','<b>The clock</b> — start, stop, or speed up time.'],['🎚','<b>The food bar</b> — more honey, or more bees.']])
                     :'<div class="roleHead">the grown-up holds</div>'+G([['⏱','<b>The clock</b> and <b>the food bar</b> — ask them!']]));
         $('roleInvite').classList.toggle('hide',!NET.host);
@@ -7113,7 +7213,9 @@
               ['🖌','<b>Any cell on the comb.</b> Everyone else is fenced to their wedge — you can rescue anyone.']])
           +'<div class="roleHead">the hive decides together</div>'
           +G([['🗳','🌼 which bloom · 🫙 harvesting a jar · 🥄 the syrup feed. Anyone proposes, everyone dances. <b>A tie means no.</b>'],
-              ['⚔️','Hornet raids — <b>every screen</b> can tap the hornet.']]); }
+              ['🐝','<b>Hive meetings</b> — a real beekeeping dilemma lands on every screen. Talk it over; the majority picks, a tie takes the steadier road.'],
+              ['⚔️','Hornet raids — <b>every screen</b> can tap the hornet.'],
+              ['👏','<b>React</b> with the row on the right edge. When a keeper taps 🙋, their comb opens to everyone for 40 s.']]); }
       else{ $('roleBadge').textContent='🐝 your post';
         $('roleName').textContent=netSectorName(NET.myIx-1,nw);
         $('roleName').style.color=NETCOL[NET.myIx]||'#ffd66b';
@@ -7125,7 +7227,8 @@
           '<div class="roleHead mine">yours</div>'
           +G([['🖌','<b>'+mine+' cells</b> of comb — 🍼 nursery, 🍯 shelves, 🔨 fresh wax.'],
               ['🗳','<b>Call a vote.</b> Tap a bloom in the ☀ Meadow, or ask for a 🫙 harvest or 🥄 syrup.'],
-              ['⚔️','<b>Tap hornets.</b> Defence is everyone’s.']])
+              ['⚔️','<b>Tap hornets.</b> Defence is everyone’s.'],
+              ['🙋','<b>Ask for a hand.</b> Tap 🙋 on the right edge and the others can tend your comb for 40 s. 👏 😂 😱 💛 just say hi.']])
           +'<div class="roleHead">the Queen holds</div>'
           +G([['⏱','<b>Time</b> — that’s why your play buttons wear a 👑.'],
               ['🎚','<b>The forage dial</b> — lean over and talk her into it.']]); }
@@ -7297,13 +7400,13 @@
       ctx.save();
       for(let i=0;i<cells.length;i++){ const c=cells[i]; if(!c.built&&!c.flagExpand) continue;
         const s=netSector[i]; if(s<0) continue; const p2=NET.players[s]; if(!p2||p2.gone) continue;
-        ctx.globalAlpha=(s===NET.myIx&&!NET.host)?0.15:0.08; ctx.fillStyle=NETCOL[s]||'#fff';
+        ctx.globalAlpha=netHelpOpen(s)?0.2+0.12*Math.sin(performance.now()/200):(s===NET.myIx&&!NET.host)?0.15:0.08; ctx.fillStyle=NETCOL[s]||'#fff';
         const p=cellCenter(c.c,c.r); hexPathOn(ctx,p.x,p.y,size*0.98); ctx.fill(); }
       ctx.globalAlpha=0.8; ctx.font='700 '+Math.round(size*1.05)+'px Bricolage Grotesque'; ctx.textAlign='center';
       for(let w=0;w<nw;w++){ const p2=NET.players[w+1]; if(!p2||p2.gone) continue;
         const A=-Math.PI/2+w*2*Math.PI/nw;
         ctx.fillStyle=NETCOL[w+1];
-        ctx.fillText((p2.ix===NET.myIx?'★ ':'')+p2.name, hiveCx+Math.cos(A)*size*SQ3*7.2, hiveCy+Math.sin(A)*size*SQ3*6.2); }
+        ctx.fillText((p2.ix===NET.myIx?'★ ':'')+(netHelpOpen(p2.ix)?'🙋 ':'')+p2.name, hiveCx+Math.cos(A)*size*SQ3*7.2, hiveCy+Math.sin(A)*size*SQ3*6.2); }
       ctx.textAlign='left'; ctx.globalAlpha=1; ctx.restore(); }
     function netTeardown(){ clearInterval(NET.listT); NET.listT=null;
       if(NET.host) hostCloseRoom(false);
@@ -7312,7 +7415,7 @@
       for(const p of NET.players){ try{ if(p.pc) p.pc.close(); }catch(e){} }
       try{ if(joinPc) joinPc.close(); }catch(e){}
       joinPc=null; joinDc=null; NET.on=false; NET.host=false; NET.started=false; NET.endSent=false;
-      NET.players=[]; NET.pend=null; NET.vote=null; NET.cVote=null; NET.myIx=-1; netVoteUI=null; netSector=null; netVotedIx=[];
+      NET.players=[]; NET.pend=null; NET.vote=null; NET.cVote=null; NET.myIx=-1; NET.help=null; netVoteUI=null; netSector=null; netVotedIx=[];
       NET.order=null; NET.orderCD=undefined; NET.ordersDone=0; NET.stale=false; NET.orderTaught=false; NET.voteTaught=false; NET.resume=null; NET.hiveName=''; NET.merit={}; netOrderShow();
       document.body.classList.remove('netc');
       NET.family=false;   // restore the player's own saved family preference (a transient join-adopt reverts)
@@ -7709,9 +7812,9 @@
       built:cells.filter(c=>c.built).length, flagged:cells.filter(c=>!c.built&&c.flagExpand).length,
       zones:{brood:cells.filter(c=>c.built&&c.zone==='brood').length,honey:cells.filter(c=>c.built&&c.zone==='honey').length,none:cells.filter(c=>c.built&&c.zone==='none').length},
       rateH:rate.h, rj, jars, goals:goals?goals.map(g=>({l:g.label,d:g.done})):null,
-      net:{on:NET.on,host:NET.host,started:NET.started,ix:NET.myIx,players:NET.players.map(p=>({ix:p.ix,n:p.name,g:p.gone})),vote:!!(NET.vote||NET.cVote), room:NET.room, mailbox:NET.mailbox, slots:[...NET.slots.keys()],
+      net:{on:NET.on,host:NET.host,started:NET.started,ix:NET.myIx,players:NET.players.map(p=>({ix:p.ix,n:p.name,g:p.gone})),vote:!!(NET.vote||NET.cVote), help:NET.players.filter(q=>netHelpOpen(q.ix)).map(q=>q.ix), room:NET.room, mailbox:NET.mailbox, slots:[...NET.slots.keys()],
         ownBuilt:(netSector?cells.reduce((a,c,i)=>a+((c.built&&netSector[i]===NET.myIx)?1:0),0):0),
-        ownCellPx:(()=>{ if(!netSector) return null; for(let i=0;i<cells.length;i++){ if(cells[i].built&&netSector[i]===NET.myIx&&cells[i].zone!=='brood'){ const p=cellCenter(cells[i].c,cells[i].r); return {x:p.x,y:p.y}; } } return null; })()},
+        ownCellPx:(()=>{ if(!netSector) return null; for(let i=0;i<cells.length;i++){ if(cells[i].built&&netSector[i]===NET.myIx&&cells[i].zone!=='brood'){ const p=cellCenter(cells[i].c,cells[i].r); const hit=document.elementFromPoint(p.x,p.y); if(hit&&hit.id!=='c') continue; return {x:p.x,y:p.y}; } } return null; })()},
       patches:PATCHES.map((pt,i)=>{ const pp=patchPos(i); return {i,x:pp.x,y:pp.y,q:patchQuality(i,day)}; })});
 
     // ===================== main loop =====================

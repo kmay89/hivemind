@@ -96,6 +96,65 @@ Then the changes that make the first year teach itself:
 Multi-year lines swing with the weather roll (across seeds 1–2: expand-only year 2 ranges
 4–13/15, skilled 3-year 4–10/15), so read them as a regression guard, not a promise.
 
+### Round 4: what the best games teach, applied to a first colony and a party (2026-09)
+
+We asked what the games people can't put down do in their **first ten minutes** and in
+**co-op**, and took only what fits a cozy, educational game with no ads and no timers.
+
+| Game | What it does | What we took |
+|---|---|---|
+| **Tetris** | One verb, one goal, readable with zero text. It gets harder as you get better. | Every control must explain itself the moment it appears. The comb brush stays the only verb in the first minute. |
+| **Minecraft** | No tutorial wall. Survive the first night is the goal nobody has to state. | Winter is our first night. It was already the frame; the stars and hook from round 3 keep it. |
+| **Hay Day** | The first minutes are one guided crop cycle. Features (the shop, the truck, the boat) **unlock by level, one at a time, each with its own small fanfare**, just when they become useful. Neighbours **ask for help** and helping earns rewards. | The tray arrives a control at a time. A 🙋 help flare lets keepers help each other on purpose. |
+| **Clash Royale / Brawl Stars** | The first match *is* the tutorial. **Emotes** let strangers and kids be social without a chat box. | One-tap reactions on every screen. We deliberately added no free-text chat, because Family mode has kids in it. |
+| **Clash of Clans** | Clan donations: asking for troops makes your friends useful, and giving is how you're recognised. | The help flare pays the helper 🌾 Good-Neighbor merit, not the asker. |
+| **Among Us / Jackbox** | Time stops for a meeting, and everyone argues out loud, then votes. | The event deck in a party becomes a **hive meeting**. |
+
+**What we did not take:** energy, timers, waits you pay to skip, daily-login streaks and
+leaderboards. They drive retention by pressure, not by fun, and a leaderboard would turn the
+party's Stag Hunt back into a race (see `MULTIPLAYER.md`).
+
+**Onboarding: the tray arrives one control at a time.** After the coach, a first colony
+still saw every button at once, including Fast, both lenses and the report. They were
+buried under a wall of chips a player didn't need yet. The `DISCOVER` table (the existing
+reveal system) now also holds those four controls:
+
+- **Fast-forward** arrives when the first quest (draw comb) is done.
+- **ⓘ** arrives in late spring, and the **heat lens** at the start of summer.
+- **The report** comes in summer, when the forecast starts to matter.
+
+Each arrives lit, with one line on what it's for. A second colony, a daily or a party sees
+the whole tray.
+
+**Multiplayer: the party gets the best part of solo.** Round 2's event deck, the decisions
+that make a year a story, was solo-only. Parties had orders and votes about patches and
+jars, but no dilemmas.
+
+- **Hive meetings.** Every ~2–3 minutes of party play, the Queen's device deals an event
+  card to every screen as a vote. The two buttons *are* the card's two options, with their
+  costs, and it has 35 s on the clock. The majority picks, and a tie takes the second,
+  steadier option, so a meeting always decides something. The choice plays out on the
+  host exactly as in solo, the winter-forecast change is announced to everyone, and
+  **every keeper files the field note in their own career**. Learning in a party counts.
+  Cards that need a solo mini-game (the frame check) or ✧ the hive can't afford stay out.
+- **Reactions.** 👏 😂 😱 💛 on a slim right-edge rail float on every screen, with your
+  name in your colour, even over a vote card. That's where "😱" is funniest.
+- **🙋 Ask for a hand.** For 40 s the other keepers may paint your wedge, which pulses on
+  every comb. Every cell they tend there is 🌾 aid merit for *them*. Before this, the
+  wedges that make mixed-skill groups safe also meant that a struggling friend couldn't
+  be helped until they left the game. Now helping is one tap away, and it is the
+  merit-dominant move, as the Stag Hunt design wants.
+
+A new spring card, **the dandelions are out** (pollen for the nursery, or early nectar?),
+gives a party its first meeting about 50 s in. Before, no party-eligible card was ready
+until day ~55. Solo sees it from the second colony on; a first colony's first spring stays
+with the guided quests.
+
+`tools/mp-lobby-smoke.js` now plays a meeting, a reaction and a help flare across three
+browsers. `tools/mp-smoke.js`'s paint-replication check had been red on main: it tapped a
+cell hidden under the HUD pane. It now picks a cell the canvas can actually hear, and it
+passes.
+
 The analysis below is kept as written, since it's the reasoning behind the changes.
 
 ---

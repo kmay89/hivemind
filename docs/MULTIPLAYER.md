@@ -126,6 +126,41 @@ post: paint 4 nursery cells" — measured only inside that keeper's wedge
 ("That one's yours!"). Everyone else's chip says whose moment it is. Duos
 keep hive-wide orders only (a called post is meaningless with one wedge).
 
+## Hive meetings (the event deck, decided together)
+
+The solo event deck (`EVENTS[]`, real beekeeping dilemmas) is dealt to parties too, as a
+vote. Only the Queen's device deals (`eventCheck` → `hostStartVote('ev', id, -1)`), about
+every 48–68 hive-days, never over another vote or an open card.
+
+- `by: -1` means **the hive** raised it. Nobody auto-casts and nobody earns voice merit.
+- `#mpVote` gets the `.meet` class. The two buttons are relabelled with the card's two
+  options and their `d()` costs, and the card's field note sits under the story.
+- There is 35 s on the clock (10 more than a proposal), and the sim pauses as for any vote.
+- **A meeting always decides.** A majority takes option one; a tie or silence takes option
+  two, which by convention is the steadier, cheaper one. `netApplyEvent` plays it on the
+  host exactly as `chooseEvent` does in solo, and falls back to the other option if the ✧
+  was spent mid-vote. It also relays the forecast change and sends `{t:'fn',id}` so every
+  keeper files the field note.
+- Cards are excluded when they have `party:false` (the frame check opens a solo
+  mini-game), or when any option's `ok()` is false (a vote needs two real choices).
+- New event rows join party play automatically. Mark a row `party:false` if its `go()`
+  opens host-only UI.
+
+## Reactions and the help flare (`EMOTES[]`)
+
+The rail of one-tap reactions on the right edge (`#mpEmo`, kept off the HUD panes so it never covers comb) works like this:
+
+- A joiner sends `{t:'emo',e}`. The host rate-limits it (0.9 s per keeper) and broadcasts
+  `{t:'emo',ix,e}`, and every screen floats the emoji with the keeper's name in their
+  colour.
+- There is no free-text chat on purpose, because Family mode has kids in it.
+- `🙋` (`help:1`) is the Hay Day / Clash of Clans help request. For `NET_HELP_MS` (40 s),
+  `netHelpOpen(ix)` is true on every device:
+  - `netPaintOk` lets the other keepers paint that wedge.
+  - `netApplyPaint` accepts those paints and counts them as **aid** merit for the helper.
+  - The wedge pulses in `drawSectorOverlay`.
+- Each device times the window on its own clock. A second of skew only moves the edge.
+
 Hornet raids are also a shared moment: the hornet is mirrored to every
 screen (position travels in comb units, so screen sizes don't matter) and
 **everyone taps to defend** — joiner swats travel as intents, damage lands on
