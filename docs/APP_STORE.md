@@ -20,7 +20,7 @@ Prerequisites: Xcode 16 or later, Node 20 or later, and an Apple Developer Progr
 
 ```sh
 cd platforms/ios
-npm install              # Capacitor + the Preferences plugin (Package.swift points into node_modules)
+npm install              # Capacitor + the Preferences and Haptics plugins (Package.swift points into node_modules)
 npm run sync             # copies index.html, the legal pages, fonts/ and icons/ into the app, then `cap sync ios`
 npm run open             # opens ios/App/App.xcodeproj in Xcode
 ```
@@ -193,6 +193,7 @@ returning keeper and a full-year party found no page errors, no stuck screens an
 
 - [ ] Cold launch: the dark splash, then the studio sting, then the title, with no white flash.
 - [ ] Sound starts only after the first tap. The Sound toggle mutes it.
+- [ ] Haptics: buttons tick, painting comb clicks lightly, a hornet sting thuds, a badge or year-end plays the success pattern. Pause menu → Haptics Off silences all of it.
 - [ ] A founding tutorial played start to finish on an iPhone SE-size screen: every button is reachable, and nothing hides under the notch or home indicator.
 - [ ] Rotate the iPad mid-game, and try Split View and Slide Over: the comb re-fits.
 - [ ] Play a year. Quit the app from the app switcher mid-season and relaunch: the colony continues ("Continue" shows the bee count).

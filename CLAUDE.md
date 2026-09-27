@@ -277,6 +277,16 @@ docs/APP_STORE.md. `tools/app-store-shots.js` regenerates the store screenshots.
 - **Guided first spring**: `QUESTS[]` rows carry `guide` (teaching order for a first
   colony's first year), `how` and `spot`; `questLead` is announced once as "Next job" and
   its chip is labelled. Tapping any quest chip explains it and pulses its control.
+- **One icon language** (`ICONS{}` + `icon(name)` + `applyIcons()`): every tray/tab/menu
+  control carries `data-ic="name"` and gets a 24-grid, 1.9-stroke, duotone (`.d`) SVG
+  prepended at boot. A new control = a new `ICONS` row + a `data-ic`, never a new emoji or
+  a hand-drawn inline `<svg>`. Presses are juiced in one place (`popFx` → `iconWiggle` +
+  `pressBurst` on `#pressFx`), all respecting `RM`.
+- **Haptics** — `haptic(kind)` over the `HAPTIC{}` table (`tap`/`select`/`press`/`thud`/
+  `success`/`warn`/`error`): Capacitor Haptics (Taptic) in the app, `navigator.vibrate` on
+  Android, the `<input switch>` tick on iOS Safari; throttled, and off via the pause menu's
+  Haptics row (`hm_haptics`). Never call `navigator.vibrate` directly. Only *local* actions
+  buzz (a remote keeper's paint must not shake your phone).
 - `meadowU()` — the meadow's drawing unit (`mSize` alone collapses to ~6px on laptops).
   `patchPos` uses it too, so drawing and tap hit-testing agree.
 - `M{}` — the stat-modifier reducer over `GIFTS`(owned) + `QUEENS`(mods).

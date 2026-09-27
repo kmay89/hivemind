@@ -719,6 +719,24 @@
   .crow .cdel{ flex:none; align-self:flex-start; color:var(--dim); opacity:.45; cursor:pointer; font-size:11px; padding:1px 4px; }
   .crow .cdel:hover{ opacity:1; color:var(--text); }
   .tab svg, .tb svg{ width:15px; height:15px; display:block; flex:none; }
+  /* the icon family (ICONS): one stroke, one weight, a soft duotone body */
+  .ic{ width:17px; height:17px; flex:none; display:inline-block; vertical-align:-3.5px; overflow:visible;
+    fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; transform-origin:50% 50%; }
+  .ic .d{ fill:currentColor; opacity:.26; stroke:none; }
+  .ic .f{ fill:currentColor; stroke:none; }
+  .ic.icTxt{ margin-right:5px; }
+  .tab .ic, .tb .ic{ display:inline-block; width:17px; height:17px; }
+  .tb span[data-ic]{ display:inline-flex; align-items:center; }
+  .tb.on .ic .d, .tab.on .ic .d{ opacity:.42; }
+  .mtog .ic{ width:15px; height:15px; vertical-align:-3px; }
+  .btn .ic{ width:18px; height:18px; }
+  .btn.mode .mIc .ic{ width:24px; height:24px; vertical-align:-5px; }
+  #syrupPack .syI .ic{ width:16px; height:16px; }
+  /* the press burst: a ring and a few honey sparks from the fingertip (popFx) */
+  #pressFx{ position:fixed; inset:0; pointer-events:none; z-index:var(--z-blocker); overflow:hidden; }
+  #pressFx i{ position:absolute; left:0; top:0; display:block; pointer-events:none; }
+  #pressFx .ring{ width:10px; height:10px; margin:-5px 0 0 -5px; border-radius:50%; border:2px solid rgba(255,217,122,.75); }
+  #pressFx .spark{ width:6px; height:6px; margin:-3px 0 0 -3px; background:#ffd97a; clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%); }
   #tabMeadow svg{ margin-right:5px; }
 
   /* ---------- toast ---------- */
@@ -1451,12 +1469,12 @@
 
   <div id="hud-top">
     <div id="tabs" class="panel">
-      <div class="tab on" id="tabHive" tabindex="0">⬡ Hive</div>
-      <div class="tab meadow" id="tabMeadow" tabindex="0"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.6" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1.8" x2="12" y2="4.4"/><line x1="12" y1="19.6" x2="12" y2="22.2"/><line x1="1.8" y1="12" x2="4.4" y2="12"/><line x1="19.6" y1="12" x2="22.2" y2="12"/><line x1="4.8" y1="4.8" x2="6.6" y2="6.6"/><line x1="17.4" y1="17.4" x2="19.2" y2="19.2"/><line x1="4.8" y1="19.2" x2="6.6" y2="17.4"/><line x1="17.4" y1="6.6" x2="19.2" y2="4.8"/></g></svg>Meadow</div>
-      <div class="tab preveal" id="reportBtn" tabindex="0" title="Hive report — trends, honey ledger & winter forecast"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="4" y="12" width="4" height="8" rx="1.2"/><rect x="10" y="6.5" width="4" height="13.5" rx="1.2"/><rect x="16" y="9.5" width="4" height="10.5" rx="1.2"/></svg></div>
-      <div class="tab" id="helpBtn" tabindex="0" title="What does what — read any lesson again">?</div>
+      <div class="tab on" id="tabHive" tabindex="0" data-ic="hive">Hive</div>
+      <div class="tab meadow" id="tabMeadow" tabindex="0" data-ic="sun">Meadow</div>
+      <div class="tab preveal" id="reportBtn" tabindex="0" title="Hive report — trends, honey ledger & winter forecast" data-ic="report" aria-label="Hive report"></div>
+      <div class="tab" id="helpBtn" tabindex="0" title="What does what — read any lesson again" data-ic="help" aria-label="Guide"></div>
       <div class="tab" id="sndBtn" tabindex="0" title="Hive sound on/off"></div>
-      <div class="tab" id="menuBtn" tabindex="0" title="Pause &amp; settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h0a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55h0a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v0a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z"/></svg></div>
+      <div class="tab" id="menuBtn" tabindex="0" title="Pause &amp; settings" data-ic="menu" aria-label="Pause and settings"></div>
     </div>
 
     <div id="res" class="panel preveal">
@@ -1520,20 +1538,20 @@
       </div>
       <div class="grp" id="brushGrp">
         <span class="gl">Comb</span>
-        <div class="tb brood y on" data-brush="brood" tabindex="0" title="Paint where the queen lays"><span>Brood</span><i class="yld" id="yBrood">—</i></div>
-        <div class="tb honeyb y" data-brush="honey" tabindex="0" title="Paint storage cells"><span>Honey</span><i class="yld" id="yHon">—</i></div>
-        <div class="tb expand y" data-brush="expand" tabindex="0" title="Flag fresh wax to build"><span>Expand</span><i class="yld" id="yExp">—</i></div>
-        <div class="tb hide" id="undoBtn" tabindex="0" title="Undo the last comb change (Z)">↩ Undo</div>
-        <div class="tb" id="inspectBtn" tabindex="0" title="What is this cell? Tap this, then tap any cell">ⓘ</div>
-        <div class="tb" id="heatBtn" tabindex="0" title="Heat lens — see the warmth the nest is holding"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M10 13.5V5a2 2 0 1 1 4 0v8.5a4.5 4.5 0 1 1-4 0z"/><circle cx="12" cy="17.5" r="1.6" fill="currentColor" stroke="none"/></svg></div>
+        <div class="tb brood y on" data-brush="brood" tabindex="0" title="Paint where the queen lays"><span data-ic="brood">Brood</span><i class="yld" id="yBrood">—</i></div>
+        <div class="tb honeyb y" data-brush="honey" tabindex="0" title="Paint storage cells"><span data-ic="honey">Honey</span><i class="yld" id="yHon">—</i></div>
+        <div class="tb expand y" data-brush="expand" tabindex="0" title="Flag fresh wax to build"><span data-ic="expand">Expand</span><i class="yld" id="yExp">—</i></div>
+        <div class="tb hide" id="undoBtn" tabindex="0" title="Undo the last comb change (Z)" data-ic="undo">Undo</div>
+        <div class="tb" id="inspectBtn" tabindex="0" title="What is this cell? Tap this, then tap any cell" data-ic="inspect" aria-label="Inspect a cell"></div>
+        <div class="tb" id="heatBtn" tabindex="0" title="Heat lens — see the warmth the nest is holding" data-ic="heat" aria-label="Heat lens"></div>
       </div>
       <div class="grp hide" id="careGrp">
         <span class="gl">Safety</span>
-        <div class="tb syrup" id="syrupPack" tabindex="0" title="Emergency syrup feeder — your once-a-year safety valve. Slide it in when the pantry runs bare and it carries the cluster with +10 honey. Refills each spring."><span class="syI">🍼</span><span id="syrupState">ready</span></div>
+        <div class="tb syrup" id="syrupPack" tabindex="0" title="Emergency syrup feeder — your once-a-year safety valve. Slide it in when the pantry runs bare and it carries the cluster with +10 honey. Refills each spring."><span class="syI" data-ic="syrup"></span><span id="syrupState">ready</span></div>
       </div>
       <div class="grp preveal hidden" id="apiaryGrp">
         <span class="gl">Apiary</span>
-        <div class="tb gold" id="harvestBtn" tabindex="0" title="Seal a jar from surplus honey — autumn only">🫙 Harvest</div>
+        <div class="tb gold" id="harvestBtn" tabindex="0" title="Seal a jar from surplus honey — autumn only" data-ic="jar">Harvest</div>
       </div>
       <div class="grp" id="timeGrp">
         <span class="gl">Time</span>
@@ -1568,9 +1586,10 @@
     <div class="card mcard">
       <h1>PAUSED</h1>
       <button class="btn pulse" id="menuResume">Back to the hive ▶</button>
-      <button class="btn ghost" id="menuSaveQuit">💾 Save &amp; Quit to title</button>
+      <button class="btn ghost" id="menuSaveQuit" data-ic="save">Save &amp; Quit to title</button>
       <div class="mset">
         <div class="mrow"><span class="ml">Sound</span><button class="mtog" id="menuSnd">Off</button></div>
+        <div class="mrow"><span class="ml">Haptics</span><button class="mtog on" id="menuHaptics">On</button></div>
         <div class="mrow mcol"><span class="ml" id="paceLabel2">Pace</span>
           <div class="paceMini" role="radiogroup" aria-labelledby="paceLabel2">
             <div class="pseg" data-pace="calm" tabindex="0" role="radio" aria-checked="false">Calm<i>slow</i></div>
@@ -1586,15 +1605,15 @@
         <div class="mrow"><span class="ml">Apiary score</span><span class="ml" id="menuScore" style="color:var(--gold)">0</span></div>
         <div class="mrow"><span class="ml">Queen line</span><span class="ml" id="menuQueen" style="color:var(--gold)">—</span></div>
         <div class="mrow"><span class="ml">Apiary</span><span class="ml" id="menuRank" style="color:var(--gold)">—</span></div>
-        <div class="mrow"><span class="ml">Badges</span><button class="mtog" id="menuBadges">✦ <span id="badgeN">0</span>/<span id="badgeTot">10</span></button></div>
-        <div class="mrow"><span class="ml">Honey cellar</span><button class="mtog" id="menuCellar">🫙 <span id="jarN">0</span></button></div>
-        <div class="mrow"><span class="ml">Keeper’s path</span><button class="mtog" id="menuPath">🗺 Open</button></div>
-        <div class="mrow"><span class="ml">Colony roster</span><button class="mtog" id="menuRoster">🐝 <span id="rosterN">0</span></button></div>
-        <div class="mrow"><span class="ml">Hive chronicle</span><button class="mtog" id="menuChron">📖 <span id="chronN">0</span></button></div>
-        <div class="mrow"><span class="ml">Field notes</span><button class="mtog" id="menuNotes">🔍 <span id="notesN">0</span>/<span id="notesTot">0</span></button></div>
-        <div class="mrow"><span class="ml">Share your apiary</span><button class="mtog" id="menuShare">📸 Card</button></div>
-        <div class="mrow"><span class="ml">Dance break</span><button class="mtog" id="menuDance">Let’s go!</button></div>
-        <div class="mrow"><span class="ml">Keeper’s notes</span><button class="mtog" id="menuGuide">Open</button></div>
+        <div class="mrow"><span class="ml">Badges</span><button class="mtog" id="menuBadges" data-ic="star"><span id="badgeN">0</span>/<span id="badgeTot">10</span></button></div>
+        <div class="mrow"><span class="ml">Honey cellar</span><button class="mtog" id="menuCellar" data-ic="jar"><span id="jarN">0</span></button></div>
+        <div class="mrow"><span class="ml">Keeper’s path</span><button class="mtog" id="menuPath" data-ic="map">Open</button></div>
+        <div class="mrow"><span class="ml">Colony roster</span><button class="mtog" id="menuRoster" data-ic="bee"><span id="rosterN">0</span></button></div>
+        <div class="mrow"><span class="ml">Hive chronicle</span><button class="mtog" id="menuChron" data-ic="book"><span id="chronN">0</span></button></div>
+        <div class="mrow"><span class="ml">Field notes</span><button class="mtog" id="menuNotes" data-ic="notes"><span id="notesN">0</span>/<span id="notesTot">0</span></button></div>
+        <div class="mrow"><span class="ml">Share your apiary</span><button class="mtog" id="menuShare" data-ic="camera">Card</button></div>
+        <div class="mrow"><span class="ml">Dance break</span><button class="mtog" id="menuDance" data-ic="music">Let’s go!</button></div>
+        <div class="mrow"><span class="ml">Keeper’s notes</span><button class="mtog" id="menuGuide" data-ic="help">Open</button></div>
         <div class="mrow"><span class="ml">Hazel’s log</span><button class="mtog" id="menuLog">Open</button></div>
         <div class="mrow"><span class="ml">Hazel’s tale</span><button class="mtog" id="menuStory">▶ Replay</button></div>
         <div class="mrow"><span class="ml">Restart colony</span><button class="mtog danger" id="menuRestart">Restart</button></div>
@@ -1836,8 +1855,8 @@
       </div>
       <div class="modeCap">more ways to keep</div>
       <div class="modeRow">
-        <button class="btn mode" id="startDaily"><span class="mIc"><span class="dsun">☀</span></span><b>Daily Challenge</b><span class="mSub" id="dailyCap"></span></button>
-        <button class="btn mode" id="startParty"><span class="mIc">🐝</span><b>Play Together</b><span class="mSub">2–8 keepers, one hive · same room</span></button>
+        <button class="btn mode" id="startDaily"><span class="mIc"><span class="dsun" data-ic="sun"></span></span><b>Daily Challenge</b><span class="mSub" id="dailyCap"></span></button>
+        <button class="btn mode" id="startParty"><span class="mIc" data-ic="bee"></span><b>Play Together</b><span class="mSub">2–8 keepers, one hive · same room</span></button>
       </div>
       <div class="prefRow">
         <div id="sndInvite" class="on" tabindex="0" role="checkbox" aria-checked="true">
@@ -2175,10 +2194,44 @@
     // / non-https, where no service worker runs) — the real source of truth is sw.js's
     // VERSION; syncGameVer() below asks the running worker and corrects this label
     // live, so the two only ever drift cosmetically for a moment, never permanently.
-    let GAME_VER='2026.09.27.45';
+    let GAME_VER='2026.09.27.46';
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // ===== one icon language =====
+    // Every control wears the same hand-drawn family: 24-unit grid, 1.9 stroke, round caps,
+    // and a soft duotone fill (.d) for the "body" of the thing. Cell brushes share the hex
+    // outline so Brood, Honey and Expand read as three kinds of the same cell. Mark any
+    // element with data-ic="name" and it gets its icon at boot; add a row, not a branch.
+    const ICONS={"hive": "<path class=\"d\" d=\"M12 8.3l3.2 1.85v3.7L12 15.7l-3.2-1.85v-3.7z\"/><path d=\"M12 3.4 19.45 7.7v8.6L12 20.6 4.55 16.3V7.7z\"/>", "sun": "<circle class=\"d\" cx=\"12\" cy=\"12\" r=\"4\"/><circle cx=\"12\" cy=\"12\" r=\"4\"/><path d=\"M12 2.8v2.2M12 19v2.2M2.8 12H5M19 12h2.2M5.5 5.5 7 7M17 17l1.5 1.5M5.5 18.5 7 17M17 7l1.5-1.5\"/>", "report": "<path d=\"M4 20.5h16\"/><rect class=\"d\" x=\"5\" y=\"12\" width=\"3.6\" height=\"6\" rx=\"1\"/><rect class=\"d\" x=\"10.2\" y=\"5.5\" width=\"3.6\" height=\"12.5\" rx=\"1\"/><rect class=\"d\" x=\"15.4\" y=\"9\" width=\"3.6\" height=\"9\" rx=\"1\"/><rect x=\"5\" y=\"12\" width=\"3.6\" height=\"6\" rx=\"1\"/><rect x=\"10.2\" y=\"5.5\" width=\"3.6\" height=\"12.5\" rx=\"1\"/><rect x=\"15.4\" y=\"9\" width=\"3.6\" height=\"9\" rx=\"1\"/>", "help": "<circle class=\"d\" cx=\"12\" cy=\"12\" r=\"9\"/><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M9.5 9.4a2.6 2.6 0 1 1 3.7 2.35c-.75.35-1.2.95-1.2 1.75v.5\"/><circle class=\"f\" cx=\"12\" cy=\"17\" r=\"1.15\"/>", "sound": "<path class=\"d\" d=\"M4 9.3v5.4h3.4L12.5 19V5L7.4 9.3z\"/><path d=\"M4 9.3v5.4h3.4L12.5 19V5L7.4 9.3z\"/><path d=\"M15.6 8.8a4.6 4.6 0 0 1 0 6.4M18.3 6.2a8.3 8.3 0 0 1 0 11.6\"/>", "mute": "<path class=\"d\" d=\"M4 9.3v5.4h3.4L12.5 19V5L7.4 9.3z\"/><path d=\"M4 9.3v5.4h3.4L12.5 19V5L7.4 9.3z\"/><path d=\"M16 9.6l4.8 4.8M20.8 9.6 16 14.4\"/>", "menu": "<circle class=\"d\" cx=\"12\" cy=\"12\" r=\"3.2\"/><circle cx=\"12\" cy=\"12\" r=\"3.2\"/><path d=\"M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.55-1 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h0a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55h0a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v0a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1z\"/>", "brood": "<path d=\"M12 3.4 19.45 7.7v8.6L12 20.6 4.55 16.3V7.7z\"/><ellipse class=\"d\" cx=\"12\" cy=\"12.3\" rx=\"2.9\" ry=\"3.7\"/><ellipse cx=\"12\" cy=\"12.3\" rx=\"2.9\" ry=\"3.7\"/>", "honey": "<path d=\"M12 3.4 19.45 7.7v8.6L12 20.6 4.55 16.3V7.7z\"/><path class=\"d\" d=\"M12 7.4c2.4 2.8 3.6 4.7 3.6 6.2a3.6 3.6 0 0 1-7.2 0c0-1.5 1.2-3.4 3.6-6.2z\"/><path d=\"M12 7.4c2.4 2.8 3.6 4.7 3.6 6.2a3.6 3.6 0 0 1-7.2 0c0-1.5 1.2-3.4 3.6-6.2z\"/>", "expand": "<path d=\"M12 3.4 19.45 7.7v8.6L12 20.6 4.55 16.3V7.7z\" stroke-dasharray=\"2.4 2.1\"/><path d=\"M12 8.6v6.8M8.6 12h6.8\"/>", "undo": "<path d=\"M9.5 6.5 5 11l4.5 4.5\"/><path d=\"M5 11h9.5a4.75 4.75 0 0 1 0 9.5H12\"/>", "inspect": "<circle class=\"d\" cx=\"12\" cy=\"12\" r=\"9\"/><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 11v6\"/><circle class=\"f\" cx=\"12\" cy=\"7.6\" r=\"1.2\"/>", "heat": "<path d=\"M10 13.5V5a2 2 0 1 1 4 0v8.5a4.5 4.5 0 1 1-4 0z\"/><circle class=\"f\" cx=\"12\" cy=\"17.4\" r=\"2.1\"/><path d=\"M12 16V9\"/>", "syrup": "<path class=\"d\" d=\"M6.8 14h10.4v5a2 2 0 0 1-2 2H8.8a2 2 0 0 1-2-2z\"/><path d=\"M9.5 3h5M10.5 3v3.6L7.4 10.5a2.6 2.6 0 0 0-.6 1.7V19a2 2 0 0 0 2 2h6.4a2 2 0 0 0 2-2v-6.8a2.6 2.6 0 0 0-.6-1.7l-3.1-3.9V3\"/>", "jar": "<path class=\"d\" d=\"M6.6 12h10.8v6.5A2.5 2.5 0 0 1 14.9 21H9.1a2.5 2.5 0 0 1-2.5-2.5z\"/><rect x=\"7\" y=\"3\" width=\"10\" height=\"3.4\" rx=\"1\"/><path d=\"M6.6 6.4h10.8v12.1A2.5 2.5 0 0 1 14.9 21H9.1a2.5 2.5 0 0 1-2.5-2.5z\"/>", "star": "<path class=\"d\" d=\"M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 6-5.3-2.9-5.3 2.9 1.1-6L3.4 9.5l6-.8z\"/><path d=\"M12 3.2l2.6 5.5 6 .8-4.4 4.1 1.1 6-5.3-2.9-5.3 2.9 1.1-6L3.4 9.5l6-.8z\"/>", "map": "<path class=\"d\" d=\"M9 4.5 3.5 6.5v13L9 17.5l6 2 5.5-2v-13L15 6.5z\"/><path d=\"M9 4.5 3.5 6.5v13L9 17.5l6 2 5.5-2v-13L15 6.5z\"/><path d=\"M9 4.5v13M15 6.5v13\"/>", "bee": "<ellipse class=\"d\" cx=\"12\" cy=\"14.2\" rx=\"4.8\" ry=\"5.8\"/><ellipse cx=\"12\" cy=\"14.2\" rx=\"4.8\" ry=\"5.8\"/><path d=\"M7.4 12.4h9.2M7.4 16h9.2\"/><path d=\"M12 8.4C10.9 5.9 7.6 4.9 6.2 6.6 5 8.1 7.2 10 9.3 9.5M12 8.4c1.1-2.5 4.4-3.5 5.8-1.8 1.2 1.5-1 3.4-3.1 2.9\"/>", "book": "<path class=\"d\" d=\"M4 20.5V5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z\"/><path d=\"M4 20.5V5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5 2.5 2.5 0 0 0 6.5 21H20\"/>", "notes": "<circle class=\"d\" cx=\"10.5\" cy=\"10.5\" r=\"6\"/><circle cx=\"10.5\" cy=\"10.5\" r=\"6\"/><path d=\"M15 15l5 5\"/>", "camera": "<path class=\"d\" d=\"M3.5 8.5a2 2 0 0 1 2-2h2l1.6-2.2h5.8l1.6 2.2h2a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z\"/><path d=\"M3.5 8.5a2 2 0 0 1 2-2h2l1.6-2.2h5.8l1.6 2.2h2a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z\"/><circle cx=\"12\" cy=\"13\" r=\"3.5\"/>", "save": "<path d=\"M12 3.5v10.5M7.5 9.5 12 14l4.5-4.5\"/><path class=\"d\" d=\"M4 15.5h16V19a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z\"/><path d=\"M4 15.5V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3.5\"/>", "music": "<path d=\"M9 18V5.5l10-2V16\"/><circle class=\"d\" cx=\"6.5\" cy=\"18\" r=\"2.5\"/><circle cx=\"6.5\" cy=\"18\" r=\"2.5\"/><circle class=\"d\" cx=\"16.5\" cy=\"16\" r=\"2.5\"/><circle cx=\"16.5\" cy=\"16\" r=\"2.5\"/>"};
+    function icon(name){ const b=ICONS[name]; return b?'<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">'+b+'</svg>':''; }
+    function applyIcons(root){ (root||document).querySelectorAll('[data-ic]').forEach(el=>{ if(el.querySelector(':scope > svg.ic')) return;
+        el.insertAdjacentHTML('afterbegin', icon(el.dataset.ic));
+        const sv=el.firstElementChild; if(sv && el.textContent.trim()) sv.classList.add('icTxt'); }); }
+    // ===== haptics =====
+    // One vocabulary for touch: tap (any button), select (a choice, a notch, a painted cell),
+    // press (a commitment), thud (an impact), success / warn / error (outcomes).
+    //   · the iOS app → the Taptic Engine through @capacitor/haptics
+    //   · Android browsers → navigator.vibrate with a matching pattern
+    //   · iPhone Safari (no vibrate API) → the one system tick the web can reach: toggling a
+    //     hidden <input type=checkbox switch>, which iOS 18+ answers with a haptic
+    // Off for everyone with the pause-menu switch (hm_haptics).
+    const HAPTIC={ tap:{imp:'LIGHT',ms:7}, select:{sel:1,ms:5}, press:{imp:'MEDIUM',ms:14}, thud:{imp:'HEAVY',ms:26},
+      success:{note:'SUCCESS',ms:[12,55,20]}, warn:{note:'WARNING',ms:[22,60,22]}, error:{note:'ERROR',ms:[34,50,34,50,48]} };
+    let hapticsOn=(()=>{ try{ return localStorage.getItem('hm_haptics')!=='0'; }catch(e){ return true; } })();
+    const IOS_WEB=!IS_APP && (/iP(hone|ad|od)/.test(navigator.userAgent||'') || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1));
+    let hapSwitch=null, hapLast=0;
+    function haptic(kind){ if(!hapticsOn) return; const h=HAPTIC[kind]||HAPTIC.tap, now=performance.now();
+      if(!h.note && now-hapLast<32) return;   // a dragged stroke is a purr, not a buzz
+      hapLast=now;
+      try{ const P=IS_APP&&window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics;
+        if(P){ const r=h.note?P.notification({type:h.note}):h.sel?P.selectionChanged():P.impact({style:h.imp}); if(r&&r.catch) r.catch(()=>{}); return; }
+        if(navigator.vibrate){ navigator.vibrate(h.ms); return; }
+        if(IOS_WEB){ if(!hapSwitch){ const l=document.createElement('label'); l.setAttribute('aria-hidden','true');
+            l.style.cssText='position:fixed;left:-200px;top:0;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden';
+            const i=document.createElement('input'); i.type='checkbox'; i.setAttribute('switch',''); i.tabIndex=-1; l.appendChild(i); document.body.appendChild(l); hapSwitch=l; }
+          hapSwitch.click(); if(h.note) setTimeout(()=>{ try{ hapSwitch.click(); }catch(e){} },90); } }catch(e){} }
+    function hpt(ms){ haptic(ms>=20?'press':ms>=12?'select':'tap'); }   // older call sites speak in milliseconds
     // the one place every localStorage write goes through — Safari private browsing
     // (and other locked-down browsers) throws synchronously on setItem, and a bare
     // try/catch around each of the ~20 write sites used to lose progress with zero
@@ -2203,8 +2256,9 @@
       el.addEventListener('pointercancel',()=>{ viaPointer=false; });
       addEventListener('pointerup',()=>{ setTimeout(()=>{ viaPointer=false; },500); }); }
 
-    const ICON_SND_ON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.2v5.6h3.6L13 19V5L7.6 9.2H4z" fill="currentColor"/><path d="M15.8 8.6a4.8 4.8 0 0 1 0 6.8M18.4 6a8.6 8.6 0 0 1 0 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
-    const ICON_SND_OFF='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.2v5.6h3.6L13 19V5L7.6 9.2H4z" fill="currentColor"/><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="16" y1="9.5" x2="21" y2="14.5"/><line x1="21" y1="9.5" x2="16" y2="14.5"/></g></svg>';
+    const ICON_SND_ON=icon('sound');
+    const ICON_SND_OFF=icon('mute');
+    applyIcons();
 
     $('sndBtn').innerHTML=ICON_SND_OFF;
     function syncVerLabels(){ const mv=$('menuVer'); if(mv) mv.textContent=GAME_VER;
@@ -2929,7 +2983,7 @@
     try{ (JSON.parse(localStorage.getItem('hm_badges')||'[]')).forEach(k=>earned[k]=1); }catch(e){}
     function badgeCount(){ return Object.keys(earned).length; }
     function syncBadgeN(){ const el=$('badgeN'); if(el) el.textContent=badgeCount(); const t=$('badgeTot'); if(t) t.textContent=BADGES.length; }
-    function grantBadge(id){ if(dailyMode||earned[id]) return; const b=BADGES.find(x=>x.id===id); if(!b) return;
+    function grantBadge(id){ if(dailyMode||earned[id]) return; const b=BADGES.find(x=>x.id===id); if(!b) return; haptic('success');
       earned[id]=1; try{ lsSet('hm_badges',JSON.stringify(Object.keys(earned))); }catch(e){}
       toast('✦ Badge earned — '+b.n+'!'); logMsg('✦','Badge earned — <b>'+b.n+'</b>: '+b.d); fanfare(); syncBadgeN();
       QUEENS.filter(q=>q.lock&&q.lock.badge===id).forEach(q=>{ logMsg('👑','New queen line unlocked — <b>'+q.name+'</b>, '+q.ep+'.');
@@ -2988,7 +3042,7 @@
         const f=r.fmt||String, pct=Math.max(0,Math.min(100,v/r.tgt*100));
         if(v>=r.tgt && !questDone[r.id]){ questDone[r.id]=1; q.done=performance.now();
           const pay=questPaid<2; if(pay){ questPaid++; rj+=1; setN('vRJ','✧'+rj); }
-          logMsg(r.ic,'✓ <b>'+r.tx+'</b>'+(pay?' · +1 ✧ royal jelly':' · well kept'));
+          haptic('success'); logMsg(r.ic,'✓ <b>'+r.tx+'</b>'+(pay?' · +1 ✧ royal jelly':' · well kept'));
           try{ chime(660,990); }catch(e){} floatTx(hiveCx,hiveCy-size*2,r.ic+' ✓',"#c9ffb0"); }
         const lead=r.id===questLead&&!q.done, prog=(r.tgt>1?f(Math.min(v,r.tgt))+'/'+f(r.tgt):(q.done?'done':'…'));
         html+='<div class="qc'+(q.done?' done':'')+(lead?' lead':'')+'" data-q="'+r.id+'" role="button" tabindex="0" style="--qp:'+pct.toFixed(0)+'%" title="'+r.tx+'"><i>'+r.ic+'</i><span>'+(lead?r.tx+' · ':'')+prog+'</span></div>'; }
@@ -3018,7 +3072,7 @@
       g.armed=true; g.tgt=Math.max(6, Math.round(winterNeed()*0.42));
       g.label='Midwinter check · '+g.tgt+' cells on day 316';
       if(!silent) toast('Winter goal set: reach day 316 with '+g.tgt+' cells still capped.'); }
-    function completeGoal(g){ if(g.done) return; g.done=true; rj++;
+    function completeGoal(g){ if(g.done) return; g.done=true; rj++; haptic('success');
       fanfare(); burst(W/2,topH+40,26); toast('Season goal met \u2014 +1 ✧ royal jelly. The queen pretends not to be pleased.');
       const el=$('goal'); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
       saveGame(); }
@@ -3188,7 +3242,25 @@
       o.frequency.setValueAtTime(base*(0.96+Math.random()*0.08),t); o.frequency.exponentialRampToValueAtTime(base*0.7,t+0.09);
       g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.05,t+0.006); g.gain.exponentialRampToValueAtTime(0.0001,t+0.13);
       o.connect(g); g.connect(AU.sfxG||AU.master); o.start(t); o.stop(t+0.15); }
-    function popFx(el, kind){
+    // the fingertip burst: a ring that blooms from the exact press point, plus a few
+    // hex-shaped honey sparks for the big buttons. One fixed layer, a handful of
+    // elements, each removed when its animation ends: cheap enough to run on every tap.
+    let pressLayer=null;
+    function pressBurst(x,y,kind){ if(RM||!document.body.animate) return;
+      if(!pressLayer){ pressLayer=document.createElement('div'); pressLayer.id='pressFx'; document.body.appendChild(pressLayer); }
+      const add=(cls,frames,opts)=>{ const i=document.createElement('i'); i.className=cls; pressLayer.appendChild(i);
+        const a=i.animate(frames,opts); a.onfinish=()=>i.remove(); a.oncancel=()=>i.remove(); };
+      const big=kind==='primary', R=big?46:30;
+      add('ring',[{transform:`translate(${x}px,${y}px) scale(.4)`,opacity:.95},{transform:`translate(${x}px,${y}px) scale(${R/5})`,opacity:0}],{duration:big?460:340,easing:'cubic-bezier(.2,.7,.3,1)'});
+      if(big) for(let k=0;k<7;k++){ const a=k/7*Math.PI*2+Math.random()*0.5, d=26+Math.random()*26;
+        add('spark',[{transform:`translate(${x}px,${y}px) scale(1) rotate(0deg)`,opacity:1},
+                     {transform:`translate(${x+Math.cos(a)*d}px,${y+Math.sin(a)*d-8}px) scale(.3) rotate(${120+Math.random()*120}deg)`,opacity:0}],
+            {duration:420+Math.random()*160,easing:'cubic-bezier(.15,.8,.35,1)'}); } }
+    // the icon answers too: a quick wiggle-and-grow, so the thing you pressed looks pressed
+    function iconWiggle(el){ if(RM) return; const ic=el&&el.querySelector&&el.querySelector('svg.ic'); if(!ic||!ic.animate) return;
+      try{ ic.animate([{transform:'rotate(0) scale(1)'},{transform:'rotate(-14deg) scale(1.22)',offset:.3},{transform:'rotate(7deg) scale(.94)',offset:.62},{transform:'rotate(0) scale(1)'}],
+        {duration:360,easing:'cubic-bezier(.3,1.4,.5,1)'}); }catch(e){} }
+    function popFx(el, kind, ev){
       // press-into-the-shadow then spring back — WAAPI so it never fights CSS pulses;
       // cancel any in-flight pop first so spammed taps don't stack and jitter
       if(el && el.animate && !RM){ if(el._popAnim){ try{ el._popAnim.cancel(); }catch(e){} }
@@ -3199,14 +3271,16 @@
          {transform:'translateY(0) scale(1)'}],
         {duration:250, easing:'cubic-bezier(.3,1.3,.5,1)'}); }catch(e){} }
       clickSfx(kind);
-      if(navigator.vibrate && !RM){ try{ navigator.vibrate(kind==='primary'?12:7); }catch(e){} } }
+      iconWiggle(el);
+      if(ev && typeof ev.clientX==='number') pressBurst(ev.clientX, ev.clientY, kind);
+      haptic(kind==='primary'?'press':kind==='soft'?'select':'tap'); }
     (function(){ const SEL='.btn,.tb,.tab,.cbtn,.qopt,.pseg,.gtopic,.mtile,[data-brush],[data-sp],[role="button"],[role="radio"],[id$="Btn"],#gsPlay,#sndInvite,#welcomeBtn,#startNew,#startCont,#startDaily,#queenGo,#queenBack';
       // capture phase so it still fires when a handler stops propagation; closest() misses
       // give the canvas and other non-buttons a free pass
       addEventListener('pointerdown',e=>{ if(e.button>0) return; const el=e.target.closest&&e.target.closest(SEL); if(!el) return;
         if(el.classList.contains('locked')||el.getAttribute('aria-disabled')==='true'||el.disabled) return;
         const kind=el.matches('.btn:not(.ghost),#startNew,#queenGo,#startDaily,#gsPlay')?'primary':el.matches('.ghost,.pseg,.qopt,.gtopic,.cdel')?'soft':'tick';
-        popFx(el,kind); }, true); })();
+        popFx(el,kind,e); }, true); })();
 
     // ===================== hornet raids — telegraphed, juicy, defensible =====================
     function hornetWindow(){ const early=year>=4;
@@ -3233,7 +3307,7 @@
           toast(familyMode?'👋 The hornet buzzed off! The bees are safe. 🐝':(raidLoss?('Your guards drove the hornet off — '+raidLoss+' bees were lost.'):'Your guards drove the hornet off.')); } }
       else { h.x+=h.vx*size*dt; mv(h.x>hiveCx?W+size*6:-size*6, -size*6, 6);
         if(h.y<-size*4||h.x<-size*5||h.x>W+size*5){ hornet=null; hornetCD=familyMode?(70+Math.random()*70):(year>=4?14+Math.random()*20:24+Math.random()*36); } } }
-    function hornetDamage(){ const h=hornet; if(!h||h.state==='flee') return;
+    function hornetDamage(){ const h=hornet; if(!h||h.state==='flee') return; haptic('thud');
       h.hp--; h.x+=(Math.random()-0.5)*size*1.5; h.y-=size*0.4; shake=Math.max(shake,0.22); hitstop=0.055;
       puff(h.x,h.y,'#ff9a7a',6,1.4); chime(220+(h.maxhp-h.hp)*130, 160);
       if(h.hp<=0){ h.state='flee'; grantBadge('guardian'); noteExtra('hornet'); hornetsBeat++; puff(h.x,h.y,'#ffd76b',18,1.8); chime(520,880);
@@ -3534,7 +3608,7 @@
       if(paintErase){ if(cell.zone==='brood'&&cell.brood)return; changed=(cell.zone!=='none'); cell.zone='none'; kind='erase'; }
       else { if(brush==='brood'){ if(cell.zone!=='brood'){brushedBrood++; armLesson('brood',brushedBrood); changed=true; callTo(queenCall,cell);} cell.zone='brood'; }
         else if(brush==='honey'){ if(cell.zone!=='honey'){paintedHoney++; armLesson('honey',paintedHoney); changed=true; callTo(shelfCall,cell);} cell.zone='honey'; if(cell.brood) cell.brood=null; } checkCoachProgress(); watchHands(); }
-      if(changed) paintFx(cell,kind);
+      if(changed){ paintFx(cell,kind); haptic(kind==='erase'?'tap':'select'); }   // a purr under the finger as the stroke lays wax (local paints only)
     }
     // ---- undo: take back the last comb change (over-expansion, a stray paint) ----
     let undoStack=[], strokeSnap=null;
@@ -3712,7 +3786,7 @@
     canvas.addEventListener('pointerleave',()=>{hoveredCell=null; lastInspectedCell=null; hideInspect();});
     canvas.addEventListener('contextmenu',e=>e.preventDefault());
 
-    { const sl=$('forageSlider'); if(sl) sl.addEventListener('input',()=>{
+    { const sl=$('forageSlider'); if(sl) sl.addEventListener('input',()=>{ haptic('select');   // one tick per notch
       if(netClient()){ syncForageUI(); if(NET.denyCool<=0){ NET.denyCool=4;
         const q=NET.players[0]; toast('👑 The forage dial is <b>'+netEsc(q?q.name:'the Queen')+'</b>’s call — lean over and talk her into it!'); } return; }
       forage=FORAGE_STEPS[Math.max(0,Math.min(4,+sl.value))]; forageTouched=true; const fb=forecastCache; forecastCache=forecastToSpring(); syncForageUI(); checkCoachProgress();
@@ -5077,7 +5151,7 @@
           saveGame(); });
         row.appendChild(d); });
     }
-    function endOfYear(){
+    function endOfYear(){ haptic('success');
       const {g,gdone}=gradeYear(); grades.push({year,g,honey:Math.round(honeyCellsStored()),peak:peakPop});
       const milestone=SAGA_YEARS.includes(year), rank=apiaryRank(year);
       $('yeTitle').textContent=milestone?(rank.ic+' '+rank.nm.toUpperCase()):('YEAR '+year+' SURVIVED'); $('yeTitle').className='good';
@@ -5134,7 +5208,7 @@
       if(dial<0.7)
         return {k:'starve', sub:'the pantry ran dry in '+seasonName(day).toLowerCase(), why:'The pantry ran dry on day '+Math.floor(day)+'.', tx:'Through the summer flow the forage mixer averaged '+Math.round(dial*100)+'% nectar, so the bees raised brood when they could have banked honey.', try:'Next year: from midsummer, lean the mixer toward <b>Nectar</b> and fill the shelves before frost.'};
       return {k:'starve', sub:'the pantry ran dry in '+seasonName(day).toLowerCase(), why:'The pantry ran dry on day '+Math.floor(day)+'.', tx:'The colony was strong, but it went into winter with too little in store for that many mouths.', try:'Next year: shrink the <b>nursery</b> after the goldenrod (fewer mouths at frost), and harvest only true surplus.'}; }
-    function gameOver(kind){ if(over)return; over=true; setSpeed(0); chime(330,165); hornet=null;
+    function gameOver(kind){ if(over)return; over=true; setSpeed(0); chime(330,165); hornet=null; haptic('error');
       // the headline, the subtitle and the explanation all come from ONE diagnosis, so the card
       // never says "the pantry ran dry" above a paragraph that blames a too-small cluster
       const cause=deathCause(kind);
@@ -5840,7 +5914,7 @@
       $('heOpts').innerHTML=e.opts.map((o,i)=>'<button class="btn heOpt'+(i?' ghost':'')+'" data-i="'+i+'"'+(o.ok&&!o.ok()?' disabled':'')+'><b>'+o.tx+'</b><i>'+o.d()+'</i></button>').join('');
       $('heOpts').querySelectorAll('.heOpt').forEach(el=>press(el,()=>chooseEvent(+el.dataset.i)));
       openOverlay('hiveEvent'); try{ chime(440,554); }catch(err){} hpt(10); }
-    function chooseEvent(i){ const e=evCur; if(!e) return; const o=e.opts[i]; if(!o||(o.ok&&!o.ok())) return;
+    function chooseEvent(i){ const e=evCur; if(!e) return; const o=e.opts[i]; if(!o||(o.ok&&!o.ok())) return; haptic('press');
       evCur=null; closeOverlay('hiveEvent');
       const before=(day<300)?forecastToSpring():null;
       let res=''; try{ res=o.go()||''; }catch(err){}
@@ -6122,7 +6196,7 @@
       requestAnimationFrame(()=>el.classList.add('show')); }
     function closePlacePreview(){ pendingPlace=null; const el=$('placeConfirm'); if(!el) return;
       el.classList.remove('show'); setTimeout(()=>{ if(!pendingPlace) el.classList.add('hide'); }, 240); }
-    press($('pcPlace'), ()=>{ const cell=pendingPlace; closePlacePreview(); if(!cell) return;
+    press($('pcPlace'), ()=>{ const cell=pendingPlace; closePlacePreview(); if(!cell) return; haptic('press');
       strokeSnap=combSnap(); applyBrush(cell); commitStroke(); });
     press($('pcCancel'), ()=>closePlacePreview());
     // the blueprint: comb strategy as one picture — concentric truth, three lines.
@@ -6623,6 +6697,9 @@
     ['Music','Hum','Fx'].forEach(k=>{ const el=$('vol'+k), key=k.toLowerCase()==='music'?'music':k.toLowerCase()==='hum'?'hum':'fx';
       if(!el) return; el.value=Math.round(VOL[key]*100);
       el.addEventListener('input',()=>setVol(key, el.value/100)); });
+    function syncHaptics(){ const b=$('menuHaptics'); if(b){ b.textContent=hapticsOn?'On':'Off'; b.classList.toggle('on',hapticsOn); } }
+    press($('menuHaptics'),()=>{ hapticsOn=!hapticsOn; try{ lsSet('hm_haptics',hapticsOn?'1':'0'); }catch(e){} syncHaptics(); if(hapticsOn) haptic('press'); });
+    syncHaptics();
     function syncHints(){ const b=$('menuHints'); if(b){ b.textContent=hints?'On':'Off'; b.classList.toggle('on',hints); } }
     press($('menuHints'),()=>{ hints=!hints; try{ lsSet('hm_hints',hints?'1':'0'); }catch(e){} syncHints(); });
     syncHints(); syncBadgeN(); syncCellarN();
@@ -7366,7 +7443,6 @@
       {id:'bank', ic:'🏺', lo:3, hi:6, sect:0, txt:n=>'bank '+n+' cells of honey',
         meas:()=>Math.round(honeyCellsStored())},
     ];
-    function hpt(ms){ try{ if(navigator.vibrate) navigator.vibrate(ms); }catch(e){} }   // a tiny thump where the platform allows it
     let ordFlashT=0;
     function netOrderFlash(ok){ const el=$('mpOrder'); if(!el) return; clearTimeout(ordFlashT);
       el.classList.remove('hide','pop'); el.classList.toggle('won',!!ok); el.classList.toggle('lost',!ok);
