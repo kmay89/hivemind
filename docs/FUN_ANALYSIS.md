@@ -155,6 +155,25 @@ browsers. `tools/mp-smoke.js`'s paint-replication check had been red on main: it
 cell hidden under the HUD pane. It now picks a cell the canvas can actually hear, and it
 passes.
 
+### Round 5: no dead seasons, and a year you can retell (2026-09)
+
+- **Five new dilemmas for the quiet stretches.** The deck clustered in spring and summer:
+  from late autumn to the end of winter (about a quarter of the year), only a cold snap or
+  a mite count could raise a card. The new rows, each a real practice with its field note:
+  - **The bees are hauling water** (high summer): set out a water dish, or let them find a puddle.
+  - **The ivy is flowering** (autumn): chase the last flow and wear out the old foragers, or rest.
+  - **A mouse is looking for a home** (first frosts): a wide entrance, or a mouse guard.
+  - **Heft the hive** (deep winter): fondant for ✧1, or trust the stores.
+  - **A warm day in winter** (late winter): open up for the cleansing flight, or keep it snug.
+
+  Field notes grow from 18 to 23. Option two is always the steadier choice, so a tied party
+  meeting still lands well.
+- **A year you can retell.** A story is what makes people talk about a game afterwards
+  (the Jackbox recap, the Hay Day album).
+  - Solo: the year-end card now lists **your calls this year** (`yearCalls`, serialized).
+  - Party: the scorecard lists what the hive **decided together**, with each vote's bees
+    and hands (`NET.meetLog`, saved in the party ledger).
+
 The analysis below is kept as written, since it's the reasoning behind the changes.
 
 ---

@@ -146,6 +146,10 @@ every 48–68 hive-days, never over another vote or an open card.
 - New event rows join party play automatically. Mark a row `party:false` if its `go()`
   opens host-only UI.
 
+Each meeting's outcome is kept in `NET.meetLog` ({ic, title, choice, yes, no}; saved in the
+party ledger as `ml`). The year-end scorecard retells the last eight as **"decided together"**
+(`netMeetLines`): the shared choices are the story a party remembers.
+
 ## Reactions and the help flare (`EMOTES[]`)
 
 The rail of one-tap reactions on the right edge (`#mpEmo`, kept off the HUD panes so it never covers comb) works like this:
