@@ -1,0 +1,13 @@
+{
+  "appId": "com.errerlabs.hivemind",
+  "appName": "HIVEMIND",
+  "webDir": "www",
+  "backgroundColor": "#0b0805",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#0b0805",
+    "allowsLinkPreview": false,
+    "scrollEnabled": false,
+    "limitsNavigationsToAppBoundDomains": false
+  }
+}

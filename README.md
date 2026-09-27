@@ -29,7 +29,8 @@ You guide a colony through a 360-day year across four seasons — Spring, Summer
 
 - Single-file HTML5 canvas game (`index.html`) — HTML, CSS, and vanilla JavaScript, zero dependencies.
 - Simulation-driven: population dynamics, forage yields, comb economy, and weather all tick per in-game day.
-- Fonts loaded from Google Fonts (Bricolage Grotesque + JetBrains Mono); everything else is self-contained.
+- Fonts (Bricolage Grotesque + JetBrains Mono, SIL OFL) are self-hosted in `fonts/`; the page makes no third-party requests.
+- The iPhone/iPad app is a thin Capacitor wrapper around this same file: `platforms/ios/`, with the full submission guide in `docs/APP_STORE.md`.
 - No accounts, no analytics, no server — saves live in your browser's localStorage. See the [privacy policy](https://hive-mind-game.com/privacy.html).
 - Installable PWA: add it to your Home Screen and it runs fullscreen, works offline (service worker), and shows an in-game banner when a new version is deployed.
 

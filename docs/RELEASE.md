@@ -1,5 +1,9 @@
 # Release path — browser, iOS, iPadOS, macOS
 
+> **The iOS/iPadOS wrapper now exists** in `platforms/ios/`. The step-by-step build, listing,
+> privacy label, review notes and TestFlight checklist are in **`docs/APP_STORE.md`**; this
+> file keeps the strategy.
+
 *How HIVEMIND ships beyond the website, without breaking the single-file,
 zero-dependency rule. The web page stays the product; the apps are thin
 wrappers around it.*

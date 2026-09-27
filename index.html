@@ -30,9 +30,13 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://hive-mind-game.com/social-card.png?v=2">
 <title>HIVEMIND — keep a honeybee colony alive, year after year</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/BricolageGrotesque.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+  /* the game's two typefaces, self-hosted (SIL OFL, latin subsets): works offline and in
+     the iOS app, and the page makes no third-party requests at all */
+  @font-face{ font-family:'Bricolage Grotesque'; src:url(fonts/BricolageGrotesque.woff2) format('woff2'); font-weight:200 800; font-display:swap; }
+  @font-face{ font-family:'JetBrains Mono'; src:url(fonts/JetBrainsMono.woff2) format('woff2'); font-weight:400 800; font-display:swap; }
+</style>
 <style>
   :root{
     --comb:#0d0905;
@@ -2141,12 +2145,37 @@
   </div>
 
   <script>
+    // ===== the App Store build =====
+    // The same index.html ships inside a thin Capacitor wrapper (platforms/ios, docs/APP_STORE.md).
+    // IS_APP is true only there. It changes four things and nothing about play: no service worker
+    // (the app updates through the store), the Play Together mailbox and shared links point at the
+    // website (the app's own origin is capacitor://localhost, which no one else can reach), the
+    // trailer streams from the website instead of being bundled, and saves are mirrored into
+    // native storage, because iOS may evict a WebView's localStorage under pressure and a lost
+    // colony is the worst bug a keeper can meet.
+    const IS_APP=(()=>{ try{ return !!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()); }catch(e){ return false; } })();
+    const WEB_HOME='https://hive-mind-game.com/';
+    if(IS_APP){ document.documentElement.classList.add('isApp');
+      const PREF=()=>{ try{ return window.Capacitor.Plugins.Preferences||null; }catch(e){ return null; } };
+      const keep=k=>/^(hm|hivemind)/.test(String(k));   // the game's own keys: saves, career, settings
+      // every write lands in native storage too (keys are few and small; no debounce needed)
+      try{ const set0=Storage.prototype.setItem, rem0=Storage.prototype.removeItem;
+        Storage.prototype.setItem=function(k,v){ set0.call(this,k,v); const P=PREF(); if(this===window.localStorage&&P&&keep(k)) P.set({key:k,value:String(v)}).catch(()=>{}); };
+        Storage.prototype.removeItem=function(k){ rem0.call(this,k); const P=PREF(); if(this===window.localStorage&&P&&keep(k)) P.remove({key:k}).catch(()=>{}); };
+      }catch(e){}
+      // a WebView that woke up empty gets its keeper's hives back from native storage, then restarts once
+      try{ const P=PREF(); let empty=true; for(let i=0;i<localStorage.length;i++){ if(keep(localStorage.key(i))){ empty=false; break; } }
+        if(P&&empty&&!sessionStorage.getItem('hmRestored')){ sessionStorage.setItem('hmRestored','1');
+          P.keys().then(async r=>{ const ks=((r&&r.keys)||[]).filter(keep); if(!ks.length) return;
+            for(const k of ks){ const g=await P.get({key:k}); if(g&&g.value!=null) localStorage.setItem(k,g.value); }
+            location.reload(); }).catch(()=>{}); } }catch(e){}
+    }
   (function(){
     // fallback shown before the service worker responds (and always used on file://
     // / non-https, where no service worker runs) — the real source of truth is sw.js's
     // VERSION; syncGameVer() below asks the running worker and corrects this label
     // live, so the two only ever drift cosmetically for a moment, never permanently.
-    let GAME_VER='2026.09.27.44';
+    let GAME_VER='2026.09.27.45';
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2198,9 +2227,9 @@
     // visitors came to play). Portrait screens get the 9:16 cut. The game's own audio
     // steps aside while it plays and comes back on close.
     function openTrailer(){ const v=$('trailerVid'), tall=innerHeight>innerWidth*1.1;
-      const src='marketing/hivemind-trailer-'+(tall?'1080x1920':'1920x1080')+'.mp4';
+      const src=(IS_APP?WEB_HOME:'')+'marketing/hivemind-trailer-'+(tall?'1080x1920':'1920x1080')+'.mp4';   // the app streams it rather than carrying 30 MB of video
       $('trailerPop').classList.toggle('tall',tall);
-      if(v.dataset.src!==src){ v.poster='marketing/trailer-poster-'+(tall?'9x16':'16x9')+'.jpg'; v.src=src; v.dataset.src=src; }
+      if(v.dataset.src!==src){ v.poster=(IS_APP?WEB_HOME:'')+'marketing/trailer-poster-'+(tall?'9x16':'16x9')+'.jpg'; v.src=src; v.dataset.src=src; }
       openOverlay('trailerPop');
       if(AU.ctx&&AU.ctx.state==='running'){ try{ AU.ctx.suspend(); }catch(e){} v.dataset.duck='1'; }
       const p=v.play(); if(p&&p.catch) p.catch(()=>{}); }
@@ -2858,7 +2887,7 @@
       for(let i=-2;i<=2;i++){ hexPathOn(g,W/2+i*72,720,26); g.fillStyle=i===0?'#ffb42b':'rgba(255,180,43,0.28)'; g.fill(); }
       // stat row
       const stats = st.daily
-        ? [['🐝', beeK(st.daily.pop), 'peak bees'], ['🍯', st.daily.honey, 'honey cells'], ['📅', st.daily.streak+'d', 'streak']]
+        ? [['🐝', beeK(st.daily.pop), 'peak bees'], ['🍯', st.daily.honey, 'honey cells'], ['📅', st.daily.streak>0?st.daily.streak+'d':'—', 'streak']]
         : [['🐝', beeK(st.pop), 'peak bees'], ['🫙', st.jars, 'jars sealed'], ['✦', st.badges+'/'+st.badgeTot, 'badges']];
       const n=stats.length, cw=W/n;
       for(let i=0;i<n;i++){ const cx=cw*(i+0.5);
@@ -2890,6 +2919,9 @@
         const file=new File([blob],'hivemind-apiary.png',{type:'image/png'});
         const data={ files:[file], title:'HIVEMIND', text:'My apiary in HIVEMIND \ud83d\udc1d \u2014 beekeeping, one winter at a time.', url:'https://hive-mind-game.com' };
         try{ if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share(data); return; } }catch(e){ if(e&&e.name==='AbortError') return; }
+        // the app's web view can't download files, so it never claims "saved" there
+        if(IS_APP){ try{ if(navigator.share){ await navigator.share({title:data.title, text:data.text, url:data.url}); return; } }catch(e){ if(e&&e.name==='AbortError') return; }
+          toast('Sharing isn\u2019t available on this device \u2014 a screenshot keeps the card.'); return; }
         try{ const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='hivemind-apiary.png'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),4000); toast('\ud83d\udc1d Card saved \u2014 share it anywhere.'); }
         catch(e){ toast('Could not save the card here.'); }
       },'image/png'); }
@@ -5061,6 +5093,7 @@
       // the hook: what next year brings, and what's almost within reach
       { const yn=yearName(year+1), nextRank=RANKS.slice().reverse().find(r=>r[0]>year), notes=Object.keys(FNOTES).length;
         const lines=['<span class="nx">Next: Year '+(year+1)+', '+yn[0]+'</span>'+yn[1].charAt(0).toUpperCase()+yn[1].slice(1)+'.'];
+        if(P<CLUSTER_MIN*1.5) lines.push('⚠️ <b>Only '+beeN(P)+' bees came through.</b> Spring will be touch and go: keep the nursery small and warm, and lean the mixer toward <b>Pollen</b> until they rebuild.');
         if(year+1===MITE_YEAR) lines.push('🔬 <b>Varroa mites arrive.</b> Frame checks and brood breaks start to matter.');
         lines.push(rj>=GIFT_COST ? '✧ You can afford a <b>Queen’s Gift</b> right now (below).' : '✧ <b>'+rj+'/'+GIFT_COST+'</b> royal jelly toward your next Queen’s Gift.');
         if(nextRank) lines.push(nextRank[2]+' '+(nextRank[0]-year)+' more winter'+(nextRank[0]-year>1?'s':'')+' to <b>'+nextRank[1]+'</b>.');
@@ -5093,22 +5126,25 @@
     function deathCause(kind){ const summer=yearHist.filter(h=>h.d>110&&h.d<250&&typeof h.f==='number');
       const dial=summer.length?summer.reduce((a,h)=>a+h.f,0)/summer.length:forage;
       if(kind!=='starve' && year>=MITE_YEAR && mite>0.8)
-        return {why:'Varroa thinned the winter bees.', tx:'The mite load peaked at '+Math.round(mite/MITE_CAP*100)+'% of the worst it gets, and mite-struck bees don’t last the winter.', try:'Next year: when the mite count climbs, take a <b>brood break</b> or treat, and use a frame check to see the load.'};
+        return {k:'dwindle', sub:'varroa thinned the winter bees', why:'Varroa thinned the winter bees.', tx:'The mite load peaked at '+Math.round(mite/MITE_CAP*100)+'% of the worst it gets, and mite-struck bees don’t last the winter.', try:'Next year: when the mite count climbs, take a <b>brood break</b> or treat, and use a frame check to see the load.'};
       if(kind!=='starve' || P<CLUSTER_MIN*1.2)
-        return {why:'The cluster was too small to hold its heat.', tx:'Only '+beeN(Math.max(P,peakPop*0.3))+' bees went into the cold. A ball of bees that small loses heat faster than it can make it.', try:'Next year: in spring, paint a <b>nursery bigger than the colony</b>, and keep some brood going into early autumn. Autumn bees are the long-lived winter bees.'};
+        return {k:'dwindle', sub:'too few bees to keep the cluster warm', why:'The cluster was too small to hold its heat.', tx:'Only '+beeN(Math.max(P,peakPop*0.3))+' bees went into the cold. A ball of bees that small loses heat faster than it can make it.', try:'Next year: in spring, paint a <b>nursery bigger than the colony</b>, and keep some brood going into early autumn. Autumn bees are the long-lived winter bees.'};
       if(peakPop<30)
-        return {why:'A small colony all year.', tx:'It peaked at '+beeN(peakPop)+' bees. Few foragers bring in little, whatever the dial says.', try:'Next year: grow first. A wide spring <b>nursery</b>, the mixer toward <b>Pollen</b> until early summer, then Nectar.'};
+        return {k:kind, sub:kind==='starve'?'the pantry ran dry in '+seasonName(day).toLowerCase():'too few bees remained', why:'A small colony all year.', tx:'It peaked at '+beeN(peakPop)+' bees. Few foragers bring in little, whatever the dial says.', try:'Next year: grow first. A wide spring <b>nursery</b>, the mixer toward <b>Pollen</b> until early summer, then Nectar.'};
       if(dial<0.7)
-        return {why:'The pantry ran dry on day '+Math.floor(day)+'.', tx:'Through the summer flow the forage mixer averaged '+Math.round(dial*100)+'% nectar, so the bees raised brood when they could have banked honey.', try:'Next year: from midsummer, lean the mixer toward <b>Nectar</b> and fill the shelves before frost.'};
-      return {why:'The pantry ran dry on day '+Math.floor(day)+'.', tx:'The colony was strong, but it went into winter with too little in store for that many mouths.', try:'Next year: shrink the <b>nursery</b> after the goldenrod (fewer mouths at frost), and harvest only true surplus.'}; }
+        return {k:'starve', sub:'the pantry ran dry in '+seasonName(day).toLowerCase(), why:'The pantry ran dry on day '+Math.floor(day)+'.', tx:'Through the summer flow the forage mixer averaged '+Math.round(dial*100)+'% nectar, so the bees raised brood when they could have banked honey.', try:'Next year: from midsummer, lean the mixer toward <b>Nectar</b> and fill the shelves before frost.'};
+      return {k:'starve', sub:'the pantry ran dry in '+seasonName(day).toLowerCase(), why:'The pantry ran dry on day '+Math.floor(day)+'.', tx:'The colony was strong, but it went into winter with too little in store for that many mouths.', try:'Next year: shrink the <b>nursery</b> after the goldenrod (fewer mouths at frost), and harvest only true surplus.'}; }
     function gameOver(kind){ if(over)return; over=true; setSpeed(0); chime(330,165); hornet=null;
-      $('ovTitle').textContent=kind==='starve'?'THE COLONY FAILS':'THE COLONY DWINDLES'; $('ovSub').textContent=(kind==='starve'?'the pantry ran dry in '+seasonName(day).toLowerCase():'too few bees remained')+' — but the comb, the shelf, and the queen\u2019s line are yours to keep';
+      // the headline, the subtitle and the explanation all come from ONE diagnosis, so the card
+      // never says "the pantry ran dry" above a paragraph that blames a too-small cluster
+      const cause=deathCause(kind);
+      $('ovTitle').textContent=cause.k==='starve'?'THE COLONY FAILS':'THE COLONY DWINDLES'; $('ovSub').textContent=cause.sub+' — but the comb, the shelf, and the queen\u2019s line are yours to keep';
       const {g}=gradeYear(); grades.push({year,g,honey:Math.round(honeyCellsStored()),peak:peakPop});
       recordChronicle('end', g, kind); updateLegacy();
-      $('ovStats').innerHTML='Year '+year+' ends early<span class="G '+g+'">'+g+'</span><b>'+jars+'</b> jars on the shelf · <b>'+bornTotal+'</b> bees raised'; buildReview('ov');
+      $('ovStats').innerHTML='Year '+year+' ends early<span class="G '+g+'">'+g+'</span><b>'+jars+'</b> jars on the shelf · <b>'+beeN(bornTotal)+'</b> bees raised'; buildReview('ov');
       trophyRow($('ovTrophies'));
       { const host=$('ovTrophies'); const old=host.parentNode.querySelector('.beenote'); if(old) old.remove(); host.insertAdjacentHTML('afterend', beeNote()); }
-      { const c=deathCause(kind); $('ovCause').innerHTML='<span class="why">'+c.why+'</span>'+c.tx+'<span class="try">→ '+c.try+'</span>'; }
+      { const c=cause; $('ovCause').innerHTML='<span class="why">'+c.why+'</span>'+c.tx+'<span class="try">→ '+c.try+'</span>'; }
       { let rw=null; try{ rw=JSON.parse(localStorage.getItem('hm_rewind')||'null'); }catch(e){}
         $('ovRewind').classList.toggle('hide', !(rw && rw.col===colonyNum && rw.y===year && !dailyMode && !NET.on)); }
       saveGame(); openOverlay('over'); }
@@ -6118,6 +6154,7 @@
     // "let the days flow") and the game graduates to real time — decisions first,
     // clock later. Session-only; never in daily, parties, or continued colonies.
     function showDawnChip(){ const el=$('dawnChip'); if(!el) return;
+      if(speed>0) return;   // the keeper already pressed play in the moment before it appeared
       el.classList.remove('hide'); try{ chime(392,494); }catch(e){} }
     function hideDawnChip(){ const el=$('dawnChip'); if(el&&!el.classList.contains('hide')) el.classList.add('hide'); }
     function dawnResume(){ hideDawnChip(); if(speed===0) setSpeed(1); }
@@ -6838,7 +6875,8 @@
         return JSON.parse(decodeURIComponent(escape(atob(m[2].replace(/-/g,'+').replace(/_/g,'/'))))); }
       catch(e){ return null; } }
     // invite/reply travel as tappable links when we're on the web; raw codes on file://
-    function netUrl(kind,code){ const web=(location.protocol==='https:'||location.protocol==='http:');
+    function netUrl(kind,code){ if(IS_APP) return WEB_HOME+'#'+kind+'='+code;   // a link a friend's phone can open
+      const web=(location.protocol==='https:'||location.protocol==='http:');
       return web?(location.origin+location.pathname+'#'+kind+'='+code):code; }
     function netRtc(){ return new RTCPeerConnection({iceServers:[{urls:['stun:stun.l.google.com:19302','stun:stun1.l.google.com:19302']}]}); }
     // non-trickle: wait for the full candidate set so one code carries everything
@@ -7520,7 +7558,7 @@
     // network. If it is unreachable — offline, file://, a fork without it —
     // NET.mailbox latches false and the whole party falls back to the
     // paste/QR handshake, which still works exactly as before.
-    const HIVE_API='/api/hive';
+    const HIVE_API=IS_APP?WEB_HOME+'api/hive':'/api/hive';   // the function answers the app's origin with CORS
     async function hiveApi(a,body,qs){
       if(NET.mailbox===false) return null;
       try{
@@ -7589,12 +7627,14 @@
       if(!started) NET.room=null;
     }
     // ---- the joiner's side: a live list of hives, one tap in ----
+    // the public list shows only the generated hive name and the four letters, never a name
+    // anyone typed: keeper names stay among the people in the room (and off strangers' screens)
     function renderLobby(rooms){ const el=$('lobbyList'); if(!el) return;
       if(!rooms||!rooms.length){
         el.innerHTML='<div class="mpWait"><span class="dot"></span>no hives waiting yet — when your host taps <b>Host a hive</b>, it appears here</div>'; return; }
       el.innerHTML=rooms.map(r=>'<button class="btn lobbyRow" data-code="'+netEsc(r.code)+'">'
         +'<span class="lrCode">'+netEsc(r.code)+'</span>'
-        +'<span class="lrTx"><b>'+netEsc(r.name||'A hive')+'</b><i>'+netEsc(r.host||'a keeper')+' · '+(r.keepers||1)+' keeper'+((r.keepers||1)>1?'s':'')+' · '+(r.age<60?'just now':(Math.round(r.age/60)+'m ago'))+'</i></span>'
+        +'<span class="lrTx"><b>'+netEsc(r.name||'A hive')+'</b><i>'+(r.keepers||1)+' keeper'+((r.keepers||1)>1?'s':'')+' · '+(r.age<60?'just now':(Math.round(r.age/60)+'m ago'))+'</i></span>'
         +'<span class="lrGo">join ▸</span></button>').join('');
       el.querySelectorAll('.lobbyRow').forEach(b=>press(b,()=>joinByCode(b.dataset.code)));
     }
@@ -7975,7 +8015,7 @@
     requestAnimationFrame(frame);
 
     // ===================== PWA: offline play + update reminder =====================
-    if('serviceWorker' in navigator && (location.protocol==='https:'||['localhost','127.0.0.1'].includes(location.hostname))){
+    if(!IS_APP && 'serviceWorker' in navigator && (location.protocol==='https:'||['localhost','127.0.0.1'].includes(location.hostname))){
       let refreshing=false;
       // on a first visit clients.claim() also fires controllerchange — only reload
       // when a controller existed at load time (i.e. a genuine version swap)

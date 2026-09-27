@@ -9,9 +9,13 @@
 <link rel="icon" type="image/png" sizes="64x64" href="/icons/favicon-64.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <title>About — HIVEMIND</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/BricolageGrotesque.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+  /* the game's two typefaces, self-hosted (SIL OFL, latin subsets): works offline and in
+     the iOS app, and the page makes no third-party requests at all */
+  @font-face{ font-family:'Bricolage Grotesque'; src:url(fonts/BricolageGrotesque.woff2) format('woff2'); font-weight:200 800; font-display:swap; }
+  @font-face{ font-family:'JetBrains Mono'; src:url(fonts/JetBrainsMono.woff2) format('woff2'); font-weight:400 800; font-display:swap; }
+</style>
 <style>
   :root{ --comb:#0d0905; --panel:rgba(27,19,9,0.74); --border:rgba(255,196,110,0.16);
     --text:#f7eed9; --dim:#c2a97e; --gold:#ffd97a; --honey:#ffb42b; --cyan:#7fe3d6; }

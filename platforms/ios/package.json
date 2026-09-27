@@ -1,0 +1,17 @@
+{
+  "name": "hivemind-ios",
+  "private": true,
+  "description": "The App Store wrapper for HIVEMIND: a Capacitor shell around the repo's own index.html, copied in unmodified by scripts/sync-www.js. Build-time only; nothing here is served by the website or loaded by index.html. See docs/APP_STORE.md.",
+  "scripts": {
+    "sync": "node scripts/sync-www.js && npx cap sync ios",
+    "open": "npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/ios": "^8.0.0",
+    "@capacitor/preferences": "^8.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.0.0"
+  }
+}

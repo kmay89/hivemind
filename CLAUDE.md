@@ -87,6 +87,25 @@ numbers drift as the file changes; re-grep `// =====` banners if they look off)
 | 4230-4300 | **main loop** — `frame()` |
 | 4300-4328 | PWA: offline play, update banner |
 
+## The App Store build (`IS_APP`)
+
+`platforms/ios/` is a Capacitor wrapper that bundles this exact `index.html` (copied by
+`platforms/ios/scripts/sync-www.js`, never edited). `IS_APP` (top of the `<script>`) is true only
+there, and it changes exactly four things:
+
+- no service worker;
+- `HIVE_API` and `netUrl()` point at `https://hive-mind-game.com/` (the mailbox function answers
+  the app's `capacitor://localhost` origin with CORS);
+- the trailer streams from the site;
+- every `hm*`/`hivemind*` localStorage write is mirrored into `@capacitor/preferences`, and
+  restored if the WebView wakes up empty.
+
+Anything new that assumes a web origin (a relative URL fetched at runtime, a `location.origin`
+link, `a.download`) needs an `IS_APP` answer too. The two fonts are self-hosted in `fonts/`
+(no Google Fonts): keep it that way, because the app must work offline and the privacy label
+says no third-party requests. Build steps, the listing and the review checklist are in
+docs/APP_STORE.md. `tools/app-store-shots.js` regenerates the store screenshots.
+
 ## Shared primitives — reuse these, don't re-derive them
 
 - `$('id')` — `document.getElementById` shorthand.

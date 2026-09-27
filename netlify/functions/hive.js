@@ -30,7 +30,7 @@ const clean = (s, n) => String(s == null ? '' : s).replace(/[<>&"']/g, '').trim(
 const isCode = c => /^[A-Z]{4}$/.test(c || '');
 const isSdp = s => typeof s === 'string' && s.length > 40 && s.length < SDP_MAX && s.indexOf('v=0') === 0;
 
-export default async (req) => {
+const handle = async (req) => {
   let store;
   try { store = getStore({ name: 'hive-rooms', consistency: 'strong' }); }
   catch (e) { return json({ error: 'mailbox unavailable' }, 503); }
@@ -155,6 +155,31 @@ export default async (req) => {
   }
 
   return json({ error: 'unknown request' }, 400);
+};
+
+// The iOS app (docs/APP_STORE.md) runs the same page from its own origin, capacitor://localhost,
+// so it reaches the mailbox cross-origin. Only the app's origins get CORS headers; the website
+// stays same-origin and needs none. Nothing about what is stored changes.
+const APP_ORIGINS = new Set(['capacitor://localhost', 'ionic://localhost']);
+const withCors = (res, origin) => {
+  if (!APP_ORIGINS.has(origin)) return res;
+  res.headers.set('access-control-allow-origin', origin);
+  res.headers.set('vary', 'origin');
+  return res;
+};
+
+export default async (req) => {
+  const origin = req.headers.get('origin') || '';
+  if (req.method === 'OPTIONS') {
+    const res = new Response(null, { status: 204 });
+    if (APP_ORIGINS.has(origin)) {
+      res.headers.set('access-control-allow-methods', 'GET, POST, OPTIONS');
+      res.headers.set('access-control-allow-headers', 'content-type');
+      res.headers.set('access-control-max-age', '600');
+    }
+    return withCors(res, origin);
+  }
+  return withCors(await handle(req), origin);
 };
 
 export const config = { path: '/api/hive' };
