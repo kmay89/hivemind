@@ -279,7 +279,8 @@ level is probably section-local):
   they read/write.
 - The event deck's `evFx`/`evLast`/`evCD`, the rewind point `rwTaken` (+ `hm_rewind`),
   and the year's quests (`questDone`/`questAct`) are folded into `resetColonyIdentity()`
-  and serialized (`ef`/`el`/`ecd`/`qd`); quests also clear at the year transition.
+  and serialized (`ef`/`el`/`ecd`/`qd`); quests also clear at the year transition. So does
+  `yearCalls` (`yc`): each solo event choice, retold as "Your calls this year" on the year-end card.
 - Anything touched by `resetColonyIdentity()` or hand-reset alongside its
   three call sites (`seedAndPlay`, `seedDaily`, `ovRestart`) is per-run state
   and must be included there, in `serialize`/`deserialize`, and in any

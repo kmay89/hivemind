@@ -1220,6 +1220,10 @@
   .voteBtns{ display:flex; gap:9px; margin-top:11px; }
   .voteBtns .btn{ flex:1; font-size:16px; padding:13px 8px; }
   #mpVote.meet .voteBtns{ flex-direction:column; }
+  .mpMeet{ margin-top:10px; text-align:left; font-size:12.5px; }
+  .mpMeetH{ font:700 10px 'JetBrains Mono',monospace; letter-spacing:.12em; text-transform:uppercase; opacity:.7; margin-bottom:4px; }
+  .mpMeetR{ display:grid; grid-template-columns:22px 1fr auto; gap:6px; align-items:baseline; padding:3px 0; border-top:1px solid rgba(255,255,255,.07); }
+  .mpMeetR i{ font-style:normal; font-size:10px; opacity:.8; white-space:nowrap; }
   #mpVote.meet .voteBtns .btn{ display:flex; flex-direction:column; gap:3px; text-align:left; padding:11px 13px; font-size:15px; }
   #mpVote.meet .voteBtns .btn i{ font:500 11.5px 'Bricolage Grotesque',sans-serif; font-style:normal; opacity:.8; }
   #mpVote.meet .voteBtns .btn.won{ opacity:1; outline:3px solid #c9ffb0; }
@@ -1389,6 +1393,7 @@
   .yeGradeSm{ font:600 10px 'JetBrains Mono',monospace; color:var(--dim); margin-top:4px; }
   .yeHook{ margin:10px 0 6px; padding:11px 14px; border-radius:14px; border:1px solid rgba(255,196,110,.3); background:rgba(255,196,90,.06); text-align:left; font-size:13px; line-height:1.6; }
   .yeHook .nx{ font-weight:800; color:var(--gold); display:block; margin-bottom:2px; }
+  .yeCalls{ margin-top:8px; padding-top:7px; border-top:1px solid rgba(255,196,110,.2); font-size:12.5px; line-height:1.55; }
   .ovCause{ margin:10px 0 4px; padding:12px 14px; border-radius:14px; border:1px solid rgba(255,112,82,.35); background:rgba(255,112,82,.07); text-align:left; font-size:13.5px; line-height:1.55; }
   .ovCause .why{ font-weight:700; color:#ffb49e; display:block; margin-bottom:3px; }
   .ovCause .try{ display:block; margin-top:6px; color:var(--good); }
@@ -2141,7 +2146,7 @@
     // / non-https, where no service worker runs) — the real source of truth is sw.js's
     // VERSION; syncGameVer() below asks the running worker and corrects this label
     // live, so the two only ever drift cosmetically for a moment, never permanently.
-    let GAME_VER='2026.09.26.43';
+    let GAME_VER='2026.09.27.44';
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2717,7 +2722,7 @@
     // state (not serialized — play rebuilds them), but they must never survive a colony.
     function resetColonyIdentity(){ roster=[]; corpses=[]; mix=FLOWERS.map(()=>0); coldSnap=0; evFx=[]; evLast={}; evCD=14;
       rwTaken=0; try{ localStorage.removeItem('hm_rewind'); }catch(e){}
-      questDone={}; questAct=[]; questPaid=0; questSeason=-1;
+      questDone={}; questAct=[]; questPaid=0; questSeason=-1; yearCalls=[];
       queenCall.length=0; shelfCall.length=0; }
     // hive-event deck state (EVENTS[]): timed effects a choice leaves behind, when each
     // event last fired (absolute hive-day), and the quiet spell before the next card
@@ -2728,6 +2733,7 @@
     // quests: three small goals at a time, drawn from the season's pool (QUESTS). Done-set is
     // per year (serialized); the active three and their baselines rebuild on load.
     let questDone={}, questAct=[], questPaid=0, questSeason=-1, hornetsBeat=0, frameChecks=0, questLead=null;
+    let yearCalls=[];   // this year's event-deck choices, retold on the year-end card
     let rj=0, jars=0, jarsThisYear=0, fedWinter=false, goals=null, lastSI=0, scoutShown=false, raidLoss=0, starveT=0, bankAtFrost=0, seenTips={};
     const queenVigour=()=>Math.max(0.7, 1-(queenAge-1)*0.12);
 
@@ -5059,7 +5065,8 @@
         lines.push(rj>=GIFT_COST ? '✧ You can afford a <b>Queen’s Gift</b> right now (below).' : '✧ <b>'+rj+'/'+GIFT_COST+'</b> royal jelly toward your next Queen’s Gift.');
         if(nextRank) lines.push(nextRank[2]+' '+(nextRank[0]-year)+' more winter'+(nextRank[0]-year>1?'s':'')+' to <b>'+nextRank[1]+'</b>.');
         lines.push('🔍 Field notes: <b>'+notes+'/'+fieldTotal()+'</b>.');
-        $('yeHook').innerHTML=lines.join('<br>'); }
+        $('yeHook').innerHTML=lines.join('<br>')
+          +(yearCalls.length?'<div class="yeCalls"><span class="nx">Your calls this year</span>'+yearCalls.slice(-6).map(c=>'<div>'+c.ic+' '+c.t.charAt(0)+c.t.slice(1).toLowerCase()+' → <b>'+c.c+'</b></div>').join('')+'</div>':''); }
       buildReview('ye'); grantBadge('survivor'); unlockPace('medium'); if(pace!=='easy') unlockPace('hard');
       recordChronicle('year', g); updateLegacy();
       if(milestone){ fanfare(); logMsg(rank.ic,'Your apiary is now a <b>'+rank.nm+'</b> \u2014 '+year+' winters weathered.'); }
@@ -5070,7 +5077,7 @@
     }
     $('yeNext').addEventListener('click',()=>{ $('yearEnd').classList.add('hide'); apiaryAdd(); year++; day=0; peakPop=Math.round(P); coldSnap=0; swarmP=0; activePatch=null;
       queenAge++; hornet=null; hornetCD=(year>=4?14+Math.random()*20:18+Math.random()*22); scoutShown=false;
-      jarsThisYear=0; fedWinter=false; starveT=0; bankAtFrost=0; yearHist.length=0; histT=2.7; goals=makeGoals(); lastSI=0; syncAlmanacTicks();
+      jarsThisYear=0; fedWinter=false; starveT=0; bankAtFrost=0; yearHist.length=0; yearCalls=[]; histT=2.7; goals=makeGoals(); lastSI=0; syncAlmanacTicks();
       questDone={}; questAct=[]; questPaid=0; questSeason=-1;
       delete nudged.bigNest; delete nudged.bigStore; delete nudged.bigBuild; delete nudged.noGrow;
       const prevEntry=CHRON.length?CHRON[CHRON.length-1]:null;
@@ -5139,7 +5146,7 @@
       const bt=cells.map(c=>c.brood?Math.round(c.brood.t*10):0);
       const bx=cells.map(c=>(!c.built&&c.flagExpand&&c.bp>0)?Math.round(c.bp*100):0);
       return {v:SAVE_V,t:Date.now(),day,year,P,honeyU,pollenU,nectarU,peakPop,bornTotal,swarmP,mite:Math.round(mite*1000)/1000,forage,activePatch,grades,queenAge,cb,bt,bx,
-        rj,jars,jy:jarsThisYear,ql:queenLine,rs:roster,se:curSeason?curSeason.id:'calm',sq:seasonEventDone?1:0,sx:seasonEventFired,mx:mix.map(v=>Math.round(v)),ow:Object.keys(owned),fw:fedWinter?1:0,bf:Math.round(bankAtFrost),tp:Object.keys(seenTips),ls:Object.keys(lessonSeen),gd:goals?goals.map(g=>g.done?1:0):[0,0,0,0],dc:Object.keys(discovered),ef:evFx,el:evLast,ecd:Math.round(evCD*10)/10,qd:Object.keys(questDone)}; }
+        rj,jars,jy:jarsThisYear,ql:queenLine,rs:roster,se:curSeason?curSeason.id:'calm',sq:seasonEventDone?1:0,sx:seasonEventFired,mx:mix.map(v=>Math.round(v)),ow:Object.keys(owned),fw:fedWinter?1:0,bf:Math.round(bankAtFrost),tp:Object.keys(seenTips),ls:Object.keys(lessonSeen),gd:goals?goals.map(g=>g.done?1:0):[0,0,0,0],dc:Object.keys(discovered),ef:evFx,el:evLast,ecd:Math.round(evCD*10)/10,yc:yearCalls,qd:Object.keys(questDone)}; }
     function saveGame(){ if(dailyMode||NET.on) return true; return lsSet(SAVE_KEY,JSON.stringify(serialize())); }   // a hive-link party never touches the solo save
     function clearSave(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
     // a save is only safe to hand to deserialize() if it's the shape that code below
@@ -5153,6 +5160,7 @@
     function deserialize(s){ const ZN=['none','brood','honey'], STN=['egg','larva','pupa'];
       day=s.day; year=s.year; P=s.P; honeyU=s.honeyU; pollenU=s.pollenU; nectarU=s.nectarU; peakPop=s.peakPop||Math.round(P); bornTotal=s.bornTotal||0; swarmP=s.swarmP||0; mite=(typeof s.mite==='number')?s.mite:0; forage=(typeof s.forage==='number')?s.forage:(s.forage==='nectar'?0.85:s.forage==='pollen'?0.25:0.6); activePatch=(s.activePatch===undefined?null:s.activePatch); grades=s.grades||[]; queenAge=s.queenAge||1;
       questDone={}; if(Array.isArray(s.qd)) s.qd.forEach(k=>questDone[k]=1); questAct=[]; questSeason=-1;
+      yearCalls=Array.isArray(s.yc)?s.yc.filter(c=>c&&c.t).slice(-12):[];
       evFx=Array.isArray(s.ef)?s.ef.filter(f=>f&&typeof f.m==='number'):[]; evLast=(s.el&&typeof s.el==='object')?s.el:{}; evCD=typeof s.ecd==='number'?s.ecd:14;
       rj=s.rj||0; jars=s.jars||0; jarsThisYear=s.jy||0; queenLine=(s.ql&&QUEENS.some(q=>q.id===s.ql))?s.ql:'meadow'; roster=Array.isArray(s.rs)?s.rs.filter(b=>b&&b.nm):[]; mix=(s.mx&&s.mx.length===FLOWERS.length)?s.mx.slice():FLOWERS.map(()=>0); owned={}; (s.ow||[]).forEach(k=>owned[k]=true); fedWinter=!!s.fw; bankAtFrost=s.bf||0; seenTips={}; (s.tp||[]).forEach(k=>seenTips[k]=1); lessonSeen={}; (s.ls||[]).forEach(k=>lessonSeen[k]=1); tipQ.length=0; tipCool=0;
       curSeason=WEATHERS.find(x=>x.id===s.se)||WEATHERS[0]; lastSeasonId=curSeason.id; seasonEventDone=!!s.sq; seasonEventFired=s.sx||null;
@@ -5715,6 +5723,57 @@
           { tx:'Trust the wind', d:()=>'<span class="cost">risk: lose ~12% of the foragers</span> · forage unchanged',
             go(){ if(Math.random()<0.6){ const lost=P*0.12; P-=lost; return 'The drift reached the clover. <b>'+beeN(lost)+'</b> foragers never came home.'; } return 'The wind blew the spray the other way. Lucky.'; } },
         ] },
+      // the quiet seasons get their decisions too: high summer, late autumn and deep winter
+      { id:'water', ic:'💧', kick:'a heatwave', title:'THE BEES ARE HAULING WATER', gap:9999,
+        when:()=>day>110 && day<200 && P>12,
+        tx:()=>'A hot week. Foragers are queuing at the birdbath, carrying water home to fan the comb cool. Set out a water dish near the hive, or let them find their own?',
+        fact:'On hot days bees spread water droplets over the comb and fan their wings: evaporation cools the brood nest. A colony can haul over a litre a day.',
+        opts:[
+          { tx:'A dish of water and stones', d:()=>'<span class="gain">+12% nectar</span> for 20 days · fewer foragers lost to the long water run',
+            go(){ addFx('nec',1.12,20); return 'A shallow dish with pebbles for footholds. The water carriers go back to flowers.'; } },
+          { tx:'They’ll find a puddle', d:()=>'costs nothing · bees are good at finding water',
+            go(){ return 'They find the neighbour’s pond. It’s a longer trip, but it works.'; } },
+        ] },
+      { id:'ivy', ic:'🍂', kick:'the last bloom', title:'THE IVY IS FLOWERING', gap:9999,
+        when:()=>day>212 && day<248 && P>8,
+        tx:()=>'The last big bloom of the year. Old foragers could bring in one more flow, but every trip wears them out just before winter. Chase the ivy, or start closing up?',
+        fact:'Ivy flowers in autumn when almost nothing else does. For many colonies it is the last real flow before winter, and its honey sets hard in the comb.',
+        opts:[
+          { tx:'Chase the ivy', d:()=>'<span class="gain">+30% nectar</span> for 15 days · <span class="cost">+6% winter use</span> as worn foragers die',
+            go(){ addFx('nec',1.3,15); addFx('eat',1.06,110); return 'The hive smells of ivy for a fortnight. The shelves fill, and the old guard is spent.'; } },
+          { tx:'Let them rest', d:()=>'<span class="gain">−4% winter use</span> · young winter bees save their strength',
+            go(){ addFx('eat',0.96,110); return 'You let the ivy go. The winter bees stay young and fat-bodied.'; } },
+        ] },
+      { id:'mouse', ic:'🐭', kick:'first frosts', title:'A MOUSE IS LOOKING FOR A HOME', gap:9999,
+        when:()=>day>228 && day<280 && P>4,
+        tx:()=>'Droppings under the hive stand. A mouse wants the warm, honey-scented box for the winter. Leave the entrance wide for the foragers, or fit a mouse guard?',
+        fact:'A mouse guard is a metal strip with bee-sized holes. Mice that get in over winter chew comb for a nest and eat stores while the cluster is too cold to fight.',
+        opts:[
+          { tx:'Leave the entrance wide', d:()=>'<span class="gain">+10% nectar</span> for 12 days · <span class="cost">+8% winter use</span> if the mouse moves in',
+            go(){ addFx('nec',1.1,12); addFx('eat',1.08,100); return 'The foragers come and go freely. So, one night, does the mouse.'; } },
+          { tx:'Fit the mouse guard', d:()=>'costs nothing · the winter stores stay the bees’',
+            go(){ return 'Tap, tap. The strip goes on. The mouse tries the shed instead.'; } },
+        ] },
+      { id:'heft', ic:'🏋️', kick:'deep winter', title:'HEFT THE HIVE', gap:9999,
+        when:()=>day>275 && day<335 && P>3,
+        tx:()=>'You tip the back of the hive an inch to feel its weight, the way keepers check stores without opening up in the cold. It feels… lighter than you hoped.',
+        fact:'Keepers "heft" a hive in winter: lifting one side tells you roughly how much honey is left, without opening the box and chilling the cluster.',
+        opts:[
+          { tx:'Slide in a block of fondant (✧1)', d:()=>'<span class="gain">+1.5 cells of stores</span> above the cluster · ✧1',
+            ok:()=>rj>=1, go(){ rj-=1; setN('vRJ','✧'+rj); honeyU+=1.5*HC; return 'A slab of fondant over the frames, right where the cluster will reach it.'; } },
+          { tx:'Trust the stores', d:()=>'costs nothing · the forecast will tell you if it was enough',
+            go(){ return 'You set it down gently. They’ve done the arithmetic already.'; } },
+        ] },
+      { id:'cleanse', ic:'☀️', kick:'a mild winter day', title:'A WARM DAY IN WINTER', gap:9999,
+        when:()=>day>300 && day<356 && P>3,
+        tx:()=>'Sunshine and the first mild air in weeks. Bees are spilling out for a quick loop and back. Open the entrance reducer to let them out, or keep the hive snug?',
+        fact:'Bees won’t soil the hive. All winter they hold it in, and on the first warm day they pour out for a "cleansing flight". It keeps the colony healthy.',
+        opts:[
+          { tx:'Open up for the flight', d:()=>'<span class="gain">−5% winter use</span> for 40 days · a healthier cluster',
+            go(){ addFx('eat',0.95,40); return 'Yellow dots on the snow. The cluster settles back lighter and calmer.'; } },
+          { tx:'Keep it snug', d:()=>'costs nothing · they’ll manage through the small gap',
+            go(){ return 'A few bees squeeze out anyway. The rest wait for another day.'; } },
+        ] },
       { id:'wrap', ic:'🧣', kick:'before the frost', title:'WINTER IS COMING', gap:9999,
         when:()=>day>238 && day<262 && P>6,
         tx:()=>'The last flowers are going over. You can wrap the hive in insulation for winter, but a wrapped hive traps damp as well as heat.',
@@ -5749,6 +5808,7 @@
       evCur=null; closeOverlay('hiveEvent');
       const before=(day<300)?forecastToSpring():null;
       let res=''; try{ res=o.go()||''; }catch(err){}
+      yearCalls.push({ic:e.ic,t:e.title,c:o.tx}); if(yearCalls.length>12) yearCalls.shift();
       noteField(e.id, e.ic, e.title, e.fact);
       forecastCache=forecastToSpring(); saveGame();
       if(res) logMsg(e.ic,res); try{ chime(523,659); }catch(err){}
@@ -6798,7 +6858,7 @@
     // Completely separate from the solo save; resuming re-seats keepers by name.
     const PARTY_KEY='hivemind.party.v1';
     function partyWrite(){ if(!NET.host||!NET.started||NET.endSent) return;
-      lsSet(PARTY_KEY,JSON.stringify({v:1,t:Date.now(),name:NET.hiveName||'',od:NET.ordersDone||0,merit:NET.merit||{},
+      lsSet(PARTY_KEY,JSON.stringify({v:1,t:Date.now(),name:NET.hiveName||'',od:NET.ordersDone||0,merit:NET.merit||{},ml:NET.meetLog||[],
         s:serialize(), ps:NET.players.map(p=>p.name)})); }
     function partyRead(){ try{ const raw=localStorage.getItem(PARTY_KEY); if(!raw) return null;
       const sv=JSON.parse(raw); return (sv&&sv.v===1&&sv.s&&Array.isArray(sv.s.cb)&&sv.s.cb.length===cells.length)?sv:null; }catch(e){ return null; } }
@@ -6914,11 +6974,12 @@
       const pass=yes>no;   // a real quorum: a tie means the hive holds still
       netBcast({t:'tally',id:V.id,yes,no,pass,k:V.k,v:V.v});
       netVoteResult(V.k,V.v,yes,no,pass);
-      if(V.k==='ev'){ netApplyEvent(V.v,pass?0:1); return; }   // a hive meeting always decides: a tie takes the second, steadier road
+      if(V.k==='ev'){ netApplyEvent(V.v,pass?0:1,yes,no); return; }   // a hive meeting always decides: a tie takes the second, steadier road
       if(pass){ meritAdd(V.by,'voice'); netApplyDecision(V.k,V.v); } }
     // the event deck, decided together — the host plays the chosen card exactly as solo does
-    function netApplyEvent(id,i){ const e=EVENTS.find(x=>x.id===id); if(!e) return; let o=e.opts[i];
-      if(o.ok&&!o.ok()) o=e.opts[1-i];   // ✧ spent while the hive talked: the other road it is
+    function netApplyEvent(id,i,yes,no){ const e=EVENTS.find(x=>x.id===id); if(!e) return; let o=e.opts[i];
+      if(o.ok&&!o.ok()) o=e.opts[1-i];
+      (NET.meetLog||(NET.meetLog=[])).push({ic:e.ic,t:e.title,c:o.tx,y:yes|0,n:no|0});   // the year's story, for the scorecard   // ✧ spent while the hive talked: the other road it is
       const before=(day<300)?forecastToSpring():null;
       let res=''; try{ res=o.go()||''; }catch(err){}
       noteField(e.id,e.ic,e.title,e.fact); netBcast({t:'fn',id:e.id});   // everyone files the field note
@@ -7145,7 +7206,7 @@
     // colony and broadcast the start
     function netSeedParty(){
       const resume=NET.resume; NET.resume=null;
-      NET.endSent=false; NET.hadHornet=false; NET.order=null; NET.orderCD=18; NET.ordersDone=0; netOrderShow();
+      NET.endSent=false; NET.hadHornet=false; NET.order=null; NET.orderCD=18; NET.ordersDone=0; NET.meetLog=[]; netOrderShow();
       NET.merit=resume?(resume.merit||{}):{};
       NET.hiveName=resume?(resume.name||netHiveName()):netHiveName();
       if(!resume) partyClear();
@@ -7159,7 +7220,7 @@
       brushedBrood=0; flaggedExpand=0; paintedHoney=0; forageTouched=true; coachStep=0; onboard=false; yearHist.length=0; histT=2.7; popMilo={}; queenLine='meadow'; netLastSI=0;
       brush='brood'; document.querySelectorAll('[data-brush]').forEach(x=>x.classList.toggle('on',x.dataset.brush==='brood')); setReveal(false); clearUndo();
       over=false;
-      if(resume){ netApplySnap(resume.s); NET.ordersDone=resume.od||0;
+      if(resume){ netApplySnap(resume.s); NET.ordersDone=resume.od||0; NET.meetLog=Array.isArray(resume.ml)?resume.ml:[];
         if(day>=270) armMidwinter(true); lastSI=seasonIdx(day); netLastSI=lastSI; }
       NET.family=familyMode;   // the host's family switch sets the tone for the whole hive
       netRecomputeSectors();
@@ -7235,14 +7296,19 @@
       $('roleInvite').classList.toggle('hide',!NET.host);
       openOverlay('mpRole'); }
     function netYearEnd(){ if(!NET.host||NET.endSent) return; NET.endSent=true;
-      const sum={peak:Math.round(peakPop), jars, rj, goals:goals?goals.filter(g=>g.done).length:0, orders:NET.ordersDone||0, died:P<1||over&&day<YEAR, hands:NET.players.filter(p=>!p.gone).length, name:NET.hiveName, merit:NET.merit||{}};
+      const sum={peak:Math.round(peakPop), jars, rj, goals:goals?goals.filter(g=>g.done).length:0, orders:NET.ordersDone||0, meet:(NET.meetLog||[]).slice(-8), died:P<1||over&&day<YEAR, hands:NET.players.filter(p=>!p.gone).length, name:NET.hiveName, merit:NET.merit||{}};
       over=true; setSpeed(0); NET.order=null; netOrderShow(); partyClear();   // the ledger's year is finished either way
       netBcast({t:'end',sum}); netShowEnd(sum); }
+    // the hive meetings, retold: the year's shared choices are the story a party remembers
+    function netMeetLines(ml){ if(!Array.isArray(ml)||!ml.length) return '';
+      const t=x=>{ x=String(x||''); return netEsc(x.charAt(0)+x.slice(1).toLowerCase()); };
+      return '<div class="mpMeet"><div class="mpMeetH">🐝 decided together</div>'+ml.map(m=>'<div class="mpMeetR"><span>'+netEsc(m.ic||'')+'</span><span><b>'+t(m.t)+'</b> → '+netEsc(m.c||'')+'</span><i>'+'🐝'.repeat(Math.min(8,m.y|0))+((m.n|0)?' ✋'.repeat(Math.min(8,m.n|0)).replace(/ /g,''):'')+'</i></div>').join('')+'</div>'; }
     function netShowEnd(sum){ $('mpEndTitle').textContent=sum.died?'THE COMB FELL QUIET':'YOU WINTERED — TOGETHER';
       $('mpEndBody').innerHTML=(sum.name?'<div class="mpBadge">'+netEsc(sum.name)+'</div>':'')+(sum.died
         ?'<p>The colony didn’t reach spring. It happens to every keeper — the real ones too. Same crew, another go?</p>'
         :'<p>A whole year, kept by <b>'+(sum.hands||NET.players.filter(p=>!p.gone).length)+'</b> pairs of hands.</p>')
         +'<div class="mpHow" style="text-align:center">🐝 peak '+beeN(sum.peak||0)+' bees · 🫙 '+(sum.jars||0)+' jars · ✧ '+(sum.rj||0)+' royal jelly · 📣 '+(sum.orders||0)+' orders filled · '+(sum.goals||0)+'/4 season goals</div>'
+        +netMeetLines(sum.meet)
         +'<div style="margin-top:8px">'+netMeritLines(sum.merit)+'</div>'
         +(NET.host?'':'<div class="mpHow" style="text-align:center;opacity:0.75">…or hold on — the Queen can call <b>another year</b> and you’re all still linked.</div>');
       $('mpEndAgain').classList.toggle('hide', !(NET.host&&NET.players.some(p=>p.ix>0&&!p.gone)));
@@ -7416,7 +7482,7 @@
       try{ if(joinPc) joinPc.close(); }catch(e){}
       joinPc=null; joinDc=null; NET.on=false; NET.host=false; NET.started=false; NET.endSent=false;
       NET.players=[]; NET.pend=null; NET.vote=null; NET.cVote=null; NET.myIx=-1; NET.help=null; netVoteUI=null; netSector=null; netVotedIx=[];
-      NET.order=null; NET.orderCD=undefined; NET.ordersDone=0; NET.stale=false; NET.orderTaught=false; NET.voteTaught=false; NET.resume=null; NET.hiveName=''; NET.merit={}; netOrderShow();
+      NET.order=null; NET.orderCD=undefined; NET.ordersDone=0; NET.meetLog=[]; NET.stale=false; NET.orderTaught=false; NET.voteTaught=false; NET.resume=null; NET.hiveName=''; NET.merit={}; netOrderShow();
       document.body.classList.remove('netc');
       NET.family=false;   // restore the player's own saved family preference (a transient join-adopt reverts)
       { let saved=false; try{ saved=localStorage.getItem('hm_family')==='1'; }catch(e){} setFamily(saved); }
@@ -7812,7 +7878,7 @@
       built:cells.filter(c=>c.built).length, flagged:cells.filter(c=>!c.built&&c.flagExpand).length,
       zones:{brood:cells.filter(c=>c.built&&c.zone==='brood').length,honey:cells.filter(c=>c.built&&c.zone==='honey').length,none:cells.filter(c=>c.built&&c.zone==='none').length},
       rateH:rate.h, rj, jars, goals:goals?goals.map(g=>({l:g.label,d:g.done})):null,
-      net:{on:NET.on,host:NET.host,started:NET.started,ix:NET.myIx,players:NET.players.map(p=>({ix:p.ix,n:p.name,g:p.gone})),vote:!!(NET.vote||NET.cVote), help:NET.players.filter(q=>netHelpOpen(q.ix)).map(q=>q.ix), room:NET.room, mailbox:NET.mailbox, slots:[...NET.slots.keys()],
+      net:{on:NET.on,host:NET.host,started:NET.started,ix:NET.myIx,players:NET.players.map(p=>({ix:p.ix,n:p.name,g:p.gone})),vote:!!(NET.vote||NET.cVote), help:NET.players.filter(q=>netHelpOpen(q.ix)).map(q=>q.ix), meets:(NET.meetLog||[]).length, room:NET.room, mailbox:NET.mailbox, slots:[...NET.slots.keys()],
         ownBuilt:(netSector?cells.reduce((a,c,i)=>a+((c.built&&netSector[i]===NET.myIx)?1:0),0):0),
         ownCellPx:(()=>{ if(!netSector) return null; for(let i=0;i<cells.length;i++){ if(cells[i].built&&netSector[i]===NET.myIx&&cells[i].zone!=='brood'){ const p=cellCenter(cells[i].c,cells[i].r); const hit=document.elementFromPoint(p.x,p.y); if(hit&&hit.id!=='c') continue; return {x:p.x,y:p.y}; } } return null; })()},
       patches:PATCHES.map((pt,i)=>{ const pp=patchPos(i); return {i,x:pp.x,y:pp.y,q:patchQuality(i,day)}; })});

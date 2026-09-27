@@ -164,6 +164,8 @@ function serve() {
   await Promise.all([noted(join), noted(trip)]);
   const fx = await host.evaluate(() => !!document.querySelector('#fxRow .fxc'));
   console.log(fx ? '✓ the majority road was played on the host, and every keeper filed the field note' : '✗ meeting result did not apply');
+  const meets = await host.evaluate(() => window.__hm().net.meets);
+  console.log(meets === 1 ? '✓ the meeting is logged for the year-end "decided together" recap' : `✗ meeting log has ${meets} entries`);
   await join.waitForFunction(() => document.getElementById('mpVote').classList.contains('hide'), null, { timeout: 6000 });
   await tap(join, '#mpEmo .emo[data-e="0"]');
   await host.waitForSelector('.emoPop', { timeout: 4000 });
