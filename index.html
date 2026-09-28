@@ -179,7 +179,7 @@
   :root{ --stage:1180px; --pollen:#ef8c2c; }
   /* every choice carries its own numbers, the way a strategy game shows tile yields */
   .tb.y{ flex-direction:column; align-items:flex-start; gap:1px; padding-top:5px; padding-bottom:5px; }
-  .tb .yld{ font-family:'JetBrains Mono',monospace; font-size:8.5px; font-style:normal; letter-spacing:0; line-height:1.2; opacity:.95; white-space:nowrap; }
+  .tb .yld{ font-family:'JetBrains Mono',monospace; font-size:10px; font-style:normal; letter-spacing:0; line-height:1.2; opacity:.95; white-space:nowrap; }
   .tb .yld b{ color:var(--honey); font-weight:700; } .tb .yld em{ color:var(--pollen); font-style:normal; font-weight:700; }
   .tb .yld i{ color:var(--dim); font-style:normal; font-weight:400; }
   .gl u{ text-decoration:none; font-family:'JetBrains Mono',monospace; font-size:8px; opacity:.75; letter-spacing:0; }
@@ -283,7 +283,10 @@
   /* ---------- advisor ---------- */
   #advisor{ padding:10px 13px; max-width:302px; display:flex; gap:9px; align-items:flex-start; }
   #advisor .ic{ width:46px; height:46px; flex:none; margin-top:-2px; }
-  #advisor .tx{ font-size:11.5px; line-height:1.5; color:var(--text); }
+  #advisor .tx{ font:600 13.5px/1.35 'Bricolage Grotesque',sans-serif; color:var(--text); align-self:center; }
+  #quests .qHand{ font-style:normal; margin-left:3px; display:inline-block; animation:advGo 1.6s ease-in-out infinite; }
+  #advisor .advGo{ font-style:normal; display:inline-block; margin-left:3px; animation:advGo 1.6s ease-in-out infinite; }
+  @keyframes advGo{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-3px) rotate(-8deg); } }
   #advisor .tx b{ color:var(--gold); font-weight:600; }
   #advisor .tx em{ color:var(--cyan); font-style:normal; }
   #advisor.warn{ border-color:rgba(255,112,82,0.5); } #advisor.warn .ic{ filter:drop-shadow(0 0 6px rgba(255,112,82,.6)); }
@@ -450,24 +453,6 @@
   .ckWord{ font:500 10px 'Bricolage Grotesque',sans-serif; color:var(--dim); line-height:1.5; padding:3px 0; border-top:1px solid rgba(255,255,255,.05); }
   .ckWord:first-of-type{ border-top:none; }
   .ckWord b{ color:#f5e9c8; }
-  /* ---- deliberate first-placement preview card ---- */
-  #placeConfirm{ position:fixed; left:50%; bottom:180px; transform:translate(-50%,14px); z-index:46; width:min(93vw,368px);
-    background:linear-gradient(180deg,rgba(36,26,11,.985),rgba(22,15,6,.985)); border:1px solid rgba(255,214,107,.36);
-    border-radius:17px; padding:13px 14px 14px; box-shadow:0 12px 38px rgba(0,0,0,.55);
-    opacity:0; pointer-events:none; transition:opacity .22s ease, transform .28s cubic-bezier(.3,1.25,.5,1); }
-  #placeConfirm.show{ opacity:1; transform:translate(-50%,0); pointer-events:auto; }
-  #placeConfirm.hide{ display:none; }
-  .pcArt{ display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:9px; }
-  .pcArt canvas{ width:54px; height:54px; }
-  .pcArrow{ font:800 22px 'Bricolage Grotesque',sans-serif; color:var(--gold); }
-  .pcName{ font:800 15.5px 'Bricolage Grotesque',sans-serif; color:#fff2cf; text-align:center; margin-bottom:8px; }
-  .pcRow{ display:flex; gap:9px; align-items:baseline; font:500 12.5px 'Bricolage Grotesque',sans-serif; line-height:1.42; color:#e8dcc4; padding:2px 2px; }
-  .pcRow>span:first-child{ flex:none; width:15px; text-align:center; font-size:12.5px; }
-  .pcRow.pcGain>span:first-child{ color:#a7e07c; } .pcRow.pcCost>span:first-child{ color:#e6a86a; } .pcRow.pcBest>span:first-child{ color:var(--gold); }
-  .pcRow b{ color:#fff2cf; }
-  .pcNote{ font:500 10.5px 'JetBrains Mono',monospace; color:var(--frost); text-align:center; margin:7px 0 1px; min-height:14px; line-height:1.4; }
-  .pcBtns{ display:flex; gap:9px; margin-top:10px; align-items:center; }
-  #pcPlace{ flex:1; }
   #ckHandle{ flex:none; width:30px; min-height:96px; cursor:pointer; border:1px solid rgba(255,214,107,.3); border-left:none;
     background:linear-gradient(180deg,rgba(40,30,12,.96),rgba(26,18,7,.96)); border-radius:0 12px 12px 0; color:var(--gold);
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:8px 0; box-shadow:4px 0 14px rgba(0,0,0,.4); }
@@ -563,11 +548,11 @@
   #unlockChip{ position:fixed; left:50%; top:38%; transform:translate(-50%,-50%); z-index:var(--z-popup);
     display:flex; flex-direction:column; align-items:center; gap:4px; padding:18px 30px; text-align:center; }
   #unlockChip.hide{ display:none; }
-  #unlockChip.pop{ animation:unlockPop 1.65s cubic-bezier(.2,1.1,.3,1) both; }
+  #unlockChip.pop{ animation:unlockPop 1.9s cubic-bezier(.2,1.1,.3,1) both; }
   @keyframes unlockPop{ 0%{ opacity:0; transform:translate(-50%,-50%) scale(.55); }
     12%{ opacity:1; transform:translate(-50%,-50%) scale(1.06); } 20%{ transform:translate(-50%,-50%) scale(1); }
     85%{ opacity:1; } 100%{ opacity:0; transform:translate(-50%,-50%) scale(1.03); } }
-  #unlockChip .uc1{ font:700 9px 'JetBrains Mono',monospace; letter-spacing:.3em; text-transform:uppercase; color:var(--cyan); }
+  #unlockChip .ucR{ font-size:34px; line-height:1.15; letter-spacing:.04em; white-space:nowrap; filter:drop-shadow(0 3px 6px rgba(0,0,0,.4)); }
   #unlockChip .uc2{ font:800 30px 'Bricolage Grotesque',sans-serif; letter-spacing:.06em;
     background:linear-gradient(95deg,var(--gold),#fff 55%,var(--honey)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
   #unlockChip .uc3{ font:700 11px 'JetBrains Mono',monospace; color:var(--gold); }
@@ -857,8 +842,29 @@
   #coach .cbtn{ font-family:'Bricolage Grotesque'; font-weight:800; font-size:13.5px; padding:9px 20px; border-radius:11px; cursor:pointer; border:none;
     color:#ffeec4; background:linear-gradient(180deg,#6b3f0a,#4a2a05); box-shadow:0 2px 0 rgba(0,0,0,.35); transition:transform .09s; }
   #coach .cbtn:active{ transform:translateY(1px) scale(.97); }
-  #coach .cskip{ font-size:11px; color:#8a5a12; cursor:pointer; text-decoration:underline; font-weight:600; }
-  #coach .cprog{ font-size:9.5px; letter-spacing:.16em; color:#8a5a12; margin-bottom:6px; text-transform:uppercase; font-weight:800; }
+  #coach .cskip{ position:absolute; top:7px; right:9px; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:12px; color:#8a5a12; cursor:pointer; font-weight:800; background:rgba(120,70,10,.12); }
+  /* the wordless coach: a compact pill (icon · 1–3 words · progress dots); the ghost hand does the explaining */
+  #coach{ width:auto; min-width:210px; max-width:min(340px, calc(100% - 32px)); align-items:center; padding:12px 42px 12px 16px; }
+  #coach .ct{ font:800 clamp(18px, 16px + .5vw, 22px)/1.2 'Bricolage Grotesque',sans-serif; letter-spacing:.01em; }
+  #coach .cgo{ margin-top:8px; } #coach .cbtn:not([style*="none"]){ display:inline-block; }
+  #coach .cprog{ display:flex; gap:5px; margin:0 0 7px; }
+  #coach .cprog i{ width:7px; height:7px; border-radius:50%; background:rgba(120,70,10,.22); transition:background .3s, transform .3s; }
+  #coach .cprog i.done{ background:#7a3d00; } #coach .cprog i.on{ background:#fff; transform:scale(1.35); box-shadow:0 0 0 2px rgba(122,61,0,.55); }
+  /* the ghost hand: shows where to tap (or which way to slide) instead of saying it */
+  #ghostHand{ position:fixed; left:0; top:0; width:0; height:0; z-index:var(--z-popup); pointer-events:none; opacity:0;
+    transition:opacity .35s, transform .55s cubic-bezier(.3,1.3,.5,1); will-change:transform; }
+  #ghostHand.on{ opacity:1; }
+  #ghostHand .gh{ position:absolute; left:-15px; top:-4px; width:46px; height:46px; transform-origin:15px 4px;
+    filter:drop-shadow(0 5px 7px rgba(0,0,0,.5)); animation:ghTap 1.35s ease-in-out infinite; }
+  @keyframes ghTap{ 0%,100%{ transform:translate(12px,16px) rotate(-8deg); } 42%{ transform:translate(0,0) rotate(0); }
+    52%{ transform:translate(0,2px) scale(.86); } 64%{ transform:translate(0,0) scale(1); } }
+  #ghostHand .gr{ position:absolute; left:-20px; top:-20px; width:40px; height:40px; border-radius:50%; border:3px solid rgba(255,244,205,.95);
+    box-shadow:0 0 12px rgba(255,214,107,.8); opacity:0; animation:ghRip 1.35s ease-out infinite; }
+  @keyframes ghRip{ 0%,49%{ opacity:0; transform:scale(.25); } 54%{ opacity:1; transform:scale(.35); } 100%{ opacity:0; transform:scale(1.6); } }
+  #ghostHand.drag .gh{ animation:ghDrag 2.2s ease-in-out infinite; } #ghostHand.drag .gr{ animation:none; }
+  @keyframes ghDrag{ 0%,100%{ transform:translate(calc(var(--dx,40px)*-1),6px); } 50%{ transform:translate(var(--dx,40px),6px); } }
+  @media (prefers-reduced-motion:reduce){ #ghostHand .gh, #ghostHand .gr{ animation:none; } #ghostHand{ transition:opacity .35s; } }
 
   /* ---------- discovery: interface that hasn't been earned yet doesn't exist ---------- */
   /* display:none, not opacity — an undiscovered stat must not hold an empty slot open. */
@@ -1061,7 +1067,7 @@
     font-size:12px; color:#241503; background:transparent; transition:background .18s; flex:none; }
   #sndInvite.on .box{ background:var(--gold); border-color:var(--gold); }
   #sndInvite .box i{ opacity:0; font-style:normal; transition:opacity .18s; } #sndInvite.on .box i{ opacity:1; }
-  #sndInvite .sub2{ color:var(--dim); font-weight:500; }
+
   /* family-mode toggle — same shape as the sound toggle, a gentle green tint */
   #familyToggle{ display:inline-flex; align-items:center; gap:9px; margin:0 auto; padding:10px 15px; border-radius:999px; cursor:pointer;
     background:rgba(150,214,110,0.08); border:1px solid rgba(150,214,110,0.30); transition:background .2s, border-color .2s;
@@ -1072,7 +1078,7 @@
   #familyToggle.on{ background:rgba(150,214,110,0.16); border-color:rgba(150,214,110,0.62); }
   #familyToggle.on .box{ background:#96d66e; border-color:#96d66e; }
   #familyToggle .box i{ opacity:0; font-style:normal; transition:opacity .18s; } #familyToggle.on .box i{ opacity:1; }
-  #familyToggle .sub2{ color:var(--dim); font-weight:500; }
+
   .beenote{ margin-top:14px; padding:11px 13px; border-radius:12px; background:rgba(255,217,122,0.07); border:1px solid rgba(255,217,122,0.16);
     font-size:11.5px; line-height:1.55; color:var(--dim); text-align:left; }
   .beenote b{ color:var(--gold); font-weight:600; } .beenote .lbl{ display:block; font:700 8.5px 'JetBrains Mono',monospace; letter-spacing:.2em; text-transform:uppercase; color:var(--gold); margin-bottom:4px; opacity:.8; }
@@ -1341,6 +1347,7 @@
   #voteBar{ transition:background .3s; }
   #voteBar.low{ background:linear-gradient(90deg,#ff9d5a,#ff5a3a); }
   /* ===== title screen: one loud door, two quiet side doors, prefs at the edges ===== */
+  .coRow{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; }
   .modeCap{ display:flex; align-items:center; justify-content:center; gap:9px; margin:14px 0 7px;
     font:700 10px 'JetBrains Mono',monospace; letter-spacing:2px; color:var(--dim); text-transform:uppercase; }
   .modeCap::before{ content:''; flex:0 0 36px; height:1px; background:linear-gradient(90deg,transparent,rgba(255,214,107,.35)); }
@@ -1439,6 +1446,34 @@
   .heOpt::before{ display:none; }
   .heOpt b{ font-size:15px; } .heOpt i{ font:500 10.5px 'JetBrains Mono',monospace; font-style:normal; color:var(--dim); }
   .heOpt i .gain{ color:#a7e07c; } .heOpt i .cost{ color:#e6a86a; }
+  /* picture-first cards: the face shows icon · title · choices; words wait behind ⓘ / More */
+  .heIc{ font-size:58px; margin:2px 0 4px; filter:drop-shadow(0 6px 14px rgba(0,0,0,.45)); }
+  .heOpt b{ font-size:16.5px; } .heOpt i{ font-size:11.5px; } .heOpt i:empty{ display:none; }
+  .heOpt i .gain, .heOpt i .cost{ display:inline-block; padding:1px 7px; margin:2px 4px 0 0; border-radius:99px; font-weight:700; }
+  .heOpt i .gain{ background:rgba(167,224,124,.13); } .heOpt i .cost{ background:rgba(230,168,106,.13); }
+  .foldBtn{ display:block; margin:10px auto 0; border:none; background:rgba(255,214,107,.1); color:var(--gold); cursor:pointer;
+    font:800 14px 'Bricolage Grotesque',sans-serif; width:32px; height:32px; border-radius:50%; transition:background .2s, transform .2s; }
+  .foldBtn.wide{ width:auto; height:auto; padding:6px 16px; border-radius:99px; font-size:12px; letter-spacing:.04em; }
+  .foldBtn.open{ background:rgba(255,214,107,.24); } .foldBtn.wide.open{ transform:none; }
+  .fold{ margin-top:8px; animation:foldIn .32s cubic-bezier(.2,1.2,.4,1) both; } .fold.hide{ display:none; }
+  @keyframes foldIn{ from{ opacity:0; transform:translateY(-6px); } to{ opacity:1; transform:none; } }
+  .yeStar{ width:84px; } .yeStar .ysI{ font-size:22px; line-height:1; filter:grayscale(1) opacity(.45); } .yeStar.on .ysI{ filter:none; }
+  .yeHook{ text-align:center; } .yeHook .nx{ font-size:16px; margin-bottom:8px; }
+  .ycRow{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; }
+  .yc{ display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:99px; background:rgba(255,255,255,.06);
+    border:1px solid rgba(255,214,107,.18); font:700 12.5px 'JetBrains Mono',monospace; color:var(--text); }
+  .yc.warn{ border-color:rgba(255,120,90,.6); background:rgba(255,112,82,.12); } .yc.ready{ border-color:var(--gold); box-shadow:0 0 10px rgba(255,200,80,.35); }
+  .ovCause{ text-align:center; } .ovCause .ocIc{ display:block; font-size:54px; line-height:1.1; margin-bottom:4px; animation:heBob 2.4s ease-in-out infinite; }
+  .ovCause .why{ font-size:15px; } .ovCause .try{ font-weight:700; font-size:14px; }
+  .ovLong{ text-align:left; font-size:12.5px; line-height:1.55; color:var(--dim); margin-bottom:8px; }
+  /* card springs: an opening card pops, and its choices land one after another */
+  .ov:not(.hide) .card{ animation:cardSpring .5s cubic-bezier(.2,1.35,.4,1) both; }
+  @keyframes cardSpring{ from{ opacity:0; transform:translateY(16px) scale(.94); } to{ opacity:1; transform:none; } }
+  .ov:not(.hide) .heOpt, .ov:not(.hide) .dcOpt, .ov:not(.hide) .yeStar{ animation:optIn .46s cubic-bezier(.2,1.4,.4,1) both; }
+  .ov:not(.hide) .heOpt:nth-child(2), .ov:not(.hide) .dcOpt:nth-child(2){ animation-delay:.09s; }
+  .ov:not(.hide) .dcOpt:nth-child(3){ animation-delay:.18s; }
+  @keyframes optIn{ from{ opacity:0; transform:translateY(12px) scale(.96); } to{ opacity:1; transform:none; } }
+  @media (prefers-reduced-motion:reduce){ .ov:not(.hide) .card, .ov:not(.hide) .heOpt, .ov:not(.hide) .dcOpt, .fold{ animation:none; } }
   .heOpt[disabled]{ opacity:.45; pointer-events:none; }
   .heOpt:not(.ghost) i{ color:rgba(46,26,4,.82); } .heOpt:not(.ghost) i .gain{ color:#2d6310; } .heOpt:not(.ghost) i .cost{ color:#8a3208; }
   .heFact{ text-align:center; margin-top:12px; }
@@ -1700,7 +1735,7 @@
     <div class="rHead"><span>HAZEL’S LOG</span><span id="hazelBookBtn" title="The almanac — every word, season by season">📖 almanac</span><span id="chatClear">clear</span><span id="chatX">✕</span></div>
     <div id="chatRows"></div>
   </div>
-  <div id="unlockChip" class="panel hide"><span class="uc1">✦ keeper’s page unlocked</span><span class="uc2" id="unlockName">BROOD</span><span class="uc3">+1 ✧ royal jelly</span></div>
+  <div id="unlockChip" class="panel hide"><span class="ucR" id="unlockRc"></span><span class="uc2" id="unlockName">BROOD</span><span class="uc3">+1 ✧</span></div>
   <div id="heatLegend" class="panel hide"><i class="hgrad"></i><span>cold</span><span class="hl2">each ring is one step cooler — hold a single glowing heart</span><span>warm</span></div>
   <div id="tipPop" class="panel hide"><div class="tpT"></div><div class="tpB"></div><span class="tpMore hide">Read more ›</span></div>
   <div id="cellSheet" class="panel hide"><div id="csBody"></div><button class="cbtn" id="csClose">Got it</button></div>
@@ -1711,33 +1746,15 @@
   <div id="rotate"><div class="rIn"><div class="rHex">⬡</div><div class="rT">Turn your phone upright</div><div class="rS">the hive stands tall</div></div></div>
   <div id="wipe"></div>
 
+  <div id="ghostHand" aria-hidden="true"><i class="gr"></i><svg class="gh" viewBox="0 0 48 48"><path d="M15 3.5c2.3 0 4.1 1.8 4.1 4.1v12.6l1.5-.4c2.1-.5 4.2.7 4.8 2.7l.2.7 1.5-.4c2.1-.5 4.2.7 4.7 2.8l.1.4 1.2-.2c2.2-.3 4.1 1.2 4.4 3.3l.7 5.6c.7 5.1-2.5 9.9-7.4 11.3l-3.2.9c-4.1 1.1-8.5-.3-11.1-3.7L6.2 30.6c-1.3-1.7-1-4.1.7-5.4 1.7-1.3 4.1-1 5.4.7l-1.4-1.9V7.6c0-2.3 1.8-4.1 4.1-4.1z" fill="#fff8e6" stroke="#3a2205" stroke-width="2.3" stroke-linejoin="round"/><path d="M19.1 20.2v6.6M25.8 23v5.2M31.8 26.3v4.5" stroke="#c9a15c" stroke-width="1.8" stroke-linecap="round"/></svg></div>
   <div id="coach" class="panel">
     <div class="ci" id="coachIc">🐝</div>
     <div class="cb">
       <div class="cprog" id="coachProg"></div>
       <div class="ct" id="coachTx"></div>
-      <div class="cgo"><button class="cbtn" id="coachBtn">Got it</button><span class="cskip" id="coachSkip">skip intro</span></div>
+      <div class="cgo"><button class="cbtn" id="coachBtn">Next</button></div>
     </div>
-  </div>
-
-  <!-- deliberate first placements: on the founding coach's three comb taps, the game
-       is paused and this card shows before→after, what it costs, what it does, and where
-       the best spot is — so the keeper learns to weigh each cell before committing. -->
-  <div id="placeConfirm" class="hide" role="dialog" aria-live="polite">
-    <div class="pcArt">
-      <canvas id="pcBefore" width="54" height="54" aria-hidden="true"></canvas>
-      <span class="pcArrow">→</span>
-      <canvas id="pcAfter" width="54" height="54" aria-hidden="true"></canvas>
-    </div>
-    <div class="pcName" id="pcName">—</div>
-    <div class="pcRow pcGain"><span>✓</span><span id="pcEffect">—</span></div>
-    <div class="pcRow pcCost"><span>◆</span><span id="pcCost">—</span></div>
-    <div class="pcRow pcBest"><span>★</span><span id="pcBest">—</span></div>
-    <div class="pcNote" id="pcNote"></div>
-    <div class="pcBtns">
-      <button class="btn ghost sm" id="pcCancel">Pick another</button>
-      <button class="btn pulse" id="pcPlace">Place it here ▸</button>
-    </div>
+    <span class="cskip" id="coachSkip" role="button" aria-label="Skip the tutorial" title="Skip">✕</span>
   </div>
 
   <div id="report" class="panel hide">
@@ -1848,35 +1865,32 @@
     <div class="card panel">
       <h1>HIVEMIND</h1>
       <div class="sub">a beekeeping story</div>
-      <p>After forty years, a beekeeper is hanging up her veil — and her hillside of hives needs a new pair of hands. Yours.</p>
       <div id="startBtns">
         <button class="btn ghost hide" id="startCont">Continue</button>
-        <button class="btn pulse" id="startNew">Found a new colony</button>
+        <button class="btn pulse" id="startNew">▶ Play</button>
       </div>
-      <div class="modeCap">more ways to keep</div>
       <div class="modeRow">
-        <button class="btn mode" id="startDaily"><span class="mIc"><span class="dsun" data-ic="sun"></span></span><b>Daily Challenge</b><span class="mSub" id="dailyCap"></span></button>
-        <button class="btn mode" id="startParty"><span class="mIc" data-ic="bee"></span><b>Play Together</b><span class="mSub">2–8 keepers, one hive · same room</span></button>
+        <button class="btn mode" id="startDaily"><span class="mIc"><span class="dsun" data-ic="sun"></span></span><b>Daily</b><span class="mSub" id="dailyCap"></span></button>
+        <button class="btn mode" id="startParty"><span class="mIc" data-ic="bee"></span><b>Together</b><span class="mSub">👥 2–8</span></button>
       </div>
       <div class="prefRow">
         <div id="sndInvite" class="on" tabindex="0" role="checkbox" aria-checked="true">
-          <span class="box"><i>✓</i></span><span>🎧 Sound<span class="sub2"> — music &amp; the hive</span></span>
+          <span class="box"><i>✓</i></span><span>🎧 Sound</span>
         </div>
         <div id="familyToggle" tabindex="0" role="checkbox" aria-checked="false">
-          <span class="box"><i>✓</i></span><span>🧸 Family mode<span class="sub2"> — easy words, gentle bees, play as a group</span></span>
+          <span class="box"><i>✓</i></span><span>🧸 Family</span>
         </div>
         <div class="paceMini">
           <div class="paceCap" id="paceLabel">seasons</div>
           <div id="paceRow" role="radiogroup" aria-labelledby="paceLabel">
-            <div class="pseg" data-pace="calm" tabindex="0" role="radio" aria-checked="false">Calm<i>slow days</i></div>
-            <div class="pseg" data-pace="easy" tabindex="0" role="radio" aria-checked="false">Easy<i>gentle days</i></div>
-            <div class="pseg" data-pace="medium" tabindex="0" role="radio" aria-checked="false">Medium<i>keeper’s pace</i></div>
-            <div class="pseg" data-pace="hard" tabindex="0" role="radio" aria-checked="false">Hard<i>seasons rush</i></div>
+            <div class="pseg" data-pace="calm" tabindex="0" role="radio" aria-checked="false">Calm</div>
+            <div class="pseg" data-pace="easy" tabindex="0" role="radio" aria-checked="false">Easy</div>
+            <div class="pseg" data-pace="medium" tabindex="0" role="radio" aria-checked="false">Medium</div>
+            <div class="pseg" data-pace="hard" tabindex="0" role="radio" aria-checked="false">Hard</div>
           </div>
         </div>
       </div>
-      <button class="colink" id="whyBees" type="button">🌸 why bees matter →</button>
-      <button class="colink" id="watchTrailer" type="button">▶ watch the 1-minute trailer</button>
+      <div class="coRow"><button class="colink" id="whyBees" type="button">🌸 Why bees?</button><button class="colink" id="watchTrailer" type="button">▶ Trailer</button></div>
       <div class="cardLinks">
         <a href="about.html" target="_blank" rel="noopener">About</a><a href="privacy.html" target="_blank" rel="noopener">Privacy</a><a href="terms.html" target="_blank" rel="noopener">Terms</a>
       </div>
@@ -2027,6 +2041,8 @@
       </div>
       <div id="voteTally"></div>
       <div id="voteBarWrap"><div id="voteBar"></div></div>
+      <button class="foldBtn hide" id="voteMoreBtn" data-fold="voteMore" type="button" aria-label="Why?">ⓘ</button>
+      <div class="fold hide" id="voteMore"></div>
     </div>
   </div>
   <div class="ov hide" id="mpEnd" role="dialog" aria-modal="true">
@@ -2039,9 +2055,9 @@
   </div>
   <div id="mpOrder" class="hide" role="status"></div>
   <div id="dawnChip" class="hide" role="status">
-    <span id="dawnTx"><b>🌱 The hive is yours.</b> Time is paused — look around, paint, read Hazel. Start the days whenever you like.</span>
+    <span id="dawnTx"><b>🌱 Ready?</b></span>
     <span class="dawnBtns">
-      <button class="btn sm" id="dawnGo">▶ Start the days</button>
+      <button class="btn sm pulse" id="dawnGo">▶ Start</button>
     </span>
   </div>
 
@@ -2066,40 +2082,39 @@
   <!-- the good comb: layout strategy as one picture, three lines -->
   <div class="ov hide" id="combPlan" role="dialog" aria-modal="true">
     <div class="card panel">
-      <div class="mpBadge">🗺 the good comb</div>
-      <h1 style="font-size:21px">WARM HEART, SWEET WALLS</h1>
+      <h1 style="font-size:21px">THE GOOD COMB</h1>
       <canvas id="combPlanC" aria-label="The ideal comb layout — nursery centre, honey ring, room at the rim"></canvas>
       <div class="cpLines">
-        <div><span>🍼</span><span><b>Nursery in the middle</b> — babies need the warm heart.</span></div>
-        <div><span>🍯</span><span><b>Shelves around it</b> — pantry and blanket in one.</span></div>
-        <div><span>🔨</span><span><b>Build one step ahead</b> — wax costs honey, so don’t sprawl.</span></div>
+        <div><span>🍼</span><span><b>Middle</b> · warm</span></div>
+        <div><span>🍯</span><span><b>Around</b> · pantry</span></div>
+        <div><span>🔨</span><span><b>Edge</b> · one step</span></div>
       </div>
-      <button class="btn pulse" id="combPlanGo" style="margin-top:11px">Got it — to the comb ▶</button>
+      <button class="btn pulse" id="combPlanGo" style="margin-top:11px">▶</button>
     </div>
   </div>
   <!-- the scouts return: a waggle-dance quorum, interrupting play the way real scouts do -->
   <div class="ov hide" id="danceCall" role="dialog" aria-modal="true">
     <div class="card panel">
-      <div class="mpBadge">💃 the scouts return</div>
-      <h1 style="font-size:21px">THE COMB FLOOR IS BUZZING</h1>
-      <div class="sub">each dance argues for a patch — the longer the waggle, the richer the find</div>
+      <div class="heIc">💃</div>
+      <h1 style="font-size:21px">THE SCOUTS ARE DANCING</h1>
       <div id="dcOpts"></div>
       <div class="mpRow" style="margin-top:10px">
         <button class="btn ghost sm" id="dcSkip">Not now</button>
-        <button class="btn sm" id="dcLet">Let the hive decide 🐝</button>
+        <button class="btn sm" id="dcLet">🐝 Hive picks</button>
       </div>
-      <div class="mpHow" style="text-align:center">Real colonies choose exactly this way — dances compete, followers join, a quorum tips the hive. <i>(Seeley, “Honeybee Democracy.”)</i></div>
+      <button class="foldBtn" data-fold="dcMore" type="button" aria-label="Why?">ⓘ</button>
+      <div class="fold hide mpHow" id="dcMore" style="text-align:center">Each dance argues for a patch — the longer the waggle, the richer the find. Real colonies choose exactly this way: dances compete, followers join, a quorum tips the hive. <i>(Seeley, “Honeybee Democracy.”)</i></div>
     </div>
   </div>
   <!-- a keeper's choice: one card from the hive-event deck (EVENTS[]) -->
   <div class="ov hide" id="hiveEvent" role="dialog" aria-modal="true">
     <div class="card panel">
-      <div class="mpBadge" id="heKick">a keeper’s choice</div>
+      <div class="mpBadge hide" id="heKick"></div>
       <div class="heIc" id="heIc">🐝</div>
       <h1 style="font-size:21px" id="heTitle">THE HIVE NEEDS YOU</h1>
-      <div class="heTx" id="heTx"></div>
       <div id="heOpts"></div>
-      <div class="mpHow heFact" id="heFact"></div>
+      <button class="foldBtn" data-fold="heMore" type="button" aria-label="Why?">ⓘ</button>
+      <div class="fold hide" id="heMore"><div class="heTx" id="heTx"></div><div class="mpHow heFact" id="heFact"></div></div>
     </div>
   </div>
   <!-- a frame lifted from the box: a ten-second look for the queen, mites and queen cells -->
@@ -2135,15 +2150,19 @@
   <div class="ov hide" id="yearEnd" role="dialog" aria-modal="true">
     <div class="card panel">
       <h1 class="good" id="yeTitle">YEAR 1 SURVIVED</h1>
-      <div class="sub" id="yeSub">winter is past · spring returns</div>
+      <div class="sub hide" id="yeSub"></div>
       <div class="grade" id="yeGrade"></div>
       <div class="yeHook" id="yeHook"></div>
-      <div class="review" id="yeReview"></div>
-      <canvas class="ychart" id="yeChart" width="640" height="170"></canvas>
-      <div class="trophies" id="yeTrophies"></div>
+      <button class="foldBtn wide" data-fold="yeMore" type="button">More ▾</button>
+      <div class="fold hide" id="yeMore">
+        <div class="yeCallsBox" id="yeCalls"></div>
+        <div class="review" id="yeReview"></div>
+        <canvas class="ychart" id="yeChart" width="640" height="170"></canvas>
+        <div class="trophies" id="yeTrophies"></div>
+      </div>
       <div id="giftHead"><span>Queen's Gifts</span><span id="rjBal">✧0</span></div>
       <div id="giftRow"></div>
-      <button class="btn ghost" id="yeShare" style="margin-right:8px">📸 Share this year</button>
+      <button class="btn ghost" id="yeShare" style="margin-right:8px">📸 Share</button>
       <button class="btn pulse" id="yeNext">Into Year 2</button>
     </div>
   </div>
@@ -2152,14 +2171,17 @@
   <div class="ov hide" id="over" role="dialog" aria-modal="true">
     <div class="card panel">
       <h1 id="ovTitle" class="bad">THE COLONY FAILS</h1>
-      <div class="sub" id="ovSub"></div>
-      <div class="grade" id="ovStats"></div>
+      <div class="sub hide" id="ovSub"></div>
       <div class="ovCause" id="ovCause"></div>
-      <div class="review" id="ovReview"></div>
-      <canvas class="ychart" id="ovChart" width="640" height="170"></canvas>
-      <div class="trophies" id="ovTrophies"></div>
-      <button class="btn pulse" id="ovRestart">A new swarm arrives in spring ▶</button>
-      <button class="btn ghost hide" id="ovRewind">⏪ Rewind to autumn and try again</button>
+      <button class="btn pulse" id="ovRestart">🐝 New swarm ▶</button>
+      <button class="btn ghost hide" id="ovRewind">⏪ Try autumn again</button>
+      <button class="foldBtn wide" data-fold="ovMore" type="button">More ▾</button>
+      <div class="fold hide" id="ovMore">
+        <div class="grade" id="ovStats"></div>
+        <div class="review" id="ovReview"></div>
+        <canvas class="ychart" id="ovChart" width="640" height="170"></canvas>
+        <div class="trophies" id="ovTrophies"></div>
+      </div>
     </div>
   </div>
 
@@ -2194,7 +2216,7 @@
     // / non-https, where no service worker runs) — the real source of truth is sw.js's
     // VERSION; syncGameVer() below asks the running worker and corrects this label
     // live, so the two only ever drift cosmetically for a moment, never permanently.
-    let GAME_VER='2026.09.27.46';
+    let GAME_VER='2026.09.28.47';
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2881,8 +2903,8 @@
       return {id:type.id, ic:type.ic, name:type.name, metric:type.metric, tgt}; }
     function syncDailyCap(){ const el=$('dailyCap'); if(!el) return;
       const c=pickTodayChallenge(), doneToday=(DAILY.lastDone===todayKey()), streak=DAILY.streak||0;
-      const line = doneToday ? ('✓ done · '+c.ic+' '+c.name(c.tgt)) : ('today · 3 min · '+c.ic+' <b>'+c.name(c.tgt)+'</b>');   // lives inside the Daily card now — no need to re-announce the sun
-      el.innerHTML = line + (streak>0?(' · 🔥 '+streak+'-day streak'):'') + ((DAILY.bestDate===todayKey()&&DAILY.best)?(' · best '+DAILY.best.toLocaleString()):''); }
+      // a glance: the day's goal as its icon, a tick when done, and the streak flame
+      el.innerHTML = (doneToday?'✓ ':'⏱3m · ')+c.ic + (streak>0?(' · 🔥'+streak):''); el.title=c.name(c.tgt); }
     function dailyComplete(){ if(dailyDone) return; dailyDone=true; const tk=todayKey();
       if(DAILY.lastDone!==tk){ const streak=(DAILY.lastDone===yesterKey())?((DAILY.streak||0)+1):1;
         DAILY={...DAILY, date:tk, lastDone:tk, streak, skill:Math.min(1,dailySkill()+0.07)}; dailySave(); }
@@ -3021,7 +3043,7 @@
     { const qs=$('quests'); if(qs) qs.addEventListener('pointerdown',e=>{ const el=e.target.closest&&e.target.closest('.qc'); if(!el) return;
         const r=QUESTS.find(x=>x.id===el.dataset.q); if(!r) return;
         logMsg(r.ic,'<b>'+r.tx+'</b>'+(r.how?' — '+r.how:''));
-        if(r.spot){ const t=document.querySelector(r.spot); if(t){ t.classList.add('tapHere'); setTimeout(()=>t.classList.remove('tapHere'),4200); } } }); }
+        if(r.spot){ const t=document.querySelector(r.spot); if(t){ t.classList.add('tapHere'); setTimeout(()=>t.classList.remove('tapHere'),4200); ghostPoint(r.spot,4200); } } }); }
     function questBase(){ return {born:bornTotal, built:builtCells(), ap:activePatch, jars:jarsThisYear, hor:hornetsBeat, fc:frameChecks}; }
     function questTick(){ if(!started||over||onboard||dailyMode||NET.on) { const el=$('quests'); if(el&&el.innerHTML) el.innerHTML=''; return; }
       const si=seasonIdx(day);
@@ -3035,8 +3057,8 @@
       // a first colony gets ONE clear next job at a time: the earliest guided quest still
       // open is announced once, with the control that does it lit
       if(year===1 && !CHRON.length){ const lead=questAct.map(q=>QUESTS.find(r=>r.id===q.id)).filter(r=>r&&r.guide&&!questDone[r.id]).sort((a,b)=>a.guide-b.guide)[0];
-        if(lead && lead.id!==questLead){ questLead=lead.id; logMsg('🧭','<b>Next job: '+lead.tx+'.</b> '+(lead.how||''));
-          const t=lead.spot&&document.querySelector(lead.spot); if(t){ t.classList.add('tapHere'); setTimeout(()=>t.classList.remove('tapHere'),5200); } } }
+        if(lead && lead.id!==questLead){ questLead=lead.id; logMsg(lead.ic,'<b>'+lead.tx+'</b>');
+          const t=lead.spot&&document.querySelector(lead.spot); if(t){ t.classList.add('tapHere'); setTimeout(()=>t.classList.remove('tapHere'),5200); ghostPoint(lead.spot,5200); } } }
       let html='';
       for(const q of questAct){ const r=QUESTS.find(x=>x.id===q.id); let v=0; try{ v=r.cur(q); }catch(e){}
         const f=r.fmt||String, pct=Math.max(0,Math.min(100,v/r.tgt*100));
@@ -3045,7 +3067,7 @@
           haptic('success'); logMsg(r.ic,'✓ <b>'+r.tx+'</b>'+(pay?' · +1 ✧ royal jelly':' · well kept'));
           try{ chime(660,990); }catch(e){} floatTx(hiveCx,hiveCy-size*2,r.ic+' ✓',"#c9ffb0"); }
         const lead=r.id===questLead&&!q.done, prog=(r.tgt>1?f(Math.min(v,r.tgt))+'/'+f(r.tgt):(q.done?'done':'…'));
-        html+='<div class="qc'+(q.done?' done':'')+(lead?' lead':'')+'" data-q="'+r.id+'" role="button" tabindex="0" style="--qp:'+pct.toFixed(0)+'%" title="'+r.tx+'"><i>'+r.ic+'</i><span>'+(lead?r.tx+' · ':'')+prog+'</span></div>'; }
+        html+='<div class="qc'+(q.done?' done':'')+(lead?' lead':'')+'" data-q="'+r.id+'" role="button" tabindex="0" style="--qp:'+pct.toFixed(0)+'%" title="'+r.tx+'"><i>'+r.ic+'</i><span>'+prog+'</span>'+(lead?'<em class="qHand">👆</em>':'')+'</div>'; }
       // a finished quest lingers a moment in green, then makes room for the next
       questAct=questAct.filter(q=>!q.done||performance.now()-q.done<2600);
       const el=$('quests'); if(el && el.innerHTML!==html) el.innerHTML=html;
@@ -3100,6 +3122,11 @@
       ringFx={t:0, ring:2, n:0, lbl:'🐣 HATCH WAVE', sub:'+'+beeN(k)+' bees at once'}; burst(hiveCx,hiveCy,24); shake=Math.max(shake,0.2);
       try{ fanfare(); }catch(e){} }
     // a number that rises off the comb and fades: "+300" when a cohort hatches
+    // in-world pops: the comb shows what just happened where it happened (+🐝 from a cradle,
+    // +⬡ where wax was drawn), rate-limited per kind so a busy hive sparkles instead of flooding
+    const popAt={};
+    function worldPop(cell,str,col,kind,gap){ if(RM||view!=='hive'||onboard||storyMode) return; const now=performance.now();
+      if(now-(popAt[kind]||0)<(gap||600)) return; popAt[kind]=now; const p=cellCenter(cell.c,cell.r); floatTx(p.x,p.y-size*0.25,str,col); }
     function floatTx(x,y,str,col){ if(RM) return; if(parts.length>260)parts.shift();
       parts.push({x,y,vx:0,vy:-0.32,life:1.25,t:0,col:col||'#ffe9b0',s:0,tx:str}); }
     function drawParts(dt){ for(let i=parts.length-1;i>=0;i--){ const p=parts[i]; p.t+=dt;
@@ -3389,7 +3416,7 @@
       curSeason=pool[(Math.random()*pool.length)|0]; seasonEventDone=false; seasonEventFired=null; lastSeasonId=curSeason.id; }
     function announceSeason(){ if(!curSeason||curSeason.id==='calm') return;
       logMsg(curSeason.ic,'<b>'+curSeason.name+'</b> \u2014 '+curSeason.note+'.');
-      if(curSeason.tip) setTimeout(()=>toast(curSeason.tip),1100); }
+      if(curSeason.tip) logMsg('💡',curSeason.tip,true); }
     function difficulty(){ const sf=curSeason?curSeason.flow:1, st=curSeason?curSeason.temp:0;
       // Family mode keeps the meadow generous and winters mild so the hive mostly
       // thrives no matter what — losing is still possible if truly neglected, just rare.
@@ -3644,10 +3671,8 @@
     // ---- gentle attention: in Easy mode, glow the control Hazel is pointing at ----
     let attnEl=null;
     function setAttn(sel){ const el=sel?document.querySelector(sel):null; if(attnEl===el) return; if(attnEl) attnEl.classList.remove('attn'); attnEl=el; if(el) el.classList.add('attn'); }
-    function guideEasy(ic,tx){ if(pace!=='easy'||onboard||!started||over){ setAttn(null); return; }
-      if(ic==='🐝'||ic==='❄️'){ setAttn(null); return; }
-      const sel=/Expand/.test(tx)?'[data-brush="expand"]':/rood|nursery/.test(tx)?'[data-brush="brood"]':/Honey|shelves/.test(tx)?'[data-brush="honey"]':/Meadow/.test(tx)?'#tabMeadow':/Harvest/.test(tx)?'#harvestBtn':/Nectar|nectar|forag/.test(tx)?'#forageSlider':null;
-      setAttn(sel); }
+    function guideEasy(ic,sel){ if(pace!=='easy'||onboard||!started||over){ setAttn(null); return; }
+      setAttn(sel||null); }
     // She'd rather catch it while your hand is still on it than tell you afterwards. One remark
     // per idea, never twice, and never a scolding — she has done this for forty years.
     let nudgeCool=0, nudged={};
@@ -3711,10 +3736,6 @@
         if(cell){ $('csBody').innerHTML=inspectHTML(cell); $('cellSheet').classList.remove('hide'); }
         inspectMode=false; $('inspectBtn').classList.remove('on'); return; }
       const c0=cellAtPx(p.x,p.y), erase0=(e.button===2)||e.shiftKey;
-      // the founding coach's first comb taps go through a paused preview→confirm, so the
-      // keeper learns to weigh each cell. A valid cell opens the card; you can tap around
-      // to compare spots. Anything else this-tap does nothing.
-      if(combDeliberate() && !erase0){ if(placeValid(c0)) openPlacePreview(c0); return; }
       if(!erase0){ const rz=needsConfirm(c0); if(rz && !noConfirm){ openConfirm(c0, rz); return; } }
       strokeSnap=combSnap(); painting=true; paintErase=erase0; applyBrush(c0); });
     canvas.addEventListener('pointermove',e=>{ const p=rel(e);
@@ -4016,7 +4037,14 @@
     // released on a cadence, and while Hazel is teaching she is the only voice on screen —
     // everything else still goes to MSGLOG (the advisor log keeps the full history), it
     // just doesn't shout over her.
-    const FEED_KEEP=3;                                   // most cards on screen at once
+    const FEED_KEEP=2;                                   // most cards on screen at once
+    // the feed is a glance, not a read: each card shows only its first clause (a handful of
+    // words, markup stripped). The whole sentence stays in Hazel's log (MSGLOG).
+    function feedShort(html){ let t=(''+html).replace(/<[^>]+>/g,'').replace(/^Hazel:\s*/,'').trim();
+      const parts=t.split(/(?<=[.!?])\s+|\s[\u2014\u2013]\s|;\s|:\s/); let out='';
+      for(const q of parts){ out=out?out+' '+q:q; if(out.split(/\s+/).length>=3) break; }
+      const w=out.split(/\s+/); if(w.length>9) out=w.slice(0,8).join(' ')+'\u2026';
+      return out.replace(/[.,;:]$/,''); }
     let feedQ=[], feedWait=0;
     function clearFeed(){ feedQ.length=0; feedWait=0; const feed=$('msgFeed'); if(!feed) return;
       while(feed.firstChild){ const c=feed.firstChild; if(c._ft) clearTimeout(c._ft); feed.removeChild(c); } }
@@ -4034,10 +4062,10 @@
       const {ic, html}=feedQ.shift();
       const card=document.createElement('div');
       card.className='lfcard'+(FEED_WARN.has((''+ic).trim())?' warn':'');
-      card.innerHTML='<span class="lfic">'+ic+'</span><span class="lftx">'+html+'</span>';
+      const txt=feedShort(html);
+      card.innerHTML='<span class="lfic">'+ic+'</span><span class="lftx"></span>'; card.lastChild.textContent=txt;
       feed.appendChild(card);
-      const txt=(''+html).replace(/<[^>]+>/g,'');
-      const life=Math.min(15000, 6800 + txt.length*42);   // linger scales with how much there is to read
+      const life=Math.min(9000, 4200 + txt.length*60);    // linger scales with how much there is to read
       card._ft=setTimeout(()=>{ card.classList.add('age');
         setTimeout(()=>{ if(card.parentNode) card.parentNode.removeChild(card); }, 900); }, life);
       // long lines get a longer beat after them, so two messages never arrive as one wall
@@ -4063,11 +4091,49 @@
       if(day<TIP_START && key!=='notes') return;
       if(LATER_TIPS.has(key) && year<2) return; // let a first year breathe; every word still lives in the ? menu
       seenTips[key]=1;
-      if(tipCool>0){ tipQ.push(msg); } else { toast(msg); tipCool=TIP_GAP; } }
+      if(tipCool>0){ tipQ.push(msg); } else { logMsg('💡',msg,true); tipCool=TIP_GAP; } }
     // toast() now flows through the living left-edge feed (logMsg → pushFeed); the old
     // centred #toast popup is retired so messages linger on the left where they can be read.
     function toast(s,once){ if(once){if(said[once])return; said[once]=1;} logMsg('🐝', s); }
     let advCur='', advSince=0;
+    // ---- Hazel's advice as a table (add a row, not a branch). Each row: when(cx) → one icon, a
+    // few words for the bubble (`sh`), her full line for the almanac (`tx`), and `go`: the one
+    // control that answers it — tap the bubble and the ghost hand points there.
+    const GB='[data-brush="brood"]', GH='[data-brush="honey"]', GX='[data-brush="expand"]', GF='#forageSlider';
+    let advGo=null;
+    const ADVICE=[
+      { when:c=>c.raiding, ic:'⚔️', warn:1, sh:'Tap the <b>hornet</b>!', tx:'A <b>hornet</b> is raiding — <em>tap it</em> to help the guards, or let them handle it.' },
+      { when:()=>starveT>0, ic:'🍽', warn:1, sh:c=>c.feedable?'Starving — <b>syrup</b>':'Starving — <b>Nectar</b>',
+        tx:c=>c.feedable?'The pantry is empty and the cluster is hungry — tap your glowing <b>🍼 syrup pack</b> to see them through.':'The pantry is empty — every drop of <b>Nectar</b> counts now.', go:c=>c.feedable?'#syrupPack':GF },
+      { when:c=>c.feedable, ic:'🍽', sh:'Pantry bare — <b>syrup</b>?', tx:'The pantry is nearly bare. Your <b>🍼 syrup pack</b> is glowing — tap it to carry the cluster (once a year).', go:'#syrupPack' },
+      { when:()=>scoutActive(), ic:'👁', sh:'A <b>hornet</b> is scouting', tx:'A <b>hornet scout</b> circles the apiary — a raid will come within days.' },
+      { when:()=>honeyCells()<6, ic:'🍯', sh:'Paint <b>Honey</b> shelves', tx:'The comb has almost no <b>Honey</b> cells yet — the pantry needs shelves.', go:GH },
+      { when:c=>swarmP>0.6&&!c.winter, ic:'👑', warn:1, sh:'Swarm risk — <b>Expand</b>', tx:'Swarm pressure is <b>high</b> — bees may leave. <b>Expand</b> the brood comb to give the queen room.', go:GX },
+      { when:c=>year>=MITE_YEAR&&mite>0.85&&!c.winter, ic:'🩹', warn:1, sh:'<b>Mites!</b> Shrink the nursery', tx:'<b>Varroa</b> is heavy in the brood — shrink the nursery so fewer cappings feed the mites, or winter will thin the cluster hard.', go:GH },
+      { when:c=>year>=MITE_YEAR&&mite>0.5&&day>170&&!c.winter, ic:'🪥', sh:'<b>Mites</b> rising', tx:'<b>Mites</b> are building under the cappings. A smaller brood nest now means a stronger cluster at frost.', go:GH },
+      { when:c=>!c.winter&&countBrood().total>5&&nestWarmth()<0.72, ic:'🌡', sh:'Brood cold — <b>pack it tight</b>', tx:'The brood is <b>chilled at the edges</b> — a nursery in one tight patch holds its own heat. Scattered comb bleeds it away.', go:'#heatBtn' },
+      { when:c=>!c.winter&&year===1&&day<45&&P<peakPop-1&&nextHatch()>1.5&&nextHatch()<40, ic:'🐣', sh:()=>'🐝 in <b>'+Math.round(nextHatch())+'d</b>',
+        tx:()=>'The founding bees are old and tiring — that’s normal for a new colony. Your first daughters hatch in about <b>'+Math.round(nextHatch())+' days</b>. Hold on, and keep the nursery warm.' },
+      { when:c=>!c.winter&&c.Na>0.2&&pollenU<3*HC&&c.br.total>3, ic:'🌼', warn:1, sh:'Need <b>Pollen</b>', tx:'The queen is short of <b>bee bread</b> — with little <b>Pollen</b> banked she lays at half pace. Slide the mixer toward Pollen for a while.', go:GF },
+      { when:c=>!c.winter&&day>195&&day<262&&P<CLUSTER_MIN*1.8, ic:'🧶', warn:1, sh:'Too few bees — keep <b>Brood</b>', tx:'This colony is small for a <b>winter cluster</b> — a little ball of bees can’t hold its heat. Keep some <b>Brood</b> going now: autumn bees are the long-lived winter bees.', go:GB },
+      { when:c=>!c.winter&&day<210&&buildStall==='small'&&broodCells()<P*1.1, ic:'👑', sh:'<b>Honey → Brood</b>', tx:'The builders are at their limit for a colony this size. Turn a few <b>Honey</b> shelves into <b>Brood</b>: more bees, more hands, more comb.', go:GB },
+      { when:c=>!c.winter&&day<140&&broodCells()<P*1.1+4, ic:'👑', sh:'More <b>Brood</b>', tx:'Spring is for growing: the <b>nursery</b> should be <em>bigger</em> than the colony. Paint more comb as <b>Brood</b> so the queen can lay.', go:GB },
+      { when:c=>!c.winter&&day<210&&broodCells()<Math.max(6,P*0.45), ic:'👑', sh:'Nursery small — <b>Brood</b>', tx:'The <b>nursery is small</b> for this colony — paint more comb as <b>Brood</b> so the queen can lay.', go:GB },
+      { when:()=>caps().total>0&&(honeyU+pollenU+nectarU)>=caps().total-2, ic:'📦', sh:'Full — <b>Expand</b>', tx:'Storage is <b>full</b> — flow is wasted. <b>Expand</b> comb to hold more.', go:GX },
+      { when:c=>!c.winter&&c.fc&&c.fc.starve!==null&&day>135&&day<252, ic:'📉', warn:1, sh:'Winter short — <b>Nectar</b>', tx:'At this pace the pantry won’t last the winter — favour <b>Nectar</b> for a while.', go:GF },
+      { when:c=>!c.winter&&c.fc&&c.fc.minW<8&&day>150&&day<252, ic:'🍂', sh:'Lean <b>Nectar</b>', tx:'The pantry looks a little light for winter — lean <b>Nectar</b> when you can.', go:GF },
+      { when:c=>c.hs.ok, ic:'🫙', sh:'<b>Harvest</b> a jar', tx:'Surplus honey is banked — you can <b>Harvest</b> a jar for your shelf. The window closes at first frost.', go:'#harvestBtn' },
+      { when:c=>!c.winter&&c.bp.q>0.5&&(activePatch==null||patchEff(activePatch,day)<c.bp.q-0.15), ic:'💃', sh:'Rich flowers — <b>Meadow</b>', tx:'A <b>rich patch</b> is blooming within easy reach. Open the <b>☀ Meadow</b> and tap it to send your foragers there.', go:'#tabMeadow' },
+      { when:c=>c.winter&&c.hc<c.need*0.5, ic:'❄️', sh:'Hold on for spring', tx:'Deep winter and the shelves are thin — but spring is coming.' },
+      { when:()=>day<55, ic:'🌱', sh:'Babies first — <b>Pollen</b>', tx:'Early spring — feed the babies first. <b>Pollen</b> or Balanced stocks the nursery kitchen.', go:GF },
+      { when:()=>day>=85&&day<148, ic:'🌻', sh:'Flow! <b>Nectar</b> + <b>Expand</b>', tx:'The meadow is <b>pouring</b>. Lean <b>Nectar</b>, <b>Expand</b> the shelves and <b>bank hard</b> — a summer dearth is coming, and the colony will live on what you store.', go:GF },
+      { when:()=>day>=148&&day<200, ic:'🥀', sh:'Dearth — hold steady', tx:'The <b>summer dearth</b> — the flow has run thin. Live on what you banked; hold the nursery steady and build nothing you can’t fill.' },
+      { when:()=>day>=200&&day<250, ic:'🍂', sh:'Top off — <b>Nectar</b>', tx:'Autumn — the meadow is closing up shop. Top off with <b>Nectar</b>; build nothing you can’t fill.', go:GF },
+      { when:c=>day>=250&&!c.winter, ic:'🍂', sh:'Shrink the <b>nursery</b>', tx:'Brood eats your honey. Shrink the <b>brood zone</b> so fewer mouths face winter.', go:GH },
+      { when:c=>c.winter, ic:'❄️', sh:'Winter — rest', tx:'Winter. The meadow sleeps, and the cluster dreams on stored honey. Hold on for spring.' },
+      { when:c=>c.br.total<6&&c.Na>0.2, ic:'👑', sh:'Add <b>Brood</b> cells', tx:'Brood is sparse. Ensure there’s <b>pollen</b> and empty <b>brood</b> cells for the queen.', go:GB },
+    ];
+    const ADVICE_IDLE={ ic:'🐝', sh:'All’s well', tx:'All’s well. You can tell by the hum.' };
     function advise(){
       const T=currentTemp(), Na=lerpM(nectarM,day), winter=T<WIN_TEMP;
       const hc=honeyCellsStored(), need=winterNeed(), br=countBrood(), fc=forecastCache;
@@ -4082,34 +4148,14 @@
         if(day>149&&day<177) tip('dearth','Hazel: Feel the flow fade? The spring bloom is spent — this is the <b>summer dearth</b>. For a few weeks the meadow holds its nectar back, and the colony lives on what you <b>banked</b>. Hold steady, and build nothing you can’t fill.');
         else if(day>206&&day<234) tip('goldflow','Hazel: The <b>goldenrod</b> is coming in — the last real flow of the year. Lean <b>Nectar</b> and fill every shelf you can; after this, only winter.');
       }
-      if(raiding){ ic='⚔️'; warn=true; tx='A <b>hornet</b> is raiding — <em>tap it</em> to help the guards, or let them handle it.'; }
-      else if(starveT>0){ ic='🍽'; warn=true; tx=feedable?'The pantry is empty and the cluster is hungry — tap your glowing <b>🍼 syrup pack</b> to see them through.':'The pantry is empty — every drop of <b>Nectar</b> counts now.'; }
-      else if(feedable){ ic='🍽'; tx='The pantry is nearly bare. Your <b>🍼 syrup pack</b> is glowing — tap it to carry the cluster (once a year).'; }
-      else if(scoutActive()){ ic='👁'; tx='A <b>hornet scout</b> circles the apiary — a raid will come within days.'; }
-      else if(honeyCells()<6){ ic='🍯'; tx='The comb has almost no <b>Honey</b> cells yet — the pantry needs shelves.'; }
-      else if(swarmP>0.6 && !winter){ ic='👑'; warn=true; tx='Swarm pressure is <b>high</b> — bees may leave. <b>Expand</b> the brood comb to give the queen room.'; }
-      else if(year>=MITE_YEAR && mite>0.85 && !winter){ ic='🩹'; warn=true; tx='<b>Varroa</b> is heavy in the brood — shrink the nursery so fewer cappings feed the mites, or winter will thin the cluster hard.'; }
-      else if(year>=MITE_YEAR && mite>0.5 && day>170 && !winter){ ic='🪥'; tx='<b>Mites</b> are building under the cappings. A smaller brood nest now means a stronger cluster at frost.'; }
-      else if(!winter && countBrood().total>5 && nestWarmth()<0.72){ ic='🌡'; tx='The brood is <b>chilled at the edges</b> — a nursery in one tight patch holds its own heat. Scattered comb bleeds it away.'; }
-      else if(!winter && year===1 && day<45 && P<peakPop-1 && nextHatch()>1.5 && nextHatch()<40){ ic='🐣'; tx='The founding bees are old and tiring — that’s normal for a new colony. Your first daughters hatch in about <b>'+Math.round(nextHatch())+' days</b>. Hold on, and keep the nursery warm.'; }
-      else if(!winter && Na>0.2 && pollenU<3*HC && br.total>3){ ic='🌼'; warn=true; tx='The queen is short of <b>bee bread</b> — with little <b>Pollen</b> banked she lays at half pace. Slide the mixer toward Pollen for a while.'; }
-      else if(!winter && day>195 && day<262 && P<CLUSTER_MIN*1.8){ ic='🧶'; warn=true; tx='This colony is small for a <b>winter cluster</b> — a little ball of bees can’t hold its heat. Keep some <b>Brood</b> going now: autumn bees are the long-lived winter bees.'; }
-      else if(!winter && day<210 && buildStall==='small' && broodCells()<P*1.1){ ic='👑'; tx='The builders are at their limit for a colony this size. Turn a few <b>Honey</b> shelves into <b>Brood</b>: more bees, more hands, more comb.'; }
-      else if(!winter && day<140 && broodCells()<P*1.1+4){ ic='👑'; tx='Spring is for growing: the <b>nursery</b> should be <em>bigger</em> than the colony. Paint more comb as <b>Brood</b> so the queen can lay.'; }
-      else if(!winter && day<210 && broodCells()<Math.max(6,P*0.45)){ ic='👑'; tx='The <b>nursery is small</b> for this colony — paint more comb as <b>Brood</b> so the queen can lay.'; }
-      else if(caps().total>0 && (honeyU+pollenU+nectarU)>=caps().total-2){ ic='📦'; tx='Storage is <b>full</b> — flow is wasted. <b>Expand</b> comb to hold more.'; }
-      else if(!winter && fc && fc.starve!==null && day>135 && day<252){ ic='📉'; warn=true; tx='At this pace the pantry won\u2019t last the winter — favour <b>Nectar</b> for a while.'; }
-      else if(!winter && fc && fc.minW<8 && day>150 && day<252){ ic='🍂'; tx='The pantry looks a little light for winter — lean <b>Nectar</b> when you can.'; }
-      else if(hs.ok){ ic='🫙'; tx='Surplus honey is banked — you can <b>Harvest</b> a jar for your shelf. The window closes at first frost.'; }
-      else if(!winter && bp.q>0.5 && (activePatch==null || patchEff(activePatch,day)<bp.q-0.15)){ ic='💃'; tx='A <b>rich patch</b> is blooming within easy reach. Open the <b>☀ Meadow</b> and tap it to send your foragers there.'; }
-      else if(winter && hc<need*0.5){ ic='❄️'; tx='Deep winter and the shelves are thin — but spring is coming.'; }
-      else if(day<55){ ic='🌱'; tx='Early spring \u2014 feed the babies first. <b>Pollen</b> or Balanced stocks the nursery kitchen.'; }
-      else if(day>=85&&day<148){ ic='🌻'; tx='The meadow is <b>pouring</b>. Lean <b>Nectar</b>, <b>Expand</b> the shelves and <b>bank hard</b> — a summer dearth is coming, and the colony will live on what you store.'; }
-      else if(day>=148&&day<200){ ic='🥀'; tx='The <b>summer dearth</b> — the flow has run thin. Live on what you banked; hold the nursery steady and build nothing you can’t fill.'; }
-      else if(day>=200&&day<250){ ic='🍂'; tx='Autumn \u2014 the meadow is closing up shop. Top off with <b>Nectar</b>; build nothing you can\u2019t fill.'; }
-      else if(day>=250&&!winter){ ic='🍂'; tx='Brood eats your honey. Shrink the <b>brood zone</b> so fewer mouths face winter.'; }
-      else if(winter){ ic='❄️'; tx='Winter. The meadow sleeps, and the cluster dreams on stored honey. Hold on for spring.'; }
-      else if(br.total<6 && Na>0.2){ ic='👑'; tx='Brood is sparse. Ensure there\u2019s <b>pollen</b> and empty <b>brood</b> cells for the queen.'; }
+      // first matching row wins. `sh` is what the bubble says (a few words); `tx` is Hazel's full
+      // line, kept for her almanac; `go` is the control the ghost hand points at when tapped.
+      const cx={T,Na,winter,hc,need,br,fc,bp,hs,raiding,feedable};
+      const row=ADVICE.find(r=>r.when(cx))||ADVICE_IDLE;
+      ic=row.ic; warn=!!row.warn;
+      tx=typeof row.tx==='function'?row.tx(cx):row.tx;
+      const sh=typeof row.sh==='function'?row.sh(cx):row.sh;
+      const go=typeof row.go==='function'?row.go(cx):(row.go||null);
       if(hzHold<=0) hzMood=MOODOF[ic]||'calm';
       // Hazel keeps a thought for a while: a new line only replaces the old one
       // after a proper dwell, unless something is genuinely urgent
@@ -4117,11 +4163,11 @@
         if(urgent || !advCur || (performance.now()-advSince)>12000){
           // one voice at a time: Hazel's line lives in her bubble (and her almanac), not
           // also as a second copy rising in the living log beside it
-          advCur=tx; advSince=performance.now(); $('advTx').innerHTML=tx; logMsg(ic,tx,!advFold);
+          advCur=tx; advGo=go; advSince=performance.now(); $('advTx').innerHTML=sh+(advGo?' <i class="advGo">👆</i>':''); $('advisor').title=tx.replace(/<[^>]+>/g,''); logMsg(ic,tx,true);
           if(urgent&&advFold){ advFold=false; try{ lsSet('hm_advfold','0'); }catch(err){} syncFold(); } } }
       $('advisor').classList.toggle('warn',warn);
       $('advisor').classList.toggle('cold', ic==='❄️'||coldSnap>0);
-      guideEasy(ic, tx);
+      guideEasy(ic, advGo);
     }
 
     // ===================== sim core =====================
@@ -4210,7 +4256,7 @@
       for(const s of flagged){ if(budget<=0)break; if(honeyU<reserve){ buildStall='lean'; break; }
         const step=Math.min(1-(s.bp||0), budget); s.bp=(s.bp||0)+step; budget-=step;
         if(s.bp<1) continue; // still drawing — the rising fill shows the progress
-        honeyU-=cost; waxAccum+=cost; s.built=true; s.flagExpand=false; s.bp=0; s.bday=year*YEAR+day;
+        honeyU-=cost; waxAccum+=cost; s.built=true; s.flagExpand=false; s.bp=0; s.bday=year*YEAR+day; worldPop(s,'+⬡','#d8f5b0','build',350);
         if((LIFE.wb||0)<3){ LIFE.wb=(LIFE.wb||0)+1; lifeSave(); }
         let b=0,h=0; for(const[c,r]of neighbors(s.c,s.r)){const nb=cells[idx(c,r)]; if(nb.zone==='brood')b++; else if(nb.zone==='honey')h++;}
         s.zone=(b>h && cellDist(s.c,s.r)<2.2)?'brood':'honey';
@@ -4261,7 +4307,7 @@
             // a mite-struck pupa emerges deformed and doesn't join the workforce
             const struck = mite>MITE_DEFORM && Math.random() < (mite-MITE_DEFORM)*0.55;
             if(struck){ if(!offline){ const pp=cellCenter(c.c,c.r); puff(pp.x,pp.y,'#7a2a1a',3,0.5); } }
-            else if(P<CAP){ P+=1; bornTotal++; if(!offline && (roster.length<3 || Math.random()<0.12)) addRosterBee(); if(!offline&&bees.length<RENDER_BEES){ const pp=cellCenter(c.c,c.r); bees.push(makeBee(pp.x,pp.y)); puff(pp.x,pp.y,'#ffe9b0',5,0.9); }
+            else if(P<CAP){ P+=1; bornTotal++; if(!offline && (roster.length<3 || Math.random()<0.12)) addRosterBee(); if(!offline&&bees.length<RENDER_BEES){ const pp=cellCenter(c.c,c.r); bees.push(makeBee(pp.x,pp.y)); puff(pp.x,pp.y,'#ffe9b0',5,0.9); } if(!offline) worldPop(c,'+🐝','#ffe9b0','bee',900);
               if(!offline){ const pp=cellCenter(c.c,c.r); floatTx(pp.x,pp.y-size*0.3,'+'+BEE_SCALE); noteExtra('hatch'); hatchWave(); } if(!offline&&!said['firstborn']) chime(660,980); toast('A new bee unfolds her wings \u2014 and gets straight to work.','firstborn'); } } } }
       const space=cells.filter(c=>c.built&&c.zone==='brood'&&!c.brood).length;
       const pollenF=Math.max(0,Math.min(1,pollenU/400));
@@ -4682,11 +4728,6 @@
           ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(p0.x,p0.y,rr,0,6.28); ctx.stroke(); }
         ctx.fillStyle='rgba(255,255,255,'+(0.32+0.22*Math.sin(gt*3)).toFixed(2)+')';
         ctx.beginPath(); ctx.arc(p0.x,p0.y,size*0.14,0,6.28); ctx.fill(); } }
-      // the pending placement, previewed on the comb as a pulsing ghost of what it will become
-      if(pendingPlace && view==='hive'){ const {x:gx,y:gy}=cellCenter(pendingPlace.c,pendingPlace.r), gs=size*0.93;
-        const gcol=brush==='brood'?'120,170,235':brush==='honey'?'247,183,51':'150,214,110', gp=0.5+0.35*Math.sin(gt*4.2);
-        ctx.save(); hexPathOn(ctx,gx,gy,gs); ctx.fillStyle='rgba('+gcol+','+(0.22+0.22*gp).toFixed(3)+')'; ctx.fill();
-        ctx.strokeStyle='rgba('+gcol+','+(0.7+0.3*gp).toFixed(3)+')'; ctx.lineWidth=2.6; ctx.stroke(); ctx.restore(); }
       // when storage is full and nectar still flows, honey visibly drips away
       { const cp=caps(), full=cp.total>0&&(honeyU+pollenU+nectarU)>=cp.total-2, Na2=lerpM(nectarM,day);
         if(started&&!over&&full&&Na2>0.1&&!winter&&Math.random()<lastDt*2.2){
@@ -5158,28 +5199,31 @@
       $('yeSub').textContent=milestone?(year+' winters weathered — a name that carries'):'winter is past';
       // three stars, each with its own plain reason, so the next one is always in sight
       { const need=winterNeed(), bank=bankAtFrost||honeyCellsStored();
-        const st=[ {on:true, tx:'Saw the colony through winter'},
-                   {on:bank>=need||gdone>=2, tx:'Banked the winter pantry, or met 2 season goals'},
-                   {on:gdone>=3&&jarsThisYear>=1, tx:'3 season goals and a jar of honey'} ];
+        // each star is earned by one thing, shown as its icon (the words are the tooltip)
+        const st=[ {on:true, ic:'❄️', tx:'Saw the colony through winter'},
+                   {on:bank>=need||gdone>=2, ic:'🍯', tx:'Banked the winter pantry, or met 2 season goals'},
+                   {on:gdone>=3&&jarsThisYear>=1, ic:'🫙', tx:'3 season goals and a jar of honey'} ];
         const n=st.filter(x=>x.on).length; LIFE.st=(LIFE.st||0)+n; lifeSave();
-        $('yeGrade').innerHTML='<div class="yeStars">'+st.map(x=>'<div class="yeStar'+(x.on?' on':'')+'"><b>★</b>'+x.tx+'</div>').join('')+'</div><div class="yeGradeSm">grade '+g+' · '+(LIFE.st||n)+' ★ across your keeping</div>';
+        $('yeGrade').innerHTML='<div class="yeStars">'+st.map(x=>'<div class="yeStar'+(x.on?' on':'')+'" title="'+x.tx+'"><b>★</b><span class="ysI">'+x.ic+'</span></div>').join('')+'</div><div class="yeGradeSm">'+g+' · ★'+(LIFE.st||n)+'</div>';
         if(n===3) grantBadge('master'); }
       // the hook: what next year brings, and what's almost within reach
       { const yn=yearName(year+1), nextRank=RANKS.slice().reverse().find(r=>r[0]>year), notes=Object.keys(FNOTES).length;
-        const lines=['<span class="nx">Next: Year '+(year+1)+', '+yn[0]+'</span>'+yn[1].charAt(0).toUpperCase()+yn[1].slice(1)+'.'];
-        if(P<CLUSTER_MIN*1.5) lines.push('⚠️ <b>Only '+beeN(P)+' bees came through.</b> Spring will be touch and go: keep the nursery small and warm, and lean the mixer toward <b>Pollen</b> until they rebuild.');
-        if(year+1===MITE_YEAR) lines.push('🔬 <b>Varroa mites arrive.</b> Frame checks and brood breaks start to matter.');
-        lines.push(rj>=GIFT_COST ? '✧ You can afford a <b>Queen’s Gift</b> right now (below).' : '✧ <b>'+rj+'/'+GIFT_COST+'</b> royal jelly toward your next Queen’s Gift.');
-        if(nextRank) lines.push(nextRank[2]+' '+(nextRank[0]-year)+' more winter'+(nextRank[0]-year>1?'s':'')+' to <b>'+nextRank[1]+'</b>.');
-        lines.push('🔍 Field notes: <b>'+notes+'/'+fieldTotal()+'</b>.');
-        $('yeHook').innerHTML=lines.join('<br>')
-          +(yearCalls.length?'<div class="yeCalls"><span class="nx">Your calls this year</span>'+yearCalls.slice(-6).map(c=>'<div>'+c.ic+' '+c.t.charAt(0)+c.t.slice(1).toLowerCase()+' → <b>'+c.c+'</b></div>').join('')+'</div>':''); }
+        // the hook as a row of chips: what's next, what's close. Details live under More.
+        const chips=[];
+        if(P<CLUSTER_MIN*1.5) chips.push('<span class="yc warn" title="Only '+beeN(P)+' bees came through: keep the nursery small and warm, lean Pollen">⚠️ '+beeK(P)+' 🐝</span>');
+        if(year+1===MITE_YEAR) chips.push('<span class="yc" title="Varroa mites arrive: frame checks and brood breaks start to matter">🔬 mites</span>');
+        chips.push('<span class="yc'+(rj>=GIFT_COST?' ready':'')+'" title="Royal jelly toward a Queen’s Gift">✧ '+rj+'/'+GIFT_COST+'</span>');
+        if(nextRank) chips.push('<span class="yc" title="'+(nextRank[0]-year)+' more winters to '+nextRank[1]+'">'+nextRank[2]+' '+(nextRank[0]-year)+'</span>');
+        chips.push('<span class="yc" title="Field notes">🔍 '+notes+'/'+fieldTotal()+'</span>');
+        $('yeHook').innerHTML='<span class="nx">▶ Year '+(year+1)+' · '+yn[0]+'</span><div class="ycRow">'+chips.join('')+'</div>';
+        $('yeCalls').innerHTML=yearCalls.length?'<div class="yeCalls"><span class="nx">Your calls</span>'+yearCalls.slice(-6).map(c=>'<div>'+c.ic+' → <b>'+c.c+'</b></div>').join('')+'</div>':'';
+        foldReset('yeMore'); }
       buildReview('ye'); grantBadge('survivor'); unlockPace('medium'); if(pace!=='easy') unlockPace('hard');
       recordChronicle('year', g); updateLegacy();
       if(milestone){ fanfare(); logMsg(rank.ic,'Your apiary is now a <b>'+rank.nm+'</b> \u2014 '+year+' winters weathered.'); }
       trophyRow($('yeTrophies')); renderGifts();
       { const host=$('yeTrophies'); const old=host.parentNode.querySelector('.beenote'); if(old) old.remove(); host.insertAdjacentHTML('afterend', beeNote()); }
-      const yn=yearName(year+1); $('yeNext').textContent='Into Year '+(year+1)+' — '+yn[0]+' ▶';
+      const yn=yearName(year+1); $('yeNext').textContent='Year '+(year+1)+' ▶';
       fanfare(); saveGame(); openOverlay('yearEnd'); setSpeed(0);
     }
     $('yeNext').addEventListener('click',()=>{ $('yearEnd').classList.add('hide'); apiaryAdd(); year++; day=0; peakPop=Math.round(P); coldSnap=0; swarmP=0; activePatch=null;
@@ -5200,14 +5244,14 @@
     function deathCause(kind){ const summer=yearHist.filter(h=>h.d>110&&h.d<250&&typeof h.f==='number');
       const dial=summer.length?summer.reduce((a,h)=>a+h.f,0)/summer.length:forage;
       if(kind!=='starve' && year>=MITE_YEAR && mite>0.8)
-        return {k:'dwindle', sub:'varroa thinned the winter bees', why:'Varroa thinned the winter bees.', tx:'The mite load peaked at '+Math.round(mite/MITE_CAP*100)+'% of the worst it gets, and mite-struck bees don’t last the winter.', try:'Next year: when the mite count climbs, take a <b>brood break</b> or treat, and use a frame check to see the load.'};
+        return {k:'dwindle', ic:'🔬', fix:'🔍 check · ✂ brood break', sub:'varroa thinned the winter bees', why:'Varroa thinned the winter bees.', tx:'The mite load peaked at '+Math.round(mite/MITE_CAP*100)+'% of the worst it gets, and mite-struck bees don’t last the winter.', try:'Next year: when the mite count climbs, take a <b>brood break</b> or treat, and use a frame check to see the load.'};
       if(kind!=='starve' || P<CLUSTER_MIN*1.2)
-        return {k:'dwindle', sub:'too few bees to keep the cluster warm', why:'The cluster was too small to hold its heat.', tx:'Only '+beeN(Math.max(P,peakPop*0.3))+' bees went into the cold. A ball of bees that small loses heat faster than it can make it.', try:'Next year: in spring, paint a <b>nursery bigger than the colony</b>, and keep some brood going into early autumn. Autumn bees are the long-lived winter bees.'};
+        return {k:'dwindle', ic:'🥶', fix:'🍼 bigger nursery in spring', sub:'too few bees to keep the cluster warm', why:'The cluster was too small to hold its heat.', tx:'Only '+beeN(Math.max(P,peakPop*0.3))+' bees went into the cold. A ball of bees that small loses heat faster than it can make it.', try:'Next year: in spring, paint a <b>nursery bigger than the colony</b>, and keep some brood going into early autumn. Autumn bees are the long-lived winter bees.'};
       if(peakPop<30)
-        return {k:kind, sub:kind==='starve'?'the pantry ran dry in '+seasonName(day).toLowerCase():'too few bees remained', why:'A small colony all year.', tx:'It peaked at '+beeN(peakPop)+' bees. Few foragers bring in little, whatever the dial says.', try:'Next year: grow first. A wide spring <b>nursery</b>, the mixer toward <b>Pollen</b> until early summer, then Nectar.'};
+        return {k:kind, ic:'🐝', fix:'🍼 grow first · 🌼 Pollen', sub:kind==='starve'?'the pantry ran dry in '+seasonName(day).toLowerCase():'too few bees remained', why:'A small colony all year.', tx:'It peaked at '+beeN(peakPop)+' bees. Few foragers bring in little, whatever the dial says.', try:'Next year: grow first. A wide spring <b>nursery</b>, the mixer toward <b>Pollen</b> until early summer, then Nectar.'};
       if(dial<0.7)
-        return {k:'starve', sub:'the pantry ran dry in '+seasonName(day).toLowerCase(), why:'The pantry ran dry on day '+Math.floor(day)+'.', tx:'Through the summer flow the forage mixer averaged '+Math.round(dial*100)+'% nectar, so the bees raised brood when they could have banked honey.', try:'Next year: from midsummer, lean the mixer toward <b>Nectar</b> and fill the shelves before frost.'};
-      return {k:'starve', sub:'the pantry ran dry in '+seasonName(day).toLowerCase(), why:'The pantry ran dry on day '+Math.floor(day)+'.', tx:'The colony was strong, but it went into winter with too little in store for that many mouths.', try:'Next year: shrink the <b>nursery</b> after the goldenrod (fewer mouths at frost), and harvest only true surplus.'}; }
+        return {k:'starve', ic:'🍯', fix:'🍯 Nectar from midsummer', sub:'the pantry ran dry in '+seasonName(day).toLowerCase(), why:'The pantry ran dry on day '+Math.floor(day)+'.', tx:'Through the summer flow the forage mixer averaged '+Math.round(dial*100)+'% nectar, so the bees raised brood when they could have banked honey.', try:'Next year: from midsummer, lean the mixer toward <b>Nectar</b> and fill the shelves before frost.'};
+      return {k:'starve', ic:'🍯', fix:'✂ shrink nursery at frost', sub:'the pantry ran dry in '+seasonName(day).toLowerCase(), why:'The pantry ran dry on day '+Math.floor(day)+'.', tx:'The colony was strong, but it went into winter with too little in store for that many mouths.', try:'Next year: shrink the <b>nursery</b> after the goldenrod (fewer mouths at frost), and harvest only true surplus.'}; }
     function gameOver(kind){ if(over)return; over=true; setSpeed(0); chime(330,165); hornet=null; haptic('error');
       // the headline, the subtitle and the explanation all come from ONE diagnosis, so the card
       // never says "the pantry ran dry" above a paragraph that blames a too-small cluster
@@ -5218,7 +5262,10 @@
       $('ovStats').innerHTML='Year '+year+' ends early<span class="G '+g+'">'+g+'</span><b>'+jars+'</b> jars on the shelf · <b>'+beeN(bornTotal)+'</b> bees raised'; buildReview('ov');
       trophyRow($('ovTrophies'));
       { const host=$('ovTrophies'); const old=host.parentNode.querySelector('.beenote'); if(old) old.remove(); host.insertAdjacentHTML('afterend', beeNote()); }
-      { const c=cause; $('ovCause').innerHTML='<span class="why">'+c.why+'</span>'+c.tx+'<span class="try">→ '+c.try+'</span>'; }
+      // the face of the card: one big icon, why in a line, the fix in a few words. The longer
+      // explanation and the numbers wait under More.
+      { const c=cause; $('ovCause').innerHTML='<span class="ocIc">'+(c.ic||'🍂')+'</span><span class="why">'+c.why+'</span><span class="try">→ '+(c.fix||c.try)+'</span>';
+        $('ovStats').innerHTML='<div class="ovLong">'+c.tx+'<br><span class="try">→ '+c.try+'</span></div>'+$('ovStats').innerHTML; foldReset('ovMore'); }
       { let rw=null; try{ rw=JSON.parse(localStorage.getItem('hm_rewind')||'null'); }catch(e){}
         $('ovRewind').classList.toggle('hide', !(rw && rw.col===colonyNum && rw.y===year && !dailyMode && !NET.on)); }
       saveGame(); openOverlay('over'); }
@@ -5312,20 +5359,16 @@
     function fcWhen(d){ if(year<3||familyMode) return 'around day '+d; return d<300?'early in the winter':d<335?'in deep winter':'just short of spring'; }
     function recForageIdx(){ if(day<45) return 1; if(day<150) return 2; if(day<210) return 3; if(day<285) return 4; return 2; }
     function forageNote(){ const f=forage, y=forageYield(f), cp=caps(), full=(honeyU+pollenU+nectarU)>=cp.total-2;
-      const t = f>=0.8?'Mostly <b>nectar</b> \u2014 the pantry fills fast, but few new bees.'
-        : f>=0.62?'Leaning <b>nectar</b> \u2014 honey now, bees later.'
-        : f>=0.42?'A steady <b>mix</b> \u2014 honey and brood together.'
-        : f>=0.22?'Leaning <b>pollen</b> \u2014 more brood, a slower pantry.'
-        : 'Mostly <b>pollen</b> \u2014 every cradle filled, little honey stored.';
+      const t='';   // the numbers below say it: what a week brings in, and whether winter is covered
       // the training wheels come off: Hazel's ★ is a first-year aid (and stays for Family
       // mode). From year two the keeper reads the season themselves — the right notch
       // really does move now (pollen in spring, nectar in summer), so there's something to read
       let rec=''; if(started&&!onboard&&(year<=1||familyMode)){ const ri=recForageIdx(), ci=forageIdx();
-        if(ri>ci) rec=' <span class="fxRec">\u2605 Hazel: lean to honey</span>'; else if(ri<ci) rec=' <span class="fxRec">\u2605 Hazel: raise more brood</span>'; }
+        if(ri>ci) rec=' <span class="fxRec">\u2605 \u2192 \ud83c\udf6f</span>'; else if(ri<ci) rec=' <span class="fxRec">\u2605 \u2190 \ud83d\udc1d</span>'; }
       // …and what that does to winter, recomputed as the dial moves (the forecast re-runs on input)
       const fc=forecastCache; let wv='';
-      if(started&&!onboard&&fc&&day<300) wv = fc.starve!==null ? ' <span class="fxW bad">❄ dry '+fcWhen(fc.starve)+'</span>' : ' <span class="fxW good">❄ winter covered'+(fc.minW>=1?' · '+fc.minW.toFixed(0)+' spare':'')+'</span>';
-      return t+' '+(full?'<span class="fxY">comb full</span>':('<span class="fxY">+'+(y.h*7).toFixed(1)+'\ud83c\udf6f \u00b7 +'+(y.p*7).toFixed(1)+'\ud83c\udf3c /wk</span>'))+wv+rec; }
+      if(started&&!onboard&&fc&&day<300) wv = fc.starve!==null ? ' <span class="fxW bad">❄ ✗ '+((year<3||familyMode)?'d'+fc.starve:fcWhen(fc.starve))+'</span>' : ' <span class="fxW good">❄ ✓'+(fc.minW>=1?' +'+fc.minW.toFixed(0):'')+'</span>';
+      return t+(full?'<span class="fxY">⬡ full</span>':('<span class="fxY">+'+(y.h*7).toFixed(1)+'\ud83c\udf6f \u00b7 +'+(y.p*7).toFixed(1)+'\ud83c\udf3c /wk</span>'))+wv+rec; }
     // year one, once per season: Hazel says what the mixer wants now and why
     function forageSeasonTip(si){ const M={
         0:'Hazel: Spring is for growing. Slide the mixer toward <b>pollen</b> \u2014 pollen is bee bread, and it fills the cradles with new workers.',
@@ -5338,16 +5381,16 @@
       const ri=(started&&!onboard&&(year<=1||familyMode))?recForageIdx():-1, tk=$('fxTicks');
       if(tk){ const ii=tk.children; for(let i=0;i<ii.length;i++){ ii[i].classList.toggle('on',i===ci); ii[i].classList.toggle('rec',i===ri); } }
       const n=$('fxNote'); if(n){ const note='<span>'+forageNote()+'</span>'; if(n.innerHTML!==note) n.innerHTML=note; } }
+    // each brush's recipe, as pictures: what goes in → what comes out · what it needs
     const BRUSHHELP={
-      brood:'\ud83c\udf7c <b>Brood</b> = the baby bees \u2014 <span class="gain">gain: more workers</span> <span class="cost">\u00b7 cost: nurses &amp; warmth</span>',
-      honey:'\ud83c\udf6f <b>Honey</b> shelf \u2014 <span class="gain">gain: +1 pantry cell</span> <span class="cost">\u00b7 cost: wax, drawn from honey</span>',
-      expand:'\ud83d\udd28 <b>Expand</b> wax \u2014 <span class="gain">gain: room to grow</span> <span class="cost">\u00b7 cost: wax &amp; a builder\u2019s time \u2014 watch the bank</span>'
+      brood:'<b>Brood</b> <span class="gain">🥚 → 🐝</span> <span class="cost">· needs 🔥 + 🌼</span>',
+      honey:'<b>Honey</b> <span class="gain">💧 → 🍯 → ❄️</span> <span class="cost">· outer ring</span>',
+      expand:'<b>Expand</b> <span class="gain">🍯 → ⬡</span> <span class="cost">· takes ⏳</span>'
     };
-    // family mode: the same three brushes, said the way you'd say them to a kid
     const BRUSHHELP_KID={
-      brood:'\ud83c\udf7c <b>Baby bees</b> \u2014 <span class="gain">makes new bees</span> <span class="cost">\u00b7 keep them warm</span>',
-      honey:'\ud83c\udf6f <b>Honey room</b> \u2014 <span class="gain">a place to store food</span> <span class="cost">\u00b7 for winter</span>',
-      expand:'\ud83d\udd28 <b>New room</b> \u2014 <span class="gain">makes the hive bigger</span> <span class="cost">\u00b7 the builders need time</span>'
+      brood:'<b>Baby bees</b> <span class="gain">🥚 → 🐝</span> <span class="cost">· keep warm 🔥</span>',
+      honey:'<b>Food room</b> <span class="gain">🍯 → ❄️</span>',
+      expand:'<b>New room</b> <span class="gain">+ ⬡</span> <span class="cost">· takes ⏳</span>'
     };
     // each brush explains itself for its first few pickups, then goes quiet — the colours
     // carry the meaning by then, and the tray has one less line to read (Family mode keeps it)
@@ -5473,10 +5516,10 @@
       // where r2 was the nest-ring radius: real information, but expert shorthand sitting on
       // the most-looked-at control in the game. nestRing() still drives its nudge internally.
       const nbY=broodCells(), nhY=honeyCells();
-      $('yBrood').innerHTML='<b>'+nbY+'</b><i> cradle'+(nbY===1?'':'s')+'</i>';
-      $('yHon').innerHTML='<b>'+nhY+'</b><i> shel'+(nhY===1?'f':'ves')+'</i>';
+      $('yBrood').innerHTML='<b>'+nbY+'</b>';
+      $('yHon').innerHTML='<b>'+nhY+'</b>';
       const L=ledger();
-      $('yExp').innerHTML= L.wax>0.02 ? ('<i>wax </i><b>-'+(L.wax*7).toFixed(1)+'</b>') : '<i>+room</i>';
+      $('yExp').innerHTML= L.wax>0.02 ? ('<b>-'+(L.wax*7).toFixed(1)+'</b>') : '<b>+</b>';
     }
     // the almanac's coach: what a good keeper aims for this season, in real numbers
     function seasonPlan(){
@@ -5650,14 +5693,14 @@
         .filter(o=>o.q>0.05).sort((a,b)=>b.q-a.q).slice(0,3);
       if(opts.length<2) return false;
       $('dcOpts').innerHTML=opts.map(o=>{
-        const bl=o.q>0.6?'a rich bloom':o.q>0.25?'a modest bloom':'a thin bloom';
-        const fl=o.d<0.35?'a short flight':o.d<0.65?'a fair flight':'a long flight';
+        const bl='';   // the ▮ bars say how rich; the line says how far
+        const fl=o.d<0.35?'✈ near':o.d<0.65?'✈ mid':'✈ far';
         return '<button class="btn dcOpt" data-p="'+o.i+'">'
           +'<span class="dcBee" style="animation-duration:'+Math.max(0.35,1.5-o.q).toFixed(2)+'s">🐝</span>'
-          +'<span class="dcTx"><b>'+o.f.ic+' '+o.f.n+(o.i===activePatch?' <span class="dcCur">— dancing for home</span>':'')+'</b><i>'+bl+' · '+fl+'</i></span>'
+          +'<span class="dcTx"><b>'+o.f.ic+' '+o.f.n+(o.i===activePatch?' <span class="dcCur">🏠</span>':'')+'</b><i>'+fl+'</i></span>'
           +'<span class="dcQ">'+'▮'.repeat(Math.max(1,Math.round(o.q*5)))+'</span></button>'; }).join('');
       $('dcOpts').querySelectorAll('.dcOpt').forEach(el=>press(el,()=>dcApply(+el.dataset.p,'you')));
-      openOverlay('danceCall'); try{ chime(440,554); }catch(e){} hpt(10);
+      foldReset('dcMore'); openOverlay('danceCall'); try{ chime(440,554); }catch(e){} hpt(10);
       if(!seenTips['dancecall']){ seenTips['dancecall']=1; }
       return true; }
     press($('dcSkip'),()=>{ danceCallCD=12; closeOverlay('danceCall'); toast('The dancers disperse — the meadow will call again.'); });
@@ -5908,12 +5951,20 @@
       const e=ready[(Math.random()*ready.length)|0];
       if(party){ evLast[e.id]=now; evCD=48+Math.random()*20; hostStartVote('ev',e.id,-1); }
       else openEvent(e); }
+    // ---- folds: the extra words live behind a tap (ⓘ / More ▾), never on the card face ----
+    function foldReset(id){ const f=$(id); if(!f) return; f.classList.add('hide');
+      const b=document.querySelector('[data-fold="'+id+'"]'); if(b) b.classList.remove('open'); }
+    document.addEventListener('pointerdown',e=>{ const b=e.target&&e.target.closest&&e.target.closest('.foldBtn'); if(!b) return;
+      const f=$(b.dataset.fold); if(!f) return; const open=f.classList.toggle('hide')===false; b.classList.toggle('open',open); haptic('select'); });
     function openEvent(e){ evCur=e; evLast[e.id]=absDay(); evCD=26+Math.random()*16;
       $('heKick').textContent=e.kick; $('heIc').textContent=e.ic; $('heTitle').textContent=e.title;
-      $('heTx').innerHTML=e.tx(); $('heFact').innerHTML='📖 <b>Field note:</b> '+e.fact;
-      $('heOpts').innerHTML=e.opts.map((o,i)=>'<button class="btn heOpt'+(i?' ghost':'')+'" data-i="'+i+'"'+(o.ok&&!o.ok()?' disabled':'')+'><b>'+o.tx+'</b><i>'+o.d()+'</i></button>').join('');
+      $('heTx').innerHTML=e.tx(); $('heFact').innerHTML='📖 '+e.fact; foldReset('heMore');
+      // each option shows its label and only its effect chips (the green gains, the amber costs);
+      // the prose around them lives behind ⓘ with the story and the field note
+      $('heOpts').innerHTML=e.opts.map((o,i)=>'<button class="btn heOpt'+(i?' ghost':'')+'" data-i="'+i+'"'+(o.ok&&!o.ok()?' disabled':'')+'><b>'+o.tx+'</b><i>'+chipsOf(o.d())+'</i></button>').join('');
       $('heOpts').querySelectorAll('.heOpt').forEach(el=>press(el,()=>chooseEvent(+el.dataset.i)));
       openOverlay('hiveEvent'); try{ chime(440,554); }catch(err){} hpt(10); }
+    function chipsOf(html){ const m=(''+html).match(/<span class="(gain|cost)">[\s\S]*?<\/span>/g); return m?m.join(' '):''; }
     function chooseEvent(i){ const e=evCur; if(!e) return; const o=e.opts[i]; if(!o||(o.ok&&!o.ok())) return; haptic('press');
       evCur=null; closeOverlay('hiveEvent');
       const before=(day<300)?forecastToSpring():null;
@@ -5945,7 +5996,7 @@
       const qc=[]; for(let i=0;i<qcN;i++) qc.push({x:W2*(0.12+Math.random()*0.76), y:H2*(0.93-Math.random()*0.05), hit:false});
       FG={cv,g:cv.getContext('2d'),W:W2,H:H2,dpr,bees:bees2,qc,t:10,queen:false,qAt:0,mites:0,miteN,qcN,done:false,last:performance.now()};
       $('fgRes').classList.add('hide');
-      $('fgFoot').innerHTML='tap the <b>queen</b> (long body, painted dot)'+(miteN?' · tap <b>red mites</b> on backs':'')+(qcN?' · tap <b>queen cells</b> at the bottom edge':'');
+      $('fgFoot').innerHTML='👆 <b>👑 queen</b> (painted dot)'+(miteN?' · <b>🔴 mites</b>':'')+(qcN?' · <b>🥜 queen cells</b>':'');
       requestAnimationFrame(fgTick); }
     function fgTask(){ if(!FG) return ''; const left=[]; if(!FG.queen) left.push('find the queen'); if(FG.mites<FG.miteN) left.push((FG.miteN-FG.mites)+' mite'+(FG.miteN-FG.mites>1?'s':''));
       const qcl=FG.qc.filter(q=>!q.hit).length; if(qcl) left.push(qcl+' queen cell'+(qcl>1?'s':'')); return left.length?left.join(' · '):'all found!'; }
@@ -6008,21 +6059,21 @@
       // so "honeyU>0" is true before the first tap and every readout would arrive at once --
       // which is the pile-on this table exists to prevent. Each also has a generous day-based
       // fallback so nothing can stay hidden forever if a keeper plays in an unexpected order.
-      {id:'stPop',     when:()=>bornTotal>0,                          ic:'🐝', tx:'<b>Bees.</b> Every other number here follows from this one.'},
-      {id:'stBrood',   when:()=>brushedBrood>0||day>=10,              ic:'🍼', tx:'<b>Brood</b> — what the queen has laid. Twenty days to a flying bee.'},
-      {id:'tabMeadow', when:()=>nectarU>0,                            ic:'☀',  tx:'They’re bringing something home. <b>Meadow</b> shows you where from.'},
-      {id:'stHoney',   when:()=>paintedHoney>0||day>=16,              ic:'🍯', tx:'<b>Honey.</b> Not treasure — it’s what they eat all winter.'},
-      {id:'stPollen',  when:()=>nectarU>0||day>=20,                   ic:'🌸', tx:'<b>Pollen</b> is protein. No pollen, no babies.'},
-      {id:'waxBank',   when:()=>cells.some(c=>c.flagExpand),          ic:'🔨', tx:'<b>Wax bank</b> — what the pantry can afford to build.'},
-      {id:'advisor',   when:()=>day>=8,                               ic:'👵', tx:'Hazel is watching. Tap her any time to read back.'},
-      {id:'forageGrp', when:()=>(nectarU>0&&day>=12)||day>=24,        ic:'🌼', tx:'You can’t command bees — but you can aim them.'},
-      {id:'goal',      when:()=>day>=18&&!!(goals&&goals.length),     ic:'🧭', tx:'Something to aim at this season.'},
-      {id:'fastToggle',when:()=>!!questDone.comb||day>=45,            ic:'⏩', tx:'<b>Fast-forward</b> — for the quiet stretches. Tap it again for normal speed.'},
-      {id:'inspectBtn',when:()=>day>=70,                              ic:'ⓘ',  tx:'The <b>ⓘ lens</b>: tap it, then any cell, to hear what that cell is doing.'},
-      {id:'heatBtn',   when:()=>day>=100,                             ic:'🌡', tx:'The <b>heat lens</b> shows the warmth the bees hold. Brood needs the warm heart.'},
-      {id:'reportBtn', when:()=>day>=130,                             ic:'📊', tx:'The <b>report</b>, if you ever want the numbers behind all this.'},
-      {id:'wr',        when:()=>day>=HARV0*0.55,                      ic:'❄️', tx:'<b>Winter pantry.</b> This is the number the whole year is really about.'},
-      {id:'stKeeper',  when:()=>rj>0||jars>0,                         ic:'✧',  tx:'<b>Keeper</b> — what you’ve earned across every colony.'},
+      {id:'stPop',     when:()=>bornTotal>0,                          ic:'🐝', sh:'Bees · the number that matters', tx:'<b>Bees.</b> Every other number here follows from this one.'},
+      {id:'stBrood',   when:()=>brushedBrood>0||day>=10,              ic:'🍼', sh:'Brood · 🥚 → 🐝 in 20d', tx:'<b>Brood</b> — what the queen has laid. Twenty days to a flying bee.'},
+      {id:'tabMeadow', when:()=>nectarU>0,                            ic:'☀',  sh:'☀ Meadow unlocked', tx:'They’re bringing something home. <b>Meadow</b> shows you where from.'},
+      {id:'stHoney',   when:()=>paintedHoney>0||day>=16,              ic:'🍯', sh:'Honey = winter food', tx:'<b>Honey.</b> Not treasure — it’s what they eat all winter.'},
+      {id:'stPollen',  when:()=>nectarU>0||day>=20,                   ic:'🌸', sh:'Pollen = baby food', tx:'<b>Pollen</b> is protein. No pollen, no babies.'},
+      {id:'waxBank',   when:()=>cells.some(c=>c.flagExpand),          ic:'🔨', sh:'Wax bank = what you can build', tx:'<b>Wax bank</b> — what the pantry can afford to build.'},
+      {id:'advisor',   when:()=>day>=8,                               ic:'👵', sh:'Hazel · tap for a hint', tx:'Hazel is watching. Tap her any time to read back.'},
+      {id:'forageGrp', when:()=>(nectarU>0&&day>=12)||day>=24,        ic:'🌼', sh:'Aim your foragers', tx:'You can’t command bees — but you can aim them.'},
+      {id:'goal',      when:()=>day>=18&&!!(goals&&goals.length),     ic:'🧭', sh:'A goal for this season', tx:'Something to aim at this season.'},
+      {id:'fastToggle',when:()=>!!questDone.comb||day>=45,            ic:'⏩', sh:'⏩ Fast-forward unlocked', tx:'<b>Fast-forward</b> — for the quiet stretches. Tap it again for normal speed.'},
+      {id:'inspectBtn',when:()=>day>=70,                              ic:'ⓘ',  sh:'ⓘ Tap a cell to inspect', tx:'The <b>ⓘ lens</b>: tap it, then any cell, to hear what that cell is doing.'},
+      {id:'heatBtn',   when:()=>day>=100,                             ic:'🌡', sh:'🌡 Heat lens unlocked', tx:'The <b>heat lens</b> shows the warmth the bees hold. Brood needs the warm heart.'},
+      {id:'reportBtn', when:()=>day>=130,                             ic:'📊', sh:'📊 Report unlocked', tx:'The <b>report</b>, if you ever want the numbers behind all this.'},
+      {id:'wr',        when:()=>day>=HARV0*0.55,                      ic:'❄️', sh:'❄️ The winter number', tx:'<b>Winter pantry.</b> This is the number the whole year is really about.'},
+      {id:'stKeeper',  when:()=>rj>0||jars>0,                         ic:'✧',  sh:'✧ Your keeper score', tx:'<b>Keeper</b> — what you’ve earned across every colony.'},
     ];
     // containers that should stay out of the way until at least one of their children exists
     const DISC_BOX={res:['stHoney','stPollen','stPop','stBrood','stKeeper']};
@@ -6044,7 +6095,7 @@
         if(!ok) continue;
         discovered[d.id]=1; applyDiscovery();
         const el=$(d.id); if(el){ el.classList.remove('discPop'); void el.offsetWidth; el.classList.add('discPop'); }
-        if(d.tx) logMsg(d.ic||'✦', d.tx);
+        if(d.tx){ logMsg(d.ic||'✦', d.tx, true); if(d.sh) pushFeed(d.ic||'✦', d.sh); }   // feed: the short line; almanac: the full one
         try{ chime(523,784); }catch(e){}
         return;                       // one discovery per pump — they arrive as a sequence
       } }
@@ -6063,62 +6114,38 @@
     // (coachTarget()) -- folded on here so reordering or inserting a step can't
     // silently misalign the text or the hint.
     const COACH=[
-      // Three beats of "what is this, and why do I care" before a single instruction. The
-      // tutorial used to open cold on "Pick up Brood" — a command with no world around it.
-      // Deliberately one short line each: framing, not a lecture. No `until`, so each is a
-      // tap-to-continue beat, and no step number — being told what a hive is isn't a task.
-      { ic:'🐝', pause:true, prog:'your hive',
-        tx:'This is your hive. <b>Forty thousand bees</b>, thinking as one.',
-        kid:'This is your beehive! Thousands of bees live here together.' },
-      { ic:'❄️', prog:'the whole game',
-        tx:'They have one year to get ready for <span class="kw">winter</span>.',
-        kid:'They need to get ready before the cold comes!' },
-      { ic:'🖌️', prog:'your job',
-        tx:'You decide what each room becomes. That’s the whole job.',
-        kid:'You choose what each little room is for. That’s your job!' },
-      { ic:'🖌️', spot:'brushGrp', brushHint:'brood', pause:true, prog:'1 \u00b7 the brushes',
-        tx:'Pick up <span class="kb">Brood</span>.', kid:'Tap the <span class="kb">🍼 baby-bee</span> brush.',
+      // Minecraft-style: no lecture. Each step is one verb, shown by the ghost hand (brush →
+      // cell → brush → cell …). The label is 1–3 words; the unlock card after each craft is
+      // its recipe as pictures (`rc`). `kid` is the Family-mode label.
+      { ic:'🍼', brushHint:'brood', pause:true, tx:'Brood', kid:'Baby bees',
         until:()=>brush==='brood' },
-      { ic:'👑', prog:'2 \u00b7 her first cradle',
-        tx:'Tap the rippling cell.', kid:'Now tap the wiggly room to make a baby bee!',
-        until:()=>brushedBrood>=1, unlock:'brood',
-        bridge:'There \u2014 her first cradle. <em>A bee in twenty days.</em> Next craft: the <span class="kh">pantry</span>.',
-        kidBridge:'Yay! A baby bee is on the way \ud83d\udc1d Next, let\u2019s make a place for food.',
+      { ic:'👑', tx:'Tap a cell', kid:'Tap a room',
+        until:()=>brushedBrood>=1, unlock:'brood', rc:'🥚 → 🐝',
         target:()=>cells.find(c=>c.built&&c.zone!=='brood'&&!c.brood&&hexDist(c.c,c.r,CCC,CCR)<=1)
           || cells.find(c=>c.built&&c.zone!=='brood'&&!c.brood) || null },
-      { ic:'🍯', spot:'brushGrp', brushHint:'honey', prog:'3 \u00b7 the pantry',
-        tx:'Now <span class="kh">Honey</span>.', kid:'Tap the <span class="kh">🍯 honey</span> brush.',
+      { ic:'🍯', brushHint:'honey', tx:'Honey', kid:'Food room',
         until:()=>brush==='honey' },
-      { ic:'🍯', prog:'4 \u00b7 first shelf',
-        tx:'One outer cell.', kid:'Tap a room near the edge to keep food in.',
-        until:()=>paintedHoney>=1, unlock:'honey',
-        bridge:'A shelf on the wall. When the <span class="kc">nectar</span> ripens, this is where it sleeps. One craft left: <span class="kg">room</span>.',
-        kidBridge:'A food room! That’s where the honey lives. One more thing to learn.',
+      { ic:'🍯', tx:'An outer cell', kid:'Tap an edge room',
+        until:()=>paintedHoney>=1, unlock:'honey', rc:'🌸 → 🍯 → ❄️',
         target:()=>cells.find(c=>c.built&&c.zone!=='honey'&&hexDist(c.c,c.r,CCC,CCR)>=2)
           || cells.find(c=>c.built&&c.zone!=='honey') || null },
-      { ic:'🔨', spot:'brushGrp', brushHint:'expand', prog:'5 \u00b7 fresh wax',
-        tx:'And <span class="kg">Expand</span>.', kid:'Tap the <span class="kg">🔨 build</span> brush.',
+      { ic:'🔨', brushHint:'expand', tx:'Expand', kid:'Build',
         until:()=>brush==='expand' },
-      { ic:'🔨', prog:'6 \u00b7 make room',
-        tx:'Just outside the comb.', kid:'Tap just outside the hive to build a new room.',
-        until:()=>flaggedExpand>=1, unlock:'expand',
-        bridge:'The builders are already reaching for it. Last lesson \u2014 <em>aiming the foragers</em>.',
-        kidBridge:'The builder bees are on it! Last thing: telling the bees what to bring home.',
+      { ic:'🔨', tx:'Just outside', kid:'Tap outside',
+        until:()=>flaggedExpand>=1, unlock:'expand', rc:'🍯 → ⬡',
         target:()=>cells.find(c=>{ if(c.built||c.flagExpand) return false;
           let n=0; for(const [cc,rr] of neighbors(c.c,c.r)) if(cells[idx(cc,rr)].built) n++; return n>=2; }) || null },
-      { ic:'🌼', spot:'forageGrp', show:['forageGrp'], prog:'7 \u00b7 the mixer',
-        tx:'Aim your foragers \u2014 slide the <b>mixer</b> toward honey or bees.',
-        kid:'Slide the <b>bar</b> \u2014 toward \ud83c\udf6f honey, or toward \ud83d\udc1d more bees. You pick!',
-        until:()=>forageTouched, unlock:'forage',
-        bridge:'That\u2019s the whole craft, keeper. The seasons teach the rest \u2014 and I\u2019m right here when you need me.',
-        kidBridge:'You did it! Now just have fun with your bees \u2014 I\u2019m right here if you need me.' },
+      { ic:'🌼', show:['forageGrp'], hand:'#forageSlider', drag:true, tx:'🌼 bees ↔ 🍯 winter', kid:'🌼 bees ↔ 🍯 food',
+        until:()=>forageTouched, unlock:'forage', rc:'🌼 = 🐝  ·  🍯 = ❄️' },
     ];
     function showCoach(){ const s=COACH[coachStep]; if(!s){ endCoach(); return; }
       clearSpots();
       if(s.show) s.show.forEach(id=>{ const el=$(id); if(el) el.classList.remove('hidden'); });
-      $('coachIc').textContent=s.ic; typeInto($('coachTx'), (familyMode&&s.kid)?s.kid:s.tx); $('coachProg').textContent=s.prog||''; $('coachSkip').style.display='';
+      $('coachIc').textContent=s.ic; $('coachTx').innerHTML=(familyMode&&s.kid)?s.kid:s.tx; $('coachSkip').style.display='';
+      $('coachProg').innerHTML=COACH.map((_,i)=>'<i class="'+(i<coachStep?'done':i===coachStep?'on':'')+'"></i>').join('');
       const btn=$('coachBtn');
       if(s.until){ if(s.until()){ btn.style.display=''; btn.textContent='Next'; } else btn.style.display='none'; } else { btn.style.display=''; btn.textContent=s.btn||'Next'; }
+      btn.parentNode.style.display=btn.style.display;
       $('coach').classList.add('show');
       if(s.spot) spot(s.spot,true);
       if(s.brushHint){ const el=document.querySelector('[data-brush="'+s.brushHint+'"]'); if(el) el.classList.add('tapHere'); }
@@ -6126,28 +6153,21 @@
     }
     // completing a craft UNLOCKS its keeper's page: fanfare, +1 royal jelly, the
     // card as the prize \u2014 then Hazel teases the next craft. Doing comes first.
-    const UNLOCK_NAME={brood:'BROOD',honey:'HONEY',expand:'EXPAND',forage:'THE DIALS'};
-    function showUnlockChip(key, after){ $('unlockName').textContent=UNLOCK_NAME[key]||key;
-      const el=$('unlockChip'); el.classList.remove('hide'); el.classList.add('pop');
-      logMsg('✦','Keeper\u2019s page unlocked \u2014 <b>'+(UNLOCK_NAME[key]||key)+'</b> (+1 ✧ royal jelly)');
-      setTimeout(()=>{ el.classList.add('hide'); el.classList.remove('pop'); if(after) after(); },1650); }
+    const UNLOCK_NAME={brood:'BROOD',honey:'HONEY',expand:'EXPAND',forage:'THE MIXER'};
+    function showUnlockChip(key, after, rc){ $('unlockName').textContent=UNLOCK_NAME[key]||key; $('unlockRc').textContent=rc||'';
+      const el=$('unlockChip'); el.classList.remove('hide','pop'); void el.offsetWidth; el.classList.add('pop');
+      logMsg('✦','<b>'+(UNLOCK_NAME[key]||key)+'</b> '+(rc||'')+' · +1 ✧');
+      setTimeout(()=>{ el.classList.add('hide'); el.classList.remove('pop'); if(after) after(); },1900); }
     let coachWait=false;
     function advanceCoach(){ if(coachWait) return; coachWait=true; clearSpots();
       const s=COACH[coachStep]; coachStep++;
       if(speed===0) setSpeed(1);
       $('coach').classList.remove('show');
-      const tease=()=>{ if(!onboard){ coachWait=false; return; }   // the coach already ended under the unlock chip: never re-show a card with a dead button
-        const prevStep=COACH[coachStep-1]; const bridge=(prevStep&&((familyMode&&prevStep.kidBridge)||prevStep.bridge))||'';
-        if(!bridge){ coachWait=false; if(!onboard) return;
-          if(coachStep>=COACH.length){ endCoach(); } else showCoach(); return; }
-        $('coachIc').textContent='\ud83d\udc75'; $('coachProg').textContent='hazel';
-        $('coachBtn').style.display='none'; $('coachSkip').style.display='none';
-        $('coach').classList.add('show'); logMsg('👵', bridge);
-        typeInto($('coachTx'), bridge, ()=>{ const b=$('coachBtn'); b.style.display=''; b.textContent='Continue ›'; }); };
-      // first pass stays simple: the unlock chip + Hazel's short bridge, no full lesson card.
-      // the deep card waits for the second pass (placing a few), fired from commitStroke.
+      // no bridge paragraph: the recipe card IS the explanation, then the hand moves on
+      const tease=()=>{ coachWait=false; if(!onboard) return;
+        if(coachStep>=COACH.length){ endCoach(); } else showCoach(); };
       if(s&&s.unlock){ rj++; fanfare(); burst(W/2,Hh*0.42,26);
-        showUnlockChip(s.unlock, tease); }
+        showUnlockChip(s.unlock, tease, s.rc); }
       else setTimeout(tease, 350); }
     // the interlude waits for the player — nothing Hazel says vanishes on a timer
     // show, don't tell: while a tutorial step waits, the exact target cell
@@ -6155,50 +6175,27 @@
     function coachTarget(){ if(!onboard||coachWait) return null;
       const s=COACH[coachStep]; if(!s||!s.until||s.until()) return null;
       return s.target ? s.target() : null; }
+    // ---- the ghost hand: the tutorial and "next job" hints point instead of explaining.
+    // coachHand() picks what the current step wants touched (a brush, then its cell, then the
+    // slider); ghostPoint(sel,ms) borrows the hand for a moment (quest chips). Ticked by frame().
+    let ghostTmp=null;
+    function elTarget(sel){ const el=typeof sel==='string'?document.querySelector(sel):sel; if(!el||!el.offsetParent) return null;
+      const r=el.getBoundingClientRect(); if(!r.width) return null; return {x:r.left+r.width*0.5, y:r.top+r.height*0.58, w:r.width}; }
+    function coachHand(){ if(!onboard||coachWait||storyMode) return null; const s=COACH[coachStep]; if(!s) return null;
+      if(s.brushHint && brush!==s.brushHint) return elTarget('[data-brush="'+s.brushHint+'"]');
+      const tc=coachTarget(); if(tc && view==='hive'){ const p=cellCenter(tc.c,tc.r); return {x:p.x, y:p.y}; }
+      if(s.hand){ const t=elTarget(s.hand); if(t&&s.drag) t.drag=Math.min(60,t.w*0.3); return t; }
+      return null; }
+    function ghostPoint(sel,ms){ ghostTmp={sel, until:performance.now()+(ms||3800)}; }
+    function ghostTick(){ const g=$('ghostHand'); if(!g) return;
+      let t=coachHand();
+      if(!t && ghostTmp){ if(performance.now()<ghostTmp.until && !paused) t=elTarget(ghostTmp.sel); else ghostTmp=null; }
+      g.classList.toggle('on', !!t); if(!t) return;
+      g.classList.toggle('drag', !!t.drag); if(t.drag) g.style.setProperty('--dx', t.drag.toFixed(0)+'px');
+      const tf='translate('+t.x.toFixed(0)+'px,'+t.y.toFixed(0)+'px)'; if(g.style.transform!==tf) g.style.transform=tf; }
     function coachContinue(){ if(!coachWait) return; coachWait=false;
       $('coach').classList.remove('show'); if(!onboard) return;
       if(coachStep>=COACH.length){ endCoach(); } else showCoach(); }
-    // ---- deliberate first placements: the paused preview→confirm card (#placeConfirm) ----
-    // Active only during the founding coach's three comb-placement steps (brood/honey/expand),
-    // where coachTarget() is non-null — so the very first taps teach cost, effect and location
-    // instead of just dropping a cell. Tap around to compare spots; the card follows your finger.
-    let pendingPlace=null;
-    const PLACEINFO={
-      brood:{ after:'brood', name:'Brood — a cradle',
-        effect:'The queen lays here → a new worker in about <b>20 days</b>.',
-        cost:'a nurse’s <b>warmth</b> to keep the young cosy',
-        best:'the <b>warm heart</b> of the nest — babies need heat, and a tight nursery holds its own.' },
-      honey:{ after:'honey', name:'Honey — a shelf',
-        effect:'Ripe nectar sleeps here → your <b>winter fuel</b>.',
-        cost:'a little <b>wax</b>, drawn from honey',
-        best:'the <b>outer wall</b>, wrapping the warm nest like a blanket.' },
-      expand:{ after:'expand', name:'Expand — fresh wax',
-        effect:'Fresh comb the colony can <b>grow into</b>.',
-        cost:'<b>wax &amp; a builder’s time</b> — build one step ahead',
-        best:'<b>just outside</b> the comb — reach a little, don’t sprawl.' },
-    };
-    function combDeliberate(){ return onboard && !coachWait && !!coachTarget() && !!PLACEINFO[brush]; }
-    function placeValid(cell){ if(!cell) return false;
-      if(brush==='expand') return !cell.built && !cell.flagExpand && neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built);
-      if(!cell.built) return false;
-      if(brush==='brood') return cell.zone!=='brood';
-      if(brush==='honey') return cell.zone!=='honey' && !cell.brood;
-      return false; }
-    function placeCompare(cell){ const rg=hexDist(cell.c,cell.r,CCC,CCR);
-      if(brush==='brood') return rg<=1?'This one sits right in the warm heart — a fine choice.':'A little out from the heart — warm cells hold brood best, but this will do.';
-      if(brush==='honey') return rg>=2?'Out on the wall — just where stores belong.':'Close to the heart — shelves keep better on the outer wall.';
-      return 'Reaching just past the comb — the builders won’t have far to go.'; }
-    function openPlacePreview(cell){ const info=PLACEINFO[brush]; if(!info) return; pendingPlace=cell;
-      try{ drawKeySwatch($('pcBefore'), cell.built?'bare':'empty'); drawKeySwatch($('pcAfter'), info.after); }catch(e){}
-      $('pcName').innerHTML=info.name; $('pcEffect').innerHTML=info.effect; $('pcCost').innerHTML=info.cost;
-      $('pcBest').innerHTML='Best spot: '+info.best; $('pcNote').innerHTML=placeCompare(cell);
-      const el=$('placeConfirm'); el.classList.remove('hide'); el.style.bottom=(botH+14)+'px';
-      requestAnimationFrame(()=>el.classList.add('show')); }
-    function closePlacePreview(){ pendingPlace=null; const el=$('placeConfirm'); if(!el) return;
-      el.classList.remove('show'); setTimeout(()=>{ if(!pendingPlace) el.classList.add('hide'); }, 240); }
-    press($('pcPlace'), ()=>{ const cell=pendingPlace; closePlacePreview(); if(!cell) return; haptic('press');
-      strokeSnap=combSnap(); applyBrush(cell); commitStroke(); });
-    press($('pcCancel'), ()=>closePlacePreview());
     // the blueprint: comb strategy as one picture — concentric truth, three lines.
     // The pattern mirrors a real frame: brood nest at the warm centre, a band of
     // stores wrapped around it, empty fresh wax at the working rim.
@@ -6239,7 +6236,7 @@
       drawCombPlan(); openOverlay('combPlan'); try{ chime(440,587); }catch(e){} return true; }
     window.__hmPlan=()=>{ drawCombPlan(); openOverlay('combPlan'); };   // dev/test handle, like __hm
     function endCoach(viaSkip){
-      onboard=false; finishType(false); clearSpots(); closePlacePreview(); $('coach').classList.remove('show'); setReveal(false);
+      onboard=false; finishType(false); clearSpots(); $('coach').classList.remove('show'); setReveal(false);
       // the coach teaches one cell of each craft; the rest of the founding comb still needs a
       // job, or the stores (which only fit on Honey shelves) drain away the moment it ends
       if(!viaSkip) seedStarterZones();
@@ -6282,9 +6279,9 @@
     // go. Hands before story (FUN_ANALYSIS.md, D6). The full telling lives on as "Hazel's
     // tale" in the pause menu, and its facts arrive in play as Hazel tips when they matter.
     const STORY=[
-      { sc:'dawn',  line:'Forty years I\u2019ve kept bees on this hill. My hands are done now \u2014 and this hive is <b>yours</b>.' },
-      { sc:'year',  line:'It comes down to one race with the calendar: raise enough <b>bees</b> and store enough <b>honey</b> to last the winter. A big cluster keeps itself warm. A small one can\u2019t.' },
-      { sc:'ready', line:'That\u2019s plenty of talk. The queen\u2019s waiting on you \u2014 let\u2019s give her a nursery.' },
+      { sc:'dawn',  line:'This hive is <b>yours</b> now.' },
+      { sc:'year',  line:'Grow <b>bees</b>. Store <b>honey</b>. Beat <b>winter</b>.' },
+      { sc:'ready', line:'The queen is waiting.' },
     ];
     const STORY_TALE=[
       { sc:'dawn',    line:'Forty years I\u2019ve kept bees on this hill. My hands are done now \u2014 but the meadow\u2019s still humming, and I\u2019ve been waiting to hand it on.' },
@@ -6314,7 +6311,7 @@
       const el=$('story'); el.classList.remove('show'); void $('storyLine').offsetWidth;
       $('storyLine').innerHTML=b.line; storyDots(); storyT=0;
       const last=storyIx>=beats.length-1;
-      $('storyNext').textContent = last ? (onCineEnd?'Begin the year ›':'Begin ›') : 'Continue ›';
+      $('storyNext').textContent = last ? 'Begin ▶' : '›';
       requestAnimationFrame(()=>el.classList.add('show'));
     }
     function advanceStory(){ if(!storyMode) return; const beats=curBeats||STORY; storyIx++; if(storyIx>=beats.length){ endStory(); } else showStoryBeat(); }
@@ -6356,9 +6353,11 @@
       }
       let c='Now <b>Year '+year+'</b> opens — <b>'+yn[0]+'</b>. ';
       c += (s && s.id!=='calm') ? (s.ic+' '+seasonComing(s)) : 'The wind carries nothing unusual; a plain, honest year to keep.';
-      beats.push({sc:'year', line:c});
-      beats.push({sc:'flowers', line:interludeTip(prev, s)});
-      return beats;
+      // the cinematic says it in one card (last year's peak → the new year and its omen); the
+      // full recap, the omen and Hazel's tip are kept in her almanac for anyone who wants them
+      for(const b of beats) logMsg('📜', b.line, true);
+      logMsg(s&&s.ic||'🌱', c, true); logMsg('💡', interludeTip(prev, s), true);
+      return [{sc:'year', line:(prev?'<b>'+beeK(prev.pop)+'</b> 🐝 → ':'')+'Year <b>'+year+'</b> · <b>'+yn[0]+'</b>'+((s&&s.id!=='calm')?' '+s.ic:'')}];
     }
     $('storySkip').addEventListener('click',(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); endStory(); });
     $('storyNext').addEventListener('click',(e)=>{ if(e&&e.stopPropagation)e.stopPropagation(); advanceStory(); });
@@ -6803,6 +6802,8 @@
       if(e.target&&e.target.closest&&e.target.closest('#feedBtn')) return;
       if(advFold){ advFold=false; try{ lsSet('hm_advfold','0'); }catch(err){} syncFold(); return; }
       if(e.target&&e.target.closest&&e.target.closest('.fold')){ advFold=true; try{ lsSet('hm_advfold','1'); }catch(err){} syncFold(); return; }
+      if(advGo && !(e.target&&e.target.closest&&e.target.closest('.hist'))){ ghostPoint(advGo,3600); haptic('select');
+        const t=document.querySelector(advGo); if(t){ t.classList.add('tapHere'); setTimeout(()=>t.classList.remove('tapHere'),3600); } return; }
       toggleChat(); });
     syncFold();
     press($('chatX'),()=>toggleChat(false));
@@ -7113,12 +7114,14 @@
     function netShowVote(k,v,byIx,secs){ const by=NET.players[byIx], D=netVoteText(k,v);
       const mine=(NET.host?0:NET.myIx)===byIx, meet=k==='ev'&&D.a;
       $('voteQ').innerHTML=D.q;
-      $('voteSub').innerHTML=meet?D.sub+'<div class="voteFact">📖 '+D.fact+'</div>'
-        :'proposed by <b>'+(mine?'you':(by?netEsc(by.name):'a keeper'))+'</b>'+(D.sub?' · '+D.sub:'');
-      $('voteYes').innerHTML=meet?'<b>'+D.a+'</b><i>'+D.ad+'</i>':'🐝 For';
-      $('voteNo').innerHTML=meet?'<b>'+D.b+'</b><i>'+D.bd+'</i>':'✋ Against';
-      $('mpVote').classList.toggle('meet',!!meet); $('voteBadge').textContent=meet?'🐝 hive meeting · talk it over':'🗳 the hive decides';
-      $('voteTally').textContent=mine?'proposing is your dance — 🐝 cast':(meet?'a tie takes the second road':'');
+      // a hive meeting is an event card: title, two choices with their chips; the story and the
+      // field note wait behind ⓘ (talk it over out loud, not in paragraphs)
+      $('voteSub').innerHTML=meet?'':'proposed by <b>'+(mine?'you':(by?netEsc(by.name):'a keeper'))+'</b>'+(D.sub?' · '+D.sub:'');
+      $('voteMore').innerHTML=meet?'<div class="heTx">'+D.sub+'</div><div class="voteFact">📖 '+D.fact+'</div>':''; foldReset('voteMore'); $('voteMoreBtn').classList.toggle('hide',!meet);
+      $('voteYes').innerHTML=meet?'<b>'+D.a+'</b><i>'+chipsOf(D.ad)+'</i>':'🐝 For';
+      $('voteNo').innerHTML=meet?'<b>'+D.b+'</b><i>'+chipsOf(D.bd)+'</i>':'✋ Against';
+      $('mpVote').classList.toggle('meet',!!meet); $('voteBadge').textContent=meet?'🐝 hive meeting':'🗳 the hive decides';
+      $('voteTally').textContent=mine?'🐝 cast':(meet?'tie → 2nd':'');
       $('voteYes').disabled=mine; $('voteNo').disabled=mine;
       netVoteUI={deadline:performance.now()+secs*1000, dur:secs*1000, cast:mine};
       NET.tickSec=null; const vb=$('voteBar'); if(vb) vb.classList.remove('low');
@@ -7126,7 +7129,7 @@
     function netVoteResult(k,v,yes,no,pass){ netVoteUI=null; NET.cVote=null;
       const bees='🐝'.repeat(Math.min(8,yes))||'·', hands='✋'.repeat(Math.min(8,no));
       if(k==='ev'){ const D=netVoteText(k,v);
-        $('voteTally').innerHTML='🐝'.repeat(Math.min(8,yes))+(yes&&no?'  ·  ':'')+'✋'.repeat(Math.min(8,no))+'<br>→ <b>'+(pass?D.a:D.b)+'</b>'+(yes===no?' (a tie takes the steadier road)':'');
+        $('voteTally').innerHTML='🐝'.repeat(Math.min(8,yes))+(yes&&no?'  ·  ':'')+'✋'.repeat(Math.min(8,no))+'<br>→ <b>'+(pass?D.a:D.b)+'</b>';
         $('voteYes').disabled=true; $('voteNo').disabled=true; $((pass?'voteYes':'voteNo')).classList.add('won');
         setTimeout(()=>{ closeOverlay('mpVote'); $('voteYes').classList.remove('won'); $('voteNo').classList.remove('won'); },2200);
         try{ fanfare(); }catch(e){} hpt(20); netStripVoted([]); return; }
@@ -7917,7 +7920,7 @@
       // a returning keeper: Continue becomes the big, obvious action; founding anew steps back
       const cont=$('startCont'); cont.classList.remove('hide','ghost'); cont.classList.add('pulse');
       cont.innerHTML='▶ Continue<span class="contWhere">Year '+existing.year+' · '+seasonName(existing.day)+', day '+(Math.floor(existing.day)+1)+(existing.P>0?' · '+beeK(existing.P)+' bees':'')+'</span>';
-      const nw=$('startNew'); nw.classList.remove('pulse'); nw.classList.add('ghost'); nw.textContent='Found a new colony';
+      const nw=$('startNew'); nw.classList.remove('pulse'); nw.classList.add('ghost'); nw.textContent='New hive';
       const card=$('intro').querySelector('.card'); if(card) card.classList.add('hasSave'); }
 
     function beginCommon(){ $('intro').classList.add('hide'); started=true; clearUndo(); syncForageUI(); syncBrushHelp(); queen.x=hiveCx; queen.y=hiveCy; queen.tx=hiveCx; queen.ty=hiveCy; syncBeePool();
@@ -7955,10 +7958,10 @@
       } else el.classList.add('hide'); }
     // founding a new colony retires the one you're continuing — guard it with a two-tap confirm
     let newArmed=false, newArmT=0;
-    function resetNewBtn(){ newArmed=false; const b=$('startNew'); b.classList.remove('danger'); b.textContent='Found a new colony'; }
+    function resetNewBtn(){ newArmed=false; const b=$('startNew'); b.classList.remove('danger'); b.textContent=titleHasSave?'New hive':'▶ Play'; }
     $('startNew').addEventListener('click',()=>{
       if(titleHasSave && !newArmed){ newArmed=true; const b=$('startNew'); b.classList.add('danger');
-        b.textContent='⚠ Retire your colony? Tap again'; clearTimeout(newArmT); newArmT=setTimeout(resetNewBtn,4000); return; }
+        b.textContent='⚠ Replace your hive? Tap again'; clearTimeout(newArmT); newArmT=setTimeout(resetNewBtn,4000); return; }
       resetNewBtn(); showLegacyNote(); renderQueens();
       // a first-timer doesn't face seven temperaments before touching a single cell:
       // the steady Meadow line is crowned for them and the choice opens from colony two
@@ -8006,6 +8009,7 @@
       let dt=(now-last)/1000; last=now; if(dt>0.05)dt=0.05; if(dt<0)dt=0;
       gt+=dt; lastDt=dt; shake=Math.max(0,shake-dt*1.2);
       netFrame(dt);   // hive link housekeeping: vote clock, snapshots, event relay
+      ghostTick();
       const frozen=hitstop>0; if(frozen) hitstop-=dt;
       relayoutT+=dt; if(relayoutT>1){ relayoutT=0; checkBadges(); danceCallCheck(); eventCheck(); questTick(); const t=$('hud-top'),b=$('hud-bottom');
         if(Math.abs((t.offsetHeight+8)-topH)>6 || Math.abs((b.offsetHeight+8)-botH)>6) layout(); }
@@ -8065,7 +8069,7 @@
       drawLessonArt(dt);
       if(nudgeCool>0) nudgeCool-=dt;
       if(paintSndCool>0) paintSndCool-=dt;
-      if(tipCool>0){ tipCool-=dt; if(tipCool<=0 && tipQ.length){ toast(tipQ.shift()); tipCool=TIP_GAP; } }
+      if(tipCool>0){ tipCool-=dt; if(tipCool<=0 && tipQ.length){ logMsg('💡',tipQ.shift(),true); tipCool=TIP_GAP; } }
       pumpFeed(dt); pumpDiscover(dt);
       // the day, drawn on the button you'd press to stop it
       { const pf=$('playFill');

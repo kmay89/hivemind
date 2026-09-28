@@ -73,11 +73,12 @@ them.** Concretely:
 ## The solo arc as shipped (keep this shape)
 
 The first session now runs: **cold open** (touch a cell, a bee wakes) →
-**terse coach** (one brush per step, tap-here hints, no paragraphs) →
-**"Warm heart, sweet walls"** (comb strategy as one drawn picture, three
-icon-lines, shown once at `endCoach`) → **a hive handed over paused**
-(the clock simply waits, with one "▶ Start the days" invitation; ⏸ stays
-available forever after) → **the scouts' dance call** (the first interrupt-and-choose event, ~when a rich bloom
+**a wordless coach** (a pointing ghost hand shows the brush, then the cell,
+then the slider; each label is one to three words; each craft ends on its
+recipe as pictures, e.g. 🥚 → 🐝) → **"The good comb"** (comb strategy as one
+drawn picture and three two-word lines, shown once at `endCoach`) → **a hive
+handed over paused** (one "▶ Start" invitation; ⏸ stays available forever
+after) → **the scouts' dance call** (the first interrupt-and-choose event, ~when a rich bloom
 appears). Decisions first, clock later; pictures before prose; biology as
 the tutorial voice throughout.
 
@@ -90,6 +91,17 @@ replaced it is quieter and does the same job: the hive is handed over
 now (3.4 s per hive-day — a year is ~20 unhurried minutes, and winter still
 fast-forwards itself when nothing needs deciding). Parties keep the brisker
 2.5 s cadence via `PARTY_DAY`, since eight people fill the time by talking.
+
+**The word budget (Minecraft's lesson).** Minecraft teaches by letting you
+act and showing the result; its screens are icons and numbers, and the words
+live in a book you can open. HIVEMIND now works the same way. The three-page
+intro became three lines of four words, the coach lost its paragraphs and its
+place-confirm card, Hazel's advice became a few words plus a hand that points
+at the answer, the feed shows only first clauses, and every card keeps its
+explanation behind ⓘ / More. Measured on a phone with a visible-word count:
+title 89 → 22, a coach step ~25 → ~11, event and dance cards ~75 → ~18, a
+running hive ~100 → ~45. Keep new UI inside those numbers (CLAUDE.md lists the
+rules).
 
 ## Candidate future work (solo)
 
