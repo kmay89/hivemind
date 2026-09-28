@@ -9,9 +9,13 @@
 <link rel="icon" type="image/png" sizes="64x64" href="/icons/favicon-64.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 <title>Privacy Policy — HIVEMIND</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,500;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/BricolageGrotesque.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+  /* the game's two typefaces, self-hosted (SIL OFL, latin subsets): works offline and in
+     the iOS app, and the page makes no third-party requests at all */
+  @font-face{ font-family:'Bricolage Grotesque'; src:url(fonts/BricolageGrotesque.woff2) format('woff2'); font-weight:200 800; font-display:swap; }
+  @font-face{ font-family:'JetBrains Mono'; src:url(fonts/JetBrainsMono.woff2) format('woff2'); font-weight:400 800; font-display:swap; }
+</style>
 <style>
   :root{ --comb:#0d0905; --panel:rgba(27,19,9,0.74); --border:rgba(255,196,110,0.16);
     --text:#f7eed9; --dim:#c2a97e; --gold:#ffd97a; --honey:#ffb42b; --cyan:#7fe3d6; }
@@ -43,9 +47,9 @@
 <main>
   <div class="crumb"><a href="/">← hive-mind-game.com</a></div>
   <h1>PRIVACY POLICY</h1>
-  <div class="sub">effective July 16, 2026</div>
+  <div class="sub">effective September 27, 2026</div>
 
-  <p class="tldr"><b>The short version:</b> HIVEMIND has no accounts, no analytics, no ads, no tracking cookies, and no game server. Your save data never leaves your browser. We don't want your data — we want you to keep bees.</p>
+  <p class="tldr"><b>The short version:</b> HIVEMIND has no accounts, no analytics, no ads, no tracking cookies, and no game server. Your save data never leaves your device. We don't want your data — we want you to keep bees.</p>
 
   <h2>What the game stores</h2>
   <p>Your game progress (the state of your colony, your upgrades, and settings such as the sound preference) is saved with your browser's <b>localStorage</b>, on your own device. It is never transmitted to us or anyone else. Clearing your browser data for this site deletes it permanently.</p>
@@ -54,13 +58,19 @@
   <p>Nothing, directly. This site runs no analytics scripts, sets no cookies, and has no sign-up, comment, or contact forms.</p>
 
   <h2>Third-party services</h2>
-  <p>Serving the site involves three infrastructure providers, each of which may process your IP address and standard request metadata (browser type, pages requested, timestamps) as part of ordinary web hosting:</p>
+  <p>Serving the website involves two infrastructure providers, each of which may process your IP address and standard request metadata (browser type, pages requested, timestamps) as part of ordinary web hosting:</p>
   <ul>
     <li><b>Netlify</b> hosts the site and keeps standard server logs. See the <a href="https://www.netlify.com/privacy/" target="_blank" rel="noopener noreferrer">Netlify privacy policy</a>.</li>
     <li><b>Cloudflare</b> provides DNS for hive-mind-game.com. See the <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer">Cloudflare privacy policy</a>.</li>
-    <li><b>Google Fonts</b> serves the two typefaces the game uses; your browser requests the font files from Google's servers. See the <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google privacy policy</a>.</li>
   </ul>
   <p>We do not receive, combine, or analyze any of this data ourselves.</p>
+
+  <h2>Play Together (optional)</h2>
+  <p>Play Together links 2–8 devices in the same room. When you host or join, the game briefly leaves a connection handshake (a technical description of how to reach your device, plus the hive name and keeper name you typed) in a small "mailbox" on hive-mind-game.com, under a four-letter room code. It is deleted automatically after 8 minutes. Once the devices are linked they talk to each other directly (peer-to-peer); game data does not pass through any server. To find a route between devices, your device also asks a public STUN server (operated by Google) for its own network address; that request reveals your IP address to that server, as any network connection does. If you never use Play Together, none of this happens.</p>
+  <p><b>Camera:</b> joining by QR code can use your camera to read a code from another player's screen. Frames are read on your device only, nothing is recorded or uploaded, and the camera stops the moment a code is found. The camera is never required; every step also works by typing a code or sharing a link.</p>
+
+  <h2>The iOS and iPadOS app</h2>
+  <p>The App Store version is the same game. It stores your progress on your device only, contains no analytics, advertising, or tracking SDKs, and collects no data. It makes network requests only when you use Play Together (as described above) or open an outside link.</p>
 
   <h2>Children</h2>
   <p>HIVEMIND is suitable for all ages and collects no personal information from anyone, children included.</p>
