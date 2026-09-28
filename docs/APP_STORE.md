@@ -37,8 +37,18 @@ Then in Xcode:
 3. **Archive.** Product → Destination "Any iOS Device (arm64)" → Product → Archive →
    Distribute App → App Store Connect → Upload.
 
-**Run `npm run sync` again after every change to the web game.** The app bundles a copy,
-so an unsynced build ships the old game.
+**The app always carries the current game.**
+- The Xcode target's first build phase, **"Bundle the current web game"**, runs
+  `scripts/sync-www.js --app` on every build. That copies the repo's current `index.html`, the
+  legal pages, `fonts/` and `icons/` into the app bundle, so an archive can't ship a stale copy.
+  The build log prints the game build it bundled (for example `game build 2026.09.28.48`), and
+  the pause menu shows the same string on the device.
+- `npm run sync` is still needed once after cloning, and again whenever the Capacitor plugins
+  change. It generates the native side, which the build phase doesn't touch.
+- The phase needs `node` on Xcode's PATH. It looks in Homebrew, `/usr/local`, Volta and nvm. If
+  node isn't found it prints a warning and the app keeps the copy from the last sync.
+- CI (`npm run check:ios`) fails if the phase goes missing or stops running the sync, if a file
+  it copies disappears, or if `GAME_VER` and the service worker version disagree.
 
 Already set in the project:
 
