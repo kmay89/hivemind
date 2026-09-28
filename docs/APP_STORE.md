@@ -132,7 +132,7 @@ The privacy policy states all of this under "Play Together" and "The iOS and iPa
 
 ## 4. Notes for the reviewer (App Review Information → Notes)
 
-> HIVEMIND needs no login and works offline. To see the core loop: tap "▶ Play", follow the pointing hand through the short founding tutorial (or tap ✕ to skip it), then press ▶ Start. Paint cells with the Brood / Honey / Expand brushes and move the Pollen ↔ Nectar mixer. A year takes about 7 minutes at the default pace; the ⏩ button (available after the first task) speeds it up.
+> HIVEMIND needs no login and works offline. To see the core loop: on first launch tap the glowing cell, then "Begin", and follow the pointing hand through the short founding tutorial (or tap ✕ to skip it), then press ▶ Start. Later launches open on the title screen ("▶ Play"). Paint cells with the Brood / Honey / Expand brushes and move the Pollen ↔ Nectar mixer. A year takes about 7 minutes at the default pace; the ⏩ button (available after the first task) speeds it up.
 >
 > Play Together (optional) links 2–8 devices in the same room. To try it with one test device: on the device, tap Play Together → Host a hive to get a four-letter code; on any second device or a Mac, open https://hive-mind-game.com in Safari, tap Play Together → Join a hive and type the code. The camera is only used, optionally, to read a QR code from another screen; every step also works by typing.
 >

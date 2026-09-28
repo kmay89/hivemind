@@ -297,6 +297,17 @@ docs/APP_STORE.md. `tools/app-store-shots.js` regenerates the store screenshots.
     Title ~20, coach ~10, cards <20, a running hive <50 on a phone.
   - In-world feedback beats a message: `worldPop(cell,str,col,kind,gap)` floats `+🐝`/`+⬡` where it
     happened, rate-limited per kind.
+- **The first minutes** follow what Mario, Tetris, Minecraft, Hay Day and Clash Royale proved
+  (docs/FIRST_MINUTES.md). On a first-ever visit the cold open's Begin goes straight into the hive
+  (`coFast` skips the title and story; the wordmark steps aside while the cold open waits). A
+  colony's first bee is an event (`beeBorn`). Rewards fly to their counters (`flyTo(ic,x,y,sel)`:
+  hatchlings to `#stPop`, quest ✧ to `#stKeeper`). A drag climbs in pitch and lands a `×N`
+  flourish (`strokeHit`/`strokeEnd`). The first hornet brings the ghost hand (`ghostPoint` takes a
+  function too). `tools/first-minute.js` times the front door and fails past its budget: re-run
+  it after touching anything a newcomer sees.
+  - **Cosmetic code inside `stepDay` must never call `Math.random`** (or `burst`/`puff`, which do):
+    the economy sim seeds `Math.random`, so one extra draw shifts every seeded outcome and turns
+    the contract red. `beeBorn`/`flyTo` are deterministic for exactly this reason.
 - **One icon language** (`ICONS{}` + `icon(name)` + `applyIcons()`): every tray/tab/menu
   control carries `data-ic="name"` and gets a 24-grid, 1.9-stroke, duotone (`.d`) SVG
   prepended at boot. A new control = a new `ICONS` row + a `data-ic`, never a new emoji or

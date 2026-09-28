@@ -855,6 +855,11 @@
   #ghostHand{ position:fixed; left:0; top:0; width:0; height:0; z-index:var(--z-popup); pointer-events:none; opacity:0;
     transition:opacity .35s, transform .55s cubic-bezier(.3,1.3,.5,1); will-change:transform; }
   #ghostHand.on{ opacity:1; }
+  /* reward flights: an earned icon arcs to its counter (flyTo), which bumps on arrival */
+  .flyIc{ position:fixed; left:-12px; top:-14px; font-size:24px; line-height:1; z-index:var(--z-popup); pointer-events:none;
+    will-change:transform; filter:drop-shadow(0 3px 6px rgba(0,0,0,.5)); }
+  .bump{ animation:statBump .42s cubic-bezier(.2,1.6,.4,1); }
+  @keyframes statBump{ 40%{ scale:1.16; filter:brightness(1.35); } }
   #ghostHand .gh{ position:absolute; left:-15px; top:-4px; width:46px; height:46px; transform-origin:15px 4px;
     filter:drop-shadow(0 5px 7px rgba(0,0,0,.5)); animation:ghTap 1.35s ease-in-out infinite; }
   @keyframes ghTap{ 0%,100%{ transform:translate(12px,16px) rotate(-8deg); } 42%{ transform:translate(0,0) rotate(0); }
@@ -2216,7 +2221,7 @@
     // / non-https, where no service worker runs) — the real source of truth is sw.js's
     // VERSION; syncGameVer() below asks the running worker and corrects this label
     // live, so the two only ever drift cosmetically for a moment, never permanently.
-    let GAME_VER='2026.09.28.47';
+    let GAME_VER='2026.09.28.48';
     const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
     const $=(id)=>document.getElementById(id);
     const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -2288,15 +2293,19 @@
     syncVerLabels();
     // cold open: a brand-new keeper touches one rippling cell and a bee wakes —
     // hands before words. The old "why bees" essay is now a link, not a wall.
+    let coFast=false;   // the cold open's Begin skips the title + story on a first-ever visit
     (function(){ let coSeen=false; try{ coSeen=localStorage.getItem('hm_coldopen')==='1'; }catch(e){}
       if(!coSeen && !loadSave()) $('coldopen').classList.remove('hide'); })();
     (function(){ const co=$('coldopen'); let hatched=false;
       function hatch(){ if(hatched) return; hatched=true; co.classList.add('hatched');
         $('coLine').innerHTML='A bee unfolds her wings. <b>Forty thousand</b> will follow — if you keep them.';
-        try{ if(navigator.vibrate) navigator.vibrate(12); }catch(e){}
+        haptic('success');
         setTimeout(()=>{ const b=$('coBtn'); if(b) b.classList.remove('hide'); }, 640); }
       press($('coCell'), hatch);
-      press($('coBtn'),()=>{ lsSet('hm_coldopen','1'); co.classList.add('hide'); }); })();
+      // Mario's rule: after "press start" you are playing. A first-ever keeper goes from the
+      // hatching bee straight into their hive: no title card, no story pages in between
+      // (the cold open WAS the story). The title, modes and story wait for the second visit.
+      press($('coBtn'),()=>{ lsSet('hm_coldopen','1'); co.classList.add('hide'); coFast=true; $('startNew').click(); }); })();
     press($('welcomeBtn'),()=>{ lsSet('hm_welcomed','1'); $('welcome').classList.add('hide'); });
     press($('whyBees'),()=>{ $('welcome').classList.remove('hide'); });
     // ---- the trailer: nothing is fetched until "watch" is tapped (it's ~16 MB, and most
@@ -2438,6 +2447,9 @@
       let seen=false; try{ seen=localStorage.getItem('hm_seen_studio')==='1'; lsSet('hm_seen_studio','1'); }catch(e){}
       function end(){ if(gone) return; gone=true; sp.classList.add('out'); setTimeout(()=>sp.remove(),700); bootTitle(); }
       function bootTitle(){ const g=$('gsplash'); if(!g) return; syncVerLabels();
+        // a first-ever visit has the cold open's own "tap the cell" waiting underneath; two
+        // tap-to-start screens back to back is one too many, so the wordmark steps aside
+        { const co=$('coldopen'); if(co && !co.classList.contains('hide')){ g.remove(); return; } }
         g.classList.remove('hide'); requestAnimationFrame(()=>{ g.classList.add('go'); startHoneycomb($('gsFx')); });
         // the title holds as a landing screen — it waits for the player, it doesn't time out
         let byeDone=false; const bye=()=>{ if(byeDone) return; byeDone=true; g.classList.add('out'); setTimeout(()=>g.remove(),600); };
@@ -3063,7 +3075,7 @@
       for(const q of questAct){ const r=QUESTS.find(x=>x.id===q.id); let v=0; try{ v=r.cur(q); }catch(e){}
         const f=r.fmt||String, pct=Math.max(0,Math.min(100,v/r.tgt*100));
         if(v>=r.tgt && !questDone[r.id]){ questDone[r.id]=1; q.done=performance.now();
-          const pay=questPaid<2; if(pay){ questPaid++; rj+=1; setN('vRJ','✧'+rj); }
+          const pay=questPaid<2; if(pay){ questPaid++; rj+=1; setN('vRJ','✧'+rj); const qe=document.querySelector('.qc[data-q="'+r.id+'"]'), qr=qe&&qe.getBoundingClientRect(); flyTo('✧', qr?qr.left+qr.width/2:hiveCx, qr?qr.top+qr.height/2:hiveCy, '#stKeeper'); }
           haptic('success'); logMsg(r.ic,'✓ <b>'+r.tx+'</b>'+(pay?' · +1 ✧ royal jelly':' · well kept'));
           try{ chime(660,990); }catch(e){} floatTx(hiveCx,hiveCy-size*2,r.ic+' ✓',"#c9ffb0"); }
         const lead=r.id===questLead&&!q.done, prog=(r.tgt>1?f(Math.min(v,r.tgt))+'/'+f(r.tgt):(q.done?'done':'…'));
@@ -3125,6 +3137,34 @@
     // in-world pops: the comb shows what just happened where it happened (+🐝 from a cradle,
     // +⬡ where wax was drawn), rate-limited per kind so a busy hive sparkles instead of flooding
     const popAt={};
+    // ---- reward flights (Hay Day's coins and stars): what you earn flies from where it was
+    // earned to the counter that keeps it, and the counter bumps on arrival, so the eye learns
+    // where every number comes from without a word. Cosmetic only; skipped for reduced motion.
+    let flyN=0;
+    function flyTo(ic,x,y,sel,delay){ if(RM||storyMode||flyN>8||!document.body.animate) return;
+      const t=elTarget(sel); if(!t) return; flyN++;
+      const el=document.createElement('span'); el.className='flyIc'; el.textContent=ic; document.body.appendChild(el);
+      // no Math.random here: hatches run inside stepDay, and the headless economy sim seeds
+      // Math.random, so cosmetic code that draws from it would shift the seeded contract
+      const dx=t.x-x, dy=t.y-y, mx=x+dx*0.3+((flyN*37)%50-25), my=y+Math.min(dy*0.45,-70);
+      const a=el.animate([
+        {transform:'translate('+x+'px,'+y+'px) scale(.5)', opacity:0},
+        {transform:'translate('+x+'px,'+(y-18)+'px) scale(1.3)', opacity:1, offset:.2},
+        {transform:'translate('+mx+'px,'+my+'px) scale(1.05)', opacity:1, offset:.55},
+        {transform:'translate('+t.x+'px,'+t.y+'px) scale(.55)', opacity:.9}],
+        {duration:860, delay:delay||0, easing:'cubic-bezier(.45,0,.3,1)', fill:'both'});
+      a.onfinish=()=>{ el.remove(); flyN--; const tg=document.querySelector(sel); if(tg){ tg.classList.remove('bump'); void tg.offsetWidth; tg.classList.add('bump'); } };
+      a.oncancel=()=>{ el.remove(); flyN--; }; }
+    // a hatch: the comb sparkles where she emerged, and every so often a bee flies up to the
+    // Bees counter. A colony's very FIRST bee is an event (the Hay Day first-harvest moment):
+    // a burst, a chime, a success tick, and her flight to the counter — even mid-tutorial.
+    let bornFx=0;
+    function beeBorn(c){ const p=cellCenter(c.c,c.r), now=performance.now();
+      // (deterministic on purpose: no burst()/puff(), which draw from the sim's seeded Math.random)
+      if(bornTotal===1 && !NET.on && view==='hive' && !storyMode){ c.pf=1; c.pfk='honey'; if(!RM) floatTx(p.x,p.y-size*0.4,'🐝 first bee!','#fff2b8');
+        try{ chime(784,1175); }catch(e){} haptic('success'); flyTo('🐝',p.x,p.y,'#stPop',300); bornFx=now; return; }
+      worldPop(c,'+🐝','#ffe9b0','bee',900);
+      if(now-bornFx>1800 && view==='hive'){ bornFx=now; flyTo('🐝',p.x,p.y,'#stPop'); } }
     function worldPop(cell,str,col,kind,gap){ if(RM||view!=='hive'||onboard||storyMode) return; const now=performance.now();
       if(now-(popAt[kind]||0)<(gap||600)) return; popAt[kind]=now; const p=cellCenter(cell.c,cell.r); floatTx(p.x,p.y-size*0.25,str,col); }
     function floatTx(x,y,str,col){ if(RM) return; if(parts.length>260)parts.shift();
@@ -3266,7 +3306,8 @@
     function paintDab(kind){ if(!AU.on||!AU.ctx) return; const c=AU.ctx, t=c.currentTime;
       const base={brood:560, honey:680, expand:610, erase:340}[kind]||620;
       const o=c.createOscillator(), g=c.createGain(); o.type='sine';
-      o.frequency.setValueAtTime(base*(0.96+Math.random()*0.08),t); o.frequency.exponentialRampToValueAtTime(base*0.7,t+0.09);
+      const b2=base*paintPitch;   // climbs through a long stroke (strokeHit)
+      o.frequency.setValueAtTime(b2*(0.97+Math.random()*0.06),t); o.frequency.exponentialRampToValueAtTime(b2*0.7,t+0.09);
       g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.05,t+0.006); g.gain.exponentialRampToValueAtTime(0.0001,t+0.13);
       o.connect(g); g.connect(AU.sfxG||AU.master); o.start(t); o.stop(t+0.15); }
     // the fingertip burst: a ring that blooms from the exact press point, plus a few
@@ -3316,6 +3357,9 @@
     function scoutActive(){ const w=hornetWindow(); const T=currentTemp();
       return !hornet && !over && started && !onboard && T>=WIN_TEMP && day>w.a && day<w.b && P>40 && hornetCD<6; }
     function spawnHornet(){ const side=Math.random()<0.5?-1:1;
+      // Mario's first Goomba: the first raid a keeper ever meets comes with the hand showing
+      // what to do (tap it), and it follows the hornet as she flies
+      if(!hornetsBeat && !NET.on) ghostPoint(()=>hornet&&hornet.state!=='flee'&&view==='hive'?{x:hornet.x,y:hornet.y}:null, 6000);
       // family mode: a cuddlier hornet — fewer taps to shoo, softer alarm copy
       const hp=familyMode?Math.max(1,Math.round(M.hHP()*0.5)):M.hHP();
       hornet={x:hiveCx+side*W*0.55, y:topH+size*2, vx:0, vy:0, hp, maxhp:hp, t:0, atk:1.2, state:'in', wob:Math.random()*6.28};
@@ -3630,19 +3674,28 @@
     function callTo(list, cell){ if(!cell) return; const i=list.indexOf(cell); if(i>=0) list.splice(i,1);
       list.unshift(cell); if(list.length>5) list.pop(); }
     function applyBrush(cell){ if(!cell)return; if(!netPaintOk(cell))return; let changed=false, kind=brush;
-      if(brush==='expand'){ if(cell.built)return; if(neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built)){ const was=cell.flagExpand; if(!cell.flagExpand&&!paintErase){flaggedExpand++; armLesson('expand',flaggedExpand);} cell.flagExpand=!paintErase; if(!cell.flagExpand)cell.bp=0; changed=(was!==cell.flagExpand); kind=paintErase?'erase':'expand'; checkCoachProgress(); watchHands(); if(changed) paintFx(cell,kind); } return; }
+      if(brush==='expand'){ if(cell.built)return; if(neighbors(cell.c,cell.r).some(([c,r])=>cells[idx(c,r)].built)){ const was=cell.flagExpand; if(!cell.flagExpand&&!paintErase){flaggedExpand++; armLesson('expand',flaggedExpand);} cell.flagExpand=!paintErase; if(!cell.flagExpand)cell.bp=0; changed=(was!==cell.flagExpand); kind=paintErase?'erase':'expand'; checkCoachProgress(); watchHands(); if(changed){ strokeHit(cell,kind); paintFx(cell,kind); } } return; }
       if(!cell.built)return;
       if(paintErase){ if(cell.zone==='brood'&&cell.brood)return; changed=(cell.zone!=='none'); cell.zone='none'; kind='erase'; }
       else { if(brush==='brood'){ if(cell.zone!=='brood'){brushedBrood++; armLesson('brood',brushedBrood); changed=true; callTo(queenCall,cell);} cell.zone='brood'; }
         else if(brush==='honey'){ if(cell.zone!=='honey'){paintedHoney++; armLesson('honey',paintedHoney); changed=true; callTo(shelfCall,cell);} cell.zone='honey'; if(cell.brood) cell.brood=null; } checkCoachProgress(); watchHands(); }
-      if(changed){ paintFx(cell,kind); haptic(kind==='erase'?'tap':'select'); }   // a purr under the finger as the stroke lays wax (local paints only)
+      if(changed){ strokeHit(cell,kind); paintFx(cell,kind); }   // a purr under the finger as the stroke lays wax (local paints only)
     }
+    // ---- the stroke combo (Hay Day's swipe-harvest, Tetris's rising line-clear): every cell a
+    // single drag lays climbs a note higher, and a long stroke lands a little ×N flourish.
+    // Local strokes only; it is sound, haptics and sparkle — the economy never sees it.
+    let strokeN=0, strokeLast=null, paintPitch=1;
+    function strokeHit(cell,kind){ strokeN++; strokeLast=cell; paintPitch=1+Math.min(strokeN-1,10)*0.055;
+      haptic(kind==='erase'?'tap':(strokeN>=6?'press':'select')); }
+    function strokeEnd(){ const n=strokeN, c=strokeLast; strokeN=0; strokeLast=null; paintPitch=1;
+      if(n>=5 && c && !RM && !onboard){ const p=cellCenter(c.c,c.r); floatTx(p.x,p.y-size*0.7,'×'+n,'#fff2b8'); burst(p.x,p.y,6+Math.min(n,14));
+        try{ chime(660+Math.min(n,12)*30,990+Math.min(n,12)*40); }catch(e){} } }
     // ---- undo: take back the last comb change (over-expansion, a stray paint) ----
     let undoStack=[], strokeSnap=null;
     function combSnap(){ return cells.map(c=>({z:c.zone,f:c.flagExpand,p:c.bp,b:c.brood})); }
     function combRestore(sn){ for(let i=0;i<cells.length;i++){ const c=cells[i],v=sn[i]; if(!v)continue; c.zone=v.z; c.flagExpand=v.f; c.bp=v.p||0; c.brood=v.b; } }
     function syncUndoBtn(){ const b=$('undoBtn'); if(b) b.classList.toggle('hide', undoStack.length===0||onboard||!started||over||(NET.on&&NET.started)); }   // no undo in a shared comb
-    function commitStroke(){ if(!strokeSnap) return; let ch=false;
+    function commitStroke(){ strokeEnd(); if(!strokeSnap) return; let ch=false;
       for(let i=0;i<cells.length;i++){ const c=cells[i],v=strokeSnap[i]; if(c.zone!==v.z||c.flagExpand!==v.f||c.brood!==v.b){ ch=true; break; } }
       if(ch&&!(NET.on&&NET.started)){ undoStack.push(strokeSnap); if(undoStack.length>24) undoStack.shift(); syncUndoBtn(); } strokeSnap=null;
       if(ch) syncWaxBank();   // a fresh flag joins the queue the instant you lift your finger
@@ -3737,7 +3790,7 @@
         inspectMode=false; $('inspectBtn').classList.remove('on'); return; }
       const c0=cellAtPx(p.x,p.y), erase0=(e.button===2)||e.shiftKey;
       if(!erase0){ const rz=needsConfirm(c0); if(rz && !noConfirm){ openConfirm(c0, rz); return; } }
-      strokeSnap=combSnap(); painting=true; paintErase=erase0; applyBrush(c0); });
+      strokeSnap=combSnap(); painting=true; paintErase=erase0; strokeN=0; applyBrush(c0); });
     canvas.addEventListener('pointermove',e=>{ const p=rel(e);
       if(view==='hive'){ hoveredCell=cellAtPx(p.x,p.y); if(painting)applyBrush(hoveredCell); showInspect(e.clientX,e.clientY); }
       else { hoveredCell=null; hideInspect(); } });
@@ -4307,7 +4360,7 @@
             // a mite-struck pupa emerges deformed and doesn't join the workforce
             const struck = mite>MITE_DEFORM && Math.random() < (mite-MITE_DEFORM)*0.55;
             if(struck){ if(!offline){ const pp=cellCenter(c.c,c.r); puff(pp.x,pp.y,'#7a2a1a',3,0.5); } }
-            else if(P<CAP){ P+=1; bornTotal++; if(!offline && (roster.length<3 || Math.random()<0.12)) addRosterBee(); if(!offline&&bees.length<RENDER_BEES){ const pp=cellCenter(c.c,c.r); bees.push(makeBee(pp.x,pp.y)); puff(pp.x,pp.y,'#ffe9b0',5,0.9); } if(!offline) worldPop(c,'+🐝','#ffe9b0','bee',900);
+            else if(P<CAP){ P+=1; bornTotal++; if(!offline && (roster.length<3 || Math.random()<0.12)) addRosterBee(); if(!offline&&bees.length<RENDER_BEES){ const pp=cellCenter(c.c,c.r); bees.push(makeBee(pp.x,pp.y)); puff(pp.x,pp.y,'#ffe9b0',5,0.9); } if(!offline) beeBorn(c);
               if(!offline){ const pp=cellCenter(c.c,c.r); floatTx(pp.x,pp.y-size*0.3,'+'+BEE_SCALE); noteExtra('hatch'); hatchWave(); } if(!offline&&!said['firstborn']) chime(660,980); toast('A new bee unfolds her wings \u2014 and gets straight to work.','firstborn'); } } } }
       const space=cells.filter(c=>c.built&&c.zone==='brood'&&!c.brood).length;
       const pollenF=Math.max(0,Math.min(1,pollenU/400));
@@ -6189,7 +6242,7 @@
     function ghostPoint(sel,ms){ ghostTmp={sel, until:performance.now()+(ms||3800)}; }
     function ghostTick(){ const g=$('ghostHand'); if(!g) return;
       let t=coachHand();
-      if(!t && ghostTmp){ if(performance.now()<ghostTmp.until && !paused) t=elTarget(ghostTmp.sel); else ghostTmp=null; }
+      if(!t && ghostTmp){ if(performance.now()<ghostTmp.until && !paused) t=typeof ghostTmp.sel==='function'?ghostTmp.sel():elTarget(ghostTmp.sel); else ghostTmp=null; }
       g.classList.toggle('on', !!t); if(!t) return;
       g.classList.toggle('drag', !!t.drag); if(t.drag) g.style.setProperty('--dx', t.drag.toFixed(0)+'px');
       const tf='translate('+t.x.toFixed(0)+'px,'+t.y.toFixed(0)+'px)'; if(g.style.transform!==tf) g.style.transform=tf; }
@@ -6315,7 +6368,9 @@
       requestAnimationFrame(()=>el.classList.add('show'));
     }
     function advanceStory(){ if(!storyMode) return; const beats=curBeats||STORY; storyIx++; if(storyIx>=beats.length){ endStory(); } else showStoryBeat(); }
-    function startStory(){ curBeats=STORY; onCineEnd=null; { const sk=$('storySkip'); if(sk) sk.textContent='Skip intro \u203a'; } $('intro').classList.add('hide'); document.body.classList.add('cine'); storyMode=true; storyIx=0; storySun=0; camX=0.5; camS=0.8;
+    function startStory(){
+      if(coFast){ coFast=false; $('intro').classList.add('hide'); if(wantSound){ setSound(true); } seedAndPlay(); layout(); return; }
+      curBeats=STORY; onCineEnd=null; { const sk=$('storySkip'); if(sk) sk.textContent='Skip intro \u203a'; } $('intro').classList.add('hide'); document.body.classList.add('cine'); storyMode=true; storyIx=0; storySun=0; camX=0.5; camS=0.8;
       if(wantSound){ setSound(true); } seedStoryBees(); layout(); storyOpenAt=performance.now(); $('story').classList.remove('hide'); showStoryBeat(); }
     // between-year interlude — same beautiful backdrop, freshly-written beats, and a resume callback
     function startInterlude(beats, onEnd){ if(!beats||!beats.length){ if(onEnd)onEnd(); return; }
