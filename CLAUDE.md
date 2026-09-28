@@ -100,6 +100,11 @@ there, and it changes exactly four things:
 - every `hm*`/`hivemind*` localStorage write is mirrored into `@capacitor/preferences`, and
   restored if the WebView wakes up empty.
 
+The app can't go stale: the Xcode target's first build phase ("Bundle the current web game")
+runs `platforms/ios/scripts/sync-www.js --app` on every build, and `npm run check:ios` guards it.
+A new file the page needs at runtime must be added to `FILES`/`DIRS` in sync-www.js, or the app
+won't carry it.
+
 Anything new that assumes a web origin (a relative URL fetched at runtime, a `location.origin`
 link, `a.download`) needs an `IS_APP` answer too. The two fonts are self-hosted in `fonts/`
 (no Google Fonts): keep it that way, because the app must work offline and the privacy label
