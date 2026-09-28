@@ -74,7 +74,7 @@ numbers drift as the file changes; re-grep `// =====` banners if they look off)
 | 3319-3385 | grading / year transition |
 | 3385-3411 | **persistence** — `serialize()`/`deserialize()`, `SAVE_KEY` |
 | 3411-3546 | trends, ledger, `forecastToSpring()` |
-| 3546-3640 | founding coach (onboarding), `COACH[]`/`BRIDGE[]` |
+| 3546-3640 | founding coach (onboarding), `COACH[]` + the ghost hand |
 | 3640-3654 | grounded beekeeping facts |
 | 3654-3743 | cinematic intro |
 | 3743-3864 | cinematic backdrop (canvas-painted) |
@@ -157,7 +157,7 @@ docs/APP_STORE.md. `tools/app-store-shots.js` regenerates the store screenshots.
   switch (`#familyToggle`, persisted as `hm_family`; toggles a `.family` body
   class). It is a *tone* switch read in five places: (1) easy words —
   `buildCombKey` (family intro + `COMBKEY_KID`/`GLOSSARY_KID`), `syncBrushHelp`
-  (`BRUSHHELP_KID`), and the `COACH[]` rows' optional `kid`/`kidBridge` fields;
+  (`BRUSHHELP_KID`), and the `COACH[]` rows' optional `kid` labels;
   (2) gentler play — `difficulty()` has a `familyMode` branch (mild winter/flow)
   and `spawnHornet`/`stepHornet` make the hornet rarer, weaker & cuddlier;
   (3) the simpler screen is pure CSS under `.family` (hides `.arr`/`.sub`,
@@ -277,6 +277,26 @@ docs/APP_STORE.md. `tools/app-store-shots.js` regenerates the store screenshots.
 - **Guided first spring**: `QUESTS[]` rows carry `guide` (teaching order for a first
   colony's first year), `how` and `spot`; `questLead` is announced once as "Next job" and
   its chip is labelled. Tapping any quest chip explains it and pulses its control.
+- **Show, don't tell — the word budget.** The game teaches by pointing and by pictures, the way
+  Minecraft does; words are the fallback, kept a tap away. Rules that keep it that way:
+  - The **ghost hand** (`#ghostHand`, `coachHand()`/`ghostPoint(sel,ms)`/`ghostTick()` from
+    `frame()`) is the tutorial: `COACH[]` rows are one verb each (`tx` is 1–3 words, `rc` is the
+    recipe shown as pictures on the unlock chip, e.g. `'🥚 → 🐝'`). No bridge paragraphs, no
+    typewriter, no place-confirm card: you place by placing.
+  - **Hazel's advice is the `ADVICE[]` table**: `when(cx)` → `ic`, `sh` (the bubble: a few words),
+    `tx` (her full line, almanac only) and `go` (the control that answers it; tapping the bubble
+    points the hand there). Add a row, not a branch.
+  - The **living feed** shows `feedShort(html)` (first clause, ≤ ~8 words); every full sentence
+    still lands in `MSGLOG`. Teaching tips (`tip()`), season tips and interlude recaps go to the
+    almanac only (`logMsg(…, true)`). A `DISCOVER` row's `sh` is its feed line.
+  - **Cards are picture-first**: icon · title · choices. Event options show only their
+    `<span class="gain|cost">` chips (`chipsOf`); the story, field note, "your calls", charts and
+    long explanations live in a fold (`.foldBtn[data-fold=id]` + `.fold`, reset with
+    `foldReset(id)`). A death cause carries `ic` and a few-word `fix`.
+  - Check it with a word count, not by eye: the newcomer audit counts visible words per screen.
+    Title ~20, coach ~10, cards <20, a running hive <50 on a phone.
+  - In-world feedback beats a message: `worldPop(cell,str,col,kind,gap)` floats `+🐝`/`+⬡` where it
+    happened, rate-limited per kind.
 - **One icon language** (`ICONS{}` + `icon(name)` + `applyIcons()`): every tray/tab/menu
   control carries `data-ic="name"` and gets a 24-grid, 1.9-stroke, duotone (`.d`) SVG
   prepended at boot. A new control = a new `ICONS` row + a `data-ic`, never a new emoji or
